@@ -1,7 +1,7 @@
 """Pruebas sin internet del historial y las cuotas:  python tests_historial.py"""
 import os
 import tempfile
-from datetime import date
+from datetime import date, timedelta
 
 import config
 import cuotas
@@ -112,3 +112,31 @@ def test_espn_futbol():
 if __name__ == "__main__":
     test_espn_futbol()
     print("OK  test_espn_futbol")
+
+
+def test_esquinas():
+    import numpy as np
+    import esquinas
+    rng = np.random.default_rng(0)
+    eq = [f"T{i}" for i in range(12)]
+    saca = dict(zip(eq, rng.normal(0, 0.25, 12)))
+    filas, d = [], date(2025, 9, 1)
+    for k in range(3):
+        for h in eq:
+            for a in eq:
+                if h != a:
+                    cl = rng.poisson(np.exp(np.log(5.3) + 0.1 + saca[h]))
+                    cv = rng.poisson(np.exp(np.log(5.3) + saca[a]))
+                    filas.append(esquinas.Fila(d, h, a, int(cl), int(cv), int(rng.poisson(2.2)), int(rng.poisson(2.4))))
+            d = d + timedelta(days=3)
+    m = esquinas.ModeloConteo("córners").ajustar(filas, date(2027, 1, 1), "c")
+    est = [m.favor[e] for e in eq]
+    assert np.corrcoef(est, list(saca.values()))[0, 1] > 0.8
+    assert 9.5 < m.media_liga < 12.5 and m.dispersion < 1.3
+    p = m.p_mas(10.6, 9.5)
+    assert 0.5 < p < 0.75
+
+
+if __name__ == "__main__":
+    test_esquinas()
+    print("OK  test_esquinas")
