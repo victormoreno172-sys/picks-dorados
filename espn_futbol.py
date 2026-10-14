@@ -115,3 +115,73 @@ def proximos(liga: str, hoy: date, n_dias: int) -> dict[date, list[PartidoProxim
                 salida.setdefault(p["fecha"], []).append(
                     PartidoProximo(liga, p["fecha"], p["hora"], p["local"], p["visitante"], p["cuotas"]))
     return salida
+
+
+# --------------------------------------------------------------------------
+# Respaldo del calendario de las ligas europeas: football-data.co.uk solo pone
+# en fixtures.csv la jornada inminente (a veces solo la del jueves/viernes), así
+# que el calendario de ESPN completa lo que falte. Los nombres de ESPN se traducen
+# a los de football-data aprendiendo de partidos ya jugados (misma fecha y mismo
+# resultado en las dos fuentes), y si no, con el traductor de las copas europeas.
+SLUGS = {"SP1": "esp.1", "SP2": "esp.2", "E0": "eng.1", "E1": "eng.2", "I1": "ita.1",
+         "D1": "ger.1", "F1": "fra.1", "N1": "ned.1", "P1": "por.1"}
+
+
+def _aprender_nombres(slug: str, hist: list[Partido], hoy: date) -> dict[str, str]:
+    """ESPN -> football-data, con los partidos de los últimos 40 días."""
+    por_dia: dict[date, list[Partido]] = {}
+    for p in hist:
+        if hoy - timedelta(days=40) <= p.fecha < hoy - timedelta(days=1):
+            por_dia.setdefault(p.fecha, []).append(p)
+    votos: dict[str, dict[str, int]] = {}
+    for d in sorted(por_dia):
+        for e in parsear(_get(slug, d, None)):
+            if e["gl"] is None:
+                continue
+            cand = [p for k in (-1, 0, 1) for p in por_dia.get(e["fecha"] + timedelta(days=k), [])
+                    if (p.goles_local, p.goles_visitante) == (e["gl"], e["gv"])]
+            if len(cand) == 1:
+                for a, b in ((e["local"], cand[0].local), (e["visitante"], cand[0].visitante)):
+                    votos.setdefault(a, {}).setdefault(b, 0)
+                    votos[a][b] += 1
+    return {a: max(v, key=v.get) for a, v in votos.items()}
+
+
+def proximos_ligas(hoy: date, n_dias: int, historicos: dict[str, list[Partido]]) -> dict[date, list[PartidoProximo]]:
+    import europa
+    salida: dict[date, list[PartidoProximo]] = {}
+    for liga, slug in SLUGS.items():
+        hist = historicos.get(liga) or []
+        if not hist:
+            continue
+        equipos = {p.local for p in hist if p.fecha > hoy - timedelta(days=400)} | \
+                  {p.visitante for p in hist if p.fecha > hoy - timedelta(days=400)}
+        try:
+            aprendidos = _aprender_nombres(slug, hist, hoy)
+        except Exception as e:
+            print(f"  aviso ESPN {liga}: {e}")
+            aprendidos = {}
+        emp = europa.Emparejador({"X": equipos})
+        vistos, sin = set(), set()
+        for k in range(-1, n_dias + 1):
+            for e in parsear(_get(slug, hoy + timedelta(days=k), 3)):
+                if e["gl"] is not None or not (hoy <= e["fecha"] < hoy + timedelta(days=n_dias)):
+                    continue
+                nombres = []
+                for n in (e["local"], e["visitante"]):
+                    t = aprendidos.get(n)
+                    if t not in equipos:
+                        t = emp(n, "X")
+                    nombres.append(t if t in equipos else None)
+                if None in nombres:
+                    sin.add(f"{e['local']} - {e['visitante']}")
+                    continue
+                clave = (e["fecha"], *nombres)
+                if clave in vistos:
+                    continue
+                vistos.add(clave)
+                salida.setdefault(e["fecha"], []).append(
+                    PartidoProximo(liga, e["fecha"], e["hora"], nombres[0], nombres[1], e["cuotas"]))
+        print(f"  calendario ESPN {liga}: {len(vistos)} partidos ({len(aprendidos)} nombres aprendidos)"
+              + (f", sin traducir: {sorted(sin)[:4]}" if sin else ""))
+    return salida

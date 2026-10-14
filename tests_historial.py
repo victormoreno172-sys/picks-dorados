@@ -140,3 +140,34 @@ def test_esquinas():
 if __name__ == "__main__":
     test_esquinas()
     print("OK  test_esquinas")
+
+
+def test_calendario_espn_ligas():
+    import espn_futbol
+    from modelo import Partido
+
+    def ev(fecha, l, v, gl=None, gv=None):
+        hecho = gl is not None
+        return {"date": fecha, "competitions": [{"status": {"type": {"completed": hecho, "name": "S"}},
+                "competitors": [{"homeAway": "home", "score": str(gl or 0), "team": {"displayName": l}},
+                                {"homeAway": "away", "score": str(gv or 0), "team": {"displayName": v}}]}]}
+    hoy = date(2026, 10, 15)
+    pasado = date(2026, 10, 4)
+    resp = {pasado: [ev("2026-10-04T14:00Z", "Atlético Madrid", "Real Betis", 2, 1)],
+            date(2026, 10, 18): [ev("2026-10-18T14:00Z", "Atlético Madrid", "Real Betis"),
+                                 ev("2026-10-18T19:00Z", "Real Madrid", "FC Barcelona"),
+                                 ev("2026-10-18T19:00Z", "Equipo Raro", "FC Barcelona")]}
+    viejo = espn_futbol._get
+    espn_futbol._get = lambda slug, dia, horas: {"events": resp.get(dia, [])} if slug == "esp.1" else {}
+    try:
+        hist = {"SP1": [Partido(pasado, "Ath Madrid", "Betis", 2, 1), Partido(date(2026, 9, 1), "Real Madrid", "Barcelona", 1, 1)]}
+        r = espn_futbol.proximos_ligas(hoy, 7, hist)
+    finally:
+        espn_futbol._get = viejo
+    ps = r[date(2026, 10, 18)]
+    assert {(p.local, p.visitante) for p in ps} == {("Ath Madrid", "Betis"), ("Real Madrid", "Barcelona")}, ps
+
+
+if __name__ == "__main__":
+    test_calendario_espn_ligas()
+    print("OK  test_calendario_espn_ligas")

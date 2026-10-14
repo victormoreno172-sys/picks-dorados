@@ -49,13 +49,21 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
         for p in h:
             historial.anotar(p.fecha, p.local, p.visitante, p.goles_local, p.goles_visitante)
 
+    try:  # calendario de respaldo (fixtures.csv solo trae la jornada inminente)
+        for d, lista in espn_futbol.proximos_ligas(desde, n_dias, historicos).items():
+            proximos_espn.setdefault(d, []).extend(lista)
+    except Exception as e:
+        print(f"  aviso calendario ESPN: {e}")
     modelos: dict[str, ModeloDixonColes] = {}
     import esquinas
     esquinas_ = esquinas.Esquinas(desde)
     salida: dict[date, list[Analisis]] = {}
     for k in range(n_dias):
         dia = desde + timedelta(days=k)
-        partidos = datos.partidos_del_dia(dia, equipos) + proximos_espn.get(dia, [])
+        partidos = datos.partidos_del_dia(dia, equipos)
+        ya = {(p.liga, p.local, p.visitante) for p in partidos}
+        partidos += [p for p in proximos_espn.get(dia, []) if (p.liga, p.local, p.visitante) not in ya]
+        partidos.sort(key=lambda p: (p.hora or "99", p.liga))
         print(f"  {dia}: {len(partidos)} partidos")
         lista = []
         for p in partidos:
