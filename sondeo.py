@@ -1,34 +1,42 @@
-"""Sondeo temporal: fuentes de esports (CS2 y Valorant)."""
+"""Sondeo temporal: detalles de bo3.gg."""
 import json
 
 import requests
 
-UA = {"User-Agent": "PicksDorados/1.0 (github.com/victormoreno172-sys/picks-dorados)",
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
       "Accept": "application/json"}
+B = "https://api.bo3.gg/api/v1/matches"
 
 
-def probar(nombre, url, n=700, **kw):
-    try:
-        r = requests.get(url, timeout=30, headers=kw.pop("headers", UA), **kw)
-        print(f"### {nombre}: HTTP {r.status_code}, {len(r.content)} bytes")
-        if r.ok:
-            print("   ", r.text[:n].replace("\n", " "))
-        return r
-    except Exception as e:
-        print(f"### {nombre}: ERROR {str(e)[:150]}")
+def js(params):
+    r = requests.get(B, params=params, headers=UA, timeout=30)
+    print("HTTP", r.status_code, r.url[:200])
+    return r.json() if r.ok else {}
 
 
-probar("bo3 cs2 matches", "https://api.bo3.gg/api/v1/matches?page[offset]=0&page[limit]=5&sort=-start_date&filter[matches.status][in]=finished&filter[matches.discipline_id][eq]=1")
-probar("bo3 cs2 upcoming", "https://api.bo3.gg/api/v1/matches?page[offset]=0&page[limit]=5&sort=start_date&filter[matches.status][in]=upcoming&filter[matches.discipline_id][eq]=1")
-probar("bo3 disciplines", "https://api.bo3.gg/api/v1/disciplines", 500)
-probar("vlrggapi upcoming", "https://vlrggapi.vercel.app/match?q=upcoming", 500)
-probar("vlrggapi results", "https://vlrggapi.vercel.app/match?q=results", 500)
-probar("vlr.gg matches html", "https://www.vlr.gg/matches", 200)
-probar("hltv matches", "https://www.hltv.org/matches", 200)
-probar("liquipedia cs api", "https://liquipedia.net/counterstrike/api.php?action=query&list=categorymembers&cmtitle=Category:S-Tier_Tournaments&format=json&cmlimit=5", 500,
-       headers={**UA, "Accept-Encoding": "gzip"})
-probar("pandascore sin clave", "https://api.pandascore.co/csgo/matches/upcoming", 200)
-probar("tsdb esports cs", "https://www.thesportsdb.com/api/v1/json/123/search_all_leagues.php?s=ESports", 1500)
-probar("gamescorekeeper", "https://api.gamescorekeeper.com/v1/fixtures?sport=cs2", 200)
-probar("strafe", "https://api.strafe.com/v1.4/matches", 200)
-probar("esportsapi abios", "https://atlas.abiosgaming.com/v3/series", 200)
+d = js({"page[offset]": 0, "page[limit]": 3, "sort": "-start_date", "filter[matches.status][in]": "finished",
+        "filter[matches.discipline_id][eq]": 1, "with": "teams,tournament"})
+if d.get("results"):
+    m = d["results"][0]
+    print("claves:", list(m.keys()))
+    for k in ("team1", "team2", "tournament", "teams"):
+        if k in m:
+            print(k, json.dumps(m[k])[:400])
+d = js({"page[offset]": 0, "page[limit]": 2, "sort": "-start_date", "filter[matches.status][in]": "finished",
+        "filter[matches.discipline_id][eq]": 1, "include": "team1,team2,tournament"})
+if d:
+    print("include keys:", list(d.keys()), json.dumps(d)[:600])
+for lim in (100, 200, 500):
+    d = js({"page[offset]": 0, "page[limit]": lim, "sort": "-start_date", "filter[matches.status][in]": "finished",
+            "filter[matches.discipline_id][eq]": 2})
+    print("limit", lim, "->", len(d.get("results", [])), d.get("total"))
+d = js({"page[offset]": 0, "page[limit]": 5, "sort": "-start_date", "filter[matches.status][in]": "finished",
+        "filter[matches.discipline_id][eq]": 1, "filter[matches.tier][in]": "s,a"})
+print("tier s,a:", [(m.get("tier"), m.get("start_date")) for m in d.get("results", [])], d.get("total"))
+d = js({"page[offset]": 0, "page[limit]": 5, "sort": "-start_date", "filter[matches.status][in]": "finished",
+        "filter[matches.discipline_id][eq]": 1, "filter[matches.start_date][gte]": "2025-10-14"})
+print("fecha gte:", d.get("total"))
+for ruta in ("https://api.bo3.gg/api/v1/teams/22184", "https://api.bo3.gg/api/v1/tournaments/6203",
+             "https://api.bo3.gg/api/v1/teams?filter[teams.id][in]=22184,22933"):
+    r = requests.get(ruta, headers=UA, timeout=30)
+    print(ruta, r.status_code, r.text[:500])
