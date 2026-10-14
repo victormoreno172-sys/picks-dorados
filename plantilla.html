@@ -41,7 +41,11 @@ h1 span { color: var(--gold); }
 .upd { font: 500 11px/1 var(--mono); color: var(--muted); }
 .demo { margin-top: 8px; font: 600 12px/1.3 var(--body); color: var(--gold-ink); background: var(--gold-soft); padding: 6px 10px; border-radius: 6px; }
 
-.dias { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 12px; }
+.deportes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 12px; padding: 4px; border-radius: 10px; background: var(--bar); }
+.dep { border: 0; background: transparent; color: var(--muted); border-radius: 7px; padding: 8px 6px; font: 700 16px/1 var(--display); text-transform: uppercase; letter-spacing: .05em; cursor: pointer; display: flex; justify-content: center; align-items: baseline; gap: 6px; }
+.dep small { font: 500 11px/1 var(--mono); letter-spacing: 0; }
+.dep[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 15%, transparent); }
+.dias { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 8px; }
 .dia { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 7px 4px; font: 700 15px/1.1 var(--display); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
 .dia small { display: block; font: 500 11px/1.2 var(--mono); color: var(--muted); letter-spacing: 0; text-transform: none; margin-top: 2px; }
 .dia[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -102,7 +106,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 <div class="wrap">
   <header>
     <div class="brand"><h1>Picks <span>Dorados</span></h1><div class="upd" id="upd"></div></div>
-    <div class="demo" id="demo" hidden>Datos de ejemplo con equipos inventados. La versión real se rellena sola cada mañana.</div>
+    <div class="demo" id="demo" hidden>Datos de ejemplo con equipos inventados. La versión real se rellena sola cada día.</div>
+    <nav class="deportes" id="deportes" aria-label="Deporte"></nav>
     <nav class="dias" id="dias" aria-label="Día"></nav>
     <div class="filtros" id="filtros"></div>
   </header>
@@ -113,31 +118,46 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div><span class="val" style="margin:0">VALOR</span><span>Nuestra probabilidad supera a la que marca la cuota de la casa.</span></div>
       <div><span style="font:700 12px var(--mono)">1.27</span><span>Cuota justa: por debajo de esa cuota la apuesta no compensa.</span></div>
     </div>
-    <p style="margin:6px 0 0">Probabilidades calculadas con un modelo estadístico (Dixon-Coles) sobre las últimas temporadas, combinado con las cuotas del mercado. Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
+    <p style="margin:6px 0 0">Fútbol: modelo Dixon-Coles sobre las últimas temporadas, combinado con las cuotas del mercado. Baloncesto: ratings de ataque y defensa de cada equipo, combinados con las líneas de las casas cuando las hay (NBA). Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
   </footer>
 </div>
 
 <script>
 const DATOS = __DATOS__;
-const GRUPOS = [
-  ["Resultado", m => /Gana|Empate|o empate|No hay empate/.test(m)],
-  ["Goles", m => /goles/.test(m)],
-  ["Marcan", m => /marca/.test(m)],
-];
-const est = { dia: 0, soloOro: false, liga: null, abiertos: new Set() };
-try { est.soloOro = localStorage.getItem("soloOro") === "1"; } catch (e) {}
+const GRUPOS = {
+  f: [["Resultado", m => /Gana|Empate|o empate|No hay empate/.test(m)],
+      ["Goles", m => /goles/.test(m)],
+      ["Marcan", m => /marca/.test(m)]],
+  b: [["Ganador", m => /^Gana/.test(m)],
+      ["Hándicap", m => /^Hándicap/.test(m)],
+      ["Puntos", m => /puntos/.test(m)]],
+};
+const DEPORTES = [["f", "Fútbol"], ["b", "Baloncesto"]];
+const est = { dep: "f", dia: 0, soloOro: false, liga: null, abiertos: new Set() };
+try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
 
 const $ = id => document.getElementById(id);
 const pct = p => Math.round(p * 100) + "%";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const delDeporte = d => d.partidos.filter(p => (p.dep || "f") === est.dep);
+const diasVisibles = () => DATOS.dias.map((d, i) => i).filter(i => i === 0 || delDeporte(DATOS.dias[i]).length);
+
+function pintarDeportes() {
+  $("deportes").innerHTML = DEPORTES.map(([k, n]) => {
+    const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
+    return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}">${n}<small>${total}</small></button>`;
+  }).join("");
+}
 
 function pintarDias() {
-  $("dias").innerHTML = DATOS.dias.map((d, i) =>
-    `<button class="dia" aria-pressed="${i === est.dia}" data-i="${i}">${esc(d.etiqueta)}<small>${esc(d.fecha_corta)} · ${d.partidos.length}</small></button>`).join("");
+  const vis = diasVisibles();
+  if (!vis.includes(est.dia)) est.dia = vis.find(i => delDeporte(DATOS.dias[i]).length) ?? 0;
+  $("dias").innerHTML = vis.map(i => { const d = DATOS.dias[i];
+    return `<button class="dia" aria-pressed="${i === est.dia}" data-i="${i}">${esc(d.etiqueta)}<small>${esc(d.fecha_corta)} · ${delDeporte(d).length}</small></button>`; }).join("");
 }
 
 function pintarFiltros() {
-  const ligas = [...new Set(DATOS.dias[est.dia].partidos.map(p => p.liga))];
+  const ligas = [...new Set(delDeporte(DATOS.dias[est.dia]).map(p => p.liga))];
   if (est.liga && !ligas.includes(est.liga)) est.liga = null;
   $("filtros").innerHTML =
     `<button class="chip oro" data-f="oro" aria-pressed="${est.soloOro}">Solo con dorado</button>` +
@@ -155,21 +175,25 @@ function filaMercado(k) {
 function tarjeta(p, idx) {
   const id = est.dia + "-" + idx;
   const abierto = est.abiertos.has(id);
+  const basket = p.dep === "b";
   const oro = p.picks.filter(k => k.d).sort((a, b) => b.p - a.p);
   const total = p.gl + p.gv;
+  const num = x => basket ? Math.round(x) : x.toFixed(1);
   const top = oro.slice(0, 3).map(k =>
     `<div class="pick"><span class="m">${esc(k.m)}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? "cuota " + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
   let det = "";
   if (abierto) {
-    det = `<div class="det">` + GRUPOS.map(([nombre, f]) => {
+    det = `<div class="det">` + GRUPOS[basket ? "b" : "f"].map(([nombre, f]) => {
       const filas = p.picks.filter(k => f(k.m)).sort((a, b) => b.p - a.p);
-      return `<div class="grupo"><h3>${nombre}</h3>${filas.map(filaMercado).join("")}</div>`;
-    }).join("") + `<div class="marcador">Marcador más probable <b>${esc(p.marcador)}</b> (${pct(p.pm)})</div></div>`;
+      return filas.length ? `<div class="grupo"><h3>${nombre}</h3>${filas.map(filaMercado).join("")}</div>` : "";
+    }).join("") + (basket
+      ? `<div class="marcador">Resultado esperado <b>${esc(p.marcador)}</b></div></div>`
+      : `<div class="marcador">Marcador más probable <b>${esc(p.marcador)}</b> (${pct(p.pm)})</div></div>`);
   }
   return `<article class="partido">
     <button class="cab" data-id="${id}" aria-expanded="${abierto}">
       <div class="meta"><span>${esc(p.liga)}</span><span>${esc(p.hora || "--:--")}</span></div>
-      <div class="equipos"><div class="eq">${esc(p.local)}</div><div class="xg"><b>${p.gl.toFixed(1)}</b> – <b>${p.gv.toFixed(1)}</b><br><span style="font-size:10px">goles esp.</span></div><div class="eq v">${esc(p.visitante)}</div></div>
+      <div class="equipos"><div class="eq">${esc(p.local)}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : "goles esp."}</span></div><div class="eq v">${esc(p.visitante)}</div></div>
       <div class="xgbar" aria-hidden="true"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div>
       ${top ? `<div class="top">${top}</div>` : `<div class="sinpicks">Ningún mercado llega al ${pct(DATOS.umbral)}.</div>`}
       <div class="mas">${abierto ? "Ocultar mercados ▲" : `Ver los ${p.picks.length} mercados ▼`}</div>
@@ -179,19 +203,21 @@ function tarjeta(p, idx) {
 
 function pintarLista() {
   const dia = DATOS.dias[est.dia];
-  const lista = dia.partidos.map((p, i) => [p, i])
+  const delDia = dia.partidos.map((p, i) => [p, i]).filter(([p]) => (p.dep || "f") === est.dep);
+  const lista = delDia
     .filter(([p]) => !est.liga || p.liga === est.liga)
     .filter(([p]) => !est.soloOro || p.picks.some(k => k.d));
   $("lista").innerHTML = lista.length ? lista.map(([p, i]) => tarjeta(p, i)).join("")
-    : `<div class="vacio">${dia.partidos.length ? "Ningún partido cumple el filtro." : "No hay partidos de las ligas que seguimos este día."}</div>`;
+    : `<div class="vacio">${delDia.length ? "Ningún partido cumple el filtro." : "No hay partidos de las competiciones que seguimos este día."}</div>`;
 }
 
-function pintar() { pintarDias(); pintarFiltros(); pintarLista(); }
+function pintar() { pintarDeportes(); pintarDias(); pintarFiltros(); pintarLista(); }
 
 document.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b) return;
-  if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
+  if (b.dataset.dep) { est.dep = b.dataset.dep; est.liga = null; try { localStorage.setItem("dep", est.dep); } catch (e) {} pintar(); }
+  else if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
   else if (b.dataset.f === "oro") { est.soloOro = !est.soloOro; try { localStorage.setItem("soloOro", est.soloOro ? "1" : "0"); } catch (e) {} pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "todas") { est.liga = null; pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "liga") { est.liga = b.dataset.l; pintarFiltros(); pintarLista(); }
@@ -201,6 +227,6 @@ document.addEventListener("click", e => {
 $("upd").textContent = "act. " + DATOS.generado;
 $("umbral").textContent = pct(DATOS.umbral);
 $("demo").hidden = !DATOS.demo;
-if (!DATOS.dias[0].partidos.length) { const i = DATOS.dias.findIndex(d => d.partidos.length); if (i > 0) est.dia = i; }
+if (!delDeporte(DATOS.dias[0]).length) { const i = DATOS.dias.findIndex(d => delDeporte(d).length); if (i > 0) est.dia = i; }
 pintar();
 </script>

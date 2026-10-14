@@ -70,7 +70,8 @@ def a_json(por_dia: dict[date, list[Analisis]], hoy: date, demo: bool = False) -
                 "liga": config.nombre_liga(p.liga).split(" ", 1)[-1],
                 "hora": p.hora, "local": p.local, "visitante": p.visitante,
                 "gl": round(a.goles_local, 2), "gv": round(a.goles_visitante, 2),
-                "marcador": a.marcador, "pm": round(a.prob_marcador, 4),
+                "marcador": a.marcador, "pm": round(float(a.prob_marcador or 0), 4),
+                "dep": "b" if config.es_baloncesto(p.liga) else "f",
                 "picks": [{"m": k.mercado, "p": round(float(k.prob), 4),
                            "c": float(k.cuota) if k.cuota else None,
                            "d": bool(k.dorado), "v": bool(k.valor)} for k in a.picks],
@@ -146,6 +147,25 @@ def datos_demo() -> dict:
         d = hoy + timedelta(days=k)
         por_dia[d] = [analizar(PartidoProximo(lg, d, h, l, v, cuotas_simuladas(modelo, l, v, rng)), modelo)
                       for lg, l, v, h in lista]
+
+    # Baloncesto de ejemplo
+    import baloncesto as b
+    from tests_baloncesto import liga_simulada as basket_simulada
+    juegos, _, _ = basket_simulada(5)
+    nombres = {f"E{i}": n for i, n in enumerate(
+        ["Halcones Norte", "Toros Valle", "Delfines Costa", "Lobos Sierra", "Águilas Puerto", "Linces Meseta",
+         "Osos Lago", "Zorros Río", "Cóndores Isla", "Tigres Monte", "Búhos Llano", "Ciervos Bosque",
+         "Panteras Sol", "Gacelas Mar", "Jabalíes Roca", "Leones Arena"])}
+    mb = b.ModeloBaloncesto(xi=0.0).ajustar(juegos, hasta=hoy)
+    for k, lista in {0: [("ACB", "E0", "E5", "18:00"), ("EL", "E3", "E1", "20:45")],
+                     1: [("NBA", "E7", "E2", "02:00"), ("ACB", "E9", "E14", "21:00")]}.items():
+        d = hoy + timedelta(days=k)
+        for comp, l, v, h in lista:
+            j = b.Juego(comp, d, h, l, v, nombres[l], nombres[v])
+            j.comp = "ACB"  # el modelo de ejemplo solo conoce una liga
+            a = b.analizar_juego(j, mb)
+            a.partido.liga = comp
+            por_dia.setdefault(d, []).append(a)
     return a_json(por_dia, hoy, demo=True)
 
 

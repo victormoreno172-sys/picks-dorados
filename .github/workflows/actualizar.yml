@@ -29,6 +29,14 @@ jobs:
       - name: Instalar
         run: pip install -r requirements.txt pillow
 
+      # Guarda las jornadas ya descargadas entre ejecuciones (así no se bajan cada vez)
+      - name: Recuperar caché de datos
+        uses: actions/cache@v4
+        with:
+          path: cache
+          key: datos-${{ github.run_id }}
+          restore-keys: datos-
+
       - name: Calcular predicciones y generar la app
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
@@ -39,10 +47,8 @@ jobs:
           ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
         run: |
           set -o pipefail
-          python -u sondeo.py > sondeo.txt 2>&1 || true
           python -u diario.py 2>&1 | tee registro.txt
           cp registro.txt web/registro.txt
-          cp sondeo.txt web/sondeo.txt
 
       - name: Publicar en la rama gh-pages
         run: |

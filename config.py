@@ -41,8 +41,30 @@ EUROPA = {
 THESPORTSDB_KEY = os.getenv("THESPORTSDB_KEY", "")
 
 
+# --- Baloncesto -------------------------------------------------------------
+# código -> (nombre, id de TheSportsDB). La NBA va aparte (datos oficiales + ESPN).
+BASKET_EUROPA = {
+    "EL": ("🏆 Euroliga", "4546"),
+    "EC": ("🏆 Eurocup", "4547"),
+    "BCL": ("🏆 Basketball Champions League", "4548"),
+    "ACB": ("🇪🇸 Liga ACB", "4408"),
+    "LBA": ("🇮🇹 Lega Basket", "4433"),
+    "BBL": ("🇩🇪 BBL", "4441"),
+    "LNB": ("🇫🇷 LNB Élite", "4423"),
+    "BSL": ("🇹🇷 Süper Lig", "4475"),
+    "GBL": ("🇬🇷 Greek Basket League", "4452"),
+    "ABA": ("🌍 Liga ABA", "4477"),
+    "LKL": ("🇱🇹 LKL", "4478"),
+}
+BASKET = {"NBA": ("🏀 NBA", None), **BASKET_EUROPA}
+
+
+def es_baloncesto(codigo: str) -> bool:
+    return codigo in BASKET
+
+
 def nombre_liga(codigo: str) -> str:
-    return (LIGAS.get(codigo) or EUROPA.get(codigo) or (codigo,))[0]
+    return (LIGAS.get(codigo) or EUROPA.get(codigo) or BASKET.get(codigo) or (codigo,))[0]
 
 # --- Reglas de las predicciones --------------------------------------------
 UMBRAL_DORADO = 0.75     # a partir de esta probabilidad el pick sale en dorado
