@@ -118,6 +118,7 @@ h1 span { color: var(--gold); }
 .tfila .pp { font: 700 18px var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
 .tfila.r .pp { color: var(--red); }
 .tfila .pp { text-align: right; white-space: nowrap; }
+.tfila .pp .cq.pide { color: var(--gold); font-weight: 700; }
 .estim { font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
 .tfila .pp .cq { display: block; font: 700 12px var(--mono); color: var(--ink); margin-top: 3px; }
 .tfila .pp .cq.justa { font-weight: 500; color: var(--muted); }
@@ -439,11 +440,14 @@ function pintarTop(delDia, q) {
 const TOP_PROB = 0.65, TOP_CUOTA = 1.30;
 const ev = k => k.p * k.c - 1;  // ganancia esperada por euro según la app
 // Para ordenar: una cuota estimada cuenta a medias (puede estar desviada de la real)
-const orden = k => k.e ? ev(k) * 0.5 - 0.005 : ev(k);
+const orden = k => !k.c ? -0.01 : k.e ? ev(k) * 0.5 - 0.005 : ev(k);
 // Con cuota estimada (≈) el % es orientativo: se pinta en gris, nunca en verde
 const evTxt = k => { const v = ev(k), t = `${v >= 0 ? "+" : "−"}${Math.abs(Math.round(v * 100))}%`;
   return k.e ? `<span class="estim">≈${t}</span>` : `<span class="${v >= 0 ? "bien" : "mal"}">${t}</span>`; };
-const cuotaRef = k => k.c || 0;  // solo cuota de la casa: real o estimada (≈); sin cuota de la casa no entra
+// Sin cuota de la casa (córners, tarjetas...): la mínima que hay que encontrar en la casa,
+// con un 3% de margen de seguridad sobre la cuota de la app
+const minima = k => Math.ceil(100 * 1.03 / k.p) / 100;
+const cuotaRef = k => k.c || minima(k);
 function pickTop(p) {
   // De cada partido, el pick que cumple y está mejor pagado
   return p.picks.filter(k => k.p >= TOP_PROB && cuotaRef(k) >= TOP_CUOTA - 1e-9)
@@ -458,8 +462,10 @@ function pintarTopDia() {
   $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} picks</small></h2>` +
     cand.map(([p, i, k]) => `<button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
       <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}</small></span>
-      <span class="pp">${pct(k.p)}<small class="cq">${k.e ? "≈ " : ""}${casaCorta(p)} ${k.c.toFixed(2)}</small><small class="cq jj">app ${(1 / k.p).toFixed(2)} · ${evTxt(k)}</small></span></button>`).join("") +
-    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que la casa paga a ${TOP_CUOTA.toFixed(2)} o más (cuota real o estimada ≈), ordenados de mejor a peor pagados. El % es lo que ganarías (verde) o perderías (rojo) a la larga por cada euro según la app; con cuota estimada (≈, en gris) es solo orientativo. Uno por partido, de todos los deportes. Toca uno para verlo.</p></div>`;
+      <span class="pp">${pct(k.p)}${k.c
+        ? `<small class="cq">${k.e ? "≈ " : ""}${casaCorta(p)} ${k.c.toFixed(2)}</small><small class="cq jj">app ${(1 / k.p).toFixed(2)} · ${evTxt(k)}</small>`
+        : `<small class="cq pide">pide ≥ ${minima(k).toFixed(2)}</small><small class="cq jj">sin cuota en la API</small>`}</span></button>`).join("") +
+    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más, ordenados de mejor a peor pagados. El % es lo que ganarías (verde) o perderías (rojo) a la larga por cada euro según la app; con cuota estimada (≈, en gris) es orientativo. "Pide ≥ X": mercados sin cuota en la API (córners, tarjetas...): apuesta solo si en Winamax pagan X o más. Uno por partido, de todos los deportes. Toca uno para verlo.</p></div>`;
 }
 
 function pintar() {

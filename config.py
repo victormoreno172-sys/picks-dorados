@@ -67,6 +67,19 @@ BASKET_EUROPA = {
 BASKET = {"NBA": ("🏀 NBA", None), **BASKET_EUROPA}
 
 
+# Estados de TheSportsDB que significan "terminado"
+ESTADOS_FIN = {"FT", "MATCH FINISHED", "FINISHED", "AET", "AP", "PEN", "AOT", "AFTER OVER TIME", "FINAL",
+               "AFTER EXTRA TIME", "AFTER PENALTIES", "ENDED"}
+
+
+def partido_terminado(estado: str | None, fecha, hoy) -> bool:
+    """Terminado si la fuente lo dice, o si no dice nada y el día ya pasó (los 0-0 de partidos en juego no cuentan)."""
+    e = (estado or "").strip().upper()
+    if e in ESTADOS_FIN:
+        return True
+    return e == "" and fecha < hoy
+
+
 def es_baloncesto(codigo: str) -> bool:
     return codigo in BASKET
 
@@ -81,7 +94,11 @@ USAR_ROJO = False        # el rojo se quitó de la app
 UMBRAL_ROJO_PROB = 0.70  # rojo: probabilidad al menos del 70%...
 UMBRAL_ROJO_CUOTA = 1.40  # ...y cuota real de la casa al menos de 1.40
 UMBRAL_VALOR = 0.05     # VALOR: la cuota real paga al menos un 5% más de lo que vale (prob × cuota − 1 ≥ 5%)
-PESO_MERCADO = 0.5       # cuánto pesan las cuotas frente al modelo (0 = solo modelo)
+# Cuánto pesan las cuotas de la casa frente al modelo cuando las hay (0 = solo modelo).
+# La auditoría (2.000+ partidos de 6 ligas simulados) dio lo mejor entre 0.7 y 1.0: las casas
+# saben de lesiones, alineaciones, etc. En esports el modelo coincide mucho con la casa: 0.7.
+PESO_MERCADO = 0.85
+PESO_MERCADO_ESPORTS = 0.7
 TEMPORADAS_HISTORICO = 3  # temporadas que se usan para entrenar
 
 # Mercados que casi siempre superan el umbral y pagan muy poco: no se destacan.

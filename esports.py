@@ -269,7 +269,7 @@ def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
         implicita = (1 / c1) / (1 / c1 + 1 / c2)
         k = s.bo // 2 + 1
         modelo_serie = sum(v for (x, y), v in marcadores(p, s.bo).items() if x == k)
-        w = config.PESO_MERCADO
+        w = config.PESO_MERCADO_ESPORTS
         p = _p_mapa_para((1 - w) * modelo_serie + w * implicita, s.bo)
     picks, (a, b), pm = mercados_serie(s.n1, s.n2, p, s.bo)
     if cg:

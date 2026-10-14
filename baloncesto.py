@@ -176,7 +176,8 @@ def _evento_a_juego(comp: str, e: dict) -> Juego | None:
     else:
         return None
     pl, pv = e.get("intHomeScore"), e.get("intAwayScore")
-    jugado = pl not in (None, "") and pv not in (None, "") and e.get("strStatus") not in ("NS", "Postponed")
+    hoy = datetime.now(TZ).date()
+    jugado = pl not in (None, "") and pv not in (None, "") and config.partido_terminado(e.get("strStatus"), fecha, hoy)
     return Juego(comp, fecha, hora, "T" + e["idHomeTeam"], "T" + e["idAwayTeam"], e["strHomeTeam"],
                  e["strAwayTeam"], int(pl) if jugado else None, int(pv) if jugado else None)
 
@@ -374,6 +375,13 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
     pl, pv = modelo.esperado(j)
     margen, total = pl - pv, pl + pv
     w = config.PESO_MERCADO
+    m_ganador = None
+    if j.spread_local is None and j.cuotas and "Gana local" in j.cuotas and "Gana visitante" in j.cuotas:
+        # Solo cuota de ganador (pasa en la Euroliga): se traduce a un margen esperado
+        c1, c2 = j.cuotas["Gana local"], j.cuotas["Gana visitante"]
+        p_imp = min(0.995, max(0.005, (1 / c1) / (1 / c1 + 1 / c2)))
+        m_ganador = float(norm.ppf(p_imp) * modelo.sd_margen)
+        margen = (1 - w) * margen + w * m_ganador
     if j.spread_local is not None:  # mezcla con la línea de la casa
         margen = (1 - w) * margen + w * (-j.spread_local)
     if j.total_casa is not None:
@@ -392,13 +400,13 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
             otro = j.cuotas.get(_contrario(nombre) or "")
             pk.prob_cuota = (1 / cuota) / (1 / cuota + 1 / otro) if otro else None
     # Cuotas estimadas (≈) para las demás líneas, a partir de la línea de la casa
-    if j.spread_local is not None or j.total_casa is not None:
+    if j.spread_local is not None or j.total_casa is not None or m_ganador is not None:
         from analisis import estimar_cuotas
-        m_mkt = -j.spread_local if j.spread_local is not None else margen
+        m_mkt = -j.spread_local if j.spread_local is not None else (m_ganador if m_ganador is not None else margen)
         t_mkt = j.total_casa if j.total_casa is not None else total
         mkt = {pk.mercado: pk.prob for pk in mercados_baloncesto(m_mkt, t_mkt, modelo.sd_margen, modelo.sd_total,
                                                                  None, None, tipico)}
-        if j.spread_local is None:
+        if j.spread_local is None and m_ganador is None:
             mkt = {k: v for k, v in mkt.items() if "puntos" in k}
         if j.total_casa is None:
             mkt = {k: v for k, v in mkt.items() if "puntos" not in k}

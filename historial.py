@@ -97,9 +97,14 @@ def corregir(h: dict, hoy: date):
     """Rellena el resultado de los partidos ya jugados."""
     hechos = anulados = 0
     for clave, e in list(h["partidos"].items()):
-        if e.get("res"):
-            continue
         f = date.fromisoformat(e["f"])
+        if e.get("res"):
+            if (hoy - f).days > 3:
+                continue
+            # Últimos días: se vuelve a comprobar por si el resultado era provisional
+            e["res"] = None
+            for k in e["picks"]:
+                k.pop("ok", None)
         if f > hoy:
             continue
         res = None

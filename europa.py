@@ -317,7 +317,8 @@ def calendario_europeo(temporada: str) -> list[PartidoEuropeo]:
             else:
                 continue
             gl, gv = e.get("intHomeScore"), e.get("intAwayScore")
-            jugado = gl not in (None, "") and gv not in (None, "") and e.get("strStatus") not in ("NS", "Postponed")
+            jugado = (gl not in (None, "") and gv not in (None, "")
+                      and config.partido_terminado(e.get("strStatus"), fecha, hoy))
             out.append(PartidoEuropeo(comp, fecha, hora, e["strHomeTeam"], e["strAwayTeam"],
                                       int(gl) if jugado else None, int(gv) if jugado else None))
     return out
