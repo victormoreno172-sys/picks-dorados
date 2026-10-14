@@ -71,7 +71,7 @@ def a_json(por_dia: dict[date, list[Analisis]], hoy: date, demo: bool = False) -
                 "hora": p.hora, "local": p.local, "visitante": p.visitante,
                 "gl": round(a.goles_local, 2), "gv": round(a.goles_visitante, 2),
                 "marcador": a.marcador, "pm": round(float(a.prob_marcador or 0), 4),
-                "dep": "b" if config.es_baloncesto(p.liga) else "f",
+                "dep": p.deporte or ("b" if config.es_baloncesto(p.liga) else "f"),
                 "casa": p.casa,
                 "picks": [{"m": k.mercado, "p": round(float(k.prob), 4),
                            "c": float(k.cuota) if k.cuota else None,
@@ -169,6 +169,25 @@ def datos_demo() -> dict:
             a = b.analizar_juego(j, mb)
             a.partido.liga = comp
             por_dia.setdefault(d, []).append(a)
+    # Esports de ejemplo
+    import esports as es
+    from tests_esports import test_modelo  # noqa: F401  (asegura que el módulo de pruebas existe)
+    rng = np.random.default_rng(2)
+    fuerza = {f"CS2-{i}": rng.normal(0, 0.8) for i in range(12)}
+    series = []
+    for k in range(900):
+        a_, b_ = rng.choice(list(fuerza), 2, replace=False)
+        p = 1 / (1 + np.exp(-(fuerza[a_] - fuerza[b_])))
+        g1 = g2 = 0
+        while g1 < 2 and g2 < 2:
+            g1, g2 = (g1 + 1, g2) if rng.random() < p else (g1, g2 + 1)
+        series.append(es.Serie("CS2", k, hoy - timedelta(days=200 - k // 5), "", "", "a", 3, a_, b_, a_, b_, g1, g2))
+    me = es.ModeloMapas().ajustar(series, hoy)
+    nombres = ["Halcón Rojo", "Lobos Nórdicos", "Cobra Gaming", "Titanes", "Kraken", "Fénix"]
+    for k, (i, j, bo, torneo, juego) in enumerate([(0, 1, 3, "Torneo Ejemplo Masters", "CS2"), (2, 3, 3, "Torneo Ejemplo Masters", "CS2"),
+                                                   (4, 5, 5, "Liga Ejemplo Final", "VAL")]):
+        sr = es.Serie(juego, k, hoy, f"{17 + k}:00", torneo, "s", bo, f"CS2-{i}", f"CS2-{j}", nombres[i], nombres[j])
+        por_dia.setdefault(hoy, []).append(es.analizar_serie(sr, me))
     datos = a_json(por_dia, hoy, demo=True)
     datos["historial"] = historial_demo(hoy)
     return datos

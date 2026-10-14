@@ -36,6 +36,7 @@ class PartidoProximo:
     visitante: str
     cuotas: dict[str, float] = field(default_factory=dict)  # mercado -> cuota decimal
     casa: str = ""  # de dónde salen las cuotas ("Winamax FR", "media del mercado"...)
+    deporte: str = ""  # "f" fútbol, "b" baloncesto, "e" esports (vacío = se deduce de la liga)
 
 
 # ----------------------------------------------------------------- utilidades

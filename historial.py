@@ -86,7 +86,8 @@ def registrar(h: dict, por_dia: dict, hoy: date):
                      for k in a.picks if k.dorado or (k.cuota and not k.estimada and k.prob >= 0.5)]
             if not picks:
                 continue
-            h["partidos"][clave] = {"f": dia.isoformat(), "dep": "b" if config.es_baloncesto(p.liga) else "f",
+            dep = p.deporte or ("b" if config.es_baloncesto(p.liga) else "f")
+            h["partidos"][clave] = {"f": dia.isoformat(), "dep": dep,
                                     "liga": p.liga, "l": p.local, "v": p.visitante, "picks": picks, "res": None}
             n += 1
     print(f"  historial: {n} partidos guardados o actualizados")

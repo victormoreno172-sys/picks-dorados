@@ -26,13 +26,25 @@ try:
 except Exception as e:
     print(f"aviso: baloncesto no disponible: {e}")
 
+# Esports: CS2 y Valorant (si falla, la app sigue con lo demás)
+try:
+    import esports
+    for d, lista in esports.analizar_dias(hoy, 7).items():
+        por_dia.setdefault(d, []).extend(lista)
+except Exception as e:
+    print(f"aviso: esports no disponible: {e}")
+
+
+def deporte(a):
+    return a.partido.deporte or ("b" if config.es_baloncesto(a.partido.liga) else "f")
+
+
 # La app enseña hoy y, de cada deporte, los 3 próximos días que tengan partidos
 # (así en parones o entre semana no aparece vacía).
-def proximos_con(es_basket):
-    return [d for d in sorted(por_dia) if d != hoy
-            and any(config.es_baloncesto(a.partido.liga) == es_basket for a in por_dia[d])][:3]
+def proximos_con(dep):
+    return [d for d in sorted(por_dia) if d != hoy and any(deporte(a) == dep for a in por_dia[d])][:3]
 
-dias = sorted({hoy, *proximos_con(False), *proximos_con(True)})
+dias = sorted({hoy, *proximos_con("f"), *proximos_con("b"), *proximos_con("e")})
 for d in dias:
     por_dia.setdefault(d, []).sort(key=lambda a: (a.partido.hora or "99", a.partido.liga))
 datos_app = web.a_json({d: por_dia[d] for d in dias}, hoy)
@@ -48,7 +60,7 @@ except Exception as e:
 
 web.escribir(datos_app)
 
-futbol_hoy = [a for a in por_dia.get(hoy, []) if not config.es_baloncesto(a.partido.liga)]
+futbol_hoy = [a for a in por_dia.get(hoy, []) if deporte(a) == "f"]
 if (os.getenv("ENVIAR_TELEGRAM", "").lower() == "true" and futbol_hoy
         and config.TELEGRAM_TOKEN and config.TELEGRAM_CANAL):
     import bot
