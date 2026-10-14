@@ -61,13 +61,13 @@ def parsear(datos: dict) -> list[dict]:
     for e in (datos or {}).get("events", []):
         try:
             c = e["competitions"][0]
-            eq = {t["homeAway"]: t for t in c["competitors"]}
+            eq = {t["homeAway"]: t for t in c["competitors"] if t and t.get("team")}
             dt = datetime.fromisoformat(e["date"].replace("Z", "+00:00")).astimezone(TZ)
-        except (KeyError, IndexError, ValueError):
+        except (KeyError, IndexError, ValueError, TypeError, AttributeError):
             continue
         if "home" not in eq or "away" not in eq:
             continue
-        estado = (c.get("status") or e.get("status") or {}).get("type", {})
+        estado = (c.get("status") or e.get("status") or {}).get("type") or {}
         hecho = bool(estado.get("completed"))
         p = {"fecha": dt.date(), "hora": dt.strftime("%H:%M"),
              "local": eq["home"]["team"]["displayName"], "visitante": eq["away"]["team"]["displayName"],
@@ -75,10 +75,10 @@ def parsear(datos: dict) -> list[dict]:
              "gv": int(eq["away"]["score"]) if hecho else None, "cuotas": {}}
         if estado.get("name") in ("STATUS_POSTPONED", "STATUS_CANCELED"):
             continue
-        odds = (c.get("odds") or [{}])[0]
+        odds = (c.get("odds") or [{}])[0] or {}
         for clave, mercado in (("homeTeamOdds", "Gana local (1)"), ("awayTeamOdds", "Gana visitante (2)"),
                                ("drawOdds", "Empate (X)")):
-            dec = _americana_a_decimal((odds.get(clave) or {}).get("moneyLine"))
+            dec = _americana_a_decimal((odds.get(clave) or {}).get("moneyLine")) if isinstance(odds.get(clave), dict) else None
             if dec:
                 p["cuotas"][mercado] = dec
         out.append(p)

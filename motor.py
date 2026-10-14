@@ -37,7 +37,9 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
                 proximos_espn.setdefault(d, []).extend(lista)
             print(f"  {liga}: {len(historicos[liga])} partidos de historial")
         except Exception as e:
+            import traceback
             print(f"  aviso {liga}: {e}")
+            traceback.print_exc()
     if not any(historicos.values()):
         # Sin datos es mejor fallar: así la app sigue mostrando la última versión buena.
         raise RuntimeError("No se pudo descargar ningún resultado histórico.")
