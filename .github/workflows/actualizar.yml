@@ -56,6 +56,7 @@ jobs:
         run: |
           set -o pipefail
           python -u diario.py 2>&1 | tee registro.txt
+          python -u auditoria.py > web/auditoria.txt 2>&1 || true
           cp registro.txt web/registro.txt
 
       - name: Guardar el historial de aciertos
