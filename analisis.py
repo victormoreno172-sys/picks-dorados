@@ -19,10 +19,17 @@ class Pick:
     prob: float
     cuota: float | None = None
     prob_cuota: float | None = None  # probabilidad implícita (sin margen de la casa)
+    estimada: bool = False           # cuota supuesta (p. ej. 1.91 estándar), no la real de la casa
 
     @property
     def dorado(self) -> bool:
         return self.prob >= config.UMBRAL_DORADO and self.mercado not in config.MERCADOS_TRIVIALES
+
+    @property
+    def rojo(self) -> bool:
+        """Muy probable Y con una cuota real que todavía paga algo."""
+        return (self.cuota is not None and not self.estimada
+                and self.prob >= config.UMBRAL_ROJO_PROB and self.cuota >= config.UMBRAL_ROJO_CUOTA)
 
     @property
     def valor(self) -> bool:
@@ -44,7 +51,7 @@ class Analisis:
 
     @property
     def destacados(self) -> list[Pick]:
-        return sorted([p for p in self.picks if p.dorado], key=lambda p: -p.prob)
+        return sorted([p for p in self.picks if p.dorado], key=lambda p: (not p.rojo, -p.prob))
 
 
 def _quitar_margen(cuotas: dict[str, float], grupo: list[str]) -> dict[str, float]:
@@ -78,7 +85,19 @@ def analizar(p: PartidoProximo, modelo: ModeloDixonColes) -> Analisis | None:
     if all(m in implicitas for m in GRUPOS_OU):
         final["Menos de 2.5 goles"] = 1 - final["Más de 2.5 goles"]
 
-    picks = [Pick(m, v, p.cuotas.get(m), implicitas.get(m)) for m, v in final.items()]
+    cuotas = dict(p.cuotas)
+    if all(m in cuotas for m in GRUPOS_1X2):
+        # Doble oportunidad a partir del 1X2 (así la calculan las casas; conserva su margen)
+        c1, cx, c2 = (cuotas[m] for m in GRUPOS_1X2)
+        cuotas.setdefault("Local o empate (1X)", round(1 / (1 / c1 + 1 / cx), 2))
+        cuotas.setdefault("Visitante o empate (X2)", round(1 / (1 / c2 + 1 / cx), 2))
+        cuotas.setdefault("No hay empate (12)", round(1 / (1 / c1 + 1 / c2), 2))
+        s = sum(implicitas.get(m, 0) for m in GRUPOS_1X2)
+        if s:
+            implicitas["Local o empate (1X)"] = implicitas[GRUPOS_1X2[0]] + implicitas[GRUPOS_1X2[1]]
+            implicitas["Visitante o empate (X2)"] = implicitas[GRUPOS_1X2[2]] + implicitas[GRUPOS_1X2[1]]
+            implicitas["No hay empate (12)"] = implicitas[GRUPOS_1X2[0]] + implicitas[GRUPOS_1X2[2]]
+    picks = [Pick(m, v, cuotas.get(m), implicitas.get(m)) for m, v in final.items()]
     return Analisis(p, lam, mu, marcador, pm, picks)
 
 
@@ -88,7 +107,7 @@ def _pct(x: float) -> str:
 
 
 def _linea_pick(pk: Pick) -> str:
-    icono = "🟡" if pk.dorado else "▫️"
+    icono = "🔴" if pk.rojo else ("🟡" if pk.dorado else "▫️")
     txt = f"{icono} {escape(pk.mercado)}: <b>{_pct(pk.prob)}</b>"
     if pk.cuota:
         txt += f" · cuota {pk.cuota:.2f}"
@@ -100,7 +119,7 @@ def _linea_pick(pk: Pick) -> str:
 def resumen_del_dia(analisis: list[Analisis], dia: date) -> list[str]:
     """Mensaje del día. Devuelve una lista porque Telegram corta a 4096 caracteres."""
     cab = (f"⚽ <b>Partidos del {dia.strftime('%d/%m/%Y')}</b>\n"
-           f"🟡 = probabilidad ≥ {_pct(config.UMBRAL_DORADO)} · 💎 = mejor que la cuota\n")
+           f"🟡 = probabilidad ≥ {_pct(config.UMBRAL_DORADO)} · 🔴 = ≥ {_pct(config.UMBRAL_ROJO_PROB)} con cuota ≥ {config.UMBRAL_ROJO_CUOTA:.2f} · 💎 = mejor que la cuota\n")
     if not analisis:
         return [cab + "\nHoy no hay partidos de las ligas que seguimos."]
 

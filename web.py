@@ -74,11 +74,13 @@ def a_json(por_dia: dict[date, list[Analisis]], hoy: date, demo: bool = False) -
                 "dep": "b" if config.es_baloncesto(p.liga) else "f",
                 "picks": [{"m": k.mercado, "p": round(float(k.prob), 4),
                            "c": float(k.cuota) if k.cuota else None,
-                           "d": bool(k.dorado), "v": bool(k.valor)} for k in a.picks],
+                           "d": bool(k.dorado), "v": bool(k.valor), "r": bool(k.rojo),
+                           "e": bool(k.estimada)} for k in a.picks],
             })
         dias.append({"fecha": d.isoformat(), "fecha_corta": d.strftime("%d/%m"),
                      "etiqueta": etiqueta(d, hoy), "partidos": partidos})
     return {"generado": ahora.strftime("%d/%m %H:%M"), "umbral": config.UMBRAL_DORADO,
+            "rojo_p": config.UMBRAL_ROJO_PROB, "rojo_c": config.UMBRAL_ROJO_CUOTA,
             "demo": demo, "dias": dias}
 
 

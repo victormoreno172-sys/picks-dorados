@@ -16,6 +16,9 @@
   --gold-soft: #f6e6b8;
   --gold-ink: #5a3d00;
   --value: #0e6e8c;
+  --red: #c0262d;
+  --red-soft: #fbe1df;
+  --red-ink: #7a1016;
   --bar: #dfe7e1;
   --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
   --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -23,11 +26,11 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
-  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226;
+  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226; --red: #ff5a5f; --red-soft: #3d1214; --red-ink: #ffb3b3;
   color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
-  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226;
+  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226; --red: #ff5a5f; --red-soft: #3d1214; --red-ink: #ffb3b3;
   color-scheme: dark }
 
 * { box-sizing: border-box; }
@@ -76,6 +79,14 @@ h1 span { color: var(--gold); }
 .pick .m { font: 600 14px/1.2 var(--body); min-width: 0; }
 .pick .p { font: 700 20px/1 var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
 .pick .sub { display: block; font: 500 11px/1.3 var(--mono); opacity: .8; margin-top: 2px; }
+.pick.rojo { background: var(--red-soft); color: var(--red-ink); box-shadow: inset 0 0 0 1.5px var(--red); }
+.pick.rojo .p { color: var(--red); }
+.rojo-tag { display: inline-block; margin-left: 6px; font: 700 10px/1 var(--mono); letter-spacing: .05em; color: #fff; background: var(--red); border-radius: 4px; padding: 3px 5px; vertical-align: 2px; }
+.fila.r .bar i { background: var(--red); opacity: 1; }
+.fila.r .pc { color: var(--red); }
+.fila.r .n { font-weight: 600; }
+.chip.rojo[aria-pressed="true"] { border-color: var(--red); color: var(--red-ink); background: var(--red-soft); }
+.sw.r { background: var(--red); }
 .sinpicks { font-size: 13px; color: var(--muted); margin-top: 10px; }
 .mas { margin-top: 10px; font: 600 12px/1 var(--body); color: var(--pitch); }
 
@@ -115,6 +126,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   <footer>
     <div class="leyenda">
       <div><span class="sw"></span><span><b>Dorado</b>: probabilidad de al menos <span id="umbral"></span>.</span></div>
+      <div><span class="sw r"></span><span><b>Rojo</b>: probabilidad de al menos <span id="rojop"></span> y la casa todavía paga <span id="rojoc"></span> o más.</span></div>
       <div><span class="val" style="margin:0">VALOR</span><span>Nuestra probabilidad supera a la que marca la cuota de la casa.</span></div>
       <div><span style="font:700 12px var(--mono)">1.27</span><span>Cuota justa: por debajo de esa cuota la apuesta no compensa.</span></div>
     </div>
@@ -133,7 +145,7 @@ const GRUPOS = {
       ["Puntos", m => /puntos/.test(m)]],
 };
 const DEPORTES = [["f", "Fútbol"], ["b", "Baloncesto"]];
-const est = { dep: "f", dia: 0, soloOro: false, liga: null, abiertos: new Set() };
+const est = { dep: "f", dia: 0, soloOro: false, soloRojo: false, liga: null, abiertos: new Set() };
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
 
 const $ = id => document.getElementById(id);
@@ -153,22 +165,24 @@ function pintarDias() {
   const vis = diasVisibles();
   if (!vis.includes(est.dia)) est.dia = vis.find(i => delDeporte(DATOS.dias[i]).length) ?? 0;
   $("dias").innerHTML = vis.map(i => { const d = DATOS.dias[i];
-    return `<button class="dia" aria-pressed="${i === est.dia}" data-i="${i}">${esc(d.etiqueta)}<small>${esc(d.fecha_corta)} · ${delDeporte(d).length}</small></button>`; }).join("");
+    const rojos = delDeporte(d).filter(p => p.picks.some(k => k.r)).length;
+    return `<button class="dia" aria-pressed="${i === est.dia}" data-i="${i}">${esc(d.etiqueta)}<small>${esc(d.fecha_corta)} · ${delDeporte(d).length}${rojos ? ` · <b style="color:var(--red)">${rojos}●</b>` : ""}</small></button>`; }).join("");
 }
 
 function pintarFiltros() {
   const ligas = [...new Set(delDeporte(DATOS.dias[est.dia]).map(p => p.liga))];
   if (est.liga && !ligas.includes(est.liga)) est.liga = null;
   $("filtros").innerHTML =
+    `<button class="chip rojo" data-f="rojo" aria-pressed="${est.soloRojo}">Rojos</button>` +
     `<button class="chip oro" data-f="oro" aria-pressed="${est.soloOro}">Solo con dorado</button>` +
     `<button class="chip" data-f="todas" aria-pressed="${!est.liga}">Todas</button>` +
     ligas.map(l => `<button class="chip" data-f="liga" data-l="${esc(l)}" aria-pressed="${est.liga === l}">${esc(l)}</button>`).join("");
 }
 
 function filaMercado(k) {
-  const valor = k.v ? '<span class="val">VALOR</span>' : "";
+  const valor = (k.r ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
   const cuota = k.c ? `${k.c.toFixed(2)}` : `<span title="cuota justa">${(1 / k.p).toFixed(2)}</span>`;
-  return `<div class="fila ${k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
+  return `<div class="fila ${k.r ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
 
@@ -176,11 +190,11 @@ function tarjeta(p, idx) {
   const id = est.dia + "-" + idx;
   const abierto = est.abiertos.has(id);
   const basket = p.dep === "b";
-  const oro = p.picks.filter(k => k.d).sort((a, b) => b.p - a.p);
+  const oro = p.picks.filter(k => k.d).sort((a, b) => (b.r - a.r) || (b.p - a.p));
   const total = p.gl + p.gv;
   const num = x => basket ? Math.round(x) : x.toFixed(1);
   const top = oro.slice(0, 3).map(k =>
-    `<div class="pick"><span class="m">${esc(k.m)}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? "cuota " + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
+    `<div class="pick ${k.r ? "rojo" : ""}"><span class="m">${esc(k.m)}${k.r ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? "cuota " + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
   let det = "";
   if (abierto) {
     det = `<div class="det">` + GRUPOS[basket ? "b" : "f"].map(([nombre, f]) => {
@@ -206,7 +220,8 @@ function pintarLista() {
   const delDia = dia.partidos.map((p, i) => [p, i]).filter(([p]) => (p.dep || "f") === est.dep);
   const lista = delDia
     .filter(([p]) => !est.liga || p.liga === est.liga)
-    .filter(([p]) => !est.soloOro || p.picks.some(k => k.d));
+    .filter(([p]) => !est.soloOro || p.picks.some(k => k.d))
+    .filter(([p]) => !est.soloRojo || p.picks.some(k => k.r));
   $("lista").innerHTML = lista.length ? lista.map(([p, i]) => tarjeta(p, i)).join("")
     : `<div class="vacio">${delDia.length ? "Ningún partido cumple el filtro." : "No hay partidos de las competiciones que seguimos este día."}</div>`;
 }
@@ -219,6 +234,7 @@ document.addEventListener("click", e => {
   if (b.dataset.dep) { est.dep = b.dataset.dep; est.liga = null; try { localStorage.setItem("dep", est.dep); } catch (e) {} pintar(); }
   else if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
   else if (b.dataset.f === "oro") { est.soloOro = !est.soloOro; try { localStorage.setItem("soloOro", est.soloOro ? "1" : "0"); } catch (e) {} pintarFiltros(); pintarLista(); }
+  else if (b.dataset.f === "rojo") { est.soloRojo = !est.soloRojo; pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "todas") { est.liga = null; pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "liga") { est.liga = b.dataset.l; pintarFiltros(); pintarLista(); }
   else if (b.dataset.id) { const id = b.dataset.id; est.abiertos.has(id) ? est.abiertos.delete(id) : est.abiertos.add(id); pintarLista(); }
@@ -226,6 +242,8 @@ document.addEventListener("click", e => {
 
 $("upd").textContent = "act. " + DATOS.generado;
 $("umbral").textContent = pct(DATOS.umbral);
+$("rojop").textContent = pct(DATOS.rojo_p || 0.8);
+$("rojoc").textContent = (DATOS.rojo_c || 1.4).toFixed(2);
 $("demo").hidden = !DATOS.demo;
 if (!delDeporte(DATOS.dias[0]).length) { const i = DATOS.dias.findIndex(d => delDeporte(d).length); if (i > 0) est.dia = i; }
 pintar();

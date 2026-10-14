@@ -318,7 +318,7 @@ def mercados_baloncesto(margen: float, total: float, sd_m: float, sd_t: float,
         nombres = {pk.mercado for pk in picks}
         for nombre, prob in ((f"Hándicap {fav_c} -{l:g}", p), (f"Hándicap {dog_c} +{l:g}", 1 - p)):
             picks = [pk for pk in picks if pk.mercado != nombre]
-            picks.append(Pick(nombre, prob, CUOTA_ESTANDAR, 0.5))
+            picks.append(Pick(nombre, prob, CUOTA_ESTANDAR, 0.5, estimada=True))
 
     base = 5 * round((total_tipico or total) / 5)  # total típico de la competición
     lineas_t = [base + d + 0.5 for d in (-15, -10, -5, 0, 5, 10, 15) if abs(base + d - total) <= 16]
@@ -330,7 +330,7 @@ def mercados_baloncesto(margen: float, total: float, sd_m: float, sd_t: float,
         p = float(norm.sf(t, loc=total, scale=sd_t))
         for nombre, prob in ((f"Más de {t:g} puntos", p), (f"Menos de {t:g} puntos", 1 - p)):
             picks = [pk for pk in picks if pk.mercado != nombre]
-            picks.append(Pick(nombre, prob, CUOTA_ESTANDAR, 0.5))
+            picks.append(Pick(nombre, prob, CUOTA_ESTANDAR, 0.5, estimada=True))
     return picks
 
 
