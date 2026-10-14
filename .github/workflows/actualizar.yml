@@ -55,8 +55,10 @@ jobs:
           ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
         run: |
           set -o pipefail
+          python -u sondeo.py > sondeo.txt 2>&1 || true
           python -u diario.py 2>&1 | tee registro.txt
           cp registro.txt web/registro.txt
+          cp sondeo.txt web/sondeo.txt
 
       - name: Guardar el historial de aciertos
         run: |
