@@ -155,6 +155,7 @@ h1 span { color: var(--gold); }
 .mas { margin-top: 10px; font: 600 12px/1 var(--body); color: var(--pitch); }
 
 .det { border-top: 1px dashed var(--line); padding: 4px 14px 14px; }
+.grupo h3 .colcuota { float: right; font: 600 10px var(--mono); letter-spacing: .04em; text-transform: none; }
 .grupo h3 { margin: 12px 0 6px; font: 700 13px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .fila { display: grid; grid-template-columns: minmax(0, 1fr) 44px 64px; align-items: center; gap: 8px; padding: 5px 0; font-size: 14px; }
 .fila .n { min-width: 0; }
@@ -199,10 +200,10 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <div class="leyenda">
       <div><span class="sw"></span><span><b>Dorado</b>: probabilidad de al menos <span id="umbral"></span>.</span></div>
       <div><span class="val" style="margin:0">VALOR</span><span>La cuota real de la casa paga al menos un 5% más de lo que vale según la app.</span></div>
-      <div><span style="font:700 12px var(--mono)">1.27</span><span>Cuota justa: por debajo de esa cuota la apuesta no compensa.</span></div>
+      <div><span style="font:700 12px var(--mono)">1.27</span><span><b>app</b>: la cuota que calcula la app (1 ÷ probabilidad). Por debajo de ella la apuesta no compensa.</span></div>
       <div><span class="bien" style="font:700 12px var(--mono)">1.40</span><span>Cuota de la casa igual o mejor que la que vale según la app.</span></div>
       <div><span class="mal" style="font:700 12px var(--mono)">1.20</span><span>Cuota de la casa por debajo de lo que vale según la app.</span></div>
-      <div><span style="font:700 12px var(--mono)">≈1.45</span><span>Cuota estimada: calculada a partir del 1X2 y los goles de la casa. Compruébala en tu app antes de apostar.</span></div>
+      <div><span style="font:700 12px var(--mono)">≈1.45</span><span>Cuota estimada de la casa: calculada a partir de su 1X2 y su línea de goles. Compruébala en Winamax antes de apostar.</span></div>
     </div>
     <p style="margin:6px 0 0">Fútbol: modelo Dixon-Coles sobre las últimas temporadas, combinado con las cuotas del mercado. Baloncesto: ratings de ataque y defensa de cada equipo, combinados con las líneas de las casas cuando las hay (NBA). Esports (CS2 y Valorant, torneos de nivel S y A): fuerza de cada equipo según los mapas ganados y perdidos. Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
   </footer>
@@ -268,12 +269,12 @@ function pintarFiltros() {
     ligas.map(l => `<button class="chip" data-f="liga" data-l="${esc(l)}" aria-pressed="${est.liga === l}">${esc(l)}</button>`).join("");
 }
 
-function filaMercado(k) {
+function filaMercado(k, p) {
   const valor = (esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
   const justa = (1 / k.p).toFixed(2);
   const cuota = k.c
-    ? `<span class="${veredicto(k)}">${k.e ? "≈" : ""}${k.c.toFixed(2)}</span><small>justa ${justa}</small>`
-    : `<span title="cuota justa">${justa}</span>`;
+    ? `<span class="${veredicto(k)}">${k.e ? "≈" : ""}${k.c.toFixed(2)}</span><small>app ${justa}</small>`
+    : `<span>–</span><small>app ${justa}</small>`;
   return `<div class="fila ${esRojo(k) ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
@@ -288,12 +289,12 @@ function tarjeta(p, idx) {
   const total = p.gl + p.gv;
   const num = x => basket ? Math.round(x) : x.toFixed(1);
   const top = oro.slice(0, 3).map(k =>
-    `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? `<span class="${veredicto(k)}">${k.e ? "≈ cuota " : "cuota "}${k.c.toFixed(2)}</span> · ` : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
+    `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? `<span class="${veredicto(k)}">${k.e ? "≈ " : ""}${casaCorta(p)} ${k.c.toFixed(2)}</span> · ` : ""}app ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
   let det = "";
   if (abierto) {
     det = `<div class="det">` + GRUPOS[basket ? "b" : esp ? "e" : "f"].map(([nombre, f]) => {
       const filas = p.picks.filter(k => f(k.m)).sort((a, b) => b.p - a.p);
-      return filas.length ? `<div class="grupo"><h3>${nombre}</h3>${filas.map(filaMercado).join("")}</div>` : "";
+      return filas.length ? `<div class="grupo"><h3>${nombre}<span class="colcuota">${casaCorta(p)}</span></h3>${filas.map(k => filaMercado(k, p)).join("")}</div>` : "";
     }).join("") + (basket
       ? `<div class="marcador">Resultado esperado <b>${esc(p.marcador)}</b></div></div>`
       : `<div class="marcador">Marcador más probable <b>${esc(p.marcador)}</b> (${pct(p.pm)})</div></div>`);
@@ -391,13 +392,16 @@ function pintarAciertos() {
   el.innerHTML = h;
 }
 
+// Nombre corto de quien pone la cuota
+const casaCorta = p => !p || !p.casa ? "Casa" : p.casa.startsWith("Winamax") ? "Winamax"
+  : /media/.test(p.casa) ? "Media" : /ESPN/.test(p.casa) ? "Casa" : p.casa.split(" ")[0];
 // ¿La cuota real de la casa paga al menos lo que vale según la app? verde = sí, rojo = no
 const veredicto = k => (k.c && !k.e) ? (k.c >= 1 / k.p - 0.005 ? "bien" : "mal") : "";
-// Cuota bajo el porcentaje: la real de la casa si la hay; si no, la cuota justa
-const cuotaBajo = k => (k.c && !k.e)
-  ? `<small class="cq ${veredicto(k)}">cuota ${k.c.toFixed(2)} <span class="jj">· justa ${(1 / k.p).toFixed(2)}</span></small>`
-  : k.c ? `<small class="cq justa">≈ cuota ${k.c.toFixed(2)}</small>`
-  : `<small class="cq justa">justa ${(1 / k.p).toFixed(2)}</small>`;
+// Cuota bajo el porcentaje: la de la casa (real o ≈) y la que calcula la app
+const cuotaBajo = (k, p) => (k.c && !k.e)
+  ? `<small class="cq"><span class="${veredicto(k)}">${casaCorta(p)} ${k.c.toFixed(2)}</span> <span class="jj">· app ${(1 / k.p).toFixed(2)}</span></small>`
+  : k.c ? `<small class="cq justa">≈ ${casaCorta(p)} ${k.c.toFixed(2)} · app ${(1 / k.p).toFixed(2)}</small>`
+  : `<small class="cq justa">app ${(1 / k.p).toFixed(2)}</small>`;
 function pintarTop(delDia, q) {
   if (q || est.soloFav) { $("top").innerHTML = ""; return; }
   // Un pick por partido: el mejor de cada uno
@@ -406,27 +410,28 @@ function pintarTop(delDia, q) {
   const top = cand.slice().sort(([, , a], [, , b]) => (esRojo(b) - esRojo(a)) || (b.p - a.p)).slice(0, 5);
   const fila = ([p, i, k]) => `<button class="tfila ${esRojo(k) ? "r" : ""}" data-ir="${i}">
       <span class="q"><b>${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.hora || "")}</small></span>
-      <span class="pp">${pct(k.p)}${cuotaBajo(k)}</span></button>`;
+      <span class="pp">${pct(k.p)}${cuotaBajo(k, p)}</span></button>`;
   let h = "";
 
   // Combinada: los 3 picks más probables de partidos distintos que paguen algo (cuota real ≥ 1.15 o justa ≥ 1.15)
-  const paga = k => (k.c && !k.e ? k.c : 1 / k.p);
+  const paga = k => k.c || 1 / k.p;  // cuota de la casa (real o ≈); si no hay, la de la app
   const combi = cand.filter(([, , k]) => paga(k) >= 1.15).sort(([, , a], [, , b]) => b.p - a.p).slice(0, 3);
   if (combi.length >= 2) {
     const prob = combi.reduce((s, [, , k]) => s * k.p, 1);
     const reales = combi.every(([, , k]) => k.c && !k.e);
+    const conCasa = combi.every(([, , k]) => k.c);
     const cuota = combi.reduce((s, [, , k]) => s * paga(k), 1);
     h += `<div class="caja combi"><h2>Combinada del día <small>${combi.length} picks</small></h2>${combi.map(fila).join("")}
       <div class="total"><div><span>Probabilidad de acertar las ${combi.length}</span><b>${pct(prob)}</b></div>
-      <div><span>${reales ? "Cuota combinada" : "Cuota justa combinada"}</span><b>${cuota.toFixed(2)}</b></div></div>
-      <p>Al juntar picks la probabilidad baja: cada uno puede fallar. ${reales ? "Cuota con las cuotas reales de la casa." : "Sin cuotas reales en todos los picks: la cuota es la mínima que compensaría, compárala con la de tu casa."}</p></div>`;
+      <div><span>${reales ? "Cuota combinada" : conCasa ? "≈ Cuota combinada" : "Cuota app combinada"}</span><b>${cuota.toFixed(2)}</b></div></div>
+      <p>Al juntar picks la probabilidad baja: cada uno puede fallar. ${reales ? "Calculada con las cuotas reales de la casa." : conCasa ? "Algunas cuotas son estimadas (≈): compruébala en tu casa." : "No todos los picks tienen cuota de la casa: es la cuota mínima que compensaría según la app; compárala con la de tu casa."}</p></div>`;
   }
   $("top").innerHTML = h;
 }
 
 // Top: probabilidad ≥ 73% (lo que roza o pasa el 75%) y que pague al menos 1,30
 const TOP_PROB = 0.73, TOP_CUOTA = 1.30;
-const cuotaRef = k => k.c || 1 / k.p;  // real de la casa, estimada (≈) o, si no hay, la justa
+const cuotaRef = k => k.c || 0;  // solo cuota de la casa: real o estimada (≈); sin cuota de la casa no entra
 function pickTop(p) {
   return p.picks.filter(k => k.p >= TOP_PROB && cuotaRef(k) >= TOP_CUOTA - 1e-9)
     .sort((a, b) => b.p - a.p)[0];
@@ -440,8 +445,8 @@ function pintarTopDia() {
   $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} picks</small></h2>` +
     cand.map(([p, i, k]) => `<button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
       <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}</small></span>
-      <span class="pp">${pct(k.p)}${cuotaBajo(k)}</span></button>`).join("") +
-    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más (cuota de la casa, estimada ≈ o justa). Uno por partido, de todos los deportes. Toca uno para verlo.</p></div>`;
+      <span class="pp">${pct(k.p)}${cuotaBajo(k, p)}</span></button>`).join("") +
+    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que la casa paga a ${TOP_CUOTA.toFixed(2)} o más (cuota real o estimada ≈). Uno por partido, de todos los deportes. Toca uno para verlo.</p></div>`;
 }
 
 function pintar() {

@@ -71,14 +71,25 @@ def goles_del_mercado(cuotas: dict[str, float]) -> tuple[float, float, float] | 
     Goles esperados de cada equipo que "piensa" la casa, deducidos de sus cuotas
     de 1X2 (y de más/menos 2.5 goles si las hay). Devuelve (λ local, μ visitante, margen).
     """
+    import re as _re
     imp = _quitar_margen(cuotas, GRUPOS_1X2)
     if not imp:
         return None
-    ou = _quitar_margen(cuotas, GRUPOS_OU)
     margen = sum(1 / cuotas[m] for m in GRUPOS_1X2) - 1
     objetivo = [imp[GRUPOS_1X2[0]], imp[GRUPOS_1X2[1]]]
-    if ou:
-        objetivo.append(ou["Más de 2.5 goles"])
+    # Línea de goles de la casa: la que haya (en la MLS suele ser 3 o 3.5, no 2.5)
+    lineas = sorted({float(m.group(1)) for k in cuotas for m in [_re.match(r"Más de ([\d.]+) goles$", k)] if m
+                     and f"Menos de {m.group(1)} goles" in cuotas}, key=lambda x: abs(x - 2.5))
+    ou = None
+    if lineas:
+        lin = lineas[0]
+        txt = f"{lin:g}"
+        po, pu = 1 / cuotas[f"Más de {txt} goles"], 1 / cuotas[f"Menos de {txt} goles"]
+        ou = (lin, po / (po + pu))
+        objetivo.append(ou[1])
+        margen_2 = po + pu - 1  # margen real de la casa en un mercado de dos opciones
+    else:
+        margen_2 = None
 
     import numpy as np
     from scipy.optimize import minimize
@@ -92,7 +103,20 @@ def goles_del_mercado(cuotas: dict[str, float]) -> tuple[float, float, float] | 
         i, j = np.indices(m.shape)
         out = [m[i > j].sum(), m[i == j].sum()]
         if ou:
-            out.append(m[(i + j) > 2.5].sum())
+            lin, t = ou[0], i + j
+            if abs(lin - round(lin)) < 1e-9:  # línea entera: si cae justo, se devuelve (push)
+                mas, igual = m[t > lin].sum(), m[t == lin].sum()
+                out.append(mas / max(1e-9, 1 - igual))
+            elif abs(lin * 4 - round(lin * 4)) < 1e-9 and abs(lin * 2 - round(lin * 2)) > 1e-9:
+                # línea asiática de cuarto (2.25, 2.75): media de las dos líneas vecinas
+                a1, a2 = lin - 0.25, lin + 0.25
+                def p_l(l):
+                    if abs(l - round(l)) < 1e-9:
+                        return m[t > l].sum() / max(1e-9, 1 - m[t == l].sum())
+                    return m[t > l].sum()
+                out.append((p_l(a1) + p_l(a2)) / 2)
+            else:
+                out.append(m[t > lin].sum())
         return np.array(out)
 
     res = minimize(lambda x: np.sum((probs(x) - objetivo) ** 2), np.log([1.4, 1.1]), method="Nelder-Mead",
@@ -100,7 +124,11 @@ def goles_del_mercado(cuotas: dict[str, float]) -> tuple[float, float, float] | 
     lam, mu = np.exp(res.x)
     if res.fun > 1e-3:  # cuotas incoherentes: mejor no usarlas
         return None
-    return float(lam), float(mu), float(margen)
+    # Margen para los mercados de dos opciones (los que estimamos): el de su línea de goles si
+    # la hay; si no, uno típico deducido del 1X2 (que tiene tres opciones y más margen).
+    if margen_2 is None or not (0 < margen_2 < 0.15):
+        margen_2 = min(0.07, max(0.03, margen * 2 / 3))
+    return float(lam), float(mu), float(margen_2)
 
 
 def analizar(p: PartidoProximo, modelo: ModeloDixonColes) -> Analisis | None:

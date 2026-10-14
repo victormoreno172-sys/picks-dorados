@@ -218,9 +218,19 @@ def sondear_mercados(activos: set):
 
 
 # ----------------------------------------------------------------- casar
+# Mismo equipo escrito distinto en cada fuente (ya normalizado)
+ALIAS_CUOTAS = {
+    "lafc": "los angeles", "los angeles fc": "los angeles", "la galaxy": "los angeles galaxy",
+    "red bull new york": "new york red bulls", "ny red bulls": "new york red bulls",
+    "new york city": "new york city", "nycfc": "new york city", "st louis city": "st louis city",
+    "dc united": "d c united", "inter miami": "inter miami", "cf montreal": "montreal",
+}
+
+
 def _norm(nombre: str) -> str:
     from europa import ALIAS, normalizar
     n = normalizar(nombre)
+    n = ALIAS_CUOTAS.get(n, n)
     alias = ALIAS.get(n)
     return normalizar(alias) if alias else n
 
@@ -251,6 +261,13 @@ class Cuotas:
         if mejor and puntos >= 1.3:
             self.usados += 1
             return mejor
+        # Si un equipo coincide claramente y solo hay un partido así ese día, es ese
+        claros = [e for e in self.eventos if e.liga == liga and abs((e.fecha - fecha).days) <= 1
+                  and (_parecido(local, e.local) >= 0.9 or _parecido(visitante, e.visitante) >= 0.9)
+                  and max(_parecido(local, e.local), _parecido(visitante, e.visitante)) >= 0.9]
+        if len(claros) == 1:
+            self.usados += 1
+            return claros[0]
         return None
 
 
