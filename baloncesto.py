@@ -391,6 +391,23 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
             pk.cuota, pk.estimada = cuota, False
             otro = j.cuotas.get(_contrario(nombre) or "")
             pk.prob_cuota = (1 / cuota) / (1 / cuota + 1 / otro) if otro else None
+    # Cuotas estimadas (≈) para las demás líneas, a partir de la línea de la casa
+    if j.spread_local is not None or j.total_casa is not None:
+        from analisis import estimar_cuotas
+        m_mkt = -j.spread_local if j.spread_local is not None else margen
+        t_mkt = j.total_casa if j.total_casa is not None else total
+        mkt = {pk.mercado: pk.prob for pk in mercados_baloncesto(m_mkt, t_mkt, modelo.sd_margen, modelo.sd_total,
+                                                                 None, None, tipico)}
+        if j.spread_local is None:
+            mkt = {k: v for k, v in mkt.items() if "puntos" in k}
+        if j.total_casa is None:
+            mkt = {k: v for k, v in mkt.items() if "puntos" not in k}
+        mg = 0.045
+        if j.cuotas:
+            pares = [(k, v) for k, v in j.cuotas.items() if _contrario(k) in j.cuotas]
+            if pares:
+                mg = sum(1 / v + 1 / j.cuotas[_contrario(k)] - 1 for k, v in pares) / len(pares)
+        estimar_cuotas(picks, mkt, mg)
     p = PartidoProximo(j.comp, j.fecha, j.hora, j.local, j.visitante,
                        casa=j.casa or ("ESPN (línea)" if j.spread_local is not None else ""))
     return Analisis(p, pl, pv, f"{round(pl)}-{round(pv)}", 0.0, picks)

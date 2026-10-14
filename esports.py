@@ -278,6 +278,10 @@ def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
                 pk.cuota, pk.prob_cuota = cg[0], implicita
             elif pk.mercado == f"Gana {s.n2}":
                 pk.cuota, pk.prob_cuota = cg[1], 1 - implicita
+        # mapas y resultado exacto estimados (≈) desde la cuota del ganador
+        from analisis import estimar_cuotas
+        mkt, *_ = mercados_serie(s.n1, s.n2, _p_mapa_para(implicita, s.bo), s.bo)
+        estimar_cuotas(picks, {k.mercado: k.prob for k in mkt}, 1 / cg[0] + 1 / cg[1] - 1)
     icono = JUEGOS[s.juego][2]
     liga = f"{icono} {s.juego} · {s.torneo or 'Torneo'}{' · Bo' + str(s.bo) if s.bo > 1 else ' · Bo1'}"
     partido = PartidoProximo(liga, s.fecha, s.hora, s.n1, s.n2, deporte="e", casa=cg[2] if cg else "")

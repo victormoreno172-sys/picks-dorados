@@ -267,6 +267,11 @@ def analizar(p: Partido, elo: EloTenis, hoy: date) -> Analisis | None:
             pk.cuota = cuotas[pk.mercado]
             otro = [v for k, v in cuotas.items() if k != pk.mercado][0]
             pk.prob_cuota = (1 / pk.cuota) / (1 / pk.cuota + 1 / otro)
+    if cuotas:  # sets, hándicap y resultado exacto estimados (≈) desde la cuota del ganador
+        from analisis import estimar_cuotas
+        mkt_picks, *_ = mercados_tenis(p.n1, p.n2, imp, p.sets_max)
+        c1, c2 = cuotas[f"Gana {p.n1}"], cuotas[f"Gana {p.n2}"]
+        estimar_cuotas(picks, {k.mercado: k.prob for k in mkt_picks}, 1 / c1 + 1 / c2 - 1)
     icono = "🎾"
     sup_txt = {"tierra": "tierra", "dura": "dura", "hierba": "hierba"}[sup]
     liga = f"{icono} {p.tour} · {p.torneo} · {sup_txt}"
