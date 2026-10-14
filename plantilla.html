@@ -69,6 +69,7 @@ h1 span { color: var(--gold); }
 .equipos { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 10px; }
 .eq { font: 700 19px/1.1 var(--display); text-transform: uppercase; letter-spacing: .01em; min-width: 0; overflow-wrap: anywhere; }
 .eq.v { text-align: right; }
+.eq.largo { font-size: 16px; } .eq.muylargo { font-size: 14px; }
 .xg { font: 700 13px/1 var(--mono); color: var(--muted); text-align: center; white-space: nowrap; }
 .xg b { color: var(--ink); }
 .xgbar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 8px; background: var(--bar); }
@@ -94,6 +95,32 @@ h1 span { color: var(--gold); }
 .ajustes input { width: 100%; accent-color: var(--red); }
 .ajustes p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .casa { color: var(--ink); font-weight: 700; }
+.busca { margin-top: 12px; }
+.busca input { width: 100%; font: 500 15px var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+.busca input:focus { outline: 2px solid var(--gold); outline-offset: 0; }
+.partido { position: relative; }
+.estrella { position: absolute; top: 4px; right: 4px; width: 40px; height: 40px; border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 8px; }
+.estrella[aria-pressed="true"] { color: var(--gold); }
+.partido .meta { padding-right: 34px; }
+.top { margin-top: 14px; display: grid; gap: 10px; }
+.top:empty { display: none; }
+.caja { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.caja h2 { margin: 0 0 8px; font: 800 18px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.caja h2 small { font: 500 11px var(--mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
+.tfila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.tfila:first-of-type { border-top: 0; }
+.tfila .q { min-width: 0; }
+.tfila .q b { display: block; font-size: 14px; }
+.tfila .q small { display: block; font: 500 11px var(--mono); color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.tfila .pp { font: 700 18px var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
+.tfila.r .pp { color: var(--red); }
+.combi .total { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.combi .total div { background: var(--bar); border-radius: 8px; padding: 8px 10px; }
+.combi .total span { display: block; font: 600 11px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.combi .total b { font: 700 22px var(--mono); font-variant-numeric: tabular-nums; }
+.combi p { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+@keyframes brillo { from { box-shadow: 0 0 0 3px var(--gold); } }
+.partido.resaltado { animation: brillo 1.2s ease-out; }
 .aciertos { display: grid; gap: 14px; margin-top: 14px; }
 .aciertos h2 { margin: 6px 0 0; font: 700 14px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .aciertos .nota { font-size: 13px; color: var(--muted); margin: 0; }
@@ -160,6 +187,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <p id="rojosHoy"></p>
     </div>
   </header>
+  <div class="busca"><input type="search" id="busca" placeholder="Buscar equipo o competición" autocomplete="off" aria-label="Buscar equipo o competición"></div>
+  <section class="top" id="top"></section>
   <main class="lista" id="lista"></main>
   <section class="aciertos" id="aciertos" hidden></section>
   <footer>
@@ -185,7 +214,13 @@ const GRUPOS = {
 };
 const DEPORTES = [["f", "Fútbol"], ["b", "Baloncesto"]];
 const est = { dep: "f", dia: 0, soloOro: false, soloRojo: false, liga: null, abiertos: new Set(),
-              rp: DATOS.rojo_p || 0.7, rc: DATOS.rojo_c || 1.4, ajustes: false };
+              rp: DATOS.rojo_p || 0.7, rc: DATOS.rojo_c || 1.4, ajustes: false,
+              orden: "hora", busca: "", soloFav: false, favs: new Set() };
+try { est.favs = new Set(JSON.parse(localStorage.getItem("favs") || "[]")); est.orden = localStorage.getItem("orden") || "hora"; } catch (e) {}
+const clavePartido = (dia, p) => `${dia.fecha}|${p.local}|${p.visitante}`;
+const quitarAcentos = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+// Mejor pick de un partido: primero los rojos, luego la probabilidad más alta entre los destacados
+const mejorPick = p => p.picks.filter(k => k.d || esRojo(k)).sort((a, b) => (esRojo(b) - esRojo(a)) || (b.p - a.p))[0];
 try { const g = JSON.parse(localStorage.getItem("rojo") || "null"); if (g) { est.rp = g.rp; est.rc = g.rc; } } catch (e) {}
 // Rojo: probable Y con cuota real de la casa que todavía paga algo
 const esRojo = k => !!(k.c && !k.e && k.p >= est.rp - 1e-9 && k.c >= est.rc - 1e-9);
@@ -217,6 +252,8 @@ function pintarFiltros() {
   const ligas = [...new Set(delDeporte(DATOS.dias[est.dia]).map(p => p.liga))];
   if (est.liga && !ligas.includes(est.liga)) est.liga = null;
   $("filtros").innerHTML =
+    `<button class="chip" data-f="orden" aria-label="Cambiar orden">${est.orden === "hora" ? "🕒 Por hora" : "📈 Por probabilidad"}</button>` +
+    `<button class="chip oro" data-f="fav" aria-pressed="${est.soloFav}">⭐ Favoritos</button>` +
     `<button class="chip rojo" data-f="rojo" aria-pressed="${est.soloRojo}">Rojos</button>` +
     `<button class="chip" data-f="ajustes" aria-pressed="${est.ajustes}" aria-label="Ajustar el rojo">⚙ Rojo</button>` +
     `<button class="chip oro" data-f="oro" aria-pressed="${est.soloOro}">Solo con dorado</button>` +
@@ -231,6 +268,8 @@ function filaMercado(k) {
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
 
+// Nombres largos en letra más pequeña para que no se partan a mitad de palabra
+const tam = n => { const larga = Math.max(...n.split(" ").map(w => w.length)); return larga > 12 ? "muylargo" : larga > 9 ? "largo" : ""; };
 function tarjeta(p, idx) {
   const id = est.dia + "-" + idx;
   const abierto = est.abiertos.has(id);
@@ -249,10 +288,12 @@ function tarjeta(p, idx) {
       ? `<div class="marcador">Resultado esperado <b>${esc(p.marcador)}</b></div></div>`
       : `<div class="marcador">Marcador más probable <b>${esc(p.marcador)}</b> (${pct(p.pm)})</div></div>`);
   }
-  return `<article class="partido">
+  const fav = est.favs.has(clavePartido(DATOS.dias[est.dia], p));
+  return `<article class="partido" id="p-${id}">
+    <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
     <button class="cab" data-id="${id}" aria-expanded="${abierto}">
       <div class="meta"><span>${esc(p.liga)}${p.casa && p.casa.startsWith("Winamax") ? ` · <span class="casa">${esc(p.casa)}</span>` : ""}</span><span>${esc(p.hora || "--:--")}</span></div>
-      <div class="equipos"><div class="eq">${esc(p.local)}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : "goles esp."}</span></div><div class="eq v">${esc(p.visitante)}</div></div>
+      <div class="equipos"><div class="eq ${tam(p.local)}">${esc(p.local)}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : "goles esp."}</span></div><div class="eq v ${tam(p.visitante)}">${esc(p.visitante)}</div></div>
       <div class="xgbar" aria-hidden="true"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div>
       ${top ? `<div class="top">${top}</div>` : `<div class="sinpicks">Ningún mercado llega al ${pct(DATOS.umbral)}.</div>`}
       <div class="mas">${abierto ? "Ocultar mercados ▲" : `Ver los ${p.picks.length} mercados ▼`}</div>
@@ -263,10 +304,15 @@ function tarjeta(p, idx) {
 function pintarLista() {
   const dia = DATOS.dias[est.dia];
   const delDia = dia.partidos.map((p, i) => [p, i]).filter(([p]) => (p.dep || "f") === est.dep);
+  const q = quitarAcentos(est.busca.trim());
   const lista = delDia
     .filter(([p]) => !est.liga || p.liga === est.liga)
     .filter(([p]) => !est.soloOro || p.picks.some(k => k.d))
-    .filter(([p]) => !est.soloRojo || p.picks.some(esRojo));
+    .filter(([p]) => !est.soloRojo || p.picks.some(esRojo))
+    .filter(([p]) => !est.soloFav || est.favs.has(clavePartido(dia, p)))
+    .filter(([p]) => !q || quitarAcentos(`${p.local} ${p.visitante} ${p.liga}`).includes(q));
+  if (est.orden === "prob") lista.sort(([a], [b]) => ((mejorPick(b) || {}).p || 0) - ((mejorPick(a) || {}).p || 0));
+  pintarTop(delDia, q);
   $("lista").innerHTML = lista.length ? lista.map(([p, i]) => tarjeta(p, i)).join("")
     : `<div class="vacio">${delDia.length ? "Ningún partido cumple el filtro." : "No hay partidos de las competiciones que seguimos este día."}</div>`;
 }
@@ -334,6 +380,32 @@ function pintarAciertos() {
   el.innerHTML = h;
 }
 
+function pintarTop(delDia, q) {
+  if (q || est.soloFav) { $("top").innerHTML = ""; return; }
+  // Un pick por partido: el mejor de cada uno
+  const cand = delDia.map(([p, i]) => [p, i, mejorPick(p)]).filter(([, , k]) => k);
+  if (!cand.length) { $("top").innerHTML = ""; return; }
+  const top = cand.slice().sort(([, , a], [, , b]) => (esRojo(b) - esRojo(a)) || (b.p - a.p)).slice(0, 5);
+  const fila = ([p, i, k]) => `<button class="tfila ${esRojo(k) ? "r" : ""}" data-ir="${i}">
+      <span class="q"><b>${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.hora || "")}${k.c ? " · cuota " + k.c.toFixed(2) : ""}</small></span>
+      <span class="pp">${pct(k.p)}</span></button>`;
+  let h = `<div class="caja"><h2>Top del día <small>${top.length} mejores picks</small></h2>${top.map(fila).join("")}</div>`;
+
+  // Combinada: los 3 picks más probables de partidos distintos que paguen algo (cuota real ≥ 1.15 o justa ≥ 1.15)
+  const paga = k => (k.c && !k.e ? k.c : 1 / k.p);
+  const combi = cand.filter(([, , k]) => paga(k) >= 1.15).sort(([, , a], [, , b]) => b.p - a.p).slice(0, 3);
+  if (combi.length >= 2) {
+    const prob = combi.reduce((s, [, , k]) => s * k.p, 1);
+    const reales = combi.every(([, , k]) => k.c && !k.e);
+    const cuota = combi.reduce((s, [, , k]) => s * paga(k), 1);
+    h += `<div class="caja combi"><h2>Combinada del día <small>${combi.length} picks</small></h2>${combi.map(fila).join("")}
+      <div class="total"><div><span>Probabilidad de acertar las ${combi.length}</span><b>${pct(prob)}</b></div>
+      <div><span>${reales ? "Cuota combinada" : "Cuota justa combinada"}</span><b>${cuota.toFixed(2)}</b></div></div>
+      <p>Al juntar picks la probabilidad baja: cada uno puede fallar. ${reales ? "Cuota con las cuotas reales de la casa." : "Sin cuotas reales en todos los picks: la cuota es la mínima que compensaría, compárala con la de tu casa."}</p></div>`;
+  }
+  $("top").innerHTML = h;
+}
+
 function pintar() {
   const h = est.dep === "h";
   pintarDeportes();
@@ -351,6 +423,24 @@ document.addEventListener("click", e => {
   else if (b.dataset.dep) { est.dep = b.dataset.dep; est.liga = null; try { localStorage.setItem("dep", est.dep); } catch (e) {} pintar(); }
   else if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
   else if (b.dataset.f === "oro") { est.soloOro = !est.soloOro; try { localStorage.setItem("soloOro", est.soloOro ? "1" : "0"); } catch (e) {} pintarFiltros(); pintarLista(); }
+  else if (b.dataset.fav !== undefined) {
+    const p = DATOS.dias[est.dia].partidos[+b.dataset.fav], k = clavePartido(DATOS.dias[est.dia], p);
+    est.favs.has(k) ? est.favs.delete(k) : est.favs.add(k);
+    try { localStorage.setItem("favs", JSON.stringify([...est.favs].slice(-200))); } catch (e) {}
+    pintarLista();
+  }
+  else if (b.dataset.ir !== undefined) {
+    const id = est.dia + "-" + b.dataset.ir;
+    est.abiertos.add(id); pintarLista();
+    const el = $("p-" + id);
+    if (el) {
+      const alto = document.querySelector("header").offsetHeight;
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - alto - 8, behavior: "smooth" });
+      el.classList.add("resaltado");
+    }
+  }
+  else if (b.dataset.f === "orden") { est.orden = est.orden === "hora" ? "prob" : "hora"; try { localStorage.setItem("orden", est.orden); } catch (e) {} pintarFiltros(); pintarLista(); }
+  else if (b.dataset.f === "fav") { est.soloFav = !est.soloFav; pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "ajustes") { est.ajustes = !est.ajustes; $("ajustes").hidden = !est.ajustes; pintarFiltros(); }
   else if (b.dataset.f === "rojo") { est.soloRojo = !est.soloRojo; pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "todas") { est.liga = null; pintarFiltros(); pintarLista(); }
@@ -358,6 +448,7 @@ document.addEventListener("click", e => {
   else if (b.dataset.id) { const id = b.dataset.id; est.abiertos.has(id) ? est.abiertos.delete(id) : est.abiertos.add(id); pintarLista(); }
 });
 
+$("busca").addEventListener("input", e => { est.busca = e.target.value; pintarLista(); });
 $("upd").textContent = "act. " + DATOS.generado;
 $("umbral").textContent = pct(DATOS.umbral);
 $("demo").hidden = !DATOS.demo;
