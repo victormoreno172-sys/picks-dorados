@@ -29,6 +29,11 @@ LIGAS = {
     "P1": ("🇵🇹 Liga Portugal", "PPL"),
 }
 
+# Ligas que se leen de ESPN: código -> (nombre, identificador de ESPN)
+LIGAS_ESPN = {
+    "MLS": ("🇺🇸 MLS", "usa.1"),
+}
+
 # --- Competiciones europeas (calendario de TheSportsDB) ---------------------
 # código -> (nombre, id de TheSportsDB)
 EUROPA = {
@@ -67,7 +72,8 @@ def es_baloncesto(codigo: str) -> bool:
 
 
 def nombre_liga(codigo: str) -> str:
-    return (LIGAS.get(codigo) or EUROPA.get(codigo) or BASKET.get(codigo) or (codigo,))[0]
+    return (LIGAS.get(codigo) or LIGAS_ESPN.get(codigo) or EUROPA.get(codigo) or BASKET.get(codigo)
+            or (codigo,))[0]
 
 # --- Reglas de las predicciones --------------------------------------------
 UMBRAL_DORADO = 0.75     # a partir de esta probabilidad el pick sale en dorado

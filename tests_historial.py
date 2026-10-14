@@ -90,3 +90,25 @@ if __name__ == "__main__":
     for t in (test_acierta, test_ciclo, test_cuotas, test_baloncesto_con_cuotas):
         t()
         print(f"OK  {t.__name__}")
+
+
+def test_espn_futbol():
+    import espn_futbol
+    datos = {"events": [
+        {"date": "2026-10-18T23:30Z", "competitions": [{"status": {"type": {"completed": False, "name": "STATUS_SCHEDULED"}},
+            "competitors": [{"homeAway": "home", "score": "0", "team": {"displayName": "Inter Miami CF"}},
+                            {"homeAway": "away", "score": "0", "team": {"displayName": "LA Galaxy"}}],
+            "odds": [{"homeTeamOdds": {"moneyLine": -150}, "awayTeamOdds": {"moneyLine": 320}, "drawOdds": {"moneyLine": 290}}]}]},
+        {"date": "2026-10-11T00:30Z", "competitions": [{"status": {"type": {"completed": True, "name": "STATUS_FULL_TIME"}},
+            "competitors": [{"homeAway": "home", "score": "2", "team": {"displayName": "Seattle Sounders FC"}},
+                            {"homeAway": "away", "score": "1", "team": {"displayName": "Portland Timbers"}}]}]}]}
+    p = espn_futbol.parsear(datos)
+    assert p[0]["fecha"] == date(2026, 10, 19) and p[0]["hora"] == "01:30" and p[0]["gl"] is None
+    assert p[0]["cuotas"] == {"Gana local (1)": 1.67, "Gana visitante (2)": 4.2, "Empate (X)": 3.9}
+    assert p[1]["gl"] == 2 and p[1]["fecha"] == date(2026, 10, 11)
+    assert config.nombre_liga("MLS") == "🇺🇸 MLS"
+
+
+if __name__ == "__main__":
+    test_espn_futbol()
+    print("OK  test_espn_futbol")

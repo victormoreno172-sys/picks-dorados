@@ -28,6 +28,16 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
     """Analiza los partidos de `desde` y los n_dias-1 siguientes."""
     print(f"Preparando predicciones desde {desde} ({n_dias} días)...")
     historicos = {liga: datos.historico(liga, desde) for liga in config.LIGAS}
+    import espn_futbol
+    proximos_espn = {}
+    for liga in config.LIGAS_ESPN:
+        try:
+            historicos[liga] = espn_futbol.historico(liga, desde)
+            for d, lista in espn_futbol.proximos(liga, desde, n_dias).items():
+                proximos_espn.setdefault(d, []).extend(lista)
+            print(f"  {liga}: {len(historicos[liga])} partidos de historial")
+        except Exception as e:
+            print(f"  aviso {liga}: {e}")
     if not any(historicos.values()):
         # Sin datos es mejor fallar: así la app sigue mostrando la última versión buena.
         raise RuntimeError("No se pudo descargar ningún resultado histórico.")
@@ -41,7 +51,7 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
     salida: dict[date, list[Analisis]] = {}
     for k in range(n_dias):
         dia = desde + timedelta(days=k)
-        partidos = datos.partidos_del_dia(dia, equipos)
+        partidos = datos.partidos_del_dia(dia, equipos) + proximos_espn.get(dia, [])
         print(f"  {dia}: {len(partidos)} partidos")
         lista = []
         for p in partidos:
