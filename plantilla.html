@@ -87,6 +87,11 @@ h1 span { color: var(--gold); }
 .fila.r .n { font-weight: 600; }
 .chip.rojo[aria-pressed="true"] { border-color: var(--red); color: var(--red-ink); background: var(--red-soft); }
 .sw.r { background: var(--red); }
+.ajustes { margin-top: 10px; padding: 12px; border: 1px solid var(--red); border-radius: 10px; background: var(--surface); display: grid; gap: 6px; }
+.ajustes label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.ajustes label b { font: 700 14px var(--mono); color: var(--red); }
+.ajustes input { width: 100%; accent-color: var(--red); }
+.ajustes p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .sinpicks { font-size: 13px; color: var(--muted); margin-top: 10px; }
 .mas { margin-top: 10px; font: 600 12px/1 var(--body); color: var(--pitch); }
 
@@ -121,6 +126,13 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <nav class="deportes" id="deportes" aria-label="Deporte"></nav>
     <nav class="dias" id="dias" aria-label="Día"></nav>
     <div class="filtros" id="filtros"></div>
+    <div class="ajustes" id="ajustes" hidden>
+      <label for="rp">Probabilidad mínima <b id="rpv"></b></label>
+      <input type="range" id="rp" min="55" max="90" step="1">
+      <label for="rc">Cuota mínima <b id="rcv"></b></label>
+      <input type="range" id="rc" min="120" max="200" step="5">
+      <p id="rojosHoy"></p>
+    </div>
   </header>
   <main class="lista" id="lista"></main>
   <footer>
@@ -145,7 +157,11 @@ const GRUPOS = {
       ["Puntos", m => /puntos/.test(m)]],
 };
 const DEPORTES = [["f", "Fútbol"], ["b", "Baloncesto"]];
-const est = { dep: "f", dia: 0, soloOro: false, soloRojo: false, liga: null, abiertos: new Set() };
+const est = { dep: "f", dia: 0, soloOro: false, soloRojo: false, liga: null, abiertos: new Set(),
+              rp: DATOS.rojo_p || 0.7, rc: DATOS.rojo_c || 1.4, ajustes: false };
+try { const g = JSON.parse(localStorage.getItem("rojo") || "null"); if (g) { est.rp = g.rp; est.rc = g.rc; } } catch (e) {}
+// Rojo: probable Y con cuota real de la casa que todavía paga algo
+const esRojo = k => !!(k.c && !k.e && k.p >= est.rp - 1e-9 && k.c >= est.rc - 1e-9);
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
 
 const $ = id => document.getElementById(id);
@@ -165,7 +181,7 @@ function pintarDias() {
   const vis = diasVisibles();
   if (!vis.includes(est.dia)) est.dia = vis.find(i => delDeporte(DATOS.dias[i]).length) ?? 0;
   $("dias").innerHTML = vis.map(i => { const d = DATOS.dias[i];
-    const rojos = delDeporte(d).filter(p => p.picks.some(k => k.r)).length;
+    const rojos = delDeporte(d).filter(p => p.picks.some(esRojo)).length;
     return `<button class="dia" aria-pressed="${i === est.dia}" data-i="${i}">${esc(d.etiqueta)}<small>${esc(d.fecha_corta)} · ${delDeporte(d).length}${rojos ? ` · <b style="color:var(--red)">${rojos}●</b>` : ""}</small></button>`; }).join("");
 }
 
@@ -174,15 +190,16 @@ function pintarFiltros() {
   if (est.liga && !ligas.includes(est.liga)) est.liga = null;
   $("filtros").innerHTML =
     `<button class="chip rojo" data-f="rojo" aria-pressed="${est.soloRojo}">Rojos</button>` +
+    `<button class="chip" data-f="ajustes" aria-pressed="${est.ajustes}" aria-label="Ajustar el rojo">⚙ Rojo</button>` +
     `<button class="chip oro" data-f="oro" aria-pressed="${est.soloOro}">Solo con dorado</button>` +
     `<button class="chip" data-f="todas" aria-pressed="${!est.liga}">Todas</button>` +
     ligas.map(l => `<button class="chip" data-f="liga" data-l="${esc(l)}" aria-pressed="${est.liga === l}">${esc(l)}</button>`).join("");
 }
 
 function filaMercado(k) {
-  const valor = (k.r ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
+  const valor = (esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
   const cuota = k.c ? `${k.c.toFixed(2)}` : `<span title="cuota justa">${(1 / k.p).toFixed(2)}</span>`;
-  return `<div class="fila ${k.r ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
+  return `<div class="fila ${esRojo(k) ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
 
@@ -190,11 +207,11 @@ function tarjeta(p, idx) {
   const id = est.dia + "-" + idx;
   const abierto = est.abiertos.has(id);
   const basket = p.dep === "b";
-  const oro = p.picks.filter(k => k.d).sort((a, b) => (b.r - a.r) || (b.p - a.p));
+  const oro = p.picks.filter(k => k.d || esRojo(k)).sort((a, b) => (esRojo(b) - esRojo(a)) || (b.p - a.p));
   const total = p.gl + p.gv;
   const num = x => basket ? Math.round(x) : x.toFixed(1);
   const top = oro.slice(0, 3).map(k =>
-    `<div class="pick ${k.r ? "rojo" : ""}"><span class="m">${esc(k.m)}${k.r ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? "cuota " + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
+    `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? "cuota " + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
   let det = "";
   if (abierto) {
     det = `<div class="det">` + GRUPOS[basket ? "b" : "f"].map(([nombre, f]) => {
@@ -221,12 +238,26 @@ function pintarLista() {
   const lista = delDia
     .filter(([p]) => !est.liga || p.liga === est.liga)
     .filter(([p]) => !est.soloOro || p.picks.some(k => k.d))
-    .filter(([p]) => !est.soloRojo || p.picks.some(k => k.r));
+    .filter(([p]) => !est.soloRojo || p.picks.some(esRojo));
   $("lista").innerHTML = lista.length ? lista.map(([p, i]) => tarjeta(p, i)).join("")
     : `<div class="vacio">${delDia.length ? "Ningún partido cumple el filtro." : "No hay partidos de las competiciones que seguimos este día."}</div>`;
 }
 
-function pintar() { pintarDeportes(); pintarDias(); pintarFiltros(); pintarLista(); }
+function pintarAjustes() {
+  $("rp").value = Math.round(est.rp * 100); $("rc").value = Math.round(est.rc * 100);
+  $("rpv").textContent = pct(est.rp); $("rcv").textContent = est.rc.toFixed(2);
+  const n = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => p.picks.some(esRojo)).length, 0);
+  const conCuota = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => p.picks.some(k => k.c && !k.e)).length, 0);
+  $("rojosHoy").textContent = `Con estos valores: ${n} partido${n === 1 ? "" : "s"} en rojo, de ${conCuota} con cuotas de la casa.`;
+  $("rojop").textContent = pct(est.rp); $("rojoc").textContent = est.rc.toFixed(2);
+}
+for (const id of ["rp", "rc"]) $(id).addEventListener("input", () => {
+  est.rp = $("rp").value / 100; est.rc = $("rc").value / 100;
+  try { localStorage.setItem("rojo", JSON.stringify({ rp: est.rp, rc: est.rc })); } catch (e) {}
+  pintarAjustes(); pintarDias(); pintarLista();
+});
+
+function pintar() { pintarDeportes(); pintarDias(); pintarFiltros(); pintarLista(); pintarAjustes(); }
 
 document.addEventListener("click", e => {
   const b = e.target.closest("button");
@@ -234,6 +265,7 @@ document.addEventListener("click", e => {
   if (b.dataset.dep) { est.dep = b.dataset.dep; est.liga = null; try { localStorage.setItem("dep", est.dep); } catch (e) {} pintar(); }
   else if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
   else if (b.dataset.f === "oro") { est.soloOro = !est.soloOro; try { localStorage.setItem("soloOro", est.soloOro ? "1" : "0"); } catch (e) {} pintarFiltros(); pintarLista(); }
+  else if (b.dataset.f === "ajustes") { est.ajustes = !est.ajustes; $("ajustes").hidden = !est.ajustes; pintarFiltros(); }
   else if (b.dataset.f === "rojo") { est.soloRojo = !est.soloRojo; pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "todas") { est.liga = null; pintarFiltros(); pintarLista(); }
   else if (b.dataset.f === "liga") { est.liga = b.dataset.l; pintarFiltros(); pintarLista(); }
@@ -242,8 +274,6 @@ document.addEventListener("click", e => {
 
 $("upd").textContent = "act. " + DATOS.generado;
 $("umbral").textContent = pct(DATOS.umbral);
-$("rojop").textContent = pct(DATOS.rojo_p || 0.8);
-$("rojoc").textContent = (DATOS.rojo_c || 1.4).toFixed(2);
 $("demo").hidden = !DATOS.demo;
 if (!delDeporte(DATOS.dias[0]).length) { const i = DATOS.dias.findIndex(d => delDeporte(d).length); if (i > 0) est.dia = i; }
 pintar();

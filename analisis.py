@@ -51,7 +51,7 @@ class Analisis:
 
     @property
     def destacados(self) -> list[Pick]:
-        return sorted([p for p in self.picks if p.dorado], key=lambda p: (not p.rojo, -p.prob))
+        return sorted([p for p in self.picks if p.dorado or p.rojo], key=lambda p: (not p.rojo, -p.prob))
 
 
 def _quitar_margen(cuotas: dict[str, float], grupo: list[str]) -> dict[str, float]:
