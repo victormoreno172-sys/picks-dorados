@@ -1,26 +1,23 @@
 name: Actualizar picks
 
 on:
+  push:
+    branches: [main]       # se lanza solo cada vez que cambia el código
   schedule:
     - cron: "15 6 * * *"   # cada mañana (08:15 en verano, 07:15 en invierno, hora de Madrid)
     - cron: "15 14 * * *"  # repaso por la tarde, por si se publican más partidos
   workflow_dispatch:         # botón "Run workflow" para lanzarlo a mano
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: picks
   cancel-in-progress: true
 
 jobs:
   actualizar:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.publicar.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,12 +35,16 @@ jobs:
           TELEGRAM_CANAL: ${{ secrets.TELEGRAM_CANAL }}
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
           # Telegram solo en la ejecución de la mañana (o al lanzarlo a mano)
-          ENVIAR_TELEGRAM: ${{ github.event.schedule != '15 14 * * *' }}
+          ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
         run: python diario.py
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: web
-
-      - id: publicar
-        uses: actions/deploy-pages@v4
+      - name: Publicar en la rama gh-pages
+        run: |
+          cd web
+          touch .nojekyll
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "Picks del $(date +%d/%m/%Y)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages
