@@ -40,6 +40,9 @@ EUROPA = {
 # (patreon de TheSportsDB) se ven todas las jornadas completas.
 THESPORTSDB_KEY = os.getenv("THESPORTSDB_KEY", "")
 
+# Cuotas de Winamax vía The Odds API (clave gratuita en https://the-odds-api.com)
+ODDS_API_KEY = os.getenv("ODDS_API_KEY", "")
+
 
 # --- Baloncesto -------------------------------------------------------------
 # código -> (nombre, id de TheSportsDB). La NBA va aparte (datos oficiales + ESPN).

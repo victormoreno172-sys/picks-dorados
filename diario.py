@@ -35,7 +35,18 @@ def proximos_con(es_basket):
 dias = sorted({hoy, *proximos_con(False), *proximos_con(True)})
 for d in dias:
     por_dia.setdefault(d, []).sort(key=lambda a: (a.partido.hora or "99", a.partido.liga))
-web.escribir(web.a_json({d: por_dia[d] for d in dias}, hoy))
+datos_app = web.a_json({d: por_dia[d] for d in dias}, hoy)
+
+# Historial de aciertos (si falla, la app sale igual sin esa pantalla)
+try:
+    import historial
+    datos_app["historial"] = historial.actualizar(por_dia, hoy)
+except Exception as e:
+    import traceback
+    print(f"aviso: historial no disponible: {e}")
+    traceback.print_exc()
+
+web.escribir(datos_app)
 
 futbol_hoy = [a for a in por_dia.get(hoy, []) if not config.es_baloncesto(a.partido.liga)]
 if (os.getenv("ENVIAR_TELEGRAM", "").lower() == "true" and futbol_hoy

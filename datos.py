@@ -35,6 +35,7 @@ class PartidoProximo:
     local: str
     visitante: str
     cuotas: dict[str, float] = field(default_factory=dict)  # mercado -> cuota decimal
+    casa: str = ""  # de dónde salen las cuotas ("Winamax FR", "media del mercado"...)
 
 
 # ----------------------------------------------------------------- utilidades

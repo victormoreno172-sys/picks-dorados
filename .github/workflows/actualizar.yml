@@ -37,18 +37,37 @@ jobs:
           key: datos-${{ github.run_id }}
           restore-keys: datos-
 
+      - name: Recuperar el historial de aciertos
+        run: |
+          mkdir -p historial
+          if git fetch -q --depth 1 origin historial; then
+            git show FETCH_HEAD:historial.json > historial/historial.json || true
+          fi
+
       - name: Calcular predicciones y generar la app
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CANAL: ${{ secrets.TELEGRAM_CANAL }}
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
           THESPORTSDB_KEY: ${{ secrets.THESPORTSDB_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           # Telegram solo en la ejecución de la mañana (o al lanzarlo a mano)
           ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
         run: |
           set -o pipefail
           python -u diario.py 2>&1 | tee registro.txt
           cp registro.txt web/registro.txt
+
+      - name: Guardar el historial de aciertos
+        run: |
+          cd historial
+          [ -s historial.json ] || exit 0
+          git init -q -b historial
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add historial.json
+          git commit -qm "Historial $(date +%d/%m/%Y-%H:%M)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" historial
 
       - name: Publicar en la rama gh-pages
         run: |

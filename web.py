@@ -72,6 +72,7 @@ def a_json(por_dia: dict[date, list[Analisis]], hoy: date, demo: bool = False) -
                 "gl": round(a.goles_local, 2), "gv": round(a.goles_visitante, 2),
                 "marcador": a.marcador, "pm": round(float(a.prob_marcador or 0), 4),
                 "dep": "b" if config.es_baloncesto(p.liga) else "f",
+                "casa": p.casa,
                 "picks": [{"m": k.mercado, "p": round(float(k.prob), 4),
                            "c": float(k.cuota) if k.cuota else None,
                            "d": bool(k.dorado), "v": bool(k.valor), "r": bool(k.rojo),
@@ -168,7 +169,36 @@ def datos_demo() -> dict:
             a = b.analizar_juego(j, mb)
             a.partido.liga = comp
             por_dia.setdefault(d, []).append(a)
-    return a_json(por_dia, hoy, demo=True)
+    datos = a_json(por_dia, hoy, demo=True)
+    datos["historial"] = historial_demo(hoy)
+    return datos
+
+
+def historial_demo(hoy):
+    """Historial inventado para la vista previa."""
+    import random
+    import historial as hi
+    rnd = random.Random(4)
+    equipos = ["Atlético Norte", "Real Costa", "Betis Sol", "Rayo Monte", "Halcones Norte", "Toros Valle",
+               "Osasuna Roca", "Getafe Llano", "Linces Meseta", "Lobos Sierra"]
+    h = {"partidos": {}}
+    for k in range(1, 40):
+        d = hoy - timedelta(days=k)
+        for n in range(6):
+            dep = "b" if n % 3 == 0 else "f"
+            liga = rnd.choice(["ACB", "EL", "NBA"]) if dep == "b" else rnd.choice(["SP1", "E0", "I1", "UCL"])
+            l, v = rnd.sample(equipos, 2)
+            picks = []
+            for _ in range(3):
+                p = rnd.uniform(0.6, 0.93)
+                c = round(rnd.uniform(1.1, 1.9), 2) if rnd.random() < 0.5 else None
+                picks.append({"m": rnd.choice(["Gana local (1)", "Más de 1.5 goles", "Local o empate (1X)"])
+                              if dep == "f" else rnd.choice(["Gana local", "Más de 150.5 puntos"]),
+                              "p": round(p, 3), "c": c, "d": p >= 0.75, "v": bool(c and p - 1 / c > 0.05),
+                              "ok": rnd.random() < p - 0.02})
+            h["partidos"][f"{d}|{n}"] = {"f": d.isoformat(), "dep": dep, "liga": liga, "l": l, "v": v,
+                                        "picks": picks, "res": [rnd.randint(0, 3), rnd.randint(0, 3)]}
+    return hi.resumen(h, hoy)
 
 
 if __name__ == "__main__":

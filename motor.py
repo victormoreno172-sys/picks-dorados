@@ -9,6 +9,21 @@ from analisis import Analisis, analizar
 from modelo import ModeloDixonColes
 
 
+def poner_cuotas(p: datos.PartidoProximo, hoy: date):
+    """Sustituye las cuotas medias por las de Winamax cuando las hay."""
+    if p.cuotas:
+        p.casa = "media del mercado"
+    try:
+        import cuotas
+        ev = cuotas.instancia(hoy).buscar(p.liga, p.fecha, p.local, p.visitante)
+    except Exception as e:
+        print(f"  aviso cuotas: {e}")
+        return
+    if ev:
+        p.cuotas = {**p.cuotas, **ev.cuotas}
+        p.casa = ev.casa
+
+
 def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
     """Analiza los partidos de `desde` y los n_dias-1 siguientes."""
     print(f"Preparando predicciones desde {desde} ({n_dias} días)...")
@@ -17,6 +32,10 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
         # Sin datos es mejor fallar: así la app sigue mostrando la última versión buena.
         raise RuntimeError("No se pudo descargar ningún resultado histórico.")
     equipos = {l: sorted({p.local for p in h} | {p.visitante for p in h}) for l, h in historicos.items()}
+    import historial
+    for h in historicos.values():
+        for p in h:
+            historial.anotar(p.fecha, p.local, p.visitante, p.goles_local, p.goles_visitante)
 
     modelos: dict[str, ModeloDixonColes] = {}
     salida: dict[date, list[Analisis]] = {}
@@ -34,6 +53,7 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
                     continue
             if p.liga not in modelos:
                 continue
+            poner_cuotas(p, desde)
             a = analizar(p, modelos[p.liga])
             if a:
                 lista.append(a)
@@ -47,6 +67,7 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
         proximos, modelo_eu = europa.preparar(desde, n_dias)
         for pe in proximos:
             p = datos.PartidoProximo(pe.comp, pe.fecha, pe.hora, pe.local, pe.visitante)
+            poner_cuotas(p, desde)
             a = analizar(p, modelo_eu)
             if a:
                 salida.setdefault(pe.fecha, []).append(a)

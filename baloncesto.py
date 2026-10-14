@@ -62,6 +62,8 @@ class Juego:
     pv: int | None = None
     spread_local: float | None = None  # línea de la casa (negativo = local favorito)
     total_casa: float | None = None
+    cuotas: dict = None  # cuotas reales (Winamax) por mercado
+    casa: str = ""
 
     @property
     def jugado(self) -> bool:
@@ -334,9 +336,41 @@ def mercados_baloncesto(margen: float, total: float, sd_m: float, sd_t: float,
     return picks
 
 
-def analizar_juego(j: Juego, modelo: ModeloBaloncesto) -> Analisis | None:
+def _contrario(mercado: str) -> str | None:
+    """Mercado opuesto de la misma línea (para quitar el margen de la casa)."""
+    import re
+    if mercado in ("Gana local", "Gana visitante"):
+        return "Gana visitante" if mercado == "Gana local" else "Gana local"
+    m = re.match(r"Hándicap (local|visitante) ([+-][\d.]+)", mercado)
+    if m:
+        otro = "visitante" if m.group(1) == "local" else "local"
+        return f"Hándicap {otro} {-float(m.group(2)):+g}"
+    m = re.match(r"(Más|Menos) de ([\d.]+) puntos", mercado)
+    if m:
+        return f"{'Menos' if m.group(1) == 'Más' else 'Más'} de {m.group(2)} puntos"
+    return None
+
+
+def poner_cuotas(j: Juego, hoy: date):
+    try:
+        import cuotas
+        ev = cuotas.instancia(hoy).buscar(j.comp, j.fecha, j.local, j.visitante)
+    except Exception as e:
+        print(f"  aviso cuotas: {e}")
+        return
+    if ev:
+        j.cuotas, j.casa = ev.cuotas, ev.casa
+        if ev.spread_local is not None:
+            j.spread_local = ev.spread_local
+        if ev.total is not None:
+            j.total_casa = ev.total
+
+
+def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) -> Analisis | None:
     if not (modelo.conoce(j.local_id) and modelo.conoce(j.visit_id)):
         return None
+    if hoy is not None:
+        poner_cuotas(j, hoy)
     pl, pv = modelo.esperado(j)
     margen, total = pl - pv, pl + pv
     w = config.PESO_MERCADO
@@ -348,7 +382,17 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto) -> Analisis | None:
     tipico = 2 * modelo.media.get(j.comp, np.mean(list(modelo.media.values())))
     picks = mercados_baloncesto(margen, total, modelo.sd_margen, modelo.sd_total, j.spread_local,
                                 j.total_casa, tipico)
-    p = PartidoProximo(j.comp, j.fecha, j.hora, j.local, j.visitante)
+    if j.cuotas:  # cuotas reales de la casa en las líneas que ofrece
+        por_nombre = {pk.mercado: pk for pk in picks}
+        for nombre, cuota in j.cuotas.items():
+            pk = por_nombre.get(nombre)
+            if not pk:
+                continue
+            pk.cuota, pk.estimada = cuota, False
+            otro = j.cuotas.get(_contrario(nombre) or "")
+            pk.prob_cuota = (1 / cuota) / (1 / cuota + 1 / otro) if otro else None
+    p = PartidoProximo(j.comp, j.fecha, j.hora, j.local, j.visitante,
+                       casa=j.casa or ("ESPN (línea)" if j.spread_local is not None else ""))
     return Analisis(p, pl, pv, f"{round(pl)}-{round(pv)}", 0.0, picks)
 
 
@@ -357,13 +401,17 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
     salida: dict[date, list[Analisis]] = {}
 
     def procesar(nombre, juegos):
+        import historial
+        for j in juegos:
+            if j.jugado:
+                historial.anotar(j.fecha, j.local, j.visitante, j.pl, j.pv)
         proximos = [j for j in juegos if not j.jugado and hoy <= j.fecha < hoy + timedelta(days=n_dias)]
         print(f"  {nombre}: {len(juegos)} partidos, {len(proximos)} próximos")
         if not proximos:
             return
         modelo = ModeloBaloncesto().ajustar(juegos, hasta=hoy)
         for j in proximos:
-            a = analizar_juego(j, modelo)
+            a = analizar_juego(j, modelo, hoy)
             if a:
                 salida.setdefault(j.fecha, []).append(a)
             else:

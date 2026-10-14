@@ -46,6 +46,25 @@ Para que además publique el resumen cada mañana en un canal:
    - `TELEGRAM_TOKEN` → el token
    - `TELEGRAM_CANAL` → `@nombre_de_tu_canal`
 
+## 6. Cuotas de Winamax (recomendado)
+
+Para ver las cuotas de Winamax y que salgan más picks en rojo y VALOR:
+
+1. Entra en **the-odds-api.com**, pulsa **Get API Key** y elige el plan **Starter (gratis)**.
+   Te llega una clave por email.
+2. En GitHub: **Settings → Secrets and variables → Actions → New repository secret**
+   - Nombre: `ODDS_API_KEY`
+   - Valor: la clave del email
+
+Son cuotas de Winamax Francia (Winamax España no está en ninguna API); suelen ser casi iguales.
+El plan gratis da 500 consultas al mes y la app las reparte sola entre los días del mes.
+
+## Aciertos
+
+La pestaña **Aciertos** guarda cada día los picks y los corrige con el resultado real:
+porcentaje de acierto de dorados, rojos y VALOR, ganancia o pérdida (ROI) y si los porcentajes
+se cumplen. Se va llenando con los días; dale al menos un par de semanas antes de sacar conclusiones.
+
 ## Cosas a saber
 
 - **Qué cubre:** LaLiga, Segunda, Premier, Championship, Serie A, Bundesliga, Ligue 1, Eredivisie,

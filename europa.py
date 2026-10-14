@@ -436,6 +436,10 @@ def preparar(hoy: date, n_dias: int):
     inicio = hoy.year if hoy.month >= 7 else hoy.year - 1
     calendario = calendario_europeo(f"{inicio}-{inicio + 1}")
     proximos = [p for p in calendario if hoy <= p.fecha < hoy + timedelta(days=n_dias) and p.gl is None]
+    import historial
+    for p in calendario:
+        if p.gl is not None:
+            historial.anotar(p.fecha, p.local, p.visitante, p.gl, p.gv)
     print(f"  europa: {len(calendario)} partidos en el calendario, {len(proximos)} próximos")
     if not proximos:
         return [], None
