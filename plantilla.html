@@ -424,17 +424,24 @@ function pintarTop(delDia, q) {
   $("top").innerHTML = h;
 }
 
+// Top: probabilidad ≥ 73% (lo que roza o pasa el 75%) y que pague al menos 1,30
+const TOP_PROB = 0.73, TOP_CUOTA = 1.30;
+const cuotaRef = k => k.c || 1 / k.p;  // real de la casa, estimada (≈) o, si no hay, la justa
+function pickTop(p) {
+  return p.picks.filter(k => k.p >= TOP_PROB && cuotaRef(k) >= TOP_CUOTA - 1e-9)
+    .sort((a, b) => b.p - a.p)[0];
+}
 function pintarTopDia() {
   const dia = DATOS.dias[est.dia];
-  const cand = dia.partidos.map((p, i) => [p, i, mejorPick(p)]).filter(([, , k]) => k)
-    .sort(([, , a], [, , b]) => b.p - a.p).slice(0, 15);
-  if (!cand.length) { $("top").innerHTML = `<div class="vacio">No hay picks destacados este día.</div>`; return; }
+  const cand = dia.partidos.map((p, i) => [p, i, pickTop(p)]).filter(([, , k]) => k)
+    .sort(([, , a], [, , b]) => b.p - a.p).slice(0, 25);
+  if (!cand.length) { $("top").innerHTML = `<div class="vacio">Este día no hay picks de ${Math.round(TOP_PROB * 100)}% o más que paguen ${TOP_CUOTA.toFixed(2)} o más.</div>`; return; }
   const nombreDep = { f: "⚽", b: "🏀", e: "🎮" };
-  $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} mejores picks</small></h2>` +
+  $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} picks</small></h2>` +
     cand.map(([p, i, k]) => `<button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
       <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}</small></span>
       <span class="pp">${pct(k.p)}${cuotaBajo(k)}</span></button>`).join("") +
-    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">El mejor pick de cada partido, de todos los deportes, ordenados por probabilidad. Toca uno para verlo.</p></div>`;
+    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más (cuota de la casa, estimada ≈ o justa). Uno por partido, de todos los deportes. Toca uno para verlo.</p></div>`;
 }
 
 function pintar() {
