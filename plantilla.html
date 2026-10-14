@@ -16,6 +16,8 @@
   --gold-soft: #f6e6b8;
   --gold-ink: #5a3d00;
   --value: #0e6e8c;
+  --ok-soft: #d8f0df;
+  --ok-ink: #145a2f;
   --red: #c0262d;
   --red-soft: #fbe1df;
   --red-ink: #7a1016;
@@ -26,11 +28,11 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
-  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226; --red: #ff5a5f; --red-soft: #3d1214; --red-ink: #ffb3b3;
+  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226; --red: #ff5a5f; --ok-soft: #12382a; --ok-ink: #7ee2a8; --red-soft: #3d1214; --red-ink: #ffb3b3;
   color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
-  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226; --red: #ff5a5f; --red-soft: #3d1214; --red-ink: #ffb3b3;
+  --pitch: #3fae74; --gold: #f2bf3e; --gold-soft: #3a2c08; --gold-ink: #ffdf8a; --value: #5cc5e6; --bar: #1d3226; --red: #ff5a5f; --ok-soft: #12382a; --ok-ink: #7ee2a8; --red-soft: #3d1214; --red-ink: #ffb3b3;
   color-scheme: dark }
 
 * { box-sizing: border-box; }
@@ -154,7 +156,7 @@ h1 span { color: var(--gold); }
 
 .det { border-top: 1px dashed var(--line); padding: 4px 14px 14px; }
 .grupo h3 { margin: 12px 0 6px; font: 700 13px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.fila { display: grid; grid-template-columns: minmax(0, 1fr) 44px 46px; align-items: center; gap: 8px; padding: 5px 0; font-size: 14px; }
+.fila { display: grid; grid-template-columns: minmax(0, 1fr) 44px 64px; align-items: center; gap: 8px; padding: 5px 0; font-size: 14px; }
 .fila .n { min-width: 0; }
 .fila .bar { display: block; height: 3px; border-radius: 2px; background: var(--bar); margin-top: 4px; overflow: hidden; }
 .fila .bar i { display: block; height: 100%; background: var(--muted); opacity: .6; }
@@ -163,6 +165,11 @@ h1 span { color: var(--gold); }
 .fila .pc { font: 700 14px/1 var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
 .fila.d .pc { color: var(--gold); }
 .fila .cu { font: 500 12px/1.2 var(--mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.fila .cu small { display: block; font-size: 10px; opacity: .8; margin-top: 2px; white-space: nowrap; }
+.bien, .mal { font-weight: 700; border-radius: 4px; padding: 1px 4px; }
+.bien { color: var(--ok-ink); background: var(--ok-soft); }
+.mal { color: var(--red-ink); background: var(--red-soft); }
+.tfila .pp .cq .jj { font-weight: 500; color: var(--muted); }
 .val { display: inline-block; margin-left: 6px; font: 700 10px/1 var(--mono); letter-spacing: .05em; color: var(--value); border: 1px solid currentColor; border-radius: 4px; padding: 2px 4px; vertical-align: 2px; }
 .marcador { margin-top: 12px; font-size: 13px; color: var(--muted); }
 .marcador b { font: 700 14px var(--mono); color: var(--ink); }
@@ -193,6 +200,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div><span class="sw"></span><span><b>Dorado</b>: probabilidad de al menos <span id="umbral"></span>.</span></div>
       <div><span class="val" style="margin:0">VALOR</span><span>Nuestra probabilidad supera a la que marca la cuota de la casa.</span></div>
       <div><span style="font:700 12px var(--mono)">1.27</span><span>Cuota justa: por debajo de esa cuota la apuesta no compensa.</span></div>
+      <div><span class="bien" style="font:700 12px var(--mono)">1.40</span><span>Cuota de la casa igual o mejor que la que vale según la app.</span></div>
+      <div><span class="mal" style="font:700 12px var(--mono)">1.20</span><span>Cuota de la casa por debajo de lo que vale según la app.</span></div>
       <div><span style="font:700 12px var(--mono)">≈1.45</span><span>Cuota estimada: calculada a partir del 1X2 y los goles de la casa. Compruébala en tu app antes de apostar.</span></div>
     </div>
     <p style="margin:6px 0 0">Fútbol: modelo Dixon-Coles sobre las últimas temporadas, combinado con las cuotas del mercado. Baloncesto: ratings de ataque y defensa de cada equipo, combinados con las líneas de las casas cuando las hay (NBA). Esports (CS2 y Valorant, torneos de nivel S y A): fuerza de cada equipo según los mapas ganados y perdidos. Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
@@ -261,7 +270,10 @@ function pintarFiltros() {
 
 function filaMercado(k) {
   const valor = (esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
-  const cuota = k.c ? `${k.e ? "≈" : ""}${k.c.toFixed(2)}` : `<span title="cuota justa">${(1 / k.p).toFixed(2)}</span>`;
+  const justa = (1 / k.p).toFixed(2);
+  const cuota = k.c
+    ? `<span class="${veredicto(k)}">${k.e ? "≈" : ""}${k.c.toFixed(2)}</span><small>justa ${justa}</small>`
+    : `<span title="cuota justa">${justa}</span>`;
   return `<div class="fila ${esRojo(k) ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
@@ -276,7 +288,7 @@ function tarjeta(p, idx) {
   const total = p.gl + p.gv;
   const num = x => basket ? Math.round(x) : x.toFixed(1);
   const top = oro.slice(0, 3).map(k =>
-    `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? (k.e ? "≈ cuota " : "cuota ") + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
+    `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? `<span class="${veredicto(k)}">${k.e ? "≈ cuota " : "cuota "}${k.c.toFixed(2)}</span> · ` : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
   let det = "";
   if (abierto) {
     det = `<div class="det">` + GRUPOS[basket ? "b" : esp ? "e" : "f"].map(([nombre, f]) => {
@@ -379,9 +391,11 @@ function pintarAciertos() {
   el.innerHTML = h;
 }
 
+// ¿La cuota real de la casa paga al menos lo que vale según la app? verde = sí, rojo = no
+const veredicto = k => (k.c && !k.e) ? (k.c >= 1 / k.p - 0.005 ? "bien" : "mal") : "";
 // Cuota bajo el porcentaje: la real de la casa si la hay; si no, la cuota justa
 const cuotaBajo = k => (k.c && !k.e)
-  ? `<small class="cq">cuota ${k.c.toFixed(2)}</small>`
+  ? `<small class="cq ${veredicto(k)}">cuota ${k.c.toFixed(2)} <span class="jj">· justa ${(1 / k.p).toFixed(2)}</span></small>`
   : k.c ? `<small class="cq justa">≈ cuota ${k.c.toFixed(2)}</small>`
   : `<small class="cq justa">justa ${(1 / k.p).toFixed(2)}</small>`;
 function pintarTop(delDia, q) {
