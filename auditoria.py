@@ -210,7 +210,45 @@ def auditar_otros():
         traceback.print_exc()
 
 
+def auditar_esquinas(liga: str):
+    import esquinas
+    filas = esquinas.historico(liga, HOY)
+    test = [f for f in filas if f.fecha >= HOY - timedelta(days=330)]
+    for campo, lineas, nombre in (("c", esquinas.LINEAS_CORNERS, "córners"), ("t", esquinas.LINEAS_TARJETAS, "tarjetas")):
+        tramos = defaultdict(lambda: [0, 0.0, 0])
+        m, fm = None, None
+        for f in test:
+            if m is None or (f.fecha - fm).days >= 21:
+                try:
+                    m = esquinas.ModeloConteo(nombre).ajustar(filas, f.fecha, campo)
+                    fm = f.fecha
+                except ValueError:
+                    continue
+            if not (m.conoce(f.local) and m.conoce(f.visitante)):
+                continue
+            a, b = m.esperado(f.local, f.visitante)
+            tot = getattr(f, campo + "l") + getattr(f, campo + "v")
+            for lin in lineas:
+                p = m.p_mas(a + b, lin)
+                for q, ok in ((p, tot > lin), (1 - p, tot < lin)):
+                    t = min(int(q * 10), 9)
+                    tramos[t][0] += 1
+                    tramos[t][1] += q
+                    tramos[t][2] += ok
+        print(f"\n=== {nombre} {liga}: tramo, n, dijo, pasó")
+        for t in sorted(tramos):
+            k, sp, ok = tramos[t]
+            if k >= 30:
+                print(f"    {t * 10}-{t * 10 + 10}%: {k:5d}  {sp / k:6.1%}  {ok / k:6.1%}")
+
+
 if __name__ == "__main__":
+    for liga in ("SP1", "E0", "I1", "D1", "F1", "E1"):
+        try:
+            auditar_esquinas(liga)
+        except Exception:
+            import traceback
+            traceback.print_exc()
     resumen = {}
     for liga in ("SP1", "E0", "I1", "D1", "F1", "E1"):
         try:
