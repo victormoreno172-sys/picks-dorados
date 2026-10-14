@@ -71,6 +71,7 @@ def nombre_liga(codigo: str) -> str:
 
 # --- Reglas de las predicciones --------------------------------------------
 UMBRAL_DORADO = 0.75     # a partir de esta probabilidad el pick sale en dorado
+USAR_ROJO = False        # el rojo se quitó de la app
 UMBRAL_ROJO_PROB = 0.70  # rojo: probabilidad al menos del 70%...
 UMBRAL_ROJO_CUOTA = 1.40  # ...y cuota real de la casa al menos de 1.40
 UMBRAL_VALOR = 0.05     # 💎 si nuestra probabilidad supera a la de la cuota en 5 puntos

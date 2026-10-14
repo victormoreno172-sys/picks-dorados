@@ -27,8 +27,8 @@ class Pick:
 
     @property
     def rojo(self) -> bool:
-        """Muy probable Y con una cuota real que todavía paga algo."""
-        return (self.cuota is not None and not self.estimada
+        """Muy probable Y con una cuota real que todavía paga algo (desactivado en la app)."""
+        return config.USAR_ROJO and (self.cuota is not None and not self.estimada
                 and self.prob >= config.UMBRAL_ROJO_PROB and self.cuota >= config.UMBRAL_ROJO_CUOTA)
 
     @property
@@ -119,7 +119,7 @@ def _linea_pick(pk: Pick) -> str:
 def resumen_del_dia(analisis: list[Analisis], dia: date) -> list[str]:
     """Mensaje del día. Devuelve una lista porque Telegram corta a 4096 caracteres."""
     cab = (f"⚽ <b>Partidos del {dia.strftime('%d/%m/%Y')}</b>\n"
-           f"🟡 = probabilidad ≥ {_pct(config.UMBRAL_DORADO)} · 🔴 = ≥ {_pct(config.UMBRAL_ROJO_PROB)} con cuota ≥ {config.UMBRAL_ROJO_CUOTA:.2f} · 💎 = mejor que la cuota\n")
+           f"🟡 = probabilidad ≥ {_pct(config.UMBRAL_DORADO)} · 💎 = mejor que la cuota\n")
     if not analisis:
         return [cab + "\nHoy no hay partidos de las ligas que seguimos."]
 
