@@ -193,6 +193,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div><span class="sw"></span><span><b>Dorado</b>: probabilidad de al menos <span id="umbral"></span>.</span></div>
       <div><span class="val" style="margin:0">VALOR</span><span>Nuestra probabilidad supera a la que marca la cuota de la casa.</span></div>
       <div><span style="font:700 12px var(--mono)">1.27</span><span>Cuota justa: por debajo de esa cuota la apuesta no compensa.</span></div>
+      <div><span style="font:700 12px var(--mono)">≈1.45</span><span>Cuota estimada: calculada a partir del 1X2 y los goles de la casa. Compruébala en tu app antes de apostar.</span></div>
     </div>
     <p style="margin:6px 0 0">Fútbol: modelo Dixon-Coles sobre las últimas temporadas, combinado con las cuotas del mercado. Baloncesto: ratings de ataque y defensa de cada equipo, combinados con las líneas de las casas cuando las hay (NBA). Esports (CS2 y Valorant, torneos de nivel S y A): fuerza de cada equipo según los mapas ganados y perdidos. Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
   </footer>
@@ -260,7 +261,7 @@ function pintarFiltros() {
 
 function filaMercado(k) {
   const valor = (esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
-  const cuota = k.c ? `${k.c.toFixed(2)}` : `<span title="cuota justa">${(1 / k.p).toFixed(2)}</span>`;
+  const cuota = k.c ? `${k.e ? "≈" : ""}${k.c.toFixed(2)}` : `<span title="cuota justa">${(1 / k.p).toFixed(2)}</span>`;
   return `<div class="fila ${esRojo(k) ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
@@ -275,7 +276,7 @@ function tarjeta(p, idx) {
   const total = p.gl + p.gv;
   const num = x => basket ? Math.round(x) : x.toFixed(1);
   const top = oro.slice(0, 3).map(k =>
-    `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? "cuota " + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
+    `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? (k.e ? "≈ cuota " : "cuota ") + k.c.toFixed(2) + " · " : ""}justa ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
   let det = "";
   if (abierto) {
     det = `<div class="det">` + GRUPOS[basket ? "b" : esp ? "e" : "f"].map(([nombre, f]) => {
@@ -381,6 +382,7 @@ function pintarAciertos() {
 // Cuota bajo el porcentaje: la real de la casa si la hay; si no, la cuota justa
 const cuotaBajo = k => (k.c && !k.e)
   ? `<small class="cq">cuota ${k.c.toFixed(2)}</small>`
+  : k.c ? `<small class="cq justa">≈ cuota ${k.c.toFixed(2)}</small>`
   : `<small class="cq justa">justa ${(1 / k.p).toFixed(2)}</small>`;
 function pintarTop(delDia, q) {
   if (q || est.soloFav) { $("top").innerHTML = ""; return; }

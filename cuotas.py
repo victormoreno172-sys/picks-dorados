@@ -169,6 +169,7 @@ def obtener(hoy: date) -> list[EventoCuotas]:
         except requests.RequestException as e:
             print(f"  cuotas Winamax: fallo en {clave} ({e})")
     print(f"  cuotas Winamax: {gastado} créditos gastados hoy, quedan ~{_estado().get('restantes', '?')}")
+    sondear_mercados(activos)
 
     salida = []
     for clave, liga in DEPORTES.items():
@@ -182,6 +183,38 @@ def obtener(hoy: date) -> list[EventoCuotas]:
                     salida.append(e)
     print(f"  cuotas Winamax: {len(salida)} partidos con cuotas")
     return salida
+
+
+def sondear_mercados(activos: set):
+    """Una sola vez: qué mercados extra da Winamax por partido (para decidir si pagar el plan)."""
+    marca = os.path.join(CACHE, "sondeo_mercados.txt")
+    if os.path.exists(marca):
+        with open(marca, encoding="utf-8") as f:
+            print("  sondeo de mercados Winamax (guardado):", f.read()[:600])
+        return
+    extras = ("btts,draw_no_bet,double_chance,alternate_totals,alternate_spreads,team_totals,"
+              "h2h_h1,totals_h1,spreads,alternate_totals_corners,alternate_totals_cards")
+    resultado = []
+    for clave in ("soccer_spain_la_liga", "soccer_epl", "soccer_uefa_champs_league", "basketball_nba"):
+        if clave not in activos:
+            continue
+        try:
+            eventos = _get(f"sports/{clave}/events")
+            if not eventos:
+                continue
+            ev = eventos[0]
+            mercados = extras if clave.startswith("soccer") else "alternate_spreads,alternate_totals,team_totals,player_points"
+            d = _get(f"sports/{clave}/events/{ev['id']}/odds", bookmakers=CASAS, markets=mercados, oddsFormat="decimal")
+            for b in d.get("bookmakers", []):
+                resultado.append(f"{clave} {b['key']}: " + ", ".join(m["key"] for m in b.get("markets", [])))
+            if not d.get("bookmakers"):
+                resultado.append(f"{clave}: Winamax no da mercados extra")
+        except requests.RequestException as e:
+            resultado.append(f"{clave}: error {e}")
+    texto = " | ".join(resultado) or "sin datos"
+    with open(marca, "w", encoding="utf-8") as f:
+        f.write(texto)
+    print("  sondeo de mercados Winamax:", texto)
 
 
 # ----------------------------------------------------------------- casar

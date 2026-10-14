@@ -63,41 +63,96 @@ def _quitar_margen(cuotas: dict[str, float], grupo: list[str]) -> dict[str, floa
     return {m: v / s for m, v in inv.items()}
 
 
+def goles_del_mercado(cuotas: dict[str, float]) -> tuple[float, float, float] | None:
+    """
+    Goles esperados de cada equipo que "piensa" la casa, deducidos de sus cuotas
+    de 1X2 (y de más/menos 2.5 goles si las hay). Devuelve (λ local, μ visitante, margen).
+    """
+    imp = _quitar_margen(cuotas, GRUPOS_1X2)
+    if not imp:
+        return None
+    ou = _quitar_margen(cuotas, GRUPOS_OU)
+    margen = sum(1 / cuotas[m] for m in GRUPOS_1X2) - 1
+    objetivo = [imp[GRUPOS_1X2[0]], imp[GRUPOS_1X2[1]]]
+    if ou:
+        objetivo.append(ou["Más de 2.5 goles"])
+
+    import numpy as np
+    from scipy.optimize import minimize
+    from scipy.stats import poisson
+
+    g = np.arange(11)
+
+    def probs(x):
+        lam, mu = np.exp(x)
+        m = np.outer(poisson.pmf(g, lam), poisson.pmf(g, mu))
+        i, j = np.indices(m.shape)
+        out = [m[i > j].sum(), m[i == j].sum()]
+        if ou:
+            out.append(m[(i + j) > 2.5].sum())
+        return np.array(out)
+
+    res = minimize(lambda x: np.sum((probs(x) - objetivo) ** 2), np.log([1.4, 1.1]), method="Nelder-Mead",
+                   options={"xatol": 1e-6, "fatol": 1e-10})
+    lam, mu = np.exp(res.x)
+    if res.fun > 1e-3:  # cuotas incoherentes: mejor no usarlas
+        return None
+    return float(lam), float(mu), float(margen)
+
+
 def analizar(p: PartidoProximo, modelo: ModeloDixonColes) -> Analisis | None:
     if not (modelo.conoce(p.local) and modelo.conoce(p.visitante)):
         return None  # equipo recién ascendido sin historial suficiente, etc.
     tabla = modelo.tabla_marcadores(p.local, p.visitante)
     probs = mercados(tabla)
     lam, mu = modelo.goles_esperados(p.local, p.visitante)
-    marcador, pm = marcador_mas_probable(tabla)
-
-    implicitas = {**_quitar_margen(p.cuotas, GRUPOS_1X2), **_quitar_margen(p.cuotas, GRUPOS_OU)}
-
-    # Mezcla modelo + mercado: el mercado sabe cosas que el modelo no (lesiones, rotaciones).
     w = config.PESO_MERCADO
-    final = dict(probs)
-    for m, pi in implicitas.items():
-        final[m] = (1 - w) * probs[m] + w * pi
-    if all(m in implicitas for m in GRUPOS_1X2):
-        final["Local o empate (1X)"] = final[GRUPOS_1X2[0]] + final[GRUPOS_1X2[1]]
-        final["Visitante o empate (X2)"] = final[GRUPOS_1X2[2]] + final[GRUPOS_1X2[1]]
-        final["No hay empate (12)"] = final[GRUPOS_1X2[0]] + final[GRUPOS_1X2[2]]
-    if all(m in implicitas for m in GRUPOS_OU):
-        final["Menos de 2.5 goles"] = 1 - final["Más de 2.5 goles"]
 
     cuotas = dict(p.cuotas)
-    if all(m in cuotas for m in GRUPOS_1X2):
-        # Doble oportunidad a partir del 1X2 (así la calculan las casas; conserva su margen)
+    estimadas: set[str] = set()
+    implicitas = {**_quitar_margen(cuotas, GRUPOS_1X2), **_quitar_margen(cuotas, GRUPOS_OU)}
+    mercado = goles_del_mercado(cuotas)
+    if mercado:
+        # La casa "dice" unos goles esperados: con ellos sale su tabla de marcadores y,
+        # de ahí, su opinión sobre TODOS los mercados de goles.
+        lm, mm, margen = mercado
+        from scipy.stats import poisson
+        import numpy as np
+        g = np.arange(11)
+        tabla_m = np.outer(poisson.pmf(g, lm), poisson.pmf(g, mm))
+        tabla_m /= tabla_m.sum()
+        prob_mercado = mercados(tabla_m)
+        # Mezcla modelo + mercado en todos los mercados (el mercado sabe de lesiones, rotaciones...)
+        tabla = (1 - w) * tabla + w * tabla_m
+        final = {m: (1 - w) * probs[m] + w * prob_mercado[m] for m in probs}
+        # Cuotas estimadas (≈) para los mercados que la casa no nos ha dado, con su mismo margen
+        for m, pm_ in prob_mercado.items():
+            if m not in cuotas and 0.02 < pm_ < 0.98:
+                cuotas[m] = round(max(1.01, 1 / (pm_ * (1 + margen))), 2)
+                estimadas.add(m)
+        lam, mu = (1 - w) * lam + w * lm, (1 - w) * mu + w * mm
+    else:
+        final = dict(probs)
+        for m, pi in implicitas.items():
+            final[m] = (1 - w) * probs[m] + w * pi
+        if all(m in implicitas for m in GRUPOS_OU):
+            final["Menos de 2.5 goles"] = 1 - final["Más de 2.5 goles"]
+
+    if all(m in cuotas for m in GRUPOS_1X2) and not mercado:
         c1, cx, c2 = (cuotas[m] for m in GRUPOS_1X2)
-        cuotas.setdefault("Local o empate (1X)", round(1 / (1 / c1 + 1 / cx), 2))
-        cuotas.setdefault("Visitante o empate (X2)", round(1 / (1 / c2 + 1 / cx), 2))
-        cuotas.setdefault("No hay empate (12)", round(1 / (1 / c1 + 1 / c2), 2))
-        s = sum(implicitas.get(m, 0) for m in GRUPOS_1X2)
-        if s:
-            implicitas["Local o empate (1X)"] = implicitas[GRUPOS_1X2[0]] + implicitas[GRUPOS_1X2[1]]
-            implicitas["Visitante o empate (X2)"] = implicitas[GRUPOS_1X2[2]] + implicitas[GRUPOS_1X2[1]]
-            implicitas["No hay empate (12)"] = implicitas[GRUPOS_1X2[0]] + implicitas[GRUPOS_1X2[2]]
-    picks = [Pick(m, v, cuotas.get(m), implicitas.get(m)) for m, v in final.items()]
+        for m, c in (("Local o empate (1X)", 1 / (1 / c1 + 1 / cx)), ("Visitante o empate (X2)", 1 / (1 / c2 + 1 / cx)),
+                     ("No hay empate (12)", 1 / (1 / c1 + 1 / c2))):
+            if m not in cuotas:
+                cuotas[m] = round(c, 2)
+                estimadas.add(m)
+    if all(m in implicitas for m in GRUPOS_1X2):
+        implicitas["Local o empate (1X)"] = implicitas[GRUPOS_1X2[0]] + implicitas[GRUPOS_1X2[1]]
+        implicitas["Visitante o empate (X2)"] = implicitas[GRUPOS_1X2[2]] + implicitas[GRUPOS_1X2[1]]
+        implicitas["No hay empate (12)"] = implicitas[GRUPOS_1X2[0]] + implicitas[GRUPOS_1X2[2]]
+
+    marcador, pm = marcador_mas_probable(tabla)
+    picks = [Pick(m, v, cuotas.get(m), None if m in estimadas else implicitas.get(m), estimada=m in estimadas)
+             for m, v in final.items()]
     return Analisis(p, lam, mu, marcador, pm, picks)
 
 
