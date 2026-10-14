@@ -126,9 +126,20 @@ def proximos_desde_csv(texto: str, dia: date) -> list[PartidoProximo]:
         liga = f.get("Div", "").strip()
         if liga not in config.LIGAS or _fecha(f["Date"]) != dia:
             continue
-        out.append(PartidoProximo(liga, dia, f.get("Time", "").strip(),
+        out.append(PartidoProximo(liga, dia, hora_madrid(dia, f.get("Time", "")),
                                   f["HomeTeam"].strip(), f["AwayTeam"].strip(), _cuotas(f)))
     return out
+
+
+def hora_madrid(dia: date, hora_uk: str) -> str:
+    """football-data.co.uk da la hora de Reino Unido; la pasamos a la de Madrid."""
+    from zoneinfo import ZoneInfo
+    try:
+        h, m = (int(x) for x in hora_uk.strip().split(":")[:2])
+    except ValueError:
+        return ""
+    uk = datetime(dia.year, dia.month, dia.day, h, m, tzinfo=ZoneInfo("Europe/London"))
+    return uk.astimezone(ZoneInfo(config.ZONA_HORARIA)).strftime("%H:%M")
 
 
 def _desde_football_data_org(dia: date, equipos_por_liga: dict[str, list[str]]) -> list[PartidoProximo]:
