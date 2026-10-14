@@ -115,6 +115,9 @@ h1 span { color: var(--gold); }
 .tfila .q small { display: block; font: 500 11px var(--mono); color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
 .tfila .pp { font: 700 18px var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
 .tfila.r .pp { color: var(--red); }
+.tfila .pp { text-align: right; }
+.tfila .pp .cq { display: block; font: 700 12px var(--mono); color: var(--ink); margin-top: 3px; }
+.tfila .pp .cq.justa { font-weight: 500; color: var(--muted); }
 .combi .total { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 .combi .total div { background: var(--bar); border-radius: 8px; padding: 8px 10px; }
 .combi .total span { display: block; font: 600 11px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -372,6 +375,10 @@ function pintarAciertos() {
   el.innerHTML = h;
 }
 
+// Cuota bajo el porcentaje: la real de la casa si la hay; si no, la cuota justa
+const cuotaBajo = k => (k.c && !k.e)
+  ? `<small class="cq">cuota ${k.c.toFixed(2)}</small>`
+  : `<small class="cq justa">justa ${(1 / k.p).toFixed(2)}</small>`;
 function pintarTop(delDia, q) {
   if (q || est.soloFav) { $("top").innerHTML = ""; return; }
   // Un pick por partido: el mejor de cada uno
@@ -379,8 +386,8 @@ function pintarTop(delDia, q) {
   if (!cand.length) { $("top").innerHTML = ""; return; }
   const top = cand.slice().sort(([, , a], [, , b]) => (esRojo(b) - esRojo(a)) || (b.p - a.p)).slice(0, 5);
   const fila = ([p, i, k]) => `<button class="tfila ${esRojo(k) ? "r" : ""}" data-ir="${i}">
-      <span class="q"><b>${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.hora || "")}${k.c ? " · cuota " + k.c.toFixed(2) : ""}</small></span>
-      <span class="pp">${pct(k.p)}</span></button>`;
+      <span class="q"><b>${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.hora || "")}</small></span>
+      <span class="pp">${pct(k.p)}${cuotaBajo(k)}</span></button>`;
   let h = "";
 
   // Combinada: los 3 picks más probables de partidos distintos que paguen algo (cuota real ≥ 1.15 o justa ≥ 1.15)
@@ -406,8 +413,8 @@ function pintarTopDia() {
   const nombreDep = { f: "⚽", b: "🏀" };
   $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} mejores picks</small></h2>` +
     cand.map(([p, i, k]) => `<button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
-      <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}${k.c ? " · cuota " + k.c.toFixed(2) : ""}</small></span>
-      <span class="pp">${pct(k.p)}</span></button>`).join("") +
+      <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}</small></span>
+      <span class="pp">${pct(k.p)}${cuotaBajo(k)}</span></button>`).join("") +
     `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">El mejor pick de cada partido, de fútbol y baloncesto, ordenados por probabilidad. Toca uno para verlo.</p></div>`;
 }
 
