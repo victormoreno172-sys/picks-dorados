@@ -79,6 +79,12 @@ ALIAS = {
     "fc basel": "Basel", "basel 1893": "Basel", "fcsb": "FCSB", "steaua bucuresti": "FCSB",
     "aek athens": "AEK", "aek": "AEK", "ofi": "OFI Crete", "ofi crete": "OFI Crete",
     "nec nijmegen": "Nijmegen", "nec": "Nijmegen",
+    "internazionale milano": "Inter", "lazio roma": "Lazio", "sporting clube portugal": "Sp Lisbon",
+    "istanbul basaksehir": "Buyuksehyr", "basaksehir": "Buyuksehyr",
+    "rapid vienna": "Rapid Vienna", "rapid wien": "Rapid Vienna", "austria vienna": "Austria Vienna",
+    "austria wien": "Austria Vienna", "rakow czestochowa": "Rakow", "jagiellonia bialystok": "Jagiellonia",
+    "hjk helsinki": "HJK", "hjk": "HJK", "kups": "KuPS",
+    "universitatea craiova": "U Craiova", "universitatea cluj": "U Cluj",
 }
 # Nombre en inglés -> nombre local (para equipos sin liga en nuestros datos)
 ALIAS_SIN_LIGA = {
