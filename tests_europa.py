@@ -67,16 +67,16 @@ def test_modelo_conecta_ligas():
     equipos = {liga: [f"{liga}{i}" for i in range(12)] for liga in nivel}
     fuerza = {e: nivel[l] + rng.normal(0, 0.15) for l, es in equipos.items() for e in es}
     partidos, d = [], date(2024, 8, 1)
-    def jugar(h, a, eu):
+    def jugar(h, a, eu, liga=""):
         gl = rng.poisson(np.exp(0.1 + fuerza[h] - fuerza[a] * 0.6 + (0.15 if eu else 0.25)))
         gv = rng.poisson(np.exp(0.1 + fuerza[a] - fuerza[h] * 0.6))
-        partidos.append(europa.PartidoEu(d, h, a, int(gl), int(gv), eu))
+        partidos.append(europa.PartidoEu(d, h, a, int(gl), int(gv), eu, liga))
     for _ in range(2):
-        for es in equipos.values():
+        for liga, es in equipos.items():
             for h in es:
                 for a in es:
                     if h != a:
-                        jugar(h, a, False)
+                        jugar(h, a, False, liga)
         for _ in range(60):
             jugar(rng.choice(equipos["A"]), rng.choice(equipos["B"]), True)
             jugar(rng.choice(equipos["B"]), rng.choice(equipos["A"]), True)
@@ -84,6 +84,7 @@ def test_modelo_conecta_ligas():
     m = europa.ModeloEuropeo().ajustar(partidos, hasta=d)
     media = {l: np.mean([m.att[e] - m.dfn[e] for e in es]) for l, es in equipos.items()}
     assert media["A"] - media["B"] > 0.5, media  # el modelo ve que la liga A es mejor
+    assert m.nivel_liga["A"] - m.nivel_liga["B"] > 0.4, m.nivel_liga
     lam, mu = m.goles_esperados("A0", "B0")
     assert lam > mu
     t = m.tabla_marcadores("A0", "B0")
@@ -96,6 +97,8 @@ def test_gradiente():
     partidos = [europa.PartidoEu(date(2025, 1, 1) + timedelta(days=i), f"T{rng.integers(6)}",
                                  f"T{rng.integers(6, 12)}", int(rng.poisson(1.4)), int(rng.poisson(1.1)),
                                  bool(i % 3 == 0)) for i in range(300)]
+    for i, p in enumerate(partidos):
+        p.liga = "" if p.europeo else ("L1" if i % 2 else "L2")
     m = europa.ModeloEuropeo()
     # reconstruye la función objetivo igual que ajustar() para comprobar el gradiente
     import types

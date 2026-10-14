@@ -76,8 +76,15 @@ ALIAS = {
     "kobenhavn": "FC Copenhagen", "copenhagen": "FC Copenhagen", "fc midtjylland": "Midtjylland",
     "bodo glimt": "Bodo/Glimt", "fk bodo glimt": "Bodo/Glimt", "molde fk": "Molde",
     "malmo ff": "Malmo FF", "malmo": "Malmo FF", "young boys": "Young Boys", "bsc young boys": "Young Boys",
-    "fc basel": "Basel", "basel 1893": "Basel", "legia warsaw": "Legia", "legia warszawa": "Legia",
-    "lech poznan": "Lech", "fcsb": "FCSB", "steaua bucuresti": "FCSB",
+    "fc basel": "Basel", "basel 1893": "Basel", "fcsb": "FCSB", "steaua bucuresti": "FCSB",
+    "aek athens": "AEK", "aek": "AEK", "ofi": "OFI Crete", "ofi crete": "OFI Crete",
+    "nec nijmegen": "Nijmegen", "nec": "Nijmegen",
+}
+# Nombre en inglés -> nombre local (para equipos sin liga en nuestros datos)
+ALIAS_SIN_LIGA = {
+    "slavia prague": "slavia praha", "sparta prague": "sparta praha", "red star belgrade": "crvena zvezda",
+    "fc red star belgrade": "crvena zvezda", "partizan belgrade": "partizan", "shakhtar": "shakhtar donetsk",
+    "dynamo kyiv": "dynamo kyiv", "dynamo kiev": "dynamo kyiv", "plzen": "viktoria plzen",
 }
 
 QUITAR = {"fc", "cf", "afc", "ac", "sc", "sk", "fk", "bk", "if", "ik", "sv", "club", "de", "the", "cd",
@@ -105,6 +112,8 @@ class Emparejador:
         for d in self.por_pais.values():
             self.todos.update(d)
         self.cache: dict[tuple[str, str | None], str] = {}
+        self.sin_liga: dict[str, str] = {}  # "~nombre" -> país (equipos sin liga en nuestros datos)
+        self.conocidos = set(self.todos.values())
 
     def __call__(self, nombre: str, pais: str | None = None) -> str:
         clave = (nombre, pais)
@@ -112,26 +121,47 @@ class Emparejador:
             self.cache[clave] = self._buscar(nombre, pais)
         return self.cache[clave]
 
+    @staticmethod
+    def _contenido(n: str, candidatos, min_len: int = 0) -> str | None:
+        """'Jagiellonia Bialystok' ~ 'Jagiellonia'. Solo si hay un único candidato."""
+        tokens = set(n.split())
+        enc = []
+        for c in candidatos:
+            ct = set(c.split())
+            comunes = tokens & ct
+            if c and (ct <= tokens or tokens <= ct) and any(len(t) >= min_len for t in comunes):
+                enc.append(c)
+        return enc[0] if len(enc) == 1 else None
+
     def _buscar(self, nombre: str, pais: str | None) -> str:
         import difflib
         n = normalizar(nombre)
-        if n in ALIAS:
+        if n in ALIAS and ALIAS[n] in self.conocidos:
             return ALIAS[n]
         candidatos = self.por_pais.get(pais, {}) if pais else self.todos
         if n in candidatos:
             return candidatos[n]
-        # el nombre corto está contenido en el largo ("Dinamo Zagreb" ~ "Gnk Dinamo Zagreb")
-        # (solo dentro de un país: a nivel global "Inter Turku" contendría a "Inter")
-        if pais:
-            tokens = set(n.split())
-            contenidos = [c for c in candidatos if c and (set(c.split()) <= tokens or tokens <= set(c.split()))]
-            if len(contenidos) == 1:
-                return candidatos[contenidos[0]]
-        corte = 0.75 if pais else 0.86
-        m = difflib.get_close_matches(n, list(candidatos), n=1, cutoff=corte)
+        # Dentro de un país vale cualquier coincidencia; a nivel global se exige una
+        # palabra larga en común (si no, "Inter Turku" acabaría siendo el Inter).
+        c = self._contenido(n, candidatos, 0 if pais else 6)
+        if c:
+            return candidatos[c]
+        m = difflib.get_close_matches(n, list(candidatos), n=1, cutoff=0.75 if pais else 0.86)
         if m:
             return candidatos[m[0]]
-        return "~" + n  # equipo sin liga en nuestros datos: se identifica por su nombre normalizado
+        # Equipo sin liga en nuestros datos: ¿ya apareció en partidos europeos con otro nombre?
+        n = ALIAS_SIN_LIGA.get(n, n)
+        if "~" + n in self.sin_liga:
+            return "~" + n
+        previos = [k[1:] for k in self.sin_liga if not pais or self.sin_liga[k] == pais]
+        c = self._contenido(n, previos, 5)
+        if not c:
+            m = difflib.get_close_matches(n, previos, n=1, cutoff=0.8)
+            c = m[0] if m else None
+        if c:
+            return "~" + c
+        self.sin_liga["~" + n] = pais or "?"
+        return "~" + n
 
 
 # ------------------------------------------------------------------ datos
@@ -143,6 +173,7 @@ class PartidoEu:
     gl: int
     gv: int
     europeo: bool
+    liga: str = ""  # código de la liga (solo partidos nacionales)
 
 
 def _historico_nuevo(codigo: str, desde: date) -> list[PartidoEu]:
@@ -153,7 +184,7 @@ def _historico_nuevo(codigo: str, desde: date) -> list[PartidoEu]:
             d = datos._fecha(f["Date"])
             if d >= desde and f.get("HG") not in (None, ""):
                 out.append(PartidoEu(d, f["Home"].strip(), f["Away"].strip(), int(float(f["HG"])),
-                                     int(float(f["AG"])), False))
+                                     int(float(f["AG"])), False, codigo))
         except (ValueError, KeyError):
             continue
     return out
@@ -169,8 +200,8 @@ def domesticos(hoy: date) -> tuple[list[PartidoEu], dict[str, set[str]]]:
                 if cod in FORMATO_NUEVO:
                     lista = _historico_nuevo(cod, desde)
                 else:
-                    lista = [PartidoEu(p.fecha, p.local, p.visitante, p.goles_local, p.goles_visitante, False)
-                             for p in datos.historico(cod, hoy)]
+                    lista = [PartidoEu(p.fecha, p.local, p.visitante, p.goles_local, p.goles_visitante,
+                                       False, cod) for p in datos.historico(cod, hoy)]
             except requests.RequestException as e:
                 print(f"  aviso europa: {cod} no disponible ({e})")
                 continue
@@ -293,42 +324,74 @@ class ModeloEuropeo:
         self.xi, self.rho, self.min_partidos = xi, rho, min_partidos
         self.mapa: dict[str, str] = {}  # nombre mostrado -> nombre interno
 
-    def ajustar(self, partidos: list[PartidoEu], hasta: date) -> "ModeloEuropeo":
-        partidos = [p for p in partidos if p.fecha < hasta]
+    def ajustar(self, partidos: list[PartidoEu], hasta: date,
+                pais_sin_liga: dict[str, str] | None = None) -> "ModeloEuropeo":
+        """
+        Fuerza de un equipo = nivel de su LIGA + lo que destaca dentro de ella.
+        El nivel de cada liga se aprende de los partidos europeos entre países;
+        así un equipo que arrasa en una liga floja no parece un gigante.
+        """
+        partidos = sorted((p for p in partidos if p.fecha < hasta), key=lambda p: p.fecha)
         equipos = sorted({p.local for p in partidos} | {p.visitante for p in partidos})
         idx = {e: i for i, e in enumerate(equipos)}
         n = len(equipos)
+
+        # Liga de cada equipo: la de su partido nacional más reciente.
+        liga_de: dict[str, str] = {}
+        for p in partidos:
+            if p.liga:
+                liga_de[p.local] = liga_de[p.visitante] = p.liga
+        for e in equipos:
+            if e not in liga_de:
+                liga_de[e] = "X-" + (pais_sin_liga or {}).get(e, "?")
+        ligas = sorted(set(liga_de.values()))
+        lidx = {l: i for i, l in enumerate(ligas)}
+        nl = len(ligas)
+        eq_liga = np.array([lidx[liga_de[e]] for e in equipos])
+
         h = np.array([idx[p.local] for p in partidos])
         a = np.array([idx[p.visitante] for p in partidos])
+        lh, la = eq_liga[h], eq_liga[a]
         x = np.array([p.gl for p in partidos], dtype=float)
         y = np.array([p.gv for p in partidos], dtype=float)
         eu = np.array([p.europeo for p in partidos], dtype=float)
         w = np.exp(-self.xi * np.array([(hasta - p.fecha).days for p in partidos], dtype=float))
         w = w * np.where(eu > 0, 2.0, 1.0)  # los partidos europeos valen doble: son los que unen ligas
-        lam_reg = 2.0  # regularización: equipos con pocos datos se acercan a la media
+        reg_eq, reg_liga = 3.0, 0.3  # equipos con pocos datos -> media de su liga
 
         def f(theta):
-            att, dfn = theta[:n], theta[n:2 * n]
-            c0, hd, he = theta[2 * n:]
-            ll = att[h] + dfn[a] + c0 + hd * (1 - eu) + he * eu
-            lm = att[a] + dfn[h] + c0
+            ta, td = theta[:n], theta[n:2 * n]
+            ga, gd = theta[2 * n:2 * n + nl], theta[2 * n + nl:2 * n + 2 * nl]
+            c0, hd, he = theta[2 * n + 2 * nl:]
+            ll = ta[h] + ga[lh] + td[a] + gd[la] + c0 + hd * (1 - eu) + he * eu
+            lm = ta[a] + ga[la] + td[h] + gd[lh] + c0
             lam, mu = np.exp(ll), np.exp(lm)
-            nll = -np.sum(w * (x * ll - lam + y * lm - mu)) + lam_reg * (att @ att + dfn @ dfn)
+            nll = (-np.sum(w * (x * ll - lam + y * lm - mu))
+                   + reg_eq * (ta @ ta + td @ td) + reg_liga * (ga @ ga + gd @ gd))
             r1, r2 = w * (x - lam), w * (y - mu)
-            g_att = -(np.bincount(h, r1, n) + np.bincount(a, r2, n)) + 2 * lam_reg * att
-            g_dfn = -(np.bincount(a, r1, n) + np.bincount(h, r2, n)) + 2 * lam_reg * dfn
-            g = np.concatenate([g_att, g_dfn, [-(r1.sum() + r2.sum()),
-                                               -np.sum(r1 * (1 - eu)), -np.sum(r1 * eu)]])
+            g_ta = -(np.bincount(h, r1, n) + np.bincount(a, r2, n)) + 2 * reg_eq * ta
+            g_td = -(np.bincount(a, r1, n) + np.bincount(h, r2, n)) + 2 * reg_eq * td
+            g_ga = -(np.bincount(lh, r1, nl) + np.bincount(la, r2, nl)) + 2 * reg_liga * ga
+            g_gd = -(np.bincount(la, r1, nl) + np.bincount(lh, r2, nl)) + 2 * reg_liga * gd
+            g = np.concatenate([g_ta, g_td, g_ga, g_gd,
+                                [-(r1.sum() + r2.sum()), -np.sum(r1 * (1 - eu)), -np.sum(r1 * eu)]])
             return nll, g
 
-        res = minimize(f, np.zeros(2 * n + 3), jac=True, method="L-BFGS-B")
-        self.equipos = equipos
-        self.att = dict(zip(equipos, res.x[:n]))
-        self.dfn = dict(zip(equipos, res.x[n:2 * n]))
-        self.c0, self.campo_dom, self.campo_eu = res.x[2 * n:]
+        self._f = f
+        res = minimize(f, np.zeros(2 * n + 2 * nl + 3), jac=True, method="L-BFGS-B",
+                       options={"maxiter": 2000})
+        t = res.x
+        ga, gd = t[2 * n:2 * n + nl], t[2 * n + nl:2 * n + 2 * nl]
+        self.equipos, self.liga_de = equipos, liga_de
+        self.att = {e: t[i] + ga[eq_liga[i]] for i, e in enumerate(equipos)}
+        self.dfn = {e: t[n + i] + gd[eq_liga[i]] for i, e in enumerate(equipos)}
+        self.nivel_liga = {l: float(ga[i] - gd[i]) for l, i in lidx.items()}
+        self.c0, self.campo_dom, self.campo_eu = t[2 * n + 2 * nl:]
         self.n_partidos = dict(zip(equipos, np.bincount(h, minlength=n) + np.bincount(a, minlength=n)))
-        print(f"  modelo europeo: {n} equipos, {len(partidos)} partidos, "
+        top = sorted(self.nivel_liga.items(), key=lambda kv: -kv[1])
+        print(f"  modelo europeo: {n} equipos, {nl} ligas, {len(partidos)} partidos, "
               f"ventaja local en Europa {np.exp(self.campo_eu):.2f}x")
+        print("  nivel de las ligas:", ", ".join(f"{l} {v:+.2f}" for l, v in top))
         return self
 
     def registrar(self, mostrado: str, interno: str):
@@ -370,7 +433,7 @@ def preparar(hoy: date, n_dias: int):
     hist = historico_europeo(hoy, emparejar)
     actuales = [PartidoEu(p.fecha, emparejar(p.local), emparejar(p.visitante), p.gl, p.gv, True)
                 for p in calendario if p.gl is not None]
-    modelo = ModeloEuropeo().ajustar(dom + hist + actuales, hasta=hoy)
+    modelo = ModeloEuropeo().ajustar(dom + hist + actuales, hasta=hoy, pais_sin_liga=emparejar.sin_liga)
     for p in proximos:
         modelo.registrar(p.local, emparejar(p.local))
         modelo.registrar(p.visitante, emparejar(p.visitante))
