@@ -234,14 +234,53 @@ def mercados_serie(n1: str, n2: str, p: float, bo: int) -> tuple[list[Pick], tup
     return picks, probable[0], probable[1]
 
 
+def _cuotas_ganador(s: Serie) -> tuple[float, float, str] | None:
+    """Cuotas del ganador que trae bo3.gg (de una casa de apuestas, p. ej. Thunderpick)."""
+    c = s.cuotas or {}
+    try:
+        c1, c2 = float(c["team_1"]["coeff"]), float(c["team_2"]["coeff"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if c1 <= 1 or c2 <= 1:
+        return None
+    casa = "Thunderpick" if "thunderpick" in str(c.get("path", "")) else "casa de apuestas"
+    return c1, c2, casa
+
+
+def _p_mapa_para(gana: float, bo: int) -> float:
+    """Probabilidad por mapa que da esa probabilidad de ganar la serie (búsqueda binaria)."""
+    lo, hi = 1e-4, 1 - 1e-4
+    k = bo // 2 + 1
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        g = sum(v for (x, y), v in marcadores(mid, bo).items() if x == k)
+        lo, hi = (mid, hi) if g < gana else (lo, mid)
+    return (lo + hi) / 2
+
+
 def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
     if not (modelo.conoce(s.eq1) and modelo.conoce(s.eq2)):
         return None
     p = modelo.p_mapa(s.eq1, s.eq2)
+    cg = _cuotas_ganador(s)
+    implicita = None
+    if cg:  # mezcla con el mercado, como en fútbol
+        c1, c2, casa = cg
+        implicita = (1 / c1) / (1 / c1 + 1 / c2)
+        k = s.bo // 2 + 1
+        modelo_serie = sum(v for (x, y), v in marcadores(p, s.bo).items() if x == k)
+        w = config.PESO_MERCADO
+        p = _p_mapa_para((1 - w) * modelo_serie + w * implicita, s.bo)
     picks, (a, b), pm = mercados_serie(s.n1, s.n2, p, s.bo)
+    if cg:
+        for pk in picks:
+            if pk.mercado == f"Gana {s.n1}":
+                pk.cuota, pk.prob_cuota = cg[0], implicita
+            elif pk.mercado == f"Gana {s.n2}":
+                pk.cuota, pk.prob_cuota = cg[1], 1 - implicita
     icono = JUEGOS[s.juego][2]
     liga = f"{icono} {s.juego} · {s.torneo or 'Torneo'}{' · Bo' + str(s.bo) if s.bo > 1 else ' · Bo1'}"
-    partido = PartidoProximo(liga, s.fecha, s.hora, s.n1, s.n2, deporte="e")
+    partido = PartidoProximo(liga, s.fecha, s.hora, s.n1, s.n2, deporte="e", casa=cg[2] if cg else "")
     # "goles" esperados = mapas esperados de cada uno
     m = marcadores(p, s.bo)
     e1 = sum(x * v for (x, y), v in m.items())

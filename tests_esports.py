@@ -53,7 +53,14 @@ def test_a_serie():
     assert s.hora == "18:00" and s.torneo == "IEM Chicago 2026" and s.m1 is None and s.eq1 == "CS2-1"
 
 
+def test_cuotas():
+    assert abs(es._p_mapa_para(0.648, 3) - 0.6) < 1e-6
+    s = es.Serie("CS2", 1, date(2027, 1, 2), "18:00", "IEM", "s", 3, "x", "y", "Aurora", "NIP",
+                 cuotas={"path": "https://thunderpick.io/m/1", "team_1": {"coeff": 1.25}, "team_2": {"coeff": 3.5}})
+    assert es._cuotas_ganador(s) == (1.25, 3.5, "Thunderpick")
+
+
 if __name__ == "__main__":
-    for t in (test_marcadores, test_modelo, test_a_serie):
+    for t in (test_marcadores, test_modelo, test_a_serie, test_cuotas):
         t()
         print(f"OK  {t.__name__}")

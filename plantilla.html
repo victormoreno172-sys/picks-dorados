@@ -289,7 +289,7 @@ function tarjeta(p, idx) {
   return `<article class="partido" id="p-${id}">
     <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
     <button class="cab" data-id="${id}" aria-expanded="${abierto}">
-      <div class="meta"><span>${esc(p.liga)}${p.casa && p.casa.startsWith("Winamax") ? ` · <span class="casa">${esc(p.casa)}</span>` : ""}</span><span>${esc(p.hora || "--:--")}</span></div>
+      <div class="meta"><span>${esc(p.liga)}${p.casa && !/media|ESPN/.test(p.casa) ? ` · <span class="casa">${esc(p.casa)}</span>` : ""}</span><span>${esc(p.hora || "--:--")}</span></div>
       <div class="equipos"><div class="eq ${tam(p.local)}">${esc(p.local)}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : esp ? "mapas esp." : "goles esp."}</span></div><div class="eq v ${tam(p.visitante)}">${esc(p.visitante)}</div></div>
       <div class="xgbar" aria-hidden="true"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div>
       ${top ? `<div class="top">${top}</div>` : `<div class="sinpicks">Ningún mercado llega al ${pct(DATOS.umbral)}.</div>`}
