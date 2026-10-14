@@ -1,32 +1,33 @@
 """Sondeo temporal de fuentes de datos para competiciones europeas."""
+import json
+
 import requests
 
+B = "https://www.thesportsdb.com/api/v1/json/123/"
 
-def probar(nombre, url, n=500):
+
+def js(url):
     try:
-        r = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
-        print(f"### {nombre}: HTTP {r.status_code}, {len(r.content)} bytes")
-        if r.ok:
-            print("   ", r.text[:n].replace("\n", " | "))
-        return r.text if r.ok else ""
+        r = requests.get(url, timeout=30)
+        return r.json() if r.ok else {"_http": r.status_code}
     except Exception as e:
-        print(f"### {nombre}: ERROR {str(e)[:150]}")
-        return ""
+        return {"_err": str(e)[:100]}
 
 
-probar("clubelo https", "https://api.clubelo.com/Fixtures", 300)
-for liga in ("UEFA_Champions_League", "UEFA_Europa_League", "UEFA_Europa_Conference_League"):
-    for d in ("2026-10-20", "2026-10-21", "2026-10-22"):
-        t = probar(f"thesportsdb {liga} {d}",
-                   f"https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d={d}&l={liga}", 250)
-probar("thesportsdb CL next", "https://www.thesportsdb.com/api/v1/json/123/eventsnextleague.php?id=4480", 600)
-probar("thesportsdb CL season", "https://www.thesportsdb.com/api/v1/json/123/eventsseason.php?id=4480&s=2026-2027", 400)
-for temp in ("2024-25", "2023-24"):
-    for comp in ("cl", "el", "conf"):
-        probar(f"openfootball {temp} {comp}",
-               f"https://raw.githubusercontent.com/openfootball/champions-league/master/{temp}/{comp}.txt", 120)
-probar("openfootball repo listing", "https://api.github.com/repos/openfootball/champions-league/contents/2025-26", 600)
-probar("fd new AUT", "https://www.football-data.co.uk/new/AUT.csv", 300)
-probar("fd B1", "https://www.football-data.co.uk/mmz4281/2627/B1.csv", 200)
-probar("fd T1", "https://www.football-data.co.uk/mmz4281/2627/T1.csv", 200)
-probar("fd SC0", "https://www.football-data.co.uk/mmz4281/2627/SC0.csv", 200)
+ligas = js(B + "all_leagues.php").get("leagues") or []
+print("ligas UEFA:", [(l["idLeague"], l["strLeague"]) for l in ligas if "UEFA" in l["strLeague"] or "Conference" in l["strLeague"]])
+s = js(B + "search_all_leagues.php?c=Europe&s=Soccer")
+print("busqueda europa:", str(s)[:600])
+
+for lid in ("4480", "4481", "5071"):
+    for d in ("2026-10-14", "2026-10-15"):
+        ev = js(B + f"eventsday.php?d={d}&l={lid}").get("events") or []
+        print(f"eventsday {lid} {d}: {len(ev)}", [(e['strHomeTeam'], e['strAwayTeam'], e.get('strTimestamp')) for e in ev][:20])
+    ev = js(B + f"eventsnextleague.php?id={lid}").get("events") or []
+    print(f"next {lid}: {len(ev)}", [(e['strHomeTeam'], e['strAwayTeam'], e.get('strTimestamp'), e.get('strLeague')) for e in ev][:5])
+    ev = js(B + f"eventsround.php?id={lid}&r=3&s=2026-2027").get("events") or []
+    print(f"round3 {lid}: {len(ev)}", [(e['strHomeTeam'], e['strAwayTeam'], e.get('strTimestamp')) for e in ev][:20])
+    ev = js(B + f"eventsseason.php?id={lid}&s=2026-2027").get("events") or []
+    print(f"season {lid}: {len(ev)}")
+ev = js(B + "eventsday.php?d=2026-10-14&s=Soccer").get("events") or []
+print("dia futbol:", len(ev), sorted({e.get('strLeague') for e in ev})[:40])
