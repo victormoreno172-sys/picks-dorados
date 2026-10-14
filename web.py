@@ -67,7 +67,7 @@ def a_json(por_dia: dict[date, list[Analisis]], hoy: date, demo: bool = False) -
         for a in lista:
             p = a.partido
             partidos.append({
-                "liga": config.LIGAS[p.liga][0].split(" ", 1)[-1],
+                "liga": config.nombre_liga(p.liga).split(" ", 1)[-1],
                 "hora": p.hora, "local": p.local, "visitante": p.visitante,
                 "gl": round(a.goles_local, 2), "gv": round(a.goles_visitante, 2),
                 "marcador": a.marcador, "pm": round(a.prob_marcador, 4),

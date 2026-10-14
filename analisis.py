@@ -107,7 +107,7 @@ def resumen_del_dia(analisis: list[Analisis], dia: date) -> list[str]:
     bloques = []
     for n, a in enumerate(analisis, 1):
         p = a.partido
-        liga = config.LIGAS[p.liga][0]
+        liga = config.nombre_liga(p.liga)
         b = (f"\n<b>{n}. {escape(p.local)} – {escape(p.visitante)}</b>\n"
              f"{liga} · {p.hora or 'hora por confirmar'}\n"
              f"Goles esperados {a.goles_local:.1f} – {a.goles_visitante:.1f}\n")
@@ -136,7 +136,7 @@ def detalle_partido(a: Analisis) -> str:
     orden = sorted(a.picks, key=lambda pk: -pk.prob)
     lineas = "\n".join(_linea_pick(pk) + f" <i>(justa {pk.cuota_justa:.2f})</i>" for pk in orden)
     return (f"<b>{escape(p.local)} – {escape(p.visitante)}</b>\n"
-            f"{config.LIGAS[p.liga][0]} · {p.hora or 'hora por confirmar'}\n"
+            f"{config.nombre_liga(p.liga)} · {p.hora or 'hora por confirmar'}\n"
             f"Goles esperados {a.goles_local:.2f} – {a.goles_visitante:.2f}\n"
             f"Marcador más probable: {a.marcador} ({_pct(a.prob_marcador)})\n\n"
             f"{lineas}\n\n"

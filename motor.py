@@ -40,6 +40,25 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
             else:
                 print(f"  sin historial suficiente: {p.local} - {p.visitante}")
         salida[dia] = lista
+
+    # Competiciones europeas (si algo falla, la app sigue con las ligas)
+    try:
+        import europa
+        proximos, modelo_eu = europa.preparar(desde, n_dias)
+        for pe in proximos:
+            p = datos.PartidoProximo(pe.comp, pe.fecha, pe.hora, pe.local, pe.visitante)
+            a = analizar(p, modelo_eu)
+            if a:
+                salida.setdefault(pe.fecha, []).append(a)
+            else:
+                print(f"  sin datos suficientes: {pe.local} - {pe.visitante}")
+    except Exception as e:
+        import traceback
+        print(f"  aviso: competiciones europeas no disponibles: {e}")
+        traceback.print_exc()
+
+    for dia in salida:
+        salida[dia].sort(key=lambda a: (a.partido.hora or "99", a.partido.liga))
     return salida
 
 

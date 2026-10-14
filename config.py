@@ -29,6 +29,21 @@ LIGAS = {
     "P1": ("🇵🇹 Liga Portugal", "PPL"),
 }
 
+# --- Competiciones europeas (calendario de TheSportsDB) ---------------------
+# código -> (nombre, id de TheSportsDB)
+EUROPA = {
+    "UCL": ("🏆 Champions League", "4480"),
+    "UEL": ("🏆 Europa League", "4481"),
+    "UECL": ("🏆 Conference League", "5071"),
+}
+# La clave pública "123" es gratis pero limita resultados. Con una clave de pago
+# (patreon de TheSportsDB) se ven todas las jornadas completas.
+THESPORTSDB_KEY = os.getenv("THESPORTSDB_KEY", "")
+
+
+def nombre_liga(codigo: str) -> str:
+    return (LIGAS.get(codigo) or EUROPA.get(codigo) or (codigo,))[0]
+
 # --- Reglas de las predicciones --------------------------------------------
 UMBRAL_DORADO = 0.75     # a partir de esta probabilidad el pick sale en dorado
 UMBRAL_VALOR = 0.05      # 💎 si nuestra probabilidad supera a la de la cuota en 5 puntos
