@@ -22,16 +22,16 @@ TZ = ZoneInfo(config.ZONA_HORARIA)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"}
 
 
-def _get(slug: str, desde: date, hasta: date, horas: float | None):
-    """Partidos entre dos fechas (con caché; horas=None -> no caduca)."""
+def _get(slug: str, dia: date, horas: float | None):
+    """Partidos de un día (con caché; horas=None -> no caduca)."""
     os.makedirs(CACHE, exist_ok=True)
-    ruta = os.path.join(CACHE, f"{slug}_{desde:%Y%m%d}_{hasta:%Y%m%d}.json")
+    ruta = os.path.join(CACHE, f"{slug}_{dia:%Y%m%d}.json")
     if os.path.exists(ruta) and (horas is None or time.time() - os.path.getmtime(ruta) < horas * 3600):
         with open(ruta, encoding="utf-8") as f:
             return json.load(f)
     try:
         r = requests.get(URL.format(slug=slug), headers=UA, timeout=40,
-                         params={"dates": f"{desde:%Y%m%d}-{hasta:%Y%m%d}", "limit": 1000})
+                         params={"dates": f"{dia:%Y%m%d}"})
         r.raise_for_status()
         datos = r.json()
     except (requests.RequestException, ValueError) as e:
@@ -88,23 +88,30 @@ def parsear(datos: dict) -> list[dict]:
 def historico(liga: str, hoy: date) -> list[Partido]:
     slug = config.LIGAS_ESPN[liga][1]
     out = []
-    inicio = date(hoy.year - config.TEMPORADAS_HISTORICO + 1, 1, 1)  # la MLS va por años naturales
-    d = inicio
+    d = date(hoy.year - 1, 2, 1)  # la MLS va por años naturales (febrero-diciembre)
     while d < hoy:
-        fin = min(date(d.year + (d.month == 12), d.month % 12 + 1, 1) - timedelta(days=1), hoy - timedelta(days=1))
-        pasado = fin < hoy - timedelta(days=3)  # un mes ya cerrado no cambia
-        for p in parsear(_get(slug, d, fin, None if pasado else 6)):
+        if d.month in (1,):  # en enero no hay MLS
+            d = date(d.year, 2, 1)
+            continue
+        pasado = d < hoy - timedelta(days=3)  # un día ya cerrado no cambia
+        for p in parsear(_get(slug, d, None if pasado else 6)):
             if p["gl"] is not None:
                 out.append(Partido(p["fecha"], p["local"], p["visitante"], p["gl"], p["gv"]))
-        d = fin + timedelta(days=1)
-    return out
+        d += timedelta(days=1)
+    # mismo partido visto en dos días (zona horaria): quitar duplicados
+    unicos = {(p.fecha, p.local, p.visitante): p for p in out}
+    return list(unicos.values())
 
 
 def proximos(liga: str, hoy: date, n_dias: int) -> dict[date, list[PartidoProximo]]:
     slug = config.LIGAS_ESPN[liga][1]
     salida: dict[date, list[PartidoProximo]] = {}
-    for p in parsear(_get(slug, hoy - timedelta(days=1), hoy + timedelta(days=n_dias), 3)):
-        if p["gl"] is None and hoy <= p["fecha"] < hoy + timedelta(days=n_dias):
-            salida.setdefault(p["fecha"], []).append(
-                PartidoProximo(liga, p["fecha"], p["hora"], p["local"], p["visitante"], p["cuotas"]))
+    vistos = set()
+    for k in range(-1, n_dias + 1):
+        for p in parsear(_get(slug, hoy + timedelta(days=k), 3)):
+            clave = (p["fecha"], p["local"], p["visitante"])
+            if p["gl"] is None and hoy <= p["fecha"] < hoy + timedelta(days=n_dias) and clave not in vistos:
+                vistos.add(clave)
+                salida.setdefault(p["fecha"], []).append(
+                    PartidoProximo(liga, p["fecha"], p["hora"], p["local"], p["visitante"], p["cuotas"]))
     return salida
