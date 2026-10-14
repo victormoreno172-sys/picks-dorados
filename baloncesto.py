@@ -13,7 +13,7 @@ Las ligas europeas se entrenan juntas: los equipos de Euroliga/Eurocup/BCL que
 también juegan su liga nacional conectan el nivel de todas ellas.
 
 Fuentes (gratis):
-  - NBA: data.nba.com (temporada pasada) + ESPN (esta temporada, con líneas de las casas)
+  - NBA: ESPN (resultados y líneas de las casas)
   - Europa: TheSportsDB, jornada a jornada (mismos ids de equipo en todas las competiciones)
 """
 from __future__ import annotations
@@ -40,7 +40,6 @@ TZ = ZoneInfo(config.ZONA_HORARIA)
 CACHE = os.path.join(config.CARPETA_CACHE, "basket")
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"}
 
-URL_NBA_TEMPORADA = "https://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{anio}/league/00_full_schedule.json"
 URL_ESPN = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates={dia}"
 URL_TSDB = "https://www.thesportsdb.com/api/v1/json/{clave}/"
 
@@ -106,20 +105,13 @@ def _temporada_nba(hoy: date) -> int:
 
 
 def nba_temporada_pasada(hoy: date) -> list[Juego]:
+    """Resultados de la temporada pasada, día a día desde ESPN (se guardan para siempre)."""
     anio = _temporada_nba(hoy) - 1
-    d = _cache_json(f"nba_{anio}.json", URL_NBA_TEMPORADA.format(anio=anio), None)
-    out = []
-    for mes in (d or {}).get("lscd", []):
-        for g in mes["mscd"]["g"]:
-            if not g["gid"].startswith(("002", "004")):  # solo temporada regular y playoffs
-                continue
-            h, v = g["h"], g["v"]
-            try:
-                pl, pv = int(h["s"]), int(v["s"])
-            except (KeyError, ValueError):
-                continue
-            out.append(Juego("NBA", date.fromisoformat(g["gdte"]), "", "NBA-" + h["ta"], "NBA-" + v["ta"],
-                             f'{h["tc"]} {h["tn"]}', f'{v["tc"]} {v["tn"]}', pl, pv))
+    out, d = [], date(anio, 10, 15)
+    while d <= date(anio + 1, 6, 25):
+        datos = _cache_json(f"espn_{d:%Y%m%d}.json", URL_ESPN.format(dia=f"{d:%Y%m%d}"), None)
+        out += [j for j in _parse_espn(datos) if j.jugado]
+        d += timedelta(days=1)
     return out
 
 
@@ -298,19 +290,22 @@ class ModeloBaloncesto:
 
 
 # ---------------------------------------------------------------- mercados
-def _linea(x: float) -> float:
-    return np.floor(x) + 0.5
+LINEAS_HANDICAP = (2.5, 5.5, 8.5, 12.5)
 
 
 def mercados_baloncesto(margen: float, total: float, sd_m: float, sd_t: float,
-                        spread_casa: float | None = None, total_casa: float | None = None) -> list[Pick]:
-    """margen = puntos local - puntos visitante esperados."""
+                        spread_casa: float | None = None, total_casa: float | None = None,
+                        total_tipico: float | None = None) -> list[Pick]:
+    """
+    margen = puntos local - puntos visitante esperados.
+    Las líneas son fijas (no dependen de la predicción), como en una casa de
+    apuestas: así el porcentaje de cada línea refleja de verdad cada partido.
+    """
     picks = []
     p_local = float(norm.sf(0, loc=margen, scale=sd_m))
     picks += [Pick("Gana local", p_local), Pick("Gana visitante", 1 - p_local)]
 
-    lineas_h = {_linea(abs(margen) + d) for d in (-7, 0, 6)}
-    lineas_h = {l for l in lineas_h if l > 0}
+    lineas_h = set(LINEAS_HANDICAP)
     fav, dog = ("local", "visitante") if margen >= 0 else ("visitante", "local")
     s = 1 if margen >= 0 else -1
     for l in sorted(lineas_h):
@@ -325,7 +320,9 @@ def mercados_baloncesto(margen: float, total: float, sd_m: float, sd_t: float,
             picks = [pk for pk in picks if pk.mercado != nombre]
             picks.append(Pick(nombre, prob, CUOTA_ESTANDAR, 0.5))
 
-    for t in sorted({_linea(total + d) for d in (-12, -6, 0, 6)}):
+    base = 5 * round((total_tipico or total) / 5)  # total típico de la competición
+    lineas_t = [base + d + 0.5 for d in (-15, -10, -5, 0, 5, 10, 15) if abs(base + d - total) <= 16]
+    for t in lineas_t:
         p = float(norm.sf(t, loc=total, scale=sd_t))
         picks += [Pick(f"Más de {t:g} puntos", p), Pick(f"Menos de {t:g} puntos", 1 - p)]
     if total_casa is not None:
@@ -348,7 +345,9 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto) -> Analisis | None:
     if j.total_casa is not None:
         total = (1 - w) * total + w * j.total_casa
     pl, pv = (total + margen) / 2, (total - margen) / 2
-    picks = mercados_baloncesto(margen, total, modelo.sd_margen, modelo.sd_total, j.spread_local, j.total_casa)
+    tipico = 2 * modelo.media.get(j.comp, np.mean(list(modelo.media.values())))
+    picks = mercados_baloncesto(margen, total, modelo.sd_margen, modelo.sd_total, j.spread_local,
+                                j.total_casa, tipico)
     p = PartidoProximo(j.comp, j.fecha, j.hora, j.local, j.visitante)
     return Analisis(p, pl, pv, f"{round(pl)}-{round(pv)}", 0.0, picks)
 
