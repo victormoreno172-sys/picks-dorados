@@ -47,7 +47,7 @@ h1 span { color: var(--gold); }
 .upd { font: 500 11px/1 var(--mono); color: var(--muted); }
 .demo { margin-top: 8px; font: 600 12px/1.3 var(--body); color: var(--gold-ink); background: var(--gold-soft); padding: 6px 10px; border-radius: 6px; }
 
-.deportes { display: grid; grid-template-columns: 1fr 1.25fr 1fr 0.8fr; gap: 4px; margin-top: 12px; padding: 4px; border-radius: 10px; background: var(--bar); }
+.deportes { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 0.8fr; gap: 4px; margin-top: 12px; padding: 4px; border-radius: 10px; background: var(--bar); }
 .dep { border: 0; background: transparent; color: var(--muted); border-radius: 7px; padding: 7px 2px; font: 700 14px/1 var(--display); flex-direction: column; align-items: center !important; min-width: 0; text-transform: uppercase; letter-spacing: .05em; cursor: pointer; display: flex; justify-content: center; align-items: baseline; gap: 6px; }
 .dep small { font: 500 11px/1 var(--mono); letter-spacing: 0; }
 .dep[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 15%, transparent); }
@@ -206,7 +206,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div><span class="mal" style="font:700 12px var(--mono)">1.20</span><span>Cuota de la casa por debajo de lo que vale según la app.</span></div>
       <div><span style="font:700 12px var(--mono)">≈1.45</span><span>Cuota estimada de la casa: calculada a partir de su 1X2 y su línea de goles. Compruébala en Winamax antes de apostar.</span></div>
     </div>
-    <p style="margin:6px 0 0">Fútbol: modelo Dixon-Coles sobre las últimas temporadas, combinado con las cuotas del mercado. Baloncesto: ratings de ataque y defensa de cada equipo, combinados con las líneas de las casas cuando las hay (NBA). Esports (CS2 y Valorant, torneos de nivel S y A): fuerza de cada equipo según los mapas ganados y perdidos. Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
+    <p style="margin:6px 0 0">Fútbol: modelo Dixon-Coles sobre las últimas temporadas, combinado con las cuotas del mercado. Baloncesto: ratings de ataque y defensa de cada equipo, combinados con las líneas de las casas cuando las hay (NBA). Tenis (ATP y WTA): Elo general y por superficie de cada jugador. Esports (CS2 y Valorant, torneos de nivel S y A): fuerza de cada equipo según los mapas ganados y perdidos. Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
   </footer>
 </div>
 
@@ -219,11 +219,14 @@ const GRUPOS = {
   b: [["Ganador", m => /^Gana/.test(m)],
       ["Hándicap", m => /^Hándicap/.test(m)],
       ["Puntos", m => /puntos/.test(m)]],
+  te: [["Ganador", m => /^Gana /.test(m)],
+      ["Sets", m => / sets$/.test(m)],
+      ["Resultado exacto", m => /^Resultado /.test(m)]],
   e: [["Ganador", m => /^Gana /.test(m)],
       ["Mapas", m => /mapas$/.test(m)],
       ["Resultado exacto", m => /^Resultado /.test(m)]],
 };
-const DEPORTES = [["f", "Fútbol"], ["b", "Baloncesto"], ["e", "Esports"], ["t", "Top"]];
+const DEPORTES = [["f", "Fútbol"], ["b", "Basket"], ["te", "Tenis"], ["e", "Esports"], ["t", "Top"]];
 const est = { dep: "f", dia: 0, soloOro: false, soloRojo: false, liga: null, abiertos: new Set(),
               rp: DATOS.rojo_p || 0.7, rc: DATOS.rojo_c || 1.4, ajustes: false,
               orden: "hora", busca: "", soloFav: false, favs: new Set() };
@@ -236,7 +239,7 @@ try { const g = JSON.parse(localStorage.getItem("rojo") || "null"); if (g) { est
 // Rojo: probable Y con cuota real de la casa que todavía paga algo
 const esRojo = k => false;  // el rojo se quitó de la app
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
-if (!["f", "b", "e", "t"].includes(est.dep)) est.dep = "f";
+if (!["f", "b", "te", "e", "t"].includes(est.dep)) est.dep = "f";
 
 const $ = id => document.getElementById(id);
 const pct = p => Math.round(p * 100) + "%";
@@ -285,7 +288,7 @@ const tam = n => { const larga = Math.max(...n.split(" ").map(w => w.length)); r
 function tarjeta(p, idx) {
   const id = est.dia + "-" + idx;
   const abierto = est.abiertos.has(id);
-  const basket = p.dep === "b", esp = p.dep === "e";
+  const basket = p.dep === "b", esp = p.dep === "e", ten = p.dep === "te";
   const oro = p.picks.filter(k => k.d || esRojo(k)).sort((a, b) => (esRojo(b) - esRojo(a)) || (b.p - a.p));
   const total = p.gl + p.gv;
   const num = x => basket ? Math.round(x) : x.toFixed(1);
@@ -293,7 +296,7 @@ function tarjeta(p, idx) {
     `<div class="pick ${esRojo(k) ? "rojo" : ""}"><span class="m">${esc(k.m)}${esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : ""}${k.v ? '<span class="val">VALOR</span>' : ""}<span class="sub">${k.c ? `<span class="${veredicto(k)}">${k.e ? "≈ " : ""}${casaCorta(p)} ${k.c.toFixed(2)}</span> · ` : ""}app ${(1 / k.p).toFixed(2)}</span></span><span class="p">${pct(k.p)}</span></div>`).join("");
   let det = "";
   if (abierto) {
-    det = `<div class="det">` + GRUPOS[basket ? "b" : esp ? "e" : "f"].map(([nombre, f]) => {
+    det = `<div class="det">` + GRUPOS[basket ? "b" : esp ? "e" : ten ? "te" : "f"].map(([nombre, f]) => {
       const filas = p.picks.filter(k => f(k.m)).sort((a, b) => b.p - a.p);
       return filas.length ? `<div class="grupo"><h3>${nombre}<span class="colcuota">${casaCorta(p)}</span></h3>${filas.map(k => filaMercado(k, p)).join("")}</div>` : "";
     }).join("") + (basket
@@ -305,7 +308,7 @@ function tarjeta(p, idx) {
     <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
     <button class="cab" data-id="${id}" aria-expanded="${abierto}">
       <div class="meta"><span>${esc(p.liga)}${p.casa && !/media|ESPN/.test(p.casa) ? ` · <span class="casa">${esc(p.casa)}</span>` : ""}</span><span>${esc(p.hora || "--:--")}</span></div>
-      <div class="equipos"><div class="eq ${tam(p.local)}">${esc(p.local)}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : esp ? "mapas esp." : "goles esp."}</span></div><div class="eq v ${tam(p.visitante)}">${esc(p.visitante)}</div></div>
+      <div class="equipos"><div class="eq ${tam(p.local)}">${esc(p.local)}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : esp ? "mapas esp." : ten ? "sets esp." : "goles esp."}</span></div><div class="eq v ${tam(p.visitante)}">${esc(p.visitante)}</div></div>
       <div class="xgbar" aria-hidden="true"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div>
       ${top ? `<div class="top">${top}</div>` : `<div class="sinpicks">Ningún mercado llega al ${pct(DATOS.umbral)}.</div>`}
       <div class="mas">${abierto ? "Ocultar mercados ▲" : `Ver los ${p.picks.length} mercados ▼`}</div>
@@ -449,7 +452,7 @@ function pintarTopDia() {
   const cand = dia.partidos.map((p, i) => [p, i, pickTop(p)]).filter(([, , k]) => k)
     .sort(([, , a], [, , b]) => orden(b) - orden(a) || b.p - a.p).slice(0, 30);
   if (!cand.length) { $("top").innerHTML = `<div class="vacio">Este día todavía no hay picks de ${Math.round(TOP_PROB * 100)}% o más con cuota de la casa de ${TOP_CUOTA.toFixed(2)} o más. Las cuotas de Winamax se piden cuando faltan 3 días o menos para el partido.</div>`; return; }
-  const nombreDep = { f: "⚽", b: "🏀", e: "🎮" };
+  const nombreDep = { f: "⚽", b: "🏀", te: "🎾", e: "🎮" };
   $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} picks</small></h2>` +
     cand.map(([p, i, k]) => `<button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
       <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}</small></span>

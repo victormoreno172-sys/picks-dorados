@@ -63,7 +63,7 @@ def _traducir(ev: dict, liga: str) -> EventoCuotas | None:
     if not b:
         return None
     dt = datetime.fromisoformat(ev["commence_time"].replace("Z", "+00:00")).astimezone(TZ)
-    basket = config.es_baloncesto(liga)
+    basket = config.es_baloncesto(liga) or liga in ("ATP", "WTA")  # dos opciones: sin empate
     unidad = "puntos" if basket else "goles"
     e = EventoCuotas(liga, dt.date(), ev["home_team"], ev["away_team"],
                      "Winamax" + (" FR" if b["key"] == "winamax_fr" else " DE"))
@@ -133,7 +133,14 @@ def obtener(hoy: date) -> list[EventoCuotas]:
 
     limite = datetime.now(TZ) + timedelta(days=3)
     candidatos = []
-    for clave, liga in DEPORTES.items():
+    # Torneos de tenis activos (cambian cada semana): solo el ganador, 1 crédito por torneo
+    deportes = dict(DEPORTES)
+    for clave in activos:
+        if clave.startswith("tennis_atp"):
+            deportes[clave] = "ATP"
+        elif clave.startswith("tennis_wta"):
+            deportes[clave] = "WTA"
+    for clave, liga in deportes.items():
         if clave not in activos:
             continue
         ruta = os.path.join(CACHE, f"{clave}.json")
@@ -156,7 +163,8 @@ def obtener(hoy: date) -> list[EventoCuotas]:
     presupuesto = max(0.0, (restantes - 10) / quedan_dias) * 2  # x2: este cupo cubre ~2 días (caché de 20 h)
     gastado = 0
     for pronto, clave, liga in sorted(candidatos, reverse=True):
-        mercados = MERCADOS_BASKET if config.es_baloncesto(liga) else MERCADOS_FUTBOL
+        mercados = ("h2h" if liga in ("ATP", "WTA") else
+                    MERCADOS_BASKET if config.es_baloncesto(liga) else MERCADOS_FUTBOL)
         coste = len(mercados.split(","))
         if gastado + coste > presupuesto:
             print(f"  cuotas Winamax: sin presupuesto hoy para {clave}")
@@ -172,7 +180,7 @@ def obtener(hoy: date) -> list[EventoCuotas]:
     sondear_mercados(activos)
 
     salida = []
-    for clave, liga in DEPORTES.items():
+    for clave, liga in deportes.items():
         ruta = os.path.join(CACHE, f"{clave}.json")
         if not os.path.exists(ruta) or time.time() - os.path.getmtime(ruta) > 72 * 3600:
             continue
@@ -251,6 +259,20 @@ class Cuotas:
         self.usados = 0
 
     def buscar(self, liga: str, fecha: date, local: str, visitante: str) -> EventoCuotas | None:
+        if liga in ("ATP", "WTA"):
+            # En tenis no hay local: el orden de los jugadores puede venir al revés
+            e = self._buscar(liga, fecha, local, visitante)
+            if e:
+                return e
+            e = self._buscar(liga, fecha, visitante, local)
+            if e:
+                giro = {"Gana local": "Gana visitante", "Gana visitante": "Gana local"}
+                return EventoCuotas(e.liga, e.fecha, e.visitante, e.local, e.casa,
+                                    {giro.get(k, k): v for k, v in e.cuotas.items()})
+            return None
+        return self._buscar(liga, fecha, local, visitante)
+
+    def _buscar(self, liga: str, fecha: date, local: str, visitante: str) -> EventoCuotas | None:
         mejor, puntos = None, 0.0
         for e in self.eventos:
             if e.liga != liga or abs((e.fecha - fecha).days) > 1:
