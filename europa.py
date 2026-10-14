@@ -135,6 +135,7 @@ class Emparejador:
 
     def _buscar(self, nombre: str, pais: str | None) -> str:
         import difflib
+        pais = {"MCO": "FRA"}.get(pais, pais)  # el Mónaco juega la liga francesa
         n = normalizar(nombre)
         if n in ALIAS and ALIAS[n] in self.conocidos:
             return ALIAS[n]
@@ -433,6 +434,8 @@ def preparar(hoy: date, n_dias: int):
     hist = historico_europeo(hoy, emparejar)
     actuales = [PartidoEu(p.fecha, emparejar(p.local), emparejar(p.visitante), p.gl, p.gv, True)
                 for p in calendario if p.gl is not None]
+    sueltos = sorted(f"{p}:{k}" for k, p in emparejar.sin_liga.items() if p in LIGAS_PAIS or p == "?")
+    print(f"  equipos sin emparejar ({len(sueltos)}): {', '.join(sueltos)}")
     modelo = ModeloEuropeo().ajustar(dom + hist + actuales, hasta=hoy, pais_sin_liga=emparejar.sin_liga)
     for p in proximos:
         modelo.registrar(p.local, emparejar(p.local))
