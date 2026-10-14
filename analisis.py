@@ -33,7 +33,10 @@ class Pick:
 
     @property
     def valor(self) -> bool:
-        return self.prob_cuota is not None and self.prob - self.prob_cuota >= config.UMBRAL_VALOR
+        """La cuota REAL de la casa paga al menos un 5% más de lo que vale según la app
+        (ganancia esperada = probabilidad × cuota − 1 ≥ 5%)."""
+        return (self.cuota is not None and not self.estimada
+                and self.prob * self.cuota - 1 >= config.UMBRAL_VALOR)
 
     @property
     def cuota_justa(self) -> float:
@@ -174,7 +177,7 @@ def _linea_pick(pk: Pick) -> str:
 def resumen_del_dia(analisis: list[Analisis], dia: date) -> list[str]:
     """Mensaje del día. Devuelve una lista porque Telegram corta a 4096 caracteres."""
     cab = (f"⚽ <b>Partidos del {dia.strftime('%d/%m/%Y')}</b>\n"
-           f"🟡 = probabilidad ≥ {_pct(config.UMBRAL_DORADO)} · 💎 = mejor que la cuota\n")
+           f"🟡 = probabilidad ≥ {_pct(config.UMBRAL_DORADO)} · 💎 = la cuota paga ≥5% más de lo que vale\n")
     if not analisis:
         return [cab + "\nHoy no hay partidos de las ligas que seguimos."]
 

@@ -80,7 +80,7 @@ UMBRAL_DORADO = 0.75     # a partir de esta probabilidad el pick sale en dorado
 USAR_ROJO = False        # el rojo se quitó de la app
 UMBRAL_ROJO_PROB = 0.70  # rojo: probabilidad al menos del 70%...
 UMBRAL_ROJO_CUOTA = 1.40  # ...y cuota real de la casa al menos de 1.40
-UMBRAL_VALOR = 0.05     # 💎 si nuestra probabilidad supera a la de la cuota en 5 puntos
+UMBRAL_VALOR = 0.05     # VALOR: la cuota real paga al menos un 5% más de lo que vale (prob × cuota − 1 ≥ 5%)
 PESO_MERCADO = 0.5       # cuánto pesan las cuotas frente al modelo (0 = solo modelo)
 TEMPORADAS_HISTORICO = 3  # temporadas que se usan para entrenar
 
