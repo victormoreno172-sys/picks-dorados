@@ -36,7 +36,10 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
           # Telegram solo en la ejecución de la mañana (o al lanzarlo a mano)
           ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
-        run: python diario.py
+        run: |
+          set -o pipefail
+          python -u diario.py 2>&1 | tee registro.txt
+          cp registro.txt web/registro.txt
 
       - name: Publicar en la rama gh-pages
         run: |

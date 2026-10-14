@@ -14,6 +14,8 @@ from analisis import resumen_del_dia
 from motor import analizar_dias
 
 hoy = datetime.now(ZoneInfo(config.ZONA_HORARIA)).date()
+import datos
+datos.diagnostico_proximos()
 por_dia = analizar_dias(hoy, 7)
 # La app enseña hoy y los 3 próximos días que tengan partidos (así en parones o
 # entre semana no aparece vacía).

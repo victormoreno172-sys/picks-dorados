@@ -162,6 +162,21 @@ def emparejar_nombre(nombre: str, candidatos: list[str]) -> str | None:
     return m[0] if m else None
 
 
+def diagnostico_proximos():
+    """Imprime qué trae fixtures.csv (para el registro de GitHub)."""
+    try:
+        filas = _filas(_descargar(URL_PROXIMOS, "fixtures.csv", 3))
+    except Exception as e:
+        print(f"  fixtures.csv: ERROR {e}")
+        return
+    from collections import Counter
+    print(f"  fixtures.csv: {len(filas)} filas")
+    print(f"  ligas: {Counter(f.get('Div') for f in filas).most_common(12)}")
+    print(f"  fechas: {sorted(Counter(f.get('Date') for f in filas).items())[:12]}")
+    if filas:
+        print(f"  columnas: {list(filas[0].keys())[:12]}")
+
+
 def partidos_del_dia(dia: date, equipos_por_liga: dict[str, list[str]]) -> list[PartidoProximo]:
     try:
         lista = proximos_desde_csv(_descargar(URL_PROXIMOS, "fixtures.csv", 3), dia)
