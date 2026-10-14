@@ -48,8 +48,15 @@ Para que además publique el resumen cada mañana en un canal:
 
 ## Cosas a saber
 
+- **Qué cubre:** LaLiga, Segunda, Premier, Championship, Serie A, Bundesliga, Ligue 1, Eredivisie,
+  Liga Portugal, y la **Champions, Europa League y Conference League**.
+- **Competiciones europeas:** se calculan con un modelo de toda Europa (ligas nacionales + partidos
+  europeos de las últimas temporadas), que aprende el nivel de cada liga. No llevan cuotas, así que
+  no salen etiquetas VALOR en esos partidos.
 - **Si un día sale vacía:** puede que no haya partidos de esas ligas (parones de selecciones)
-  o que la fuente aún no los haya publicado. La app muestra también mañana y pasado.
+  o que la fuente aún no los haya publicado. La app muestra también los próximos días con partidos.
+- La clave gratuita de TheSportsDB (calendario europeo) a veces no trae todos los partidos de una
+  jornada. Con una clave de pago suya (secreto `THESPORTSDB_KEY` en GitHub) salen todos.
 - **Si falla la descarga de datos**, la app se queda con la última versión buena y GitHub te avisa por email.
 - **GitHub pausa las tareas automáticas tras 60 días sin cambios en el repositorio.** Te manda un
   email; basta con entrar en Actions y tocar "Enable workflow".

@@ -34,6 +34,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CANAL: ${{ secrets.TELEGRAM_CANAL }}
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
+          THESPORTSDB_KEY: ${{ secrets.THESPORTSDB_KEY }}
           # Telegram solo en la ejecución de la mañana (o al lanzarlo a mano)
           ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
         run: |

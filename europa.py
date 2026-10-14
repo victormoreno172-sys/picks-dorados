@@ -79,7 +79,7 @@ ALIAS = {
     "fc basel": "Basel", "basel 1893": "Basel", "fcsb": "FCSB", "steaua bucuresti": "FCSB",
     "aek athens": "AEK", "aek": "AEK", "ofi": "OFI Crete", "ofi crete": "OFI Crete",
     "nec nijmegen": "Nijmegen", "nec": "Nijmegen",
-    "internazionale milano": "Inter", "lazio roma": "Lazio", "sporting clube portugal": "Sp Lisbon",
+    "sporting clube braga": "Sp Braga", "internazionale milano": "Inter", "lazio roma": "Lazio", "sporting clube portugal": "Sp Lisbon",
     "istanbul basaksehir": "Buyuksehyr", "basaksehir": "Buyuksehyr",
     "rapid vienna": "Rapid Vienna", "rapid wien": "Rapid Vienna", "austria vienna": "Austria Vienna",
     "austria wien": "Austria Vienna", "rakow czestochowa": "Rakow", "jagiellonia bialystok": "Jagiellonia",
@@ -408,10 +408,15 @@ class ModeloEuropeo:
         i = self.mapa.get(equipo, equipo)
         return self.n_partidos.get(i, 0) >= self.min_partidos
 
+    # Los partidos entre ligas tienen más incertidumbre: se suavizan los extremos
+    # (1 = sin suavizar). Corrige el exceso de confianza en los partidos muy desiguales.
+    ENCOGIMIENTO = 0.85
+
     def goles_esperados(self, local: str, visitante: str) -> tuple[float, float]:
         l, v = self.mapa.get(local, local), self.mapa.get(visitante, visitante)
-        lam = np.exp(self.att[l] + self.dfn[v] + self.c0 + self.campo_eu)
-        mu = np.exp(self.att[v] + self.dfn[l] + self.c0)
+        k = self.ENCOGIMIENTO
+        lam = np.exp(self.c0 + self.campo_eu + k * (self.att[l] + self.dfn[v]))
+        mu = np.exp(self.c0 + k * (self.att[v] + self.dfn[l]))
         return float(lam), float(mu)
 
     def tabla_marcadores(self, local: str, visitante: str) -> np.ndarray:
