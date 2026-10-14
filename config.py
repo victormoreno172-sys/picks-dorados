@@ -21,6 +21,7 @@ LIGAS = {
     "SP1": ("🇪🇸 LaLiga", "PD"),
     "SP2": ("🇪🇸 Segunda División", None),
     "E0": ("🏴 Premier League", "PL"),
+    "E1": ("🏴 Championship", "ELC"),
     "I1": ("🇮🇹 Serie A", "SA"),
     "D1": ("🇩🇪 Bundesliga", "BL1"),
     "F1": ("🇫🇷 Ligue 1", "FL1"),
