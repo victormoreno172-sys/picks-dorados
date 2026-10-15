@@ -34,7 +34,7 @@ try:
 except Exception as e:
     print(f"aviso: tenis no disponible: {e}")
 
-# Esports: CS2 y Valorant (si falla, la app sigue con lo demás)
+# Esports: CS2, Valorant y LoL (si falla, la app sigue con lo demás)
 try:
     import esports
     for d, lista in esports.analizar_dias(hoy, 7).items():

@@ -1,5 +1,5 @@
 """
-Esports: Counter-Strike 2 y Valorant (datos de bo3.gg, sin clave).
+Esports: Counter-Strike 2, Valorant y League of Legends (datos de bo3.gg, sin clave).
 
 Modelo: cada equipo tiene una fuerza; la probabilidad de ganar un MAPA es
 logística en la diferencia de fuerzas. Se aprende de los mapas ganados y
@@ -39,7 +39,9 @@ UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
 JUEGOS = {  # código -> (nombre, id de bo3.gg, icono)
     "CS2": ("Counter-Strike 2", 1, "🎯"),
     "VAL": ("Valorant", 2, "🔫"),
+    "LOL": ("League of Legends", 3, "🐉"),
 }
+UNIDAD = {"LOL": "partidas"}  # en LoL no hay mapas: se cuentan partidas
 NIVELES_ENTRENAR = "s,a,b"
 NIVELES_MOSTRAR = {"s", "a"}
 
@@ -214,7 +216,7 @@ def marcadores(p: float, bo: int) -> dict[tuple[int, int], float]:
     return out
 
 
-def mercados_serie(n1: str, n2: str, p: float, bo: int) -> tuple[list[Pick], tuple[int, int], float]:
+def mercados_serie(n1: str, n2: str, p: float, bo: int, unidad: str = "mapas") -> tuple[list[Pick], tuple[int, int], float]:
     m = marcadores(p, bo)
     k = bo // 2 + 1
     gana1 = sum(v for (a, b), v in m.items() if a == k)
@@ -223,11 +225,11 @@ def mercados_serie(n1: str, n2: str, p: float, bo: int) -> tuple[list[Pick], tup
         for linea in [x + 0.5 for x in range(1, k)]:  # Bo3: 1.5 ; Bo5: 1.5, 2.5
             p1 = sum(v for (a, b), v in m.items() if a - b > linea)
             p2 = sum(v for (a, b), v in m.items() if b - a > linea)
-            picks += [Pick(f"{n1} -{linea:g} mapas", p1), Pick(f"{n2} +{linea:g} mapas", 1 - p1),
-                      Pick(f"{n2} -{linea:g} mapas", p2), Pick(f"{n1} +{linea:g} mapas", 1 - p2)]
+            picks += [Pick(f"{n1} -{linea:g} {unidad}", p1), Pick(f"{n2} +{linea:g} {unidad}", 1 - p1),
+                      Pick(f"{n2} -{linea:g} {unidad}", p2), Pick(f"{n1} +{linea:g} {unidad}", 1 - p2)]
         for linea in [x + 0.5 for x in range(k, bo)]:  # Bo3: 2.5 ; Bo5: 3.5, 4.5
             mas = sum(v for (a, b), v in m.items() if a + b > linea)
-            picks += [Pick(f"Más de {linea:g} mapas", mas), Pick(f"Menos de {linea:g} mapas", 1 - mas)]
+            picks += [Pick(f"Más de {linea:g} {unidad}", mas), Pick(f"Menos de {linea:g} {unidad}", 1 - mas)]
         for (a, b), v in sorted(m.items(), key=lambda kv: -kv[1]):
             picks.append(Pick(f"Resultado {n1} {a}-{b} {n2}", v))
     probable = max(m.items(), key=lambda kv: kv[1])
@@ -271,7 +273,8 @@ def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
         modelo_serie = sum(v for (x, y), v in marcadores(p, s.bo).items() if x == k)
         w = config.PESO_MERCADO_ESPORTS
         p = _p_mapa_para((1 - w) * modelo_serie + w * implicita, s.bo)
-    picks, (a, b), pm = mercados_serie(s.n1, s.n2, p, s.bo)
+    unidad = UNIDAD.get(s.juego, "mapas")
+    picks, (a, b), pm = mercados_serie(s.n1, s.n2, p, s.bo, unidad)
     if cg:
         for pk in picks:
             if pk.mercado == f"Gana {s.n1}":
@@ -280,7 +283,7 @@ def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
                 pk.cuota, pk.prob_cuota = cg[1], 1 - implicita
         # mapas y resultado exacto estimados (≈) desde la cuota del ganador
         from analisis import estimar_cuotas
-        mkt, *_ = mercados_serie(s.n1, s.n2, _p_mapa_para(implicita, s.bo), s.bo)
+        mkt, *_ = mercados_serie(s.n1, s.n2, _p_mapa_para(implicita, s.bo), s.bo, unidad)
         estimar_cuotas(picks, {k.mercado: k.prob for k in mkt}, 1 / cg[0] + 1 / cg[1] - 1)
     icono = JUEGOS[s.juego][2]
     liga = f"{icono} {s.juego} · {s.torneo or 'Torneo'}{' · Bo' + str(s.bo) if s.bo > 1 else ' · Bo1'}"
