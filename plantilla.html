@@ -452,8 +452,8 @@ function pintarTop(delDia, q) {
   $("top").innerHTML = h;
 }
 
-// Top: probabilidad ≥ 65% y cuota de la casa ≥ 1,30, ordenados por lo bien pagados que están
-const TOP_PROB = 0.65, TOP_CUOTA = 1.30;
+// Top: probabilidad ≥ 70% y cuota de la casa ≥ 1,30, ordenados por lo bien pagados que están
+const TOP_PROB = 0.70, TOP_CUOTA = 1.30;
 const ev = k => k.p * k.c - 1;  // ganancia esperada por euro según la app
 // Para ordenar: una cuota estimada cuenta a medias (puede estar desviada de la real)
 const orden = k => !k.c ? -0.01 : k.e ? ev(k) * 0.5 - 0.005 : ev(k);
