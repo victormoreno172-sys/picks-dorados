@@ -112,6 +112,13 @@ h1 span { color: var(--gold); }
 .caja h2 small { font: 500 11px var(--mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
 .tfila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; text-align: left; font: inherit; cursor: pointer; }
 .tfila:first-of-type { border-top: 0; }
+.tlin { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); }
+.tlin:first-of-type { border-top: 0; }
+.tlin .tfila { border-top: 0; flex: 1; min-width: 0; }
+.chk { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 2px solid var(--line); background: none; color: var(--ink); font: 700 16px var(--mono); cursor: pointer; padding: 0; }
+.tlin.hecha .chk { background: var(--gold); border-color: var(--gold); color: #000; }
+.tlin.hecha .tfila { opacity: .35; }
+.tlin.hecha .tfila .q b { text-decoration: line-through; }
 .tfila .q { min-width: 0; }
 .tfila .q b { display: block; font-size: 14px; }
 .tfila .q small { display: block; font: 500 11px var(--mono); color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
@@ -232,7 +239,8 @@ const GRUPOS = {
 const DEPORTES = [["f", "Fútbol"], ["b", "Basket"], ["te", "Tenis"], ["e", "Esports"], ["t", "Top"]];
 const est = { dep: "f", dia: 0, soloOro: false, soloRojo: false, liga: null, abiertos: new Set(),
               rp: DATOS.rojo_p || 0.7, rc: DATOS.rojo_c || 1.4, ajustes: false,
-              orden: "hora", busca: "", soloFav: false, favs: new Set() };
+              orden: "hora", busca: "", soloFav: false, favs: new Set(), apostadas: new Set() };
+try { est.apostadas = new Set(JSON.parse(localStorage.getItem("apostadas") || "[]")); } catch (e) {}
 try { est.favs = new Set(JSON.parse(localStorage.getItem("favs") || "[]")); est.orden = localStorage.getItem("orden") || "hora"; } catch (e) {}
 const clavePartido = (dia, p) => `${dia.fecha}|${p.local}|${p.visitante}`;
 const quitarAcentos = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -456,16 +464,20 @@ function pickTop(p) {
 function pintarTopDia() {
   const dia = DATOS.dias[est.dia];
   const cand = dia.partidos.map((p, i) => [p, i, pickTop(p)]).filter(([, , k]) => k)
-    .sort(([, , a], [, , b]) => orden(b) - orden(a) || b.p - a.p).slice(0, 30);
+    .sort(([, , a], [, , b]) => orden(b) - orden(a) || b.p - a.p).slice(0, 30)
+    .sort(([a], [b]) => (a.hora || "99").localeCompare(b.hora || "99"));  // los 30 mejores, por hora
   if (!cand.length) { $("top").innerHTML = `<div class="vacio">Este día todavía no hay picks de ${Math.round(TOP_PROB * 100)}% o más con cuota de la casa de ${TOP_CUOTA.toFixed(2)} o más. Las cuotas de Winamax se piden cuando faltan 3 días o menos para el partido.</div>`; return; }
   const nombreDep = { f: "⚽", b: "🏀", te: "🎾", e: "🎮" };
-  $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} picks</small></h2>` +
-    cand.map(([p, i, k]) => `<button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
+  const clave = (p, k) => [dia.fecha, p.local, p.visitante, k.m].join("|");
+  const hechas = cand.filter(([p, , k]) => est.apostadas.has(clave(p, k))).length;
+  $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} picks${hechas ? ` · ${hechas} apostadas` : ""}</small></h2>` +
+    cand.map(([p, i, k]) => { const c = clave(p, k), ap = est.apostadas.has(c);
+      return `<div class="tlin ${ap ? "hecha" : ""}"><button class="chk" data-ap="${esc(c)}" aria-label="${ap ? "Desmarcar" : "Marcar como apostada"}">${ap ? "✓" : ""}</button><button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
       <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}</small></span>
       <span class="pp">${pct(k.p)}${k.c
         ? `<small class="cq">${k.e ? "≈ " : ""}${casaCorta(p)} ${k.c.toFixed(2)}</small><small class="cq jj">app ${(1 / k.p).toFixed(2)} · ${evTxt(k)}</small>`
-        : `<small class="cq pide">pide ≥ ${minima(k).toFixed(2)}</small><small class="cq jj">sin cuota en la API</small>`}</span></button>`).join("") +
-    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más, ordenados de mejor a peor pagados. El % es lo que ganarías (verde) o perderías (rojo) a la larga por cada euro según la app; con cuota estimada (≈, en gris) es orientativo. "Pide ≥ X": mercados sin cuota en la API (córners, tarjetas...): apuesta solo si en Winamax pagan X o más. Uno por partido, de todos los deportes. Toca uno para verlo.</p></div>`;
+        : `<small class="cq pide">pide ≥ ${minima(k).toFixed(2)}</small><small class="cq jj">sin cuota en la API</small>`}</span></button></div>`; }).join("") +
+    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más, los 30 mejor pagados, ordenados por hora. Toca el cuadrado para marcar los que ya has apostado (se quedan en este móvil). El % es lo que ganarías (verde) o perderías (rojo) a la larga por cada euro según la app; con cuota estimada (≈, en gris) es orientativo. "Pide ≥ X": mercados sin cuota en la API (córners, tarjetas...): apuesta solo si en Winamax pagan X o más. Uno por partido, de todos los deportes. Toca uno para verlo.</p></div>`;
 }
 
 function pintar() {
@@ -493,6 +505,12 @@ document.addEventListener("click", e => {
   else if (b.dataset.dep) { est.dep = b.dataset.dep; est.liga = null; try { localStorage.setItem("dep", est.dep); } catch (e) {} pintar(); }
   else if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
   else if (b.dataset.f === "oro") { est.soloOro = !est.soloOro; try { localStorage.setItem("soloOro", est.soloOro ? "1" : "0"); } catch (e) {} pintarFiltros(); pintarLista(); }
+  else if (b.dataset.ap !== undefined) {
+    const k = b.dataset.ap;
+    est.apostadas.has(k) ? est.apostadas.delete(k) : est.apostadas.add(k);
+    try { localStorage.setItem("apostadas", JSON.stringify([...est.apostadas].slice(-500))); } catch (e) {}
+    pintarTopDia();
+  }
   else if (b.dataset.fav !== undefined) {
     const p = DATOS.dias[est.dia].partidos[+b.dataset.fav], k = clavePartido(DATOS.dias[est.dia], p);
     est.favs.has(k) ? est.favs.delete(k) : est.favs.add(k);
