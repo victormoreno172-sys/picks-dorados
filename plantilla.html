@@ -255,12 +255,20 @@ if (!["f", "b", "te", "e", "t"].includes(est.dep)) est.dep = "f";
 const $ = id => document.getElementById(id);
 const pct = p => Math.round(p * 100) + "%";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const delDeporte = d => est.dep === "t" ? d.partidos : d.partidos.filter(p => (p.dep || "f") === est.dep);
+// Fecha y hora de Madrid ahora mismo: los partidos que ya han empezado no se muestran
+function ahoraMadrid() {
+  const f = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
+  return { fecha: f.slice(0, 10), hora: f.slice(11, 16) };
+}
+let AHORA = ahoraMadrid();
+const empezado = (d, p) => d.fecha < AHORA.fecha || (d.fecha === AHORA.fecha && !!p.hora && p.hora <= AHORA.hora);
+const pendientes = d => d.partidos.filter(p => !empezado(d, p));
+const delDeporte = d => est.dep === "t" ? pendientes(d) : pendientes(d).filter(p => (p.dep || "f") === est.dep);
 const diasVisibles = () => DATOS.dias.map((d, i) => i).filter(i => i === 0 || delDeporte(DATOS.dias[i]).length);
 
 function pintarDeportes() {
   $("deportes").innerHTML = DEPORTES.map(([k, n]) => {
-    const total = k === "h" || k === "t" ? "" : DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
+    const total = k === "h" || k === "t" ? "" : DATOS.dias.reduce((s, d) => s + pendientes(d).filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}">${n}<small>${total}</small></button>`;
   }).join("");
 }
@@ -329,7 +337,7 @@ function tarjeta(p, idx) {
 
 function pintarLista() {
   const dia = DATOS.dias[est.dia];
-  const delDia = dia.partidos.map((p, i) => [p, i]).filter(([p]) => (p.dep || "f") === est.dep);
+  const delDia = dia.partidos.map((p, i) => [p, i]).filter(([p]) => (p.dep || "f") === est.dep && !empezado(dia, p));
   const q = quitarAcentos(est.busca.trim());
   const lista = delDia
     .filter(([p]) => !est.liga || p.liga === est.liga)
@@ -463,7 +471,7 @@ function pickTop(p) {
 }
 function pintarTopDia() {
   const dia = DATOS.dias[est.dia];
-  const cand = dia.partidos.map((p, i) => [p, i, pickTop(p)]).filter(([, , k]) => k)
+  const cand = dia.partidos.map((p, i) => [p, i, pickTop(p)]).filter(([p, , k]) => k && !empezado(dia, p))
     .sort(([, , a], [, , b]) => orden(b) - orden(a) || b.p - a.p).slice(0, 30)
     .sort(([a], [b]) => (a.hora || "99").localeCompare(b.hora || "99"));  // los 30 mejores, por hora
   if (!cand.length) { $("top").innerHTML = `<div class="vacio">Este día todavía no hay picks de ${Math.round(TOP_PROB * 100)}% o más con cuota de la casa de ${TOP_CUOTA.toFixed(2)} o más. Las cuotas de Winamax se piden cuando faltan 3 días o menos para el partido.</div>`; return; }
@@ -543,4 +551,11 @@ $("umbral").textContent = pct(DATOS.umbral);
 $("demo").hidden = !DATOS.demo;
 if (!delDeporte(DATOS.dias[0]).length) { const i = DATOS.dias.findIndex(d => delDeporte(d).length); if (i > 0) est.dia = i; }
 pintar();
+// Cada minuto: si algún partido ha empezado, se quita de la lista y del Top
+setInterval(() => {
+  const antes = DATOS.dias.reduce((s, d) => s + pendientes(d).length, 0);
+  AHORA = ahoraMadrid();
+  if (DATOS.dias.reduce((s, d) => s + pendientes(d).length, 0) !== antes) pintar();
+}, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { AHORA = ahoraMadrid(); pintar(); } });
 </script>
