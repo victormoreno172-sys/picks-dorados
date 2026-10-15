@@ -1,6 +1,6 @@
 """
 Ligas de fútbol que football-data.co.uk no tiene en el formato normal: se leen
-de ESPN (calendario, resultados y, a veces, cuotas). Ahora mismo: MLS.
+de ESPN (calendario, resultados y, a veces, cuotas): MLS y liga argentina.
 """
 from __future__ import annotations
 
@@ -88,9 +88,10 @@ def parsear(datos: dict) -> list[dict]:
 def historico(liga: str, hoy: date) -> list[Partido]:
     slug = config.LIGAS_ESPN[liga][1]
     out = []
-    d = date(hoy.year - 1, 2, 1)  # la MLS va por años naturales (febrero-diciembre)
+    # MLS: años naturales (febrero-diciembre). Otras ligas: los últimos ~15 meses.
+    d = date(hoy.year - 1, 2, 1) if liga == "MLS" else hoy - timedelta(days=460)
     while d < hoy:
-        if d.month in (1,):  # en enero no hay MLS
+        if liga == "MLS" and d.month in (1,):  # en enero no hay MLS
             d = date(d.year, 2, 1)
             continue
         pasado = d < hoy - timedelta(days=3)  # un día ya cerrado no cambia

@@ -32,6 +32,7 @@ LIGAS = {
 # Ligas que se leen de ESPN: código -> (nombre, identificador de ESPN)
 LIGAS_ESPN = {
     "MLS": ("🇺🇸 MLS", "usa.1"),
+    "ARG": ("🇦🇷 Liga Argentina", "arg.1"),
 }
 
 # --- Competiciones europeas (calendario de TheSportsDB) ---------------------
