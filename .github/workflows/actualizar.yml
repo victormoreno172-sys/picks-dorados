@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]       # se lanza solo cada vez que cambia el código
   schedule:
-    - cron: "15 6 * * *"   # cada mañana (08:15 en verano, 07:15 en invierno, hora de Madrid)
-    - cron: "15 14 * * *"  # repaso por la tarde, por si se publican más partidos
+    - cron: "15 4-22/2 * * *"  # cada 2 horas de 06:15 a 00:15 (hora de Madrid en verano); GitHub a veces se retrasa
   workflow_dispatch:         # botón "Run workflow" para lanzarlo a mano
 
 permissions:
@@ -13,7 +12,7 @@ permissions:
 
 concurrency:
   group: picks
-  cancel-in-progress: true
+  cancel-in-progress: false  # si llega otra mientras corre, espera en vez de cortarla
 
 jobs:
   actualizar:
