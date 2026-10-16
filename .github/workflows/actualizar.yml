@@ -54,7 +54,9 @@ jobs:
           ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
         run: |
           set -o pipefail
+          { echo "caché al empezar: $(du -sh cache 2>/dev/null | cut -f1) en $(find cache -type f 2>/dev/null | wc -l) archivos"; date -u +%H:%M:%S; } > inicio.txt
           python -u diario.py 2>&1 | tee registro.txt
+          { cat inicio.txt; date -u +%H:%M:%S; echo "caché al terminar: $(du -sh cache | cut -f1) en $(find cache -type f | wc -l) archivos"; cat registro.txt; } > r2.txt && mv r2.txt registro.txt
           cp registro.txt web/registro.txt
 
       - name: Guardar el historial de aciertos
