@@ -65,7 +65,7 @@ BASKET_EUROPA = {
     "ABA": ("🌍 Liga ABA", "4477"),
     "LKL": ("🇱🇹 LKL", "4478"),
 }
-BASKET = {"NBA": ("🏀 NBA", None), **BASKET_EUROPA}
+BASKET = {"NBA": ("🏀 NBA", None), "NBA-PRE": ("🏀 NBA · Pretemporada", None), **BASKET_EUROPA}
 
 
 # Estados de TheSportsDB que significan "terminado"

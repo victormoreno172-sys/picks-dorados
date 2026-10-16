@@ -64,6 +64,7 @@ class Juego:
     total_casa: float | None = None
     cuotas: dict = None  # cuotas reales (Winamax) por mercado
     casa: str = ""
+    pre: bool = False  # pretemporada de la NBA
 
     @property
     def jugado(self) -> bool:
@@ -112,7 +113,7 @@ def nba_temporada_pasada(hoy: date) -> list[Juego]:
     out, d = [], date(anio, 10, 15)
     while d <= date(anio + 1, 6, 25):
         datos = _cache_json(f"espn_{d:%Y%m%d}.json", URL_ESPN.format(dia=f"{d:%Y%m%d}"), None)
-        out += [j for j in _parse_espn(datos) if j.jugado]
+        out += [j for j in _parse_espn(datos) if j.jugado and not j.pre]
         d += timedelta(days=1)
     return out
 
@@ -120,7 +121,8 @@ def nba_temporada_pasada(hoy: date) -> list[Juego]:
 def _parse_espn(datos: dict) -> list[Juego]:
     out = []
     for e in (datos or {}).get("events", []):
-        if (e.get("season") or {}).get("type") not in (2, 3):  # 2 = regular, 3 = playoffs
+        tipo = (e.get("season") or {}).get("type")
+        if tipo not in (1, 2, 3):  # 1 = pretemporada, 2 = regular, 3 = playoffs
             continue
         c = e["competitions"][0]
         eq = {t["homeAway"]: t for t in c["competitors"]}
@@ -131,7 +133,8 @@ def _parse_espn(datos: dict) -> list[Juego]:
         hecho = c.get("status", {}).get("type", {}).get("completed", False)
         j = Juego("NBA", dt.date(), dt.strftime("%H:%M"), "NBA-" + ab["home"], "NBA-" + ab["away"],
                   eq["home"]["team"]["displayName"], eq["away"]["team"]["displayName"],
-                  int(eq["home"]["score"]) if hecho else None, int(eq["away"]["score"]) if hecho else None)
+                  int(eq["home"]["score"]) if hecho else None, int(eq["away"]["score"]) if hecho else None,
+                  pre=tipo == 1)
         odds = (c.get("odds") or [{}])[0]
         if odds.get("overUnder"):
             j.total_casa = float(odds["overUnder"])
@@ -374,13 +377,19 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
         poner_cuotas(j, hoy)
     pl, pv = modelo.esperado(j)
     margen, total = pl - pv, pl + pv
+    sd_m, sd_t = modelo.sd_margen, modelo.sd_total
+    if j.pre:
+        # Pretemporada: rotaciones largas y titulares descansando -> los equipos se parecen
+        # más entre sí y hay más sorpresas que en la liga regular
+        margen *= 0.5
+        sd_m, sd_t = sd_m * 1.25, sd_t * 1.15
     w = config.PESO_MERCADO
     m_ganador = None
     if j.spread_local is None and j.cuotas and "Gana local" in j.cuotas and "Gana visitante" in j.cuotas:
         # Solo cuota de ganador (pasa en la Euroliga): se traduce a un margen esperado
         c1, c2 = j.cuotas["Gana local"], j.cuotas["Gana visitante"]
         p_imp = min(0.995, max(0.005, (1 / c1) / (1 / c1 + 1 / c2)))
-        m_ganador = float(norm.ppf(p_imp) * modelo.sd_margen)
+        m_ganador = float(norm.ppf(p_imp) * sd_m)
         margen = (1 - w) * margen + w * m_ganador
     if j.spread_local is not None:  # mezcla con la línea de la casa
         margen = (1 - w) * margen + w * (-j.spread_local)
@@ -388,7 +397,7 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
         total = (1 - w) * total + w * j.total_casa
     pl, pv = (total + margen) / 2, (total - margen) / 2
     tipico = 2 * modelo.media.get(j.comp, np.mean(list(modelo.media.values())))
-    picks = mercados_baloncesto(margen, total, modelo.sd_margen, modelo.sd_total, j.spread_local,
+    picks = mercados_baloncesto(margen, total, sd_m, sd_t, j.spread_local,
                                 j.total_casa, tipico)
     if j.cuotas:  # cuotas reales de la casa en las líneas que ofrece
         por_nombre = {pk.mercado: pk for pk in picks}
@@ -404,7 +413,7 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
         from analisis import estimar_cuotas
         m_mkt = -j.spread_local if j.spread_local is not None else (m_ganador if m_ganador is not None else margen)
         t_mkt = j.total_casa if j.total_casa is not None else total
-        mkt = {pk.mercado: pk.prob for pk in mercados_baloncesto(m_mkt, t_mkt, modelo.sd_margen, modelo.sd_total,
+        mkt = {pk.mercado: pk.prob for pk in mercados_baloncesto(m_mkt, t_mkt, sd_m, sd_t,
                                                                  None, None, tipico)}
         if j.spread_local is None and m_ganador is None:
             mkt = {k: v for k, v in mkt.items() if "puntos" in k}
@@ -416,7 +425,7 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
             if pares:
                 mg = sum(1 / v + 1 / j.cuotas[_contrario(k)] - 1 for k, v in pares) / len(pares)
         estimar_cuotas(picks, mkt, mg)
-    p = PartidoProximo(j.comp, j.fecha, j.hora, j.local, j.visitante,
+    p = PartidoProximo("NBA-PRE" if j.pre else j.comp, j.fecha, j.hora, j.local, j.visitante,
                        casa=j.casa or ("ESPN (línea)" if j.spread_local is not None else ""))
     return Analisis(p, pl, pv, f"{round(pl)}-{round(pv)}", 0.0, picks)
 
@@ -434,7 +443,8 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
         print(f"  {nombre}: {len(juegos)} partidos, {len(proximos)} próximos")
         if not proximos:
             return
-        modelo = ModeloBaloncesto().ajustar(juegos, hasta=hoy)
+        # La pretemporada no entrena el modelo: las estrellas juegan poco y no dice mucho
+        modelo = ModeloBaloncesto().ajustar([j for j in juegos if not j.pre], hasta=hoy)
         for j in proximos:
             a = analizar_juego(j, modelo, hoy)
             if a:
