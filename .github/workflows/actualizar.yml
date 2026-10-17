@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]       # se lanza solo cada vez que cambia el código
   schedule:
-    - cron: "15 4-22/2 * * *"  # cada 2 horas de 06:15 a 00:15 (hora de Madrid en verano); GitHub a veces se retrasa
+    - cron: "15 4-22/2 * * *"
+    - cron: "15 23 * * *"      # cada 2 horas (hora UTC) y a las 23:15 UTC = 00:15 de Madrid en invierno (apuestas del día)
   workflow_dispatch:         # botón "Run workflow" para lanzarlo a mano
 
 permissions:
@@ -41,6 +42,7 @@ jobs:
           mkdir -p historial
           if git fetch -q --depth 1 origin historial; then
             git show FETCH_HEAD:historial.json > historial/historial.json || true
+            git show FETCH_HEAD:banca.json > historial/banca.json 2>/dev/null || rm -f historial/banca.json
           fi
 
       - name: Calcular predicciones y generar la app
@@ -50,8 +52,7 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
           THESPORTSDB_KEY: ${{ secrets.THESPORTSDB_KEY }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-          # Telegram solo en la ejecución de la mañana (o al lanzarlo a mano)
-          ENVIAR_TELEGRAM: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '15 6 * * *' }}
+          BANCA: ${{ vars.BANCA }}
         run: |
           set -o pipefail
           { echo "caché al empezar: $(du -sh cache 2>/dev/null | cut -f1) en $(find cache -type f 2>/dev/null | wc -l) archivos"; date -u +%H:%M:%S; } > inicio.txt
@@ -67,6 +68,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add historial.json
+          if [ -f banca.json ]; then git add banca.json; fi
           git commit -qm "Historial $(date +%d/%m/%Y-%H:%M)"
           for i in 1 2 3; do
             git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" historial && exit 0

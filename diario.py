@@ -74,10 +74,11 @@ except Exception as e:
 
 web.escribir(datos_app)
 
-futbol_hoy = [a for a in por_dia.get(hoy, []) if deporte(a) == "f"]
-if (os.getenv("ENVIAR_TELEGRAM", "").lower() == "true" and futbol_hoy
-        and config.TELEGRAM_TOKEN and config.TELEGRAM_CANAL):
-    import bot
-    for msg in resumen_del_dia(futbol_hoy, hoy):
-        bot.enviar(config.TELEGRAM_CANAL, msg)
-    print("Resumen enviado a Telegram")
+# Apuestas del día por Telegram (pasadas las 00:00) y banca simulada
+try:
+    import apuestas
+    apuestas.actualizar(por_dia)
+except Exception as e:
+    import traceback
+    print(f"aviso: apuestas no disponibles: {e}")
+    traceback.print_exc()
