@@ -482,19 +482,33 @@ function pickTop(p) {
 }
 function pintarTopDia() {
   const dia = DATOS.dias[est.dia];
+  const porHora = ([a], [b]) => (a.hora || "99").localeCompare(b.hora || "99");
   const cand = dia.partidos.map((p, i) => [p, i, pickTop(p)]).filter(([p, , k]) => k && !empezado(dia, p))
-    .sort(([, , a], [, , b]) => real(b) - real(a) || orden(b) - orden(a) || b.p - a.p).slice(0, 30)
-    .sort(([a], [b]) => (a.hora || "99").localeCompare(b.hora || "99"));  // los 30 mejores, por hora
-  if (!cand.length) { $("top").innerHTML = `<div class="vacio">Este día todavía no hay picks de ${Math.round(TOP_PROB * 100)}% o más con cuota de la casa de ${TOP_CUOTA.toFixed(2)} o más. Las cuotas de Winamax se piden cuando faltan 3 días o menos para el partido.</div>`; return; }
+    .sort(([, , a], [, , b]) => real(b) - real(a) || orden(b) - orden(a) || b.p - a.p).slice(0, 30).sort(porHora);
+  // Basket, tenis y esports sin cuota en la API (ligas y torneos que la API no cubre):
+  // aparte, con la cuota mínima que hay que encontrar en Winamax. Nunca córners ni tarjetas.
+  const conTop = new Set(cand.map(([, i]) => i));
+  const sinCuota = dia.partidos.map((p, i) => [p, i, (p.dep || "f") === "f" || conTop.has(i) || empezado(dia, p) ? null
+      : p.picks.filter(k => !k.c && k.p >= TOP_PROB && minima(k) >= TOP_CUOTA - 1e-9).sort((a, b) => b.p - a.p)[0]])
+    .filter(([, , k]) => k).sort(([, , a], [, , b]) => b.p - a.p).slice(0, 15).sort(porHora);
+  if (!cand.length && !sinCuota.length) { $("top").innerHTML = `<div class="vacio">Este día todavía no hay picks de ${Math.round(TOP_PROB * 100)}% o más con cuota de ${TOP_CUOTA.toFixed(2)} o más. Las cuotas de Winamax se piden cuando faltan 3 días o menos para el partido.</div>`; return; }
   const nombreDep = { f: "⚽", b: "🏀", te: "🎾", e: "🎮" };
   const clave = (p, k) => [dia.fecha, p.local, p.visitante, k.m].join("|");
-  const hechas = cand.filter(([p, , k]) => est.apostadas.has(clave(p, k))).length;
-  $("top").innerHTML = `<div class="caja"><h2>Top del día <small>${cand.length} picks${hechas ? ` · ${hechas} apostadas` : ""}</small></h2>` +
-    cand.map(([p, i, k]) => { const c = clave(p, k), ap = est.apostadas.has(c);
-      return `<div class="tlin ${ap ? "hecha" : ""}"><button class="chk" data-ap="${esc(c)}" aria-label="${ap ? "Desmarcar" : "Marcar como apostada"}">${ap ? "✓" : ""}</button><button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
+  const todos = cand.concat(sinCuota);
+  const hechas = todos.filter(([p, , k]) => est.apostadas.has(clave(p, k))).length;
+  const fila = ([p, i, k]) => { const c = clave(p, k), ap = est.apostadas.has(c);
+    return `<div class="tlin ${ap ? "hecha" : ""}"><button class="chk" data-ap="${esc(c)}" aria-label="${ap ? "Desmarcar" : "Marcar como apostada"}">${ap ? "✓" : ""}</button><button class="tfila" data-ir="${i}" data-irdep="${p.dep || "f"}">
       <span class="q"><b>${nombreDep[p.dep || "f"]} ${esc(k.m)}</b><small>${esc(p.local)} – ${esc(p.visitante)} · ${esc(p.liga)} · ${esc(p.hora || "")}</small></span>
-      <span class="pp">${pct(k.p)}<small class="cq">${k.e ? "≈ " : ""}${casaCorta(p)} ${k.c.toFixed(2)}</small><small class="cq jj">app ${(1 / k.p).toFixed(2)} · ${evTxt(k)}</small></span></button></div>`; }).join("") +
-    `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más, solo de mercados con cuota de la casa: primero los de cuota real de Winamax (o Thunderpick en esports), mejor pagados antes; luego, si faltan, los de cuota estimada (≈). Se enseñan los 30 mejores, ordenados por hora. El % es lo que ganarías (verde) o perderías (rojo) a la larga por cada euro según la app; con ≈ (gris) es orientativo. Córners y tarjetas no salen aquí porque no tienen cuota: míralos dentro de cada partido. Uno por partido. Toca el cuadrado para marcar los que ya has apostado.</p></div>`;
+      <span class="pp">${pct(k.p)}${k.c
+        ? `<small class="cq">${k.e ? "≈ " : ""}${casaCorta(p)} ${k.c.toFixed(2)}</small><small class="cq jj">app ${(1 / k.p).toFixed(2)} · ${evTxt(k)}</small>`
+        : `<small class="cq pide">pide ≥ ${minima(k).toFixed(2)}</small><small class="cq jj">mírala en Winamax</small>`}</span></button></div>`; };
+  const nota = t => `<p class="nota" style="margin:8px 0 0;font-size:12px;color:var(--muted)">${t}</p>`;
+  let h = "";
+  if (cand.length) h += `<div class="caja"><h2>Top del día <small>${cand.length} picks${hechas ? ` · ${hechas} apostadas` : ""}</small></h2>` +
+    cand.map(fila).join("") + nota(`Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más, con cuota de la casa: primero los de cuota real de Winamax (o Thunderpick en esports), mejor pagados antes; luego los de cuota estimada (≈). Los 30 mejores, ordenados por hora. El % es lo que ganarías (verde) o perderías (rojo) a la larga por cada euro según la app; con ≈ (gris) es orientativo. Uno por partido. Toca el cuadrado para marcar los que ya has apostado.`) + `</div>`;
+  if (sinCuota.length) h += `<div class="caja"><h2>Basket, tenis y esports sin cuota <small>${sinCuota.length} picks</small></h2>` +
+    sinCuota.map(fila).join("") + nota(`Partidos de ligas y torneos que la API de cuotas no cubre (ACB, Lega, Grecia..., torneos de tenis pequeños). Mismo listón: ${Math.round(TOP_PROB * 100)}% o más. "Pide ≥ X": apuesta solo si en Winamax pagan X o más; si pagan menos, no compensa. Córners y tarjetas no salen en el Top: míralos dentro de cada partido.`) + `</div>`;
+  $("top").innerHTML = h;
 }
 
 function pintar() {
