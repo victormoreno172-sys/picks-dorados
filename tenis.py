@@ -65,6 +65,9 @@ class Partido:
     s1: int | None = None      # sets ganados
     s2: int | None = None
     retirada: bool = False
+    flag1: str = ""   # banderas y sede (para la ficha del partido)
+    flag2: str = ""
+    sede: str = ""
 
 
 # --------------------------------------------------------------- descarga
@@ -132,7 +135,9 @@ def _parsear(tour: str, datos: dict) -> list[Partido]:
                         f"{tour}-{b['athlete'].get('id') or b['athlete'].get('displayName')}",
                         a["athlete"].get("displayName") or "?", b["athlete"].get("displayName") or "?",
                         bool(a.get("winner")) if hecho else None, sa if hecho else None, sb if hecho else None,
-                        est.get("name") in ("STATUS_RETIRED", "STATUS_WALKOVER")))
+                        est.get("name") in ("STATUS_RETIRED", "STATUS_WALKOVER"),
+                        (a["athlete"].get("flag") or {}).get("href") or "", (b["athlete"].get("flag") or {}).get("href") or "",
+                        ", ".join(x for x in ((c.get("venue") or {}).get("fullName"), (c.get("venue") or {}).get("court")) if x)))
                 except (KeyError, TypeError, ValueError):
                     continue
     return out
@@ -295,12 +300,17 @@ def analizar(p: Partido, elo: EloTenis, hoy: date) -> Analisis | None:
     return Analisis(partido, e1, e2, f"{a}-{b}", pm, picks)
 
 
+HIST: list = []   # partidos jugados (para "últimos partidos" en la ficha)
+INFO: dict[tuple, dict] = {}
+
+
 def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
     salida: dict[date, list[Analisis]] = {}
     import historial
     for tour in TOURS:
         try:
             hist = historico(tour, hoy)
+            HIST.extend(hist)
             for h in hist:
                 historial.anotar(h.fecha, h.n1, h.n2, h.s1 or 0, h.s2 or 0)
             prox = proximos(tour, hoy, n_dias)
@@ -309,6 +319,7 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
                 continue
             elo = EloTenis().ajustar(hist)
             for p in prox:
+                INFO[(p.fecha.isoformat(), p.n1, p.n2)] = {"esc": [p.flag1, p.flag2], "estadio": p.sede or p.torneo}
                 a = analizar(p, elo, hoy)
                 if a:
                     salida.setdefault(p.fecha, []).append(a)

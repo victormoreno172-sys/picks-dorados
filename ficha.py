@@ -180,5 +180,79 @@ def enriquecer(datos_app: dict):
                     n_detalle += 1
             p["fi"] = fi
             n_fichas += 1
+    _otros_deportes(datos_app, tablas)
     datos_app["tablas"] = tablas
     print(f"  fichas: {n_fichas} partidos con escudos y estadio, {n_detalle} con detalle, {len(tablas)} clasificaciones")
+
+
+# ---------------------------------------------------- basket europeo, tenis y esports
+def _forma_de(nombre: str, partidos: list, campos) -> list:
+    """Últimos 5 de un equipo/jugador. campos(p) -> (fecha, local, visitante, tanteo_l, tanteo_v)."""
+    out = []
+    for p in partidos:
+        f, l, v, a, b = campos(p)
+        if nombre not in (l, v) or a is None:
+            continue
+        mio, suyo = (a, b) if nombre == l else (b, a)
+        out.append({"r": "W" if mio > suyo else "L" if mio < suyo else "D", "m": f"{a}-{b}",
+                    "a": "vs" if nombre == l else "@", "o": v if nombre == l else l, "f": f.isoformat()})
+    return sorted(out, key=lambda e: e["f"], reverse=True)[:5]
+
+
+def _tabla_basket(comp: str, jugados: list, hoy: date) -> list | None:
+    inicio = date(hoy.year if hoy.month >= 8 else hoy.year - 1, 8, 1)
+    st: dict[str, list] = {}
+    for j in jugados:
+        if j.comp != comp or j.fecha < inicio:
+            continue
+        for eq, a, b in ((j.local, j.pl, j.pv), (j.visitante, j.pv, j.pl)):
+            r = st.setdefault(eq, [0, 0, 0])
+            r[0 if a > b else 1] += 1
+            r[2] += a - b
+    if len(st) < 4:
+        return None
+    orden = sorted(st.items(), key=lambda kv: (-kv[1][0] / max(1, kv[1][0] + kv[1][1]), -kv[1][2]))
+    return [[str(i), eq, str(r[0] + r[1]), str(r[0]), "0", str(r[1]), f"{r[2]:+d}", str(r[0])]
+            for i, (eq, r) in enumerate(orden, 1)]
+
+
+def _otros_deportes(datos_app: dict, tablas: dict):
+    hoy = datetime.now(TZ).date()
+    import baloncesto, esports, tenis
+    codigo = {config.nombre_liga(c).split(" ", 1)[-1]: c for c in config.BASKET}
+    n = 0
+    for dia in datos_app.get("dias", []):
+        for p in dia["partidos"]:
+            if p.get("fi") or p.get("dep") not in ("b", "te", "e"):
+                continue
+            clave = (dia["fecha"], p["local"], p["visitante"])
+            fi = {"n": [p["local"], p["visitante"]]}
+            if p["dep"] == "b":
+                fi.update(baloncesto.INFO.get(clave, {}))
+                campos = lambda j: (j.fecha, j.local, j.visitante, j.pl, j.pv)
+                fi["forma"] = {"l": _forma_de(p["local"], baloncesto.JUGADOS, campos),
+                               "v": _forma_de(p["visitante"], baloncesto.JUGADOS, campos)}
+                c = codigo.get(p["liga"])
+                if c and c != "NBA":
+                    clave_t = "b-" + c
+                    if clave_t not in tablas:
+                        t = _tabla_basket(c, baloncesto.JUGADOS, hoy)
+                        if t:
+                            tablas[clave_t] = t
+                    if clave_t in tablas:
+                        fi["slug"] = clave_t
+            elif p["dep"] == "te":
+                fi.update(tenis.INFO.get(clave, {}))
+                campos = lambda h: (h.fecha, h.n1, h.n2, h.s1, h.s2)
+                fi["forma"] = {"l": _forma_de(p["local"], tenis.HIST, campos),
+                               "v": _forma_de(p["visitante"], tenis.HIST, campos)}
+            else:
+                fi.update(esports.INFO.get(clave, {}))
+                campos = lambda s: (s.fecha, s.n1, s.n2, s.m1, s.m2)
+                fi["forma"] = {"l": _forma_de(p["local"], esports.HIST, campos),
+                               "v": _forma_de(p["visitante"], esports.HIST, campos)}
+            if not (fi["forma"]["l"] or fi["forma"]["v"]):
+                fi.pop("forma")
+            p["fi"] = fi
+            n += 1
+    print(f"  fichas de basket europeo, tenis y esports: {n}")

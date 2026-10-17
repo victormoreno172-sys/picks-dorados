@@ -606,7 +606,7 @@ function pintarFicha() {
   const tabs = [["prob", "Probabilidades"]];
   if (p.dep === "f" || fi.alin) tabs.push(["alin", "Alineaciones"]);
   if (fi.slug && DATOS.tablas && DATOS.tablas[fi.slug]) tabs.push(["tabla", "Clasificación"]);
-  if (fi.forma) tabs.push(["forma", "Últimos partidos"]);
+  if (fi.forma) tabs.push(["forma", p.dep === "te" ? "Últimos partidos" : "Últimos partidos"]);
   if (!tabs.some(t => t[0] === est.tab)) est.tab = "prob";
   let cont = "";
   if (est.tab === "prob") {
@@ -625,7 +625,7 @@ function pintarFicha() {
     }
   } else if (est.tab === "tabla") {
     const t = DATOS.tablas[fi.slug], nombres = (fi.n || []).map(quitarAcentos);
-    cont = `<table class="tabla2"><tr><th>#</th><th>Equipo</th><th>PJ</th><th>DG</th><th>PTS</th></tr>` +
+    cont = `<table class="tabla2"><tr><th>#</th><th>Equipo</th><th>PJ</th><th>${p.dep === "b" ? "DIF" : "DG"}</th><th>${p.dep === "b" ? "V" : "PTS"}</th></tr>` +
       t.map(r => `<tr class="${nombres.includes(quitarAcentos(r[1])) ? "yo" : ""}"><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[6])}</td><td><b>${esc(r[7])}</b></td></tr>`).join("") + `</table>`;
   } else if (est.tab === "forma") {
     const col = (lado, nombre) => `<div class="fcol"><h4>${esc(nombre)}</h4>` + ((fi.forma[lado] || []).map(e =>

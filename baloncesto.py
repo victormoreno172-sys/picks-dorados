@@ -167,6 +167,11 @@ def _temporadas_europa(hoy: date) -> list[str]:
     return [f"{a - 1}-{a}", f"{a}-{a + 1}"]
 
 
+# Para la ficha de cada partido: escudos y pabellón (TheSportsDB) y todos los partidos jugados
+INFO: dict[tuple, dict] = {}
+JUGADOS: list = []
+
+
 def _evento_a_juego(comp: str, e: dict) -> Juego | None:
     if not e.get("idHomeTeam") or not e.get("idAwayTeam"):
         return None
@@ -181,6 +186,8 @@ def _evento_a_juego(comp: str, e: dict) -> Juego | None:
     pl, pv = e.get("intHomeScore"), e.get("intAwayScore")
     hoy = datetime.now(TZ).date()
     jugado = pl not in (None, "") and pv not in (None, "") and config.partido_terminado(e.get("strStatus"), fecha, hoy)
+    INFO[(fecha.isoformat(), e["strHomeTeam"], e["strAwayTeam"])] = {
+        "esc": [e.get("strHomeTeamBadge") or "", e.get("strAwayTeamBadge") or ""], "estadio": e.get("strVenue") or ""}
     return Juego(comp, fecha, hora, "T" + e["idHomeTeam"], "T" + e["idAwayTeam"], e["strHomeTeam"],
                  e["strAwayTeam"], int(pl) if jugado else None, int(pv) if jugado else None)
 
@@ -447,6 +454,7 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
         for j in juegos:
             if j.jugado:
                 historial.anotar(j.fecha, j.local, j.visitante, j.pl, j.pv)
+        JUGADOS.extend(j for j in juegos if j.jugado)
         proximos = [j for j in juegos if not j.jugado and hoy <= j.fecha < hoy + timedelta(days=n_dias)]
         print(f"  {nombre}: {len(juegos)} partidos, {len(proximos)} próximos")
         if not proximos:

@@ -62,6 +62,12 @@ class Serie:
     m1: int | None = None  # mapas ganados
     m2: int | None = None
     cuotas: dict | None = None
+    img1: str = ""
+    img2: str = ""
+
+
+HIST: list = []
+INFO: dict[tuple, dict] = {}
 
 
 # ----------------------------------------------------------------- descarga
@@ -96,7 +102,8 @@ def _a_serie(juego: str, m: dict) -> Serie | None:
                      int(m.get("bo_type") or 1), f"{juego}-{m['team1_id']}", f"{juego}-{m['team2_id']}",
                      t1.get("name") or "?", t2.get("name") or "?",
                      int(m["team1_score"]) if hecho else None, int(m["team2_score"]) if hecho else None,
-                     m.get("bet_updates") if isinstance(m.get("bet_updates"), dict) else None)
+                     m.get("bet_updates") if isinstance(m.get("bet_updates"), dict) else None,
+                     t1.get("image_url") or "", t2.get("image_url") or "")
     except (KeyError, ValueError, TypeError):
         return None
 
@@ -305,7 +312,9 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             if not prox or len(hist) < 100:
                 continue
             modelo = ModeloMapas().ajustar(hist, hoy)
+            HIST.extend(hist)
             for s in prox:
+                INFO[(s.fecha.isoformat(), s.n1, s.n2)] = {"esc": [s.img1, s.img2], "estadio": s.torneo}
                 a = analizar_serie(s, modelo)
                 if a:
                     salida.setdefault(s.fecha, []).append(a)
