@@ -1,0 +1,242 @@
+{
+"inicial": 70.0,
+"apuestas": [
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "18:30",
+"liga": "LaLiga",
+"local": "Betis",
+"visitante": "Barcelona",
+"mercado": "Más de 2.5 goles",
+"prob": 0.749,
+"cuota": 1.24,
+"estimada": false
+}
+],
+"cuota": 1.24,
+"prob": 0.749,
+"importe": 3.5,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "20:30",
+"liga": "MLS",
+"local": "Philadelphia Union",
+"visitante": "Charlotte FC",
+"mercado": "Menos de 4.5 goles",
+"prob": 0.711,
+"cuota": 1.36,
+"estimada": true
+}
+],
+"cuota": 1.36,
+"prob": 0.711,
+"importe": 3.33,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "20:45",
+"liga": "Ligue 1",
+"local": "Troyes",
+"visitante": "Lens",
+"mercado": "Visitante o empate (X2)",
+"prob": 0.772,
+"cuota": 1.28,
+"estimada": true
+}
+],
+"cuota": 1.28,
+"prob": 0.772,
+"importe": 3.16,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "20:45",
+"liga": "Ligue 1",
+"local": "Lille",
+"visitante": "Brest",
+"mercado": "Local o empate (1X)",
+"prob": 0.745,
+"cuota": 1.31,
+"estimada": true
+}
+],
+"cuota": 1.31,
+"prob": 0.745,
+"importe": 3.0,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "21:00",
+"liga": "Eredivisie",
+"local": "Sparta Rotterdam",
+"visitante": "Willem II",
+"mercado": "Menos de 4.5 goles",
+"prob": 0.769,
+"cuota": 1.26,
+"estimada": true
+}
+],
+"cuota": 1.26,
+"prob": 0.769,
+"importe": 2.85,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "21:00",
+"liga": "LaLiga",
+"local": "Valencia",
+"visitante": "Ath Bilbao",
+"mercado": "Menos de 3.5 goles",
+"prob": 0.762,
+"cuota": 1.27,
+"estimada": true
+}
+],
+"cuota": 1.27,
+"prob": 0.762,
+"importe": 2.71,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Combinada doble",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "20:45",
+"liga": "Serie A",
+"local": "Roma",
+"visitante": "Genoa",
+"mercado": "Local o empate (1X)",
+"prob": 0.833,
+"cuota": 1.17,
+"estimada": true
+},
+{
+"fecha": "2026-10-17",
+"hora": "18:30",
+"liga": "E0",
+"local": "Newcastle",
+"visitante": "Aston Villa",
+"mercado": "Más de 1.5 goles",
+"prob": 0.82,
+"cuota": 1.17,
+"estimada": true
+}
+],
+"cuota": 1.37,
+"prob": 0.683,
+"importe": 2.57,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Combinada triple",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "22:30",
+"liga": "MLS",
+"local": "Minnesota United FC",
+"visitante": "St. Louis CITY SC",
+"mercado": "Más de 1.5 goles",
+"prob": 0.846,
+"cuota": 1.14,
+"estimada": true
+},
+{
+"fecha": "2026-10-17",
+"hora": "22:30",
+"liga": "Liga Argentina",
+"local": "Platense",
+"visitante": "Lanús",
+"mercado": "Menos de 3.5 goles",
+"prob": 0.852,
+"cuota": 1.13,
+"estimada": true
+},
+{
+"fecha": "2026-10-17",
+"hora": "21:00",
+"liga": "Segunda División",
+"local": "Las Palmas",
+"visitante": "Castellon",
+"mercado": "Menos de 4.5 goles",
+"prob": 0.822,
+"cuota": 1.17,
+"estimada": true
+}
+],
+"cuota": 1.51,
+"prob": 0.592,
+"importe": 2.44,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "19:30",
+"liga": "ACB",
+"local": "BC Andorra",
+"visitante": "CB Breogan",
+"mercado": "Hándicap local +12.5",
+"prob": 0.807,
+"cuota": 1.28,
+"estimada": false,
+"minima": true
+}
+],
+"cuota": 1.28,
+"prob": 0.807,
+"importe": 2.32,
+"fecha": "2026-10-17"
+},
+{
+"tipo": "Sencilla",
+"piernas": [
+{
+"fecha": "2026-10-17",
+"hora": "19:00",
+"liga": "LNB",
+"local": "Limoges",
+"visitante": "Lyon-Villeurbanne",
+"mercado": "Menos de 185.5 puntos",
+"prob": 0.802,
+"cuota": 1.29,
+"estimada": false,
+"minima": true
+}
+],
+"cuota": 1.29,
+"prob": 0.802,
+"importe": 2.21,
+"fecha": "2026-10-17"
+}
+],
+"ultimo_envio": "2026-10-17",
+"chat": null
+}
