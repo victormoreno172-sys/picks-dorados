@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04060a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bot Dorado">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icono.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+<title>Bot Dorado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Mismo lenguaje que Picks Dorados: tinta verde, oro solo para el dinero y lo que destaca */
+:root {
+  /* Negro y futurista: cristal oscuro, neón verde para lo que gana, oro para el dinero */
+  --bg: #04060a; --surface: rgba(255, 255, 255, .035); --ink: #e8eef8; --muted: #8391a7; --line: rgba(255, 255, 255, .09);
+  --gold: #ffcc4d; --gold-soft: rgba(255, 204, 77, .12); --ok: #39f5a0; --ok-soft: rgba(57, 245, 160, .12);
+  --red: #ff4d6d; --red-soft: rgba(255, 77, 109, .14); --wait: #8391a7; --bar: rgba(255, 255, 255, .06);
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.45 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
+header { padding-block: 14px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--line); }
+h1 { margin: 0; font: 800 28px/1 var(--display); text-transform: uppercase; }
+h1 span { color: var(--gold); }
+.upd { font: 500 11px var(--mono); color: var(--muted); text-align: right; }
+.upd a { color: var(--gold); text-decoration: none; font-weight: 700; }
+.caja { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 12px; }
+h2 { margin: 0 0 10px; font: 700 18px/1.1 var(--display); text-transform: uppercase; letter-spacing: .02em; display: flex; justify-content: space-between; align-items: baseline; }
+h2 small { font: 500 11px var(--mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
+.hero .num { font: 800 46px/1 var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
+.hero .sub { font: 600 14px var(--mono); margin-top: 4px; }
+.pos { color: var(--ok); } .neg { color: var(--red); }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.kpi { border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.kpi b { display: block; font: 700 18px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 11px; color: var(--muted); }
+svg.graf { width: 100%; height: 170px; display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font: 500 11px var(--mono); color: var(--muted); padding: 4px 4px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 7px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+td.n, th.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.dia h3 { margin: 14px 0 6px; font: 700 15px var(--display); text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.ap { border: 1px solid var(--line); border-left: 4px solid var(--wait); border-radius: 10px; padding: 9px 10px; margin-bottom: 8px; background: var(--surface); }
+.ap.g { border-left-color: var(--ok); } .ap.p { border-left-color: var(--red); }
+.ap .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.ap .top .eur { font: 700 14px var(--mono); white-space: nowrap; }
+.ap .leg { font-size: 13px; color: var(--muted); margin-top: 4px; overflow-wrap: anywhere; }
+.ap .leg b { color: var(--ink); font-weight: 600; }
+.badge { font: 700 11px var(--mono); padding: 2px 6px; border-radius: 6px; background: var(--bar); color: var(--wait); white-space: nowrap; }
+.badge.g { background: var(--ok-soft); color: var(--ok); } .badge.p { background: var(--red-soft); color: var(--red); }
+.nota { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.vacio { color: var(--muted); font-size: 14px; }
+
+/* ---------- capa futurista ---------- */
+body { background: radial-gradient(900px 500px at 100% -10%, rgba(57, 245, 160, .10), transparent 60%),
+  radial-gradient(800px 500px at -20% 20%, rgba(255, 204, 77, .08), transparent 60%), #04060a; background-attachment: fixed; }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+  background-image: linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .03) 1px, transparent 1px);
+  background-size: 32px 32px; mask-image: linear-gradient(#000, transparent 75%); }
+header { border-bottom-color: var(--line); }
+h1 { letter-spacing: .02em; }
+h1 span { color: var(--ok); text-shadow: 0 0 18px rgba(57, 245, 160, .55); }
+.caja { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 20px 40px -24px rgba(0, 0, 0, .9); }
+.hero { background: linear-gradient(160deg, rgba(57, 245, 160, .10), rgba(255, 255, 255, .02) 55%); border-color: rgba(57, 245, 160, .22); }
+.hero .num { font-family: var(--display); font-weight: 700; letter-spacing: -.02em; text-shadow: 0 0 28px rgba(255, 204, 77, .35); }
+.kpi { background: rgba(255, 255, 255, .025); border-radius: 12px; }
+.kpi b { font-size: 17px; }
+.pos { text-shadow: 0 0 12px rgba(57, 245, 160, .35); }
+h2 { font-family: var(--display); font-weight: 700; letter-spacing: .08em; font-size: 15px; color: #c7d2e4; }
+.ap { background: rgba(255, 255, 255, .03); border-radius: 14px; }
+.ap.g { box-shadow: -6px 0 18px -10px rgba(57, 245, 160, .7); }
+.ap.p { box-shadow: -6px 0 18px -10px rgba(255, 77, 109, .7); }
+svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
+.upd a { color: var(--ok); }
+
+.ap.x { opacity: .45; border-left-color: var(--line); box-shadow: none; }
+.badge.x { background: var(--bar); color: var(--muted); }
+.acc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+.acc button { border: 1px solid var(--line); background: rgba(255, 255, 255, .04); color: var(--ink); border-radius: 999px; padding: 5px 10px; font: 600 12px var(--body); cursor: pointer; }
+.ap.x .acc { opacity: 1; }
+.nota2 { font-size: 12px; color: var(--muted); }
+
+.disp { margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 204, 77, .25); background: rgba(255, 204, 77, .06); display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; }
+.disp span { font-size: 13px; color: var(--muted); }
+.disp b { font: 700 22px var(--mono); color: var(--ink); text-align: right; }
+.disp small { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+
+.pest { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 12px; padding: 4px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+.pest button { border: 0; background: none; color: var(--muted); font: 700 14px var(--display); letter-spacing: .08em; text-transform: uppercase; padding: 9px; border-radius: 10px; cursor: pointer; }
+.pest button[aria-pressed="true"] { background: rgba(57, 245, 160, .14); color: var(--ok); box-shadow: inset 0 0 0 1px rgba(57, 245, 160, .35); }
+.csv { border: 1px solid rgba(57, 245, 160, .4); background: rgba(57, 245, 160, .08); color: var(--ok); border-radius: 999px; padding: 4px 10px; font: 600 11px var(--body); cursor: pointer; letter-spacing: 0; text-transform: none; }
+.tscroll { overflow-x: auto; margin: 0 -14px; padding: 0 14px; }
+.excel { border-collapse: collapse; font: 500 12px var(--mono); white-space: nowrap; min-width: 100%; }
+.excel th { position: sticky; top: 0; background: #0b1018; color: var(--muted); font-weight: 600; text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.excel td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.excel th:first-child, .excel td:first-child { position: sticky; left: 0; background: #0b1018; text-align: left; z-index: 1; }
+.excel tbody tr:nth-child(even) td { background: rgba(255, 255, 255, .02); }
+.excel tfoot td { font-weight: 700; color: var(--ink); border-top: 2px solid var(--line); border-bottom: 0; }
+</style>
+<div class="wrap">
+  <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
+  <nav class="pest" id="pest"><button data-p="resumen" aria-pressed="true">Resumen</button><button data-p="diario" aria-pressed="false">Diario</button></nav>
+  <div id="vDiario" hidden>
+    <section class="caja"><h2>Resumen por días <small id="ndias"></small></h2><div class="kpis" id="kdiario"></div></section>
+    <section class="caja"><h2>Tabla diaria <button class="csv" id="csv">⬇ Excel (CSV)</button></h2><div class="tscroll" id="tdiaria"></div>
+      <p class="nota">Saldo = dinero en Winamax. Apostado = lo que metiste ese día. Cobrado = lo que te devolvieron las acertadas de ese día. ROI = ganancia ÷ apostado. Los días con apuestas sin resolver salen marcados con ⏳.</p></section>
+  </div>
+  <div id="vResumen">
+  <section class="caja hero" aria-label="Banca">
+    <div style="font:500 12px var(--mono);color:var(--muted)">SALDO AHORA EN WINAMAX</div>
+    <div class="num" id="saldo"></div>
+    <div class="sub" id="variacion"></div>
+    <div class="kpis" id="dinero"></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+  <section class="caja"><h2>Evolución <small id="rango"></small></h2><div id="grafica"></div></section>
+  <section class="caja"><h2>Por tipo</h2><div id="tipos"></div></section>
+  <section class="caja"><h2>Por deporte y cuota</h2><div id="otros"></div></section>
+  <section class="caja"><h2>Apuestas <small id="nap"></small></h2><div id="lista"></div>
+    <p class="nota">El saldo supone que cada apuesta se hizo con el importe y la cuota que dijo el bot (en las de "pide ≥ X", con esa cuota mínima). Juega con responsabilidad. +18.</p></section>
+  </div>
+</div>
+<script>
+const D = {"generado": "17/10 19:43", "inicial": 70.0, "apuestas": [{"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "18:30", "liga": "LaLiga", "local": "Betis", "visitante": "Barcelona", "mercado": "Más de 2.5 goles", "prob": 0.749, "cuota": 1.24, "estimada": false}], "cuota": 1.24, "prob": 0.749, "importe": 3.5, "fecha": "2026-10-17"}, {"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "20:30", "liga": "MLS", "local": "Philadelphia Union", "visitante": "Charlotte FC", "mercado": "Menos de 4.5 goles", "prob": 0.711, "cuota": 1.36, "estimada": true}], "cuota": 1.36, "prob": 0.711, "importe": 3.33, "fecha": "2026-10-17"}, {"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "20:45", "liga": "Ligue 1", "local": "Troyes", "visitante": "Lens", "mercado": "Visitante o empate (X2)", "prob": 0.772, "cuota": 1.28, "estimada": true}], "cuota": 1.28, "prob": 0.772, "importe": 3.16, "fecha": "2026-10-17"}, {"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "20:45", "liga": "Ligue 1", "local": "Lille", "visitante": "Brest", "mercado": "Local o empate (1X)", "prob": 0.745, "cuota": 1.31, "estimada": true}], "cuota": 1.31, "prob": 0.745, "importe": 3.0, "fecha": "2026-10-17"}, {"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "21:00", "liga": "Eredivisie", "local": "Sparta Rotterdam", "visitante": "Willem II", "mercado": "Menos de 4.5 goles", "prob": 0.769, "cuota": 1.26, "estimada": true}], "cuota": 1.26, "prob": 0.769, "importe": 2.85, "fecha": "2026-10-17"}, {"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "21:00", "liga": "LaLiga", "local": "Valencia", "visitante": "Ath Bilbao", "mercado": "Menos de 3.5 goles", "prob": 0.762, "cuota": 1.27, "estimada": true}], "cuota": 1.27, "prob": 0.762, "importe": 2.71, "fecha": "2026-10-17"}, {"tipo": "Combinada doble", "piernas": [{"fecha": "2026-10-17", "hora": "20:45", "liga": "Serie A", "local": "Roma", "visitante": "Genoa", "mercado": "Local o empate (1X)", "prob": 0.833, "cuota": 1.17, "estimada": true}, {"fecha": "2026-10-17", "hora": "18:30", "liga": "E0", "local": "Newcastle", "visitante": "Aston Villa", "mercado": "Más de 1.5 goles", "prob": 0.82, "cuota": 1.17, "estimada": true}], "cuota": 1.37, "prob": 0.683, "importe": 2.57, "fecha": "2026-10-17"}, {"tipo": "Combinada triple", "piernas": [{"fecha": "2026-10-17", "hora": "22:30", "liga": "MLS", "local": "Minnesota United FC", "visitante": "St. Louis CITY SC", "mercado": "Más de 1.5 goles", "prob": 0.846, "cuota": 1.14, "estimada": true}, {"fecha": "2026-10-17", "hora": "22:30", "liga": "Liga Argentina", "local": "Platense", "visitante": "Lanús", "mercado": "Menos de 3.5 goles", "prob": 0.852, "cuota": 1.13, "estimada": true}, {"fecha": "2026-10-17", "hora": "21:00", "liga": "Segunda División", "local": "Las Palmas", "visitante": "Castellon", "mercado": "Menos de 4.5 goles", "prob": 0.822, "cuota": 1.17, "estimada": true}], "cuota": 1.51, "prob": 0.592, "importe": 2.44, "fecha": "2026-10-17"}, {"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "19:30", "liga": "ACB", "local": "BC Andorra", "visitante": "CB Breogan", "mercado": "Hándicap local +12.5", "prob": 0.807, "cuota": 1.28, "estimada": false, "minima": true}], "cuota": 1.28, "prob": 0.807, "importe": 2.32, "fecha": "2026-10-17"}, {"tipo": "Sencilla", "piernas": [{"fecha": "2026-10-17", "hora": "19:00", "liga": "LNB", "local": "Limoges", "visitante": "Lyon-Villeurbanne", "mercado": "Menos de 185.5 puntos", "prob": 0.802, "cuota": 1.29, "estimada": false, "minima": true}], "cuota": 1.29, "prob": 0.802, "importe": 2.21, "fecha": "2026-10-17"}]};
+const $ = id => document.getElementById(id);
+const eur = x => (x < 0 ? "−" : "") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
+const sig = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
+const pct = x => (x >= 0 ? "+" : "−") + Math.abs(x * 100).toFixed(1).replace(".", ",") + " %";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
+const cerrada = a => a.ok === true || a.ok === false;
+const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.piernas.every(p => (p.dep || "f") === "f") ? "⚽ Fútbol" : "Mixtas";
+
+// Ajustes a mano (en este móvil): apuesta no hecha, o acertada / fallada
+const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
+let OV = {};
+try { OV = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); } catch (e) {}
+D.apuestas.forEach(a => {
+  a.key = claveAp(a);
+  const o = OV[a.key];
+  if (o === "x") a.excluida = true;
+  else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
+  else if (o === "p") { a.ok = false; a.manual = true; }
+});
+const ap = D.apuestas.filter(a => !a.excluida);
+// Si has quitado o corregido alguna, los importes de los días aún sin jugar se recalculan
+// (cada apuesta el 5 % de lo que queda tras las anteriores, en el mismo orden)
+if (Object.keys(OV).length) {
+  const cerradas = ap.filter(cerrada).reduce((s, a) => s + gan(a), 0);
+  const dias = [...new Set(ap.map(a => a.fecha))].sort();
+  for (const d of dias) {
+    const del = ap.filter(a => a.fecha === d);
+    if (del.some(a => "ok" in a)) continue;   // día con algo ya resuelto: se deja como estaba
+    const otras = ap.filter(a => a.fecha !== d && !("ok" in a)).reduce((s, a) => s + a.importe, 0);
+    let disp = D.inicial + cerradas - otras;
+    for (const a of del) { a.importe = Math.max(0.1, Math.round(disp * 5) / 100); disp -= a.importe; }
+  }
+}
+const cer = ap.filter(cerrada);
+const saldo = D.inicial + ap.reduce((s, a) => s + gan(a), 0);
+const enJuego = ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
+$("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Probabilidades</a>';
+const siTodas = saldo - enJuego + ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe * a.cuota, 0);
+$("saldo").textContent = eur(saldo - enJuego);
+$("variacion").innerHTML = `<span class="${saldo >= D.inicial ? "pos" : "neg"}">${sig(saldo - D.inicial)} (${pct(saldo / D.inicial - 1)})</span> <span style="color:var(--muted)">desde ${eur(D.inicial)}</span>`;
+$("dinero").innerHTML = [
+  [eur(enJuego), "en juego ahora"],
+  [eur(siTodas), "si aciertas todas"],
+  [eur(saldo), "saldo + en juego"],
+].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("");
+
+function resumen(lista) {
+  const c = lista.filter(cerrada), apost = c.reduce((s, a) => s + a.importe, 0), b = c.reduce((s, a) => s + gan(a), 0);
+  return { n: c.length, ok: c.filter(a => a.ok).length, apost, b, roi: apost ? b / apost : 0, pend: lista.length - c.length };
+}
+const R = resumen(ap);
+let racha = 0;
+for (const a of [...cer].reverse()) { if (racha === 0) racha = a.ok ? 1 : -1; else if ((racha > 0) === a.ok) racha += a.ok ? 1 : -1; else break; }
+$("kpis").innerHTML = [
+  [R.n ? `${R.ok}/${R.n}` : "—", "acertadas"],
+  [R.n ? Math.round(100 * R.ok / R.n) + " %" : "—", "acierto"],
+  [R.n ? pct(R.roi) : "—", "rentabilidad"],
+  [eur(R.apost), "apostado (resueltas)"],
+  [sig(R.b), "beneficio"],
+  [D.inicial ? eur(D.inicial) : "—", "banca inicial"],
+].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("") +
+  (racha ? `<div class="kpi" style="grid-column:1/-1"><b class="${racha > 0 ? "pos" : "neg"}">${racha > 0 ? "🔥 " + racha + " acertadas seguidas" : "❄️ " + (-racha) + " falladas seguidas"}</b><span>racha actual</span></div>` : "");
+
+// Gráfica: saldo al final de cada día
+(function () {
+  const dias = [...new Set(cer.map(a => a.fecha))].sort();
+  if (!dias.length) { $("grafica").innerHTML = '<p class="vacio">La gráfica aparece cuando se resuelvan las primeras apuestas.</p>'; return; }
+  let s = D.inicial; const pts = [{ d: "inicio", s }];
+  for (const d of dias) { s += cer.filter(a => a.fecha === d).reduce((t, a) => t + gan(a), 0); pts.push({ d, s }); }
+  const W = 520, H = 170, pl = 40, pr = 8, pt = 10, pb = 22;
+  const vals = pts.map(p => p.s), mn = Math.min(...vals, D.inicial), mx = Math.max(...vals, D.inicial), rg = (mx - mn) || 1;
+  const x = i => pl + (W - pl - pr) * (pts.length === 1 ? 0.5 : i / (pts.length - 1));
+  const y = v => pt + (H - pt - pb) * (1 - (v - mn) / rg);
+  const linea = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.s).toFixed(1)}`).join("");
+  const ult = pts[pts.length - 1], color = ult.s >= D.inicial ? "var(--ok)" : "var(--red)";
+  const fmt = d => d === "inicio" ? "inicio" : d.slice(8, 10) + "/" + d.slice(5, 7);
+  $("rango").textContent = `${dias.length} día${dias.length > 1 ? "s" : ""}`;
+  $("grafica").innerHTML = `<svg class="graf" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución de la banca">
+    <line x1="${pl}" x2="${W - pr}" y1="${y(D.inicial)}" y2="${y(D.inicial)}" stroke="var(--line)" stroke-dasharray="4 4"/>
+    <text x="${pl - 6}" y="${y(D.inicial) + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${Math.round(D.inicial)}</text>
+    <text x="${pl - 6}" y="${y(mx) + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${mx !== D.inicial ? Math.round(mx) : ""}</text>
+    <text x="${pl - 6}" y="${y(mn) + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${mn !== D.inicial ? Math.round(mn) : ""}</text>
+    <path d="${linea}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>
+    ${pts.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.s)}" r="3" fill="${color}"><title>${fmt(p.d)}: ${eur(p.s)}</title></circle>`).join("")}
+    <text x="${x(0)}" y="${H - 5}" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(pts[0].d)}</text>
+    <text x="${x(pts.length - 1)}" y="${H - 5}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(ult.d)}</text>
+  </svg>`;
+})();
+
+function tabla(grupos) {
+  const filas = grupos.map(([n, l]) => [n, resumen(l)]).filter(([, r]) => r.n + r.pend > 0);
+  if (!filas.length) return '<p class="vacio">Todavía no hay apuestas.</p>';
+  return `<table><tr><th>Grupo</th><th class="n">Acert.</th><th class="n">Benef.</th><th class="n">Rent.</th></tr>` +
+    filas.map(([n, r]) => `<tr><td>${n}${r.pend ? ` <span style="color:var(--muted);font-size:11px">(${r.pend} en juego)</span>` : ""}</td>
+      <td class="n">${r.n ? `${r.ok}/${r.n}` : "—"}</td><td class="n ${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : "—"}</td>
+      <td class="n">${r.n ? pct(r.roi) : "—"}</td></tr>`).join("") + "</table>";
+}
+const tipos = [...new Set(ap.map(a => a.tipo))];
+$("tipos").innerHTML = tabla(tipos.map(t => [t, ap.filter(a => a.tipo === t)]));
+const tramos = [["Cuota < 1,30", a => a.cuota < 1.3], ["1,30 – 1,50", a => a.cuota >= 1.3 && a.cuota < 1.5], ["1,50 o más", a => a.cuota >= 1.5]];
+$("otros").innerHTML = tabla([...new Set(ap.map(deporte))].map(d => [d, ap.filter(a => deporte(a) === d)])) +
+  '<div style="height:10px"></div>' + tabla(tramos.map(([n, f]) => [n, ap.filter(f)]));
+
+// Lista por días (lo más reciente arriba)
+const porDia = {};
+D.apuestas.forEach((a, i) => (porDia[a.fecha] ||= []).push(a));
+const dias = Object.keys(porDia).sort().reverse();
+$("nap").textContent = `${ap.length} en total`;
+const icono = p => p.ok === true ? "✅" : p.ok === false ? "❌" : p.ok === null ? "➖" : "⏳";
+$("lista").innerHTML = dias.length ? dias.map(d => {
+  const l = porDia[d], r = resumen(l);
+  return `<div class="dia"><h3><span>${d.slice(8, 10)}/${d.slice(5, 7)}</span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></h3>` +
+    l.map((a, i) => {
+      const cls = a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
+      const est = a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
+      const o = OV[a.key];
+      const acc = `<div class="acc">` + (o
+        ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span><button data-k="${esc(a.key)}" data-ov="">↺ Deshacer</button>`
+        : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No la hice</button><button data-k="${esc(a.key)}" data-ov="g">✅ Acertada</button><button data-k="${esc(a.key)}" data-ov="p">❌ Fallada</button>`) + `</div>`;
+      return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}</span>
+        <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}${a.manual ? " ✎" : ""}</span></span></div>` +
+        a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + acc + "</div>";
+    }).join("") + "</div>";
+}).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button[data-ov]");
+  if (!b) return;
+  if (b.dataset.ov === "x" && !confirm("¿Quitar esta apuesta? Dejará de contar en la banca y en las estadísticas.")) return;
+  if (b.dataset.ov) OV[b.dataset.k] = b.dataset.ov; else delete OV[b.dataset.k];
+  try { localStorage.setItem("ajustesBot", JSON.stringify(OV)); } catch (err) {}
+  location.reload();
+});
+
+// ---------------------------------------------------------------- pestaña Diario (tipo Excel)
+const cobro = a => a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0;
+const filasDiario = (() => {
+  const dias = [...new Set(ap.map(a => a.fecha))].sort();
+  let saldoIni = D.inicial, acum = 0;
+  return dias.map(d => {
+    const l = ap.filter(a => a.fecha === d), cer = l.filter(cerrada), pend = l.filter(a => !("ok" in a));
+    const apostado = l.reduce((s, a) => s + a.importe, 0), cobrado = l.reduce((s, a) => s + cobro(a), 0);
+    const ganancia = cer.reduce((s, a) => s + gan(a), 0), apCer = cer.reduce((s, a) => s + a.importe, 0);
+    const saldoFin = saldoIni - apostado + cobrado;
+    acum += ganancia;
+    const ganadas = cer.filter(a => a.ok);
+    const f = {
+      d, saldoIni, apostado, cobrado, ganancia, roi: apCer ? ganancia / apCer : null, saldoFin, n: l.length, ok: ganadas.length, cer: cer.length,
+      pend: pend.length, acumPct: acum / D.inicial, mejor: ganadas.length ? Math.max(...ganadas.map(a => a.cuota)) : null,
+      sencillas: l.filter(a => a.tipo === "Sencilla").length, combis: l.filter(a => a.tipo !== "Sencilla").length,
+    };
+    saldoIni = saldoFin;
+    return f;
+  });
+})();
+const fechaC = d => d.slice(8, 10) + "/" + d.slice(5, 7);
+const num2 = x => x.toFixed(2).replace(".", ",");
+function pintarDiario() {
+  const F = filasDiario, cerrados = F.filter(f => f.cer);
+  $("ndias").textContent = `${F.length} día${F.length === 1 ? "" : "s"}`;
+  const pos = cerrados.filter(f => f.ganancia > 0).length;
+  const mejor = cerrados.reduce((m, f) => !m || f.ganancia > m.ganancia ? f : m, null);
+  const peor = cerrados.reduce((m, f) => !m || f.ganancia < m.ganancia ? f : m, null);
+  const media = cerrados.length ? cerrados.reduce((s, f) => s + f.ganancia, 0) / cerrados.length : 0;
+  $("kdiario").innerHTML = [
+    [cerrados.length ? `${pos}/${cerrados.length}` : "—", "días en positivo"],
+    [cerrados.length ? sig(media) : "—", "ganancia media al día"],
+    [R.n ? pct(R.roi) : "—", "ROI total"],
+    [mejor ? sig(mejor.ganancia) : "—", mejor ? "mejor día (" + fechaC(mejor.d) + ")" : "mejor día"],
+    [peor ? sig(peor.ganancia) : "—", peor ? "peor día (" + fechaC(peor.d) + ")" : "peor día"],
+    [F.length ? eur(F[F.length - 1].saldoFin) : eur(D.inicial), "saldo actual"],
+  ].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("");
+  if (!F.length) { $("tdiaria").innerHTML = '<p class="vacio">Todavía no hay días con apuestas.</p>'; return; }
+  const cab = ["Día", "Saldo inicio", "Apostado", "Cobrado", "Ganancia", "ROI día", "Saldo fin", "Acertadas", "Apuestas", "Mejor cuota", "Acumulado"];
+  const tot = F.reduce((t, f) => ({ apostado: t.apostado + f.apostado, cobrado: t.cobrado + f.cobrado, ganancia: t.ganancia + f.ganancia, ok: t.ok + f.ok, cer: t.cer + f.cer, n: t.n + f.n }),
+    { apostado: 0, cobrado: 0, ganancia: 0, ok: 0, cer: 0, n: 0 });
+  const cls = x => x > 0 ? "pos" : x < 0 ? "neg" : "";
+  $("tdiaria").innerHTML = `<table class="excel"><thead><tr>${cab.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
+    F.slice().reverse().map(f => `<tr><td>${fechaC(f.d)}${f.pend ? " ⏳" : ""}</td><td>${num2(f.saldoIni)}</td><td>${num2(f.apostado)}</td><td>${num2(f.cobrado)}</td>
+      <td class="${cls(f.ganancia)}">${f.cer ? sig(f.ganancia).replace(" €", "") : "—"}</td><td class="${cls(f.roi || 0)}">${f.roi === null ? "—" : pct(f.roi)}</td>
+      <td><b>${num2(f.saldoFin)}</b></td><td>${f.cer ? f.ok + "/" + f.cer : "—"}</td><td>${f.sencillas}S + ${f.combis}C</td><td>${f.mejor ? num2(f.mejor) : "—"}</td>
+      <td class="${cls(f.acumPct)}">${pct(f.acumPct)}</td></tr>`).join("") +
+    `</tbody><tfoot><tr><td>Total</td><td>${num2(D.inicial)}</td><td>${num2(tot.apostado)}</td><td>${num2(tot.cobrado)}</td><td class="${cls(tot.ganancia)}">${sig(tot.ganancia).replace(" €", "")}</td>
+      <td>${tot.cer ? pct(R.roi) : "—"}</td><td><b>${num2(F[F.length - 1].saldoFin)}</b></td><td>${tot.cer ? tot.ok + "/" + tot.cer : "—"}</td><td>${tot.n}</td><td></td><td></td></tr></tfoot></table>`;
+}
+pintarDiario();
+$("csv").addEventListener("click", () => {
+  const filas = [["Dia", "Saldo inicio", "Apostado", "Cobrado", "Ganancia", "ROI dia %", "Saldo fin", "Acertadas", "Resueltas", "Apuestas", "Mejor cuota acertada", "Acumulado %"]]
+    .concat(filasDiario.map(f => [f.d, f.saldoIni, f.apostado, f.cobrado, f.ganancia, f.roi === null ? "" : f.roi * 100, f.saldoFin, f.ok, f.cer, f.n, f.mejor || "", f.acumPct * 100]
+      .map(x => typeof x === "number" ? x.toFixed(2).replace(".", ",") : x)));
+  const csv = "\ufeff" + filas.map(r => r.join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "bot-dorado-diario.csv"; a.click();
+});
+document.getElementById("pest").addEventListener("click", e => {
+  const b = e.target.closest("button[data-p]"); if (!b) return;
+  for (const x of document.querySelectorAll("#pest button")) x.setAttribute("aria-pressed", String(x === b));
+  $("vResumen").hidden = b.dataset.p !== "resumen"; $("vDiario").hidden = b.dataset.p !== "diario";
+  try { localStorage.setItem("pestBot", b.dataset.p); } catch (err) {}
+});
+try { const p = localStorage.getItem("pestBot"); if (p) document.querySelector(`#pest [data-p="${p}"]`).click(); } catch (err) {}
+</script>
+
+</body>
+</html>
