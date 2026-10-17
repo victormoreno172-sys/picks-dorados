@@ -227,9 +227,7 @@ const DATOS = __DATOS__;
 const GRUPOS = {
   f: [["Resultado", m => /Gana|Empate|o empate|No hay empate/.test(m)],
       ["Goles", m => /goles/.test(m)],
-      ["Marcan", m => /marca/.test(m)],
-      ["Córners", m => /córners$/.test(m)],
-      ["Tarjetas", m => /tarjetas$/.test(m)]],
+      ["Marcan", m => /marca/.test(m)]],
   b: [["Ganador", m => /^Gana/.test(m)],
       ["Hándicap", m => /^Hándicap/.test(m)],
       ["Puntos", m => /puntos/.test(m)]],
@@ -469,14 +467,13 @@ const real = k => k.c && !k.e ? 1 : 0;  // cuota real de la casa (no estimada)
 // Con cuota estimada (≈) el % es orientativo: se pinta en gris, nunca en verde
 const evTxt = k => { const v = ev(k), t = `${v >= 0 ? "+" : "−"}${Math.abs(Math.round(v * 100))}%`;
   return k.e ? `<span class="estim">≈${t}</span>` : `<span class="${v >= 0 ? "bien" : "mal"}">${t}</span>`; };
-// Sin cuota de la casa (córners, tarjetas...): la mínima que hay que encontrar en la casa,
+// Sin cuota de la casa: la mínima que hay que encontrar en la casa,
 // con un 3% de margen de seguridad sobre la cuota de la app
 const minima = k => Math.ceil(100 * 1.03 / k.p) / 100;
 const cuotaRef = k => k.c || minima(k);
 function pickTop(p) {
   // De cada partido, el pick que cumple y está mejor pagado
   // Solo picks con cuota de la casa: primero las reales, luego las estimadas (≈).
-  // Córners y tarjetas no tienen cuota en la API: se ven dentro de cada partido, no aquí.
   return p.picks.filter(k => k.c && k.p >= TOP_PROB && k.c >= TOP_CUOTA - 1e-9)
     .sort((a, b) => real(b) - real(a) || orden(b) - orden(a) || b.p - a.p)[0];
 }
@@ -486,7 +483,7 @@ function pintarTopDia() {
   const cand = dia.partidos.map((p, i) => [p, i, pickTop(p)]).filter(([p, , k]) => k && !empezado(dia, p))
     .sort(([, , a], [, , b]) => real(b) - real(a) || orden(b) - orden(a) || b.p - a.p).slice(0, 30).sort(porHora);
   // Basket, tenis y esports sin cuota en la API (ligas y torneos que la API no cubre):
-  // aparte, con la cuota mínima que hay que encontrar en Winamax. Nunca córners ni tarjetas.
+  // aparte, con la cuota mínima que hay que encontrar en Winamax.
   const conTop = new Set(cand.map(([, i]) => i));
   const sinCuota = dia.partidos.map((p, i) => [p, i, (p.dep || "f") === "f" || conTop.has(i) || empezado(dia, p) ? null
       : p.picks.filter(k => !k.c && k.p >= TOP_PROB && minima(k) >= TOP_CUOTA - 1e-9).sort((a, b) => b.p - a.p)[0]])
@@ -507,7 +504,7 @@ function pintarTopDia() {
   if (cand.length) h += `<div class="caja"><h2>Top del día <small>${cand.length} picks${hechas ? ` · ${hechas} apostadas` : ""}</small></h2>` +
     cand.map(fila).join("") + nota(`Picks de ${Math.round(TOP_PROB * 100)}% o más que pagan ${TOP_CUOTA.toFixed(2)} o más, con cuota de la casa: primero los de cuota real de Winamax (o Thunderpick en esports), mejor pagados antes; luego los de cuota estimada (≈). Los 30 mejores, ordenados por hora. El % es lo que ganarías (verde) o perderías (rojo) a la larga por cada euro según la app; con ≈ (gris) es orientativo. Uno por partido. Toca el cuadrado para marcar los que ya has apostado.`) + `</div>`;
   if (sinCuota.length) h += `<div class="caja"><h2>Basket, tenis y esports sin cuota <small>${sinCuota.length} picks</small></h2>` +
-    sinCuota.map(fila).join("") + nota(`Partidos de ligas y torneos que la API de cuotas no cubre (ACB, Lega, Grecia..., torneos de tenis pequeños). Mismo listón: ${Math.round(TOP_PROB * 100)}% o más. "Pide ≥ X": apuesta solo si en Winamax pagan X o más; si pagan menos, no compensa. Córners y tarjetas no salen en el Top: míralos dentro de cada partido.`) + `</div>`;
+    sinCuota.map(fila).join("") + nota(`Partidos de ligas y torneos que la API de cuotas no cubre (ACB, Lega, Grecia..., torneos de tenis pequeños). Mismo listón: ${Math.round(TOP_PROB * 100)}% o más. "Pide ≥ X": apuesta solo si en Winamax pagan X o más; si pagan menos, no compensa.`) + `</div>`;
   $("top").innerHTML = h;
 }
 

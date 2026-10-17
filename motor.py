@@ -55,8 +55,6 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
     except Exception as e:
         print(f"  aviso calendario ESPN: {e}")
     modelos: dict[str, ModeloDixonColes] = {}
-    import esquinas
-    esquinas_ = esquinas.Esquinas(desde)
     salida: dict[date, list[Analisis]] = {}
     for k in range(n_dias):
         dia = desde + timedelta(days=k)
@@ -77,11 +75,6 @@ def analizar_dias(desde: date, n_dias: int = 1) -> dict[date, list[Analisis]]:
                 continue
             poner_cuotas(p, desde)
             a = analizar(p, modelos[p.liga])
-            if a and p.liga in config.LIGAS:  # córners y tarjetas (solo ligas con esos datos)
-                try:
-                    a.picks += esquinas_.picks(p.liga, p.local, p.visitante)
-                except Exception as e:
-                    print(f"  aviso córners/tarjetas: {e}")
             if a:
                 lista.append(a)
             else:
