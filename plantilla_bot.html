@@ -89,10 +89,10 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
   <section class="caja hero" aria-label="Banca">
-    <div style="font:500 12px var(--mono);color:var(--muted)">BANCA</div>
+    <div style="font:500 12px var(--mono);color:var(--muted)">SALDO AHORA EN WINAMAX</div>
     <div class="num" id="saldo"></div>
     <div class="sub" id="variacion"></div>
-    <div class="disp" id="disponible"></div>
+    <div class="kpis" id="dinero"></div>
     <div class="kpis" id="kpis"></div>
   </section>
   <section class="caja"><h2>Evolución <small id="rango"></small></h2><div id="grafica"></div></section>
@@ -141,9 +141,14 @@ const cer = ap.filter(cerrada);
 const saldo = D.inicial + ap.reduce((s, a) => s + gan(a), 0);
 const enJuego = ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
 $("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Probabilidades</a>';
-$("saldo").textContent = eur(saldo);
+const siTodas = saldo - enJuego + ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe * a.cuota, 0);
+$("saldo").textContent = eur(saldo - enJuego);
 $("variacion").innerHTML = `<span class="${saldo >= D.inicial ? "pos" : "neg"}">${sig(saldo - D.inicial)} (${pct(saldo / D.inicial - 1)})</span> <span style="color:var(--muted)">desde ${eur(D.inicial)}</span>`;
-$("disponible").innerHTML = `<span>💳 Saldo en tu cuenta ahora</span><b>${eur(saldo - enJuego)}</b><small>${enJuego > 0 ? `${eur(enJuego)} en apuestas sin resolver · si las aciertas todas: ${eur(saldo - enJuego + ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe * a.cuota, 0))}` : "No tienes apuestas en juego"}</small>`;
+$("dinero").innerHTML = [
+  [eur(enJuego), "en juego ahora"],
+  [eur(siTodas), "si aciertas todas"],
+  [eur(saldo), "saldo + en juego"],
+].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("");
 
 function resumen(lista) {
   const c = lista.filter(cerrada), apost = c.reduce((s, a) => s + a.importe, 0), b = c.reduce((s, a) => s + gan(a), 0);
@@ -156,9 +161,9 @@ $("kpis").innerHTML = [
   [R.n ? `${R.ok}/${R.n}` : "—", "acertadas"],
   [R.n ? Math.round(100 * R.ok / R.n) + " %" : "—", "acierto"],
   [R.n ? pct(R.roi) : "—", "rentabilidad"],
-  [eur(R.apost), "apostado"],
+  [eur(R.apost), "apostado (resueltas)"],
   [sig(R.b), "beneficio"],
-  [eur(enJuego), "en juego"],
+  [D.inicial ? eur(D.inicial) : "—", "banca inicial"],
 ].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("") +
   (racha ? `<div class="kpi" style="grid-column:1/-1"><b class="${racha > 0 ? "pos" : "neg"}">${racha > 0 ? "🔥 " + racha + " acertadas seguidas" : "❄️ " + (-racha) + " falladas seguidas"}</b><span>racha actual</span></div>` : "");
 
