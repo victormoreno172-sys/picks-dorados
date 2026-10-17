@@ -66,6 +66,13 @@ def _quitar_margen(cuotas: dict[str, float], grupo: list[str]) -> dict[str, floa
     return {m: v / s for m, v in inv.items()}
 
 
+# Calibrado con cuotas reales de Winamax (Real Madrid - Sevilla, 17/10/2026): la casa no reparte
+# su margen en proporción, sino casi a partes iguales entre las opciones (así el favorito paga
+# casi lo justo y la opción poco probable paga bastante menos). Y no en todos los mercados se
+# queda lo mismo: en "ambos marcan" se queda unas 2,5 veces más que en el total de goles.
+FACTOR_MARGEN = (("Ambos marcan", 2.5), (" marca", 1.2), ("o empate", 0.67), ("No hay empate", 0.67))
+
+
 def estimar_cuotas(picks: list["Pick"], prob_mercado: dict[str, float], margen: float):
     """Pone cuota estimada (≈) a los picks sin cuota, con la probabilidad que da la casa
     (deducida de sus cuotas reales) y su margen típico en mercados de dos opciones."""
@@ -74,7 +81,8 @@ def estimar_cuotas(picks: list["Pick"], prob_mercado: dict[str, float], margen: 
         if pk.cuota is None and pk.mercado in prob_mercado:
             pm = prob_mercado[pk.mercado]
             if 0.03 < pm < 0.97:
-                pk.cuota = round(max(1.01, 1 / (pm * (1 + margen))), 2)
+                f = next((v for clave, v in FACTOR_MARGEN if clave in pk.mercado), 1.0)
+                pk.cuota = round(max(1.01, 1 / min(0.995, pm + f * margen / 2)), 2)
                 pk.estimada = True
 
 
