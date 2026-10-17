@@ -9,8 +9,8 @@ Cada día, de todo un poco (lo pidió el usuario: volumen y movimiento):
     las de cuota real de Winamax y las mejor pagadas. Hasta 6. Las que tienen valor (ganan a la
     larga) llevan más importe; las demás, el mínimo.
   - COMBINADA DOBLE y COMBINADA TRIPLE con los picks más seguros (78 %+) de partidos distintos.
-  - Importe: el 5 % de la banca del momento en cada apuesta (lo decidió el usuario); como mucho
-    8 apuestas, un 40 % de la banca en un día. Si la banca baja, los importes bajan con ella.
+  - Importe: cada apuesta es el 5 % del dinero que queda tras hacer las anteriores, en el orden
+    del mensaje (lo decidió el usuario). Como mucho 8 apuestas al día.
   - De momento fútbol y basket (los que se pueden corregir solos con el resultado).
 """
 from __future__ import annotations
@@ -153,7 +153,16 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
     for ap in elegidas:
         ap["fecha"] = ap["piernas"][0]["fecha"]
     sencillas = sorted([ap for ap in elegidas if ap["tipo"] == "Sencilla"], key=lambda ap: ap["piernas"][0]["hora"] or "99")
-    return sencillas + [ap for ap in elegidas if ap["tipo"] != "Sencilla"]
+    elegidas = sencillas + [ap for ap in elegidas if ap["tipo"] != "Sencilla"]
+    importes_en_cadena(elegidas, banca)
+    return elegidas
+
+
+def importes_en_cadena(apuestas: list[dict], disponible: float):
+    """Cada apuesta es el % del dinero que queda después de hacer las anteriores (en este orden)."""
+    for ap in apuestas:
+        ap["importe"] = max(0.1, round(disponible * PORCENTAJE + 1e-9, 2))
+        disponible -= ap["importe"]
 
 
 def _linea_pierna(pi: dict) -> str:
@@ -179,8 +188,8 @@ def mensaje(elegidas: list[dict], b: dict, dia: date) -> str:
     cerradas = [a for a in b["apuestas"] if a.get("ok") in (True, False)]
     t = [_ayer(b, dia) + f"🟡 <b>Apuestas del {dia:%d/%m}</b>\n"]
     if elegidas:
-        for ap in elegidas:
-            t.append(f"<b>{ap['tipo']}</b> · cuota {ap['cuota']:.2f} · <b>{ap['importe']:.2f} €</b>")
+        for n, ap in enumerate(elegidas, 1):
+            t.append(f"<b>{n}. {ap['tipo']}</b> · cuota {ap['cuota']:.2f} · <b>{ap['importe']:.2f} €</b>")
             t += [_linea_pierna(pi) for pi in sorted(ap["piernas"], key=lambda pi: pi["hora"] or "99")]
             t.append("")
         t.append(f"Total del día: <b>{sum(ap['importe'] for ap in elegidas):.2f} €</b>")
@@ -224,7 +233,8 @@ def actualizar(por_dia: dict):
     else:
         dia = None
     if dia and (b.get("ultimo_envio") or "") < dia.isoformat():
-        elegidas = elegir(por_dia.get(dia, []), saldo(b), ahora)
+        pendiente = sum(a["importe"] for a in b["apuestas"] if "ok" not in a)  # dinero aún en juego
+        elegidas = elegir(por_dia.get(dia, []), saldo(b) - pendiente, ahora)
         texto = mensaje(elegidas, b, dia)
         print(texto)
         enviado = False
