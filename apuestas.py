@@ -176,7 +176,7 @@ def actualizar(por_dia: dict):
         dia = ahora.date()
     else:
         dia = None
-    if dia and b.get("ultimo_envio", "") < dia.isoformat():
+    if dia and (b.get("ultimo_envio") or "") < dia.isoformat():
         elegidas = elegir(por_dia.get(dia, []), saldo(b), ahora)
         texto = mensaje(elegidas, b, dia)
         print(texto)
