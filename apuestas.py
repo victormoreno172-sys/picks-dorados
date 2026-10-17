@@ -1,10 +1,8 @@
 """
-Apuestas del día + banca simulada.
-
-Cada noche (pasadas las 00:00 de Madrid) se eligen las apuestas del día con las reglas del Top
-y se manda por Telegram la lista con el importe de cada una. Las apuestas se apuntan en una
-banca SIMULADA (historial/banca.json) que se va corrigiendo con los resultados reales: así se
-ve con datos si el sistema gana o pierde antes de arriesgar dinero.
+Bot de apuestas: cada noche (hacia las 23:35 de Madrid) elige las apuestas del día siguiente con
+las reglas del Top y manda por Telegram la lista con el importe de cada una para la banca real.
+Las apuestas se apuntan en historial/banca.json y se corrigen solas con los resultados reales,
+así el mensaje lleva siempre el saldo al día (suponiendo que se han hecho todas a esa cuota).
 
 Reglas:
   - probabilidad >= 70 % y cuota de la casa (real o estimada ≈) >= 1.30
@@ -33,9 +31,12 @@ MAX_APUESTAS, MAX_EXPOSICION = 8, 0.15
 def cargar() -> dict:
     try:
         with open(RUTA, encoding="utf-8") as f:
-            return json.load(f)
+            b = json.load(f)
     except (OSError, ValueError):
-        return {"inicial": config.BANCA_INICIAL, "apuestas": [], "ultimo_envio": None, "chat": None}
+        b = {"inicial": config.BANCA_INICIAL, "apuestas": [], "ultimo_envio": None, "chat": None}
+    if not b["apuestas"]:  # todavía sin apuestas: manda la banca que esté configurada
+        b["inicial"] = config.BANCA_INICIAL
+    return b
 
 
 def guardar(b: dict):
@@ -111,11 +112,22 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
     return sorted(elegidas, key=lambda c: c["hora"] or "99")
 
 
+def _ayer(b: dict, dia: date) -> str:
+    ayer = (dia - timedelta(days=1)).isoformat()
+    hechas = [a for a in b["apuestas"] if a["fecha"] == ayer and a.get("ok") in (True, False)]
+    if not hechas:
+        return ""
+    neto = sum(a["importe"] * (a["cuota"] - 1) if a["ok"] else -a["importe"] for a in hechas)
+    lineas = [f"{'✅' if a['ok'] else '❌'} {a['local']} – {a['visitante']}: {a['mercado']}" for a in hechas]
+    return (f"📋 <b>Ayer</b>: {sum(a['ok'] for a in hechas)}/{len(hechas)} acertadas, "
+            f"{neto:+.2f} €\n" + "\n".join(lineas) + "\n")
+
+
 def mensaje(elegidas: list[dict], b: dict, hoy: date) -> str:
     s = saldo(b)
     cerradas = [a for a in b["apuestas"] if a.get("ok") in (True, False)]
     ganadas = sum(1 for a in cerradas if a["ok"])
-    t = [f"🟡 <b>Apuestas del {hoy:%d/%m}</b>\n"]
+    t = [_ayer(b, hoy) + f"🟡 <b>Apuestas del {hoy:%d/%m}</b>\n"]
     if elegidas:
         for c in elegidas:
             casa = "≈ " if c["estimada"] else ""
@@ -128,7 +140,7 @@ def mensaje(elegidas: list[dict], b: dict, hoy: date) -> str:
             t.append("≈ = cuota estimada: apuesta solo si en Winamax pagan eso o más.")
     else:
         t.append("Hoy no hay apuestas con valor (70 %+ y bien pagadas). Mejor no apostar.")
-    t.append(f"\n💰 Banca simulada: <b>{s:.2f} €</b> (empezó con {b['inicial']:.0f} €, "
+    t.append(f"\n💰 Banca: <b>{s:.2f} €</b> (empezó con {b['inicial']:.0f} €, "
              f"{s / b['inicial'] - 1:+.1%})" + (f" · {ganadas}/{len(cerradas)} acertadas" if cerradas else ""))
     t.append("<i>Importes para una banca de "
              f"{s:.0f} €. Juega con responsabilidad. +18.</i>")
@@ -154,12 +166,19 @@ def _chat(b: dict) -> str | None:
 
 def actualizar(por_dia: dict):
     ahora = datetime.now(TZ)
-    hoy = ahora.date()
     b = cargar()
     corregir(b)
-    if b.get("ultimo_envio") != hoy.isoformat() and ahora.hour < 12:
-        elegidas = elegir(por_dia.get(hoy, []), saldo(b), ahora)
-        texto = mensaje(elegidas, b, hoy)
+    # A partir de las 22:00 se mandan las del día siguiente; si GitHub se retrasa y ya es de
+    # madrugada (o es la primera vez que se arranca el bot), las del mismo día.
+    if ahora.hour >= 22:
+        dia = ahora.date() + timedelta(days=1)
+    elif ahora.hour < 12 or not b.get("ultimo_envio"):
+        dia = ahora.date()
+    else:
+        dia = None
+    if dia and b.get("ultimo_envio", "") < dia.isoformat():
+        elegidas = elegir(por_dia.get(dia, []), saldo(b), ahora)
+        texto = mensaje(elegidas, b, dia)
         print(texto)
         enviado = False
         if config.TELEGRAM_TOKEN:
@@ -167,9 +186,9 @@ def actualizar(por_dia: dict):
             if chat:
                 import bot
                 enviado = bool(bot.llamar("sendMessage", chat_id=chat, text=texto, parse_mode="HTML").get("ok"))
-        if enviado or not config.TELEGRAM_TOKEN:
-            b["ultimo_envio"] = hoy.isoformat()
+        if enviado:  # solo cuentan las apuestas que de verdad te han llegado
+            b["ultimo_envio"] = dia.isoformat()
             b["apuestas"] += elegidas
-    print(f"  banca simulada: {saldo(b):.2f} € ({len(b['apuestas'])} apuestas)")
+    print(f"  banca: {saldo(b):.2f} € ({len(b['apuestas'])} apuestas)")
     guardar(b)
     return b

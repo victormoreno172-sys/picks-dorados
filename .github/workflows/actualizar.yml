@@ -5,7 +5,8 @@ on:
     branches: [main]       # se lanza solo cada vez que cambia el código
   schedule:
     - cron: "15 4-22/2 * * *"
-    - cron: "15 23 * * *"      # cada 2 horas (hora UTC) y a las 23:15 UTC = 00:15 de Madrid en invierno (apuestas del día)
+    - cron: "35 21 * * *"      # 23:35 de Madrid en verano: apuestas del día siguiente por Telegram
+    - cron: "35 22 * * *"      # 23:35 de Madrid en invierno
   workflow_dispatch:         # botón "Run workflow" para lanzarlo a mano
 
 permissions:
