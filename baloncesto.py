@@ -379,9 +379,12 @@ def analizar_juego(j: Juego, modelo: ModeloBaloncesto, hoy: date | None = None) 
     margen, total = pl - pv, pl + pv
     sd_m, sd_t = modelo.sd_margen, modelo.sd_total
     if j.comp != "NBA":
-        # Calibrado con 6 partidos de Winamax (ACB, Lega, Grecia; 17/10/2026): el modelo aprieta
-        # demasiado las diferencias entre equipos y se queda unos 3 puntos corto en el total.
-        margen *= config.BASKET_FACTOR_MARGEN
+        # Calibrado con resultados reales (backtest de 2.000 partidos, calibracion/backtest_basket.py)
+        # y con cuotas de Winamax: a principio de temporada (sep-nov) el modelo aprieta demasiado
+        # las diferencias entre equipos (factor real 1.25; el resto del año ~1.0) y en general
+        # se queda algo corto en el total de puntos.
+        if j.fecha.month in (9, 10, 11):
+            margen *= config.BASKET_FACTOR_MARGEN_INICIO
         total += config.BASKET_SUMA_TOTAL
     if j.pre:
         # Pretemporada: rotaciones largas y titulares descansando -> los equipos se parecen
