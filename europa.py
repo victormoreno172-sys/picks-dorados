@@ -13,6 +13,8 @@ Calendario de partidos europeos: TheSportsDB (clave pública gratuita "123").
 from __future__ import annotations
 
 import csv
+import json
+import os
 import io
 import re
 import time
@@ -274,7 +276,7 @@ class PartidoEuropeo:
     gv: int | None = None
 
 
-def _tsdb(ruta: str) -> list[dict]:
+def _tsdb_red(ruta: str) -> list[dict] | None:
     url = URL_TSDB.format(clave=config.THESPORTSDB_KEY or "123") + ruta
     for intento in range(3):
         try:
@@ -283,12 +285,36 @@ def _tsdb(ruta: str) -> list[dict]:
                 time.sleep(20)
                 continue
             r.raise_for_status()
+            time.sleep(2.1)  # la clave gratuita permite ~30 peticiones por minuto
             return r.json().get("events") or []
         except (requests.RequestException, ValueError) as e:
             if intento == 2:
                 print(f"  aviso TheSportsDB {ruta}: {e}")
         time.sleep(3)
-    return []
+    return None
+
+
+CACHE_TSDB = os.path.join(config.CARPETA_CACHE, "tsdb_futbol")
+
+
+def _tsdb(ruta: str, horas: float = 3, cerrada=None) -> list[dict]:
+    """Con caché en disco. Si `cerrada(eventos)` es cierto (jornada ya jugada), no se vuelve a pedir."""
+    os.makedirs(CACHE_TSDB, exist_ok=True)
+    base = os.path.join(CACHE_TSDB, re.sub(r"[^A-Za-z0-9=&._-]", "_", ruta))
+    for ext, h in ((".fin", None), (".json", horas)):
+        if os.path.exists(base + ext) and (h is None or time.time() - os.path.getmtime(base + ext) < h * 3600):
+            with open(base + ext, encoding="utf-8") as f:
+                return json.load(f)
+    eventos = _tsdb_red(ruta)
+    if eventos is None:  # sin red: lo último guardado, aunque sea viejo
+        if os.path.exists(base + ".json"):
+            with open(base + ".json", encoding="utf-8") as f:
+                return json.load(f)
+        return []
+    fin = bool(eventos) and cerrada is not None and cerrada(eventos)
+    with open(base + (".fin" if fin else ".json"), "w", encoding="utf-8") as f:
+        json.dump(eventos, f)
+    return eventos
 
 
 def calendario_europeo(temporada: str) -> list[PartidoEuropeo]:
@@ -298,12 +324,15 @@ def calendario_europeo(temporada: str) -> list[PartidoEuropeo]:
     hoy = datetime.now(tz).date()
     for comp, (_, lid) in config.EUROPA.items():
         eventos = []
+        def cerrada(evs):  # jornada terminada hace más de 3 días: ya no cambia
+            return all(config.partido_terminado(e.get("strStatus"), date.fromisoformat(e["dateEvent"]), hoy)
+                       and e.get("intHomeScore") not in (None, "")
+                       and date.fromisoformat(e["dateEvent"]) < hoy - timedelta(days=3)
+                       for e in evs if e.get("dateEvent"))
         for r in range(1, 11):
-            eventos += _tsdb(f"eventsround.php?id={lid}&r={r}&s={temporada}")
-            time.sleep(2.1)  # la clave gratuita permite ~30 peticiones por minuto
+            eventos += _tsdb(f"eventsround.php?id={lid}&r={r}&s={temporada}", 6, cerrada)
         for k in range(0, 8):  # complementa por días (la clave gratuita corta algunas jornadas)
-            eventos += _tsdb(f"eventsday.php?d={hoy + timedelta(days=k)}&l={lid}")
-            time.sleep(2.1)
+            eventos += _tsdb(f"eventsday.php?d={hoy + timedelta(days=k)}&l={lid}", 3)
         for e in eventos:
             if e.get("idEvent") in vistos:
                 continue
