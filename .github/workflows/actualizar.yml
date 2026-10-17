@@ -60,7 +60,6 @@ jobs:
           python -u diario.py 2>&1 | tee registro.txt
           { cat inicio.txt; date -u +%H:%M:%S; echo "caché al terminar: $(du -sh cache | cut -f1) en $(find cache -type f | wc -l) archivos"; cat registro.txt; } > r2.txt && mv r2.txt registro.txt
           cp registro.txt web/registro.txt
-          python -u sonda.py > web/sonda.txt 2>&1 || true
 
       - name: Guardar el historial de aciertos
         run: |

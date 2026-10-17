@@ -63,6 +63,15 @@ for d in dias:
     por_dia.setdefault(d, []).sort(key=lambda a: (a.partido.hora or "99", a.partido.liga))
 datos_app = web.a_json({d: por_dia[d] for d in dias}, hoy)
 
+# Ficha de cada partido: escudos, estadio, alineaciones, clasificación y forma (ESPN)
+try:
+    import ficha
+    ficha.enriquecer(datos_app)
+except Exception as e:
+    import traceback
+    print(f"aviso: fichas no disponibles: {e}")
+    traceback.print_exc()
+
 # Historial de aciertos (si falla, la app sale igual sin esa pantalla)
 try:
     import historial

@@ -271,6 +271,54 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .abajo span { font-size: 20px; line-height: 1; }
 .abajo [aria-pressed="true"] { color: var(--gold); }
 .abajo [aria-pressed="true"] span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ---------- ficha del partido ---------- */
+.ficha { margin-top: 4px; }
+.fbar { display: flex; align-items: center; gap: 10px; }
+.fbar .fdep { flex: 1; font: 700 20px var(--display); }
+.fliga { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--muted); font: 600 12px var(--body); letter-spacing: .06em; text-align: left; cursor: pointer; box-shadow: var(--sombra); }
+.fliga b { color: var(--ink); }
+.fliga .flecha { margin-left: auto; font-size: 20px; }
+.fequipos { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 16px; padding: 18px 10px; border-radius: 20px;
+  background: radial-gradient(120% 140% at 50% 0%, rgba(255, 183, 3, .16), transparent 60%), var(--surface); border: 1px solid var(--line); box-shadow: var(--sombra); }
+.feq { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; min-width: 0; }
+.feq b { font: 700 17px/1.15 var(--display); overflow-wrap: anywhere; }
+.escudo { width: 76px; height: 76px; object-fit: contain; border-radius: 18px; background: #fff; padding: 8px; box-shadow: 0 8px 20px -10px rgba(11, 18, 32, .45); border: 1px solid var(--line); }
+.escudo.ini { display: grid; place-items: center; font: 700 26px var(--display); color: #fff; background: linear-gradient(135deg, #0b1220, #334155); border: 0; }
+.fcentro { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.fcentro b { font: 700 36px/1 var(--display); letter-spacing: -.01em; }
+.fcentro small { font: 500 11px var(--mono); color: var(--muted); }
+.festadio { margin-top: 10px; text-align: center; font-size: 13px; color: var(--muted); }
+.ftabs { display: flex; gap: 6px; overflow-x: auto; margin: 14px -16px 0; padding: 0 16px; border-bottom: 1px solid var(--line); scrollbar-width: none; }
+.ftabs button { flex: none; border: 0; background: none; color: var(--muted); font: 700 13px var(--display); letter-spacing: .08em; text-transform: uppercase; padding: 12px 8px; position: relative; cursor: pointer; }
+.ftabs button[aria-pressed="true"] { color: var(--ink); }
+.ftabs button[aria-pressed="true"]::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--grad); }
+.fcont { margin-top: 12px; }
+.fcont .det { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--sombra); padding-top: 4px; }
+.fesp { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 12px; box-shadow: var(--sombra); }
+.fesp > div:first-child { display: flex; justify-content: space-between; align-items: baseline; }
+.fesp b { font: 700 24px var(--mono); }
+.fesp span { font-size: 12px; color: var(--muted); }
+.alin { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.alcol, .fcol { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px; box-shadow: var(--sombra); min-width: 0; }
+.fcol { margin-bottom: 10px; }
+.alcol h4, .fcol h4 { margin: 0 0 8px; font: 700 15px var(--display); }
+.alcol h4 small { color: var(--gold); font-family: var(--mono); }
+.alcol h5 { margin: 10px 0 4px; font: 700 11px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.jug { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px; align-items: center; padding: 4px 0; font-size: 13px; border-top: 1px solid var(--line); }
+.jug .dorsal { font: 700 12px var(--mono); color: var(--gold); text-align: center; }
+.jug .jn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jug .pos { font: 500 10px var(--mono); color: var(--muted); }
+.jug.sup { color: var(--muted); }
+.tabla2 { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; box-shadow: var(--sombra); font-size: 13px; }
+.tabla2 th { text-align: left; font: 600 11px var(--mono); color: var(--muted); padding: 8px 6px; border-bottom: 1px solid var(--line); }
+.tabla2 td { padding: 7px 6px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.tabla2 td:first-child, .tabla2 th:first-child { width: 28px; text-align: center; color: var(--muted); }
+.tabla2 tr.yo td { background: rgba(255, 183, 3, .16); font-weight: 700; }
+.fpart { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.res { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 7px; font: 700 12px var(--mono); color: #fff; background: var(--muted); }
+.res.rW { background: #16a34a; } .res.rD { background: #94a3b8; } .res.rL { background: var(--red); }
+.fpart .fm { font: 700 13px var(--mono); }
 </style>
 
 <div class="wrap">
@@ -487,7 +535,7 @@ function filaPartido(p, idx) {
     .replace(/^Menos de /, "Menos ").replace(/ goles$/, "").replace(/ puntos$/, " pts").replace(/^Resultado /, "")
     .replace(/ \((1X|X2|12|1|X|2)\)$/, " ($1)").replace(/^Ambos marcan: /, "Ambos: ");
   return `<article class="fp ${abierto ? "abierto" : ""}" id="p-${id}">
-    <button class="fpcab" data-id="${id}" aria-expanded="${abierto}">
+    <button class="fpcab" data-abrir="${idx}">
       <span class="hora">${esc(p.hora || "--:--")}</span>
       <span class="eqs"><b>${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
       <span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>
@@ -506,6 +554,8 @@ function bloqueLiga(liga, lista) {
 }
 
 function pintarLista() {
+  document.querySelector("header").hidden = est.vista === "partido";  // la ficha tiene su propia cabecera
+  if (est.vista === "partido") return pintarFicha();
   const vis = partidosVisibles();
   const porLiga = {};
   vis.forEach(x => (porLiga[x[0].liga] ||= []).push(x));
@@ -538,6 +588,63 @@ function pintarLista() {
       : `<div class="vacio">${est.vista === "favs" ? "Toca la ☆ de un partido para tenerlo aquí." : "No hay partidos."}</div>`;
   }
   $("vista").innerHTML = h;
+}
+
+// ---------------------------------------------------------------- ficha del partido
+const iniciales = n => n.split(/\s+/).filter(w => w.length > 2 || /^[A-Z]/.test(w)).slice(0, 2).map(w => w[0]).join("").toUpperCase() || n.slice(0, 2).toUpperCase();
+const escudo = (url, nombre) => url ? `<img class="escudo" src="${esc(url)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'escudo ini',textContent:'${esc(iniciales(nombre))}'}))">`
+  : `<span class="escudo ini">${esc(iniciales(nombre))}</span>`;
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const DIAS_L = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+function pintarFicha() {
+  const dia = DATOS.dias[est.dia], p = dia.partidos[est.sel];
+  if (!p) { est.vista = "comps"; return pintarLista(); }
+  const fi = p.fi || {}, inf = infoLiga(p.liga);
+  const f = new Date(dia.fecha + "T12:00:00");
+  const fav = est.favs.has(clavePartido(dia, p));
+  const basket = p.dep === "b", num = x => basket ? Math.round(x) : (+x).toFixed(1);
+  const tabs = [["prob", "Probabilidades"]];
+  if (p.dep === "f" || fi.alin) tabs.push(["alin", "Alineaciones"]);
+  if (fi.slug && DATOS.tablas && DATOS.tablas[fi.slug]) tabs.push(["tabla", "Clasificación"]);
+  if (fi.forma) tabs.push(["forma", "Últimos partidos"]);
+  if (!tabs.some(t => t[0] === est.tab)) est.tab = "prob";
+  let cont = "";
+  if (est.tab === "prob") {
+    const total = p.gl + p.gv || 1;
+    cont = `<div class="fesp"><div><b>${num(p.gl)}</b><span>${basket ? "puntos" : p.dep === "te" ? "sets" : p.dep === "e" ? "mapas" : "goles"} esperados</span><b>${num(p.gv)}</b></div>
+      <div class="xgbar"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div></div>` + detalle(p);
+  } else if (est.tab === "alin") {
+    const al = fi.alin;
+    if (!al) cont = `<div class="vacio">Las alineaciones salen más o menos <b>una hora antes</b> del partido. Vuelve a mirarlo entonces (la app se actualiza sola).</div>`;
+    else {
+      const col = (lado, nombre) => { const a = al[lado]; if (!a) return `<div class="alcol"><h4>${esc(nombre)}</h4><p class="vacio">Sin datos</p></div>`;
+        return `<div class="alcol"><h4>${esc(nombre)}${a.form ? ` <small>${esc(a.form)}</small>` : ""}</h4>` +
+          a.tit.map(j => `<div class="jug"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${esc(j[2])}</span></div>`).join("") +
+          (a.sup.length ? `<h5>Suplentes</h5>` + a.sup.map(j => `<div class="jug sup"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span></div>`).join("") : "") + `</div>`; };
+      cont = `<div class="alin">${col("l", p.local)}${col("v", p.visitante)}</div>`;
+    }
+  } else if (est.tab === "tabla") {
+    const t = DATOS.tablas[fi.slug], nombres = (fi.n || []).map(quitarAcentos);
+    cont = `<table class="tabla2"><tr><th>#</th><th>Equipo</th><th>PJ</th><th>DG</th><th>PTS</th></tr>` +
+      t.map(r => `<tr class="${nombres.includes(quitarAcentos(r[1])) ? "yo" : ""}"><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[6])}</td><td><b>${esc(r[7])}</b></td></tr>`).join("") + `</table>`;
+  } else if (est.tab === "forma") {
+    const col = (lado, nombre) => `<div class="fcol"><h4>${esc(nombre)}</h4>` + ((fi.forma[lado] || []).map(e =>
+      `<div class="fpart"><span class="res r${esc(e.r)}">${{ W: "V", D: "E", L: "D" }[e.r] || "–"}</span><span class="fo">${e.a === "@" ? "en " : "vs "}${esc(e.o)}</span><span class="fm">${esc(e.m)}</span></div>`).join("") || '<p class="vacio">Sin datos</p>') + `</div>`;
+    cont = col("l", p.local) + col("v", p.visitante);
+  }
+  $("vista").innerHTML = `<div class="ficha">
+    <div class="fbar"><button class="ico" data-vista="${est.volverA || "comps"}" aria-label="Volver">←</button>
+      <span class="fdep">${ICONO_DEP[est.dep]} ${DEPORTES.find(d => d[0] === est.dep)[1]}</span>
+      <button class="ico" data-fav="${est.sel}" aria-pressed="${fav}" aria-label="Favorito">${fav ? "★" : "☆"}</button></div>
+    <button class="fliga" data-liga-ir="${esc(p.liga)}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
+    <div class="fequipos">
+      <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b>${esc(p.local)}</b></div>
+      <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]}</small><b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small></div>
+      <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b>${esc(p.visitante)}</b></div>
+    </div>
+    ${fi.estadio ? `<div class="festadio">🏟️ ${esc(fi.estadio)}</div>` : ""}
+    <nav class="ftabs">${tabs.map(([k, n]) => `<button data-tab="${k}" aria-pressed="${est.tab === k}">${n}</button>`).join("")}</nav>
+    <div class="fcont">${cont}</div></div>`;
 }
 
 function pintarSelector() {
@@ -718,10 +825,13 @@ document.addEventListener("click", e => {
   if (b.id === "lupa" || b.dataset.nav === "buscar") { const c = $("cajabusca"); c.hidden = !c.hidden; if (!c.hidden) { $("busca").focus(); } else { est.busca = ""; $("busca").value = ""; } pintarSelector(); pintarLista(); return; }
   if (b.dataset.nav) { est.vista = b.dataset.nav; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
+  if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarLista(); return; }
+  if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
   if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = b.dataset.ligaIr; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.ligafav !== undefined) { const l = b.dataset.ligafav; est.ligasFav.has(l) ? est.ligasFav.delete(l) : est.ligasFav.add(l);
     try { localStorage.setItem("ligasFav", JSON.stringify([...est.ligasFav])); } catch (e) {} pintarLista(); return; }
   if (b.dataset.dep) { est.vista = "comps"; }
+  if (b.dataset.i !== undefined && est.vista === "partido") est.vista = "comps";
   if (b.dataset.per) { est.periodo = b.dataset.per; pintarAciertos(); }
   else if (b.dataset.dep) { est.dep = b.dataset.dep; est.liga = null; try { localStorage.setItem("dep", est.dep); } catch (e) {} pintar(); }
   else if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
