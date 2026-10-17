@@ -24,10 +24,11 @@ P={
 "Más de 0.5 goles":1.06,"Menos de 0.5 goles":9.5,"Más de 1.5 goles":1.30,"Menos de 1.5 goles":3.55,"Más de 3.5 goles":3.25,"Menos de 3.5 goles":1.34,
 "Local marca":1.66,"Visitante marca":1.14}),
 }
+TOT={'Racing-Independiente':2.245,'Belgrano-River':1.869,'Leeds-United':2.728,'Forest-Arsenal':2.269,'RM-Sevilla':3.37}
 def run(rho=0.0, verbose=True):
     errs=[]
     for n,(c,w) in P.items():
-        l,m,mg=analisis.goles_del_mercado(c)
+        l,m,mg=analisis.goles_del_mercado(c, TOT.get(n))
         M=analisis.tabla_mercado(l,m); pm=mercados(M)
         picks=[analisis.Pick(k,pm[k]) for k in w]; analisis.estimar_cuotas(picks,pm,mg)
         if verbose: print(n, "λ %.2f μ %.2f margen %.3f"%(l,m,mg))
@@ -38,13 +39,15 @@ def run(rho=0.0, verbose=True):
     print("error medio %.1f%%"%(100*np.mean(errs)))
 run()
 
+import sys
+if "--grid" not in sys.argv: sys.exit()
 import itertools
 best=None
 for fb,fm,fd,ft in itertools.product([1,1.3,1.6,2,2.5],[0.8,1,1.2,1.5],[0.5,0.67,0.8,1],[0.8,1,1.2,1.4]):
     analisis.FACTOR_MARGEN=(("Ambos marcan",fb),(" marca",fm),("o empate",fd),("No hay empate",fd),("goles",ft))
     errs=[]
     for n,(c,w) in P.items():
-        l,m,mg=analisis.goles_del_mercado(c)
+        l,m,mg=analisis.goles_del_mercado(c, TOT.get(n))
         M=analisis.tabla_mercado(l,m); pm=mercados(M)
         picks=[analisis.Pick(k,pm[k]) for k in w]; analisis.estimar_cuotas(picks,pm,mg)
         errs+=[abs(np.log(p.cuota/w[p.mercado])) for p in picks if p.cuota]

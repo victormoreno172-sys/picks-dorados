@@ -110,7 +110,7 @@ def estimar_cuotas(picks: list["Pick"], prob_mercado: dict[str, float], margen: 
                 pk.estimada = True
 
 
-def goles_del_mercado(cuotas: dict[str, float]) -> tuple[float, float, float] | None:
+def goles_del_mercado(cuotas: dict[str, float], total_modelo: float | None = None) -> tuple[float, float, float] | None:
     """
     Goles esperados de cada equipo que "piensa" la casa, deducidos de sus cuotas
     de 1X2 (y de más/menos 2.5 goles si las hay). Devuelve (λ local, μ visitante, margen).
@@ -163,10 +163,20 @@ def goles_del_mercado(cuotas: dict[str, float]) -> tuple[float, float, float] | 
                 out.append(m[t > lin].sum())
         return np.array(out)
 
-    res = minimize(lambda x: np.sum((probs(x) - objetivo) ** 2), np.log([1.4, 1.1]), method="Nelder-Mead",
-                   options={"xatol": 1e-6, "fatol": 1e-10})
+    # Sin línea de goles de la casa, el 1X2 solo no dice bien cuántos goles habrá (Racing - Independiente
+    # y Belgrano - River tenían 1X2 parecidos y totales muy distintos): se usa el total de nuestro
+    # modelo como referencia y el 1X2 decide quién marca más.
+    usa_total = ou is None and total_modelo
+    opciones = {"xatol": 1e-6, "fatol": 1e-10}
+    res = minimize(lambda x: np.sum((probs(x) - objetivo) ** 2), np.log([1.4, 1.1]), method="Nelder-Mead", options=opciones)
+    if usa_total:
+        # a medio camino entre lo que sugiere el 1X2 y lo que dice nuestro modelo (con 5 partidos
+        # de prueba es lo que más se acerca a las cuotas de goles reales de Winamax)
+        objetivo_total = (np.exp(res.x).sum() + total_modelo) / 2
+        res = minimize(lambda x: np.sum((probs(x) - objetivo) ** 2) + (np.exp(x).sum() / objetivo_total - 1) ** 2,
+                       res.x, method="Nelder-Mead", options=opciones)
     lam, mu = np.exp(res.x)
-    if res.fun > 1e-3:  # cuotas incoherentes: mejor no usarlas
+    if res.fun > (3e-3 if usa_total else 1e-3):  # cuotas incoherentes: mejor no usarlas
         return None
     # Margen para los mercados de dos opciones (los que estimamos): el de su línea de goles si
     # la hay; si no, uno típico deducido del 1X2 (que tiene tres opciones y más margen).
@@ -186,7 +196,7 @@ def analizar(p: PartidoProximo, modelo: ModeloDixonColes) -> Analisis | None:
     cuotas = dict(p.cuotas)
     estimadas: set[str] = set()
     implicitas = {**_quitar_margen(cuotas, GRUPOS_1X2), **_quitar_margen(cuotas, GRUPOS_OU)}
-    mercado = goles_del_mercado(cuotas)
+    mercado = goles_del_mercado(cuotas, lam + mu)
     if mercado:
         # La casa "dice" unos goles esperados: con ellos sale su tabla de marcadores y,
         # de ahí, su opinión sobre TODOS los mercados de goles.
