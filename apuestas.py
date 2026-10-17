@@ -96,7 +96,7 @@ def _deporte(a) -> str:
 
 def _pierna(a, k) -> dict:
     p = a.partido
-    return {"fecha": p.fecha.isoformat(), "hora": p.hora, "liga": p.liga, "local": p.local,
+    return {"fecha": p.fecha.isoformat(), "hora": p.hora, "liga": p.liga, "dep": _deporte(a), "local": p.local,
             "visitante": p.visitante, "mercado": k.mercado, "prob": round(float(k.prob), 3),
             "cuota": float(k.cuota or 0), "estimada": bool(k.estimada)}
 
@@ -265,7 +265,8 @@ def actualizar(por_dia: dict):
             if chat:
                 import bot
                 enviado = bool(bot.llamar("sendMessage", chat_id=chat, text=texto, parse_mode="HTML").get("ok"))
-        if enviado:  # solo cuentan las apuestas que de verdad te han llegado
+        # Se apuntan siempre: si Telegram no está configurado, se ven en la app del bot
+        if enviado or not config.TELEGRAM_TOKEN:
             b["ultimo_envio"] = dia.isoformat()
             b["apuestas"] += elegidas
     print(f"  banca: {saldo(b):.2f} € ({len(b['apuestas'])} apuestas)")

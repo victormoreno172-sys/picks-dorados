@@ -1,0 +1,167 @@
+<title>Bot Dorado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Mismo lenguaje que Picks Dorados: tinta verde, oro solo para el dinero y lo que destaca */
+:root {
+  --bg: #eef2ee; --surface: #ffffff; --ink: #12261c; --muted: #5d6f64; --line: #d6dfd8;
+  --gold: #a87408; --gold-soft: #f6e6b8; --ok: #18794a; --ok-soft: #d8f0df; --red: #c0262d; --red-soft: #fbe1df;
+  --wait: #6b7a71; --bar: #dfe7e1;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
+  --gold: #f2bf3e; --gold-soft: #3a2c08; --ok: #6fdc9f; --ok-soft: #12382a; --red: #ff6b6f; --red-soft: #3d1214; --wait: #93a79a; --bar: #1d3226;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
+  --gold: #f2bf3e; --gold-soft: #3a2c08; --ok: #6fdc9f; --ok-soft: #12382a; --red: #ff6b6f; --red-soft: #3d1214; --wait: #93a79a; --bar: #1d3226;
+  color-scheme: dark }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.45 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
+header { padding-block: 14px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--line); }
+h1 { margin: 0; font: 800 28px/1 var(--display); text-transform: uppercase; }
+h1 span { color: var(--gold); }
+.upd { font: 500 11px var(--mono); color: var(--muted); text-align: right; }
+.upd a { color: var(--gold); text-decoration: none; font-weight: 700; }
+.caja { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 12px; }
+h2 { margin: 0 0 10px; font: 700 18px/1.1 var(--display); text-transform: uppercase; letter-spacing: .02em; display: flex; justify-content: space-between; align-items: baseline; }
+h2 small { font: 500 11px var(--mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
+.hero .num { font: 800 46px/1 var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
+.hero .sub { font: 600 14px var(--mono); margin-top: 4px; }
+.pos { color: var(--ok); } .neg { color: var(--red); }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.kpi { border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.kpi b { display: block; font: 700 18px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 11px; color: var(--muted); }
+svg.graf { width: 100%; height: 170px; display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font: 500 11px var(--mono); color: var(--muted); padding: 4px 4px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 7px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+td.n, th.n { text-align: right; font-family: var(--mono); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.dia h3 { margin: 14px 0 6px; font: 700 15px var(--display); text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.ap { border: 1px solid var(--line); border-left: 4px solid var(--wait); border-radius: 10px; padding: 9px 10px; margin-bottom: 8px; background: var(--surface); }
+.ap.g { border-left-color: var(--ok); } .ap.p { border-left-color: var(--red); }
+.ap .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.ap .top .eur { font: 700 14px var(--mono); white-space: nowrap; }
+.ap .leg { font-size: 13px; color: var(--muted); margin-top: 4px; overflow-wrap: anywhere; }
+.ap .leg b { color: var(--ink); font-weight: 600; }
+.badge { font: 700 11px var(--mono); padding: 2px 6px; border-radius: 6px; background: var(--bar); color: var(--wait); white-space: nowrap; }
+.badge.g { background: var(--ok-soft); color: var(--ok); } .badge.p { background: var(--red-soft); color: var(--red); }
+.nota { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.vacio { color: var(--muted); font-size: 14px; }
+</style>
+<div class="wrap">
+  <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
+  <section class="caja hero" aria-label="Banca">
+    <div style="font:500 12px var(--mono);color:var(--muted)">BANCA</div>
+    <div class="num" id="saldo"></div>
+    <div class="sub" id="variacion"></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+  <section class="caja"><h2>Evolución <small id="rango"></small></h2><div id="grafica"></div></section>
+  <section class="caja"><h2>Por tipo</h2><div id="tipos"></div></section>
+  <section class="caja"><h2>Por deporte y cuota</h2><div id="otros"></div></section>
+  <section class="caja"><h2>Apuestas <small id="nap"></small></h2><div id="lista"></div>
+    <p class="nota">El saldo supone que cada apuesta se hizo con el importe y la cuota que dijo el bot (en las de "pide ≥ X", con esa cuota mínima). Juega con responsabilidad. +18.</p></section>
+</div>
+<script>
+const D = __DATOS__;
+const $ = id => document.getElementById(id);
+const eur = x => (x < 0 ? "−" : "") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
+const sig = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
+const pct = x => (x >= 0 ? "+" : "−") + Math.abs(x * 100).toFixed(1).replace(".", ",") + " %";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
+const cerrada = a => a.ok === true || a.ok === false;
+const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.piernas.every(p => (p.dep || "f") === "f") ? "⚽ Fútbol" : "Mixtas";
+
+const ap = D.apuestas;
+const cer = ap.filter(cerrada);
+const saldo = D.inicial + ap.reduce((s, a) => s + gan(a), 0);
+const enJuego = ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
+$("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Picks Dorados</a>';
+$("saldo").textContent = eur(saldo);
+$("variacion").innerHTML = `<span class="${saldo >= D.inicial ? "pos" : "neg"}">${sig(saldo - D.inicial)} (${pct(saldo / D.inicial - 1)})</span> <span style="color:var(--muted)">desde ${eur(D.inicial)}</span>`;
+
+function resumen(lista) {
+  const c = lista.filter(cerrada), apost = c.reduce((s, a) => s + a.importe, 0), b = c.reduce((s, a) => s + gan(a), 0);
+  return { n: c.length, ok: c.filter(a => a.ok).length, apost, b, roi: apost ? b / apost : 0, pend: lista.length - c.length };
+}
+const R = resumen(ap);
+let racha = 0;
+for (const a of [...cer].reverse()) { if (racha === 0) racha = a.ok ? 1 : -1; else if ((racha > 0) === a.ok) racha += a.ok ? 1 : -1; else break; }
+$("kpis").innerHTML = [
+  [R.n ? `${R.ok}/${R.n}` : "—", "acertadas"],
+  [R.n ? Math.round(100 * R.ok / R.n) + " %" : "—", "acierto"],
+  [R.n ? pct(R.roi) : "—", "rentabilidad"],
+  [eur(R.apost), "apostado"],
+  [sig(R.b), "beneficio"],
+  [eur(enJuego), "en juego"],
+].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("") +
+  (racha ? `<div class="kpi" style="grid-column:1/-1"><b class="${racha > 0 ? "pos" : "neg"}">${racha > 0 ? "🔥 " + racha + " acertadas seguidas" : "❄️ " + (-racha) + " falladas seguidas"}</b><span>racha actual</span></div>` : "");
+
+// Gráfica: saldo al final de cada día
+(function () {
+  const dias = [...new Set(cer.map(a => a.fecha))].sort();
+  if (!dias.length) { $("grafica").innerHTML = '<p class="vacio">La gráfica aparece cuando se resuelvan las primeras apuestas.</p>'; return; }
+  let s = D.inicial; const pts = [{ d: "inicio", s }];
+  for (const d of dias) { s += cer.filter(a => a.fecha === d).reduce((t, a) => t + gan(a), 0); pts.push({ d, s }); }
+  const W = 520, H = 170, pl = 40, pr = 8, pt = 10, pb = 22;
+  const vals = pts.map(p => p.s), mn = Math.min(...vals, D.inicial), mx = Math.max(...vals, D.inicial), rg = (mx - mn) || 1;
+  const x = i => pl + (W - pl - pr) * (pts.length === 1 ? 0.5 : i / (pts.length - 1));
+  const y = v => pt + (H - pt - pb) * (1 - (v - mn) / rg);
+  const linea = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.s).toFixed(1)}`).join("");
+  const ult = pts[pts.length - 1], color = ult.s >= D.inicial ? "var(--ok)" : "var(--red)";
+  const fmt = d => d === "inicio" ? "inicio" : d.slice(8, 10) + "/" + d.slice(5, 7);
+  $("rango").textContent = `${dias.length} día${dias.length > 1 ? "s" : ""}`;
+  $("grafica").innerHTML = `<svg class="graf" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución de la banca">
+    <line x1="${pl}" x2="${W - pr}" y1="${y(D.inicial)}" y2="${y(D.inicial)}" stroke="var(--line)" stroke-dasharray="4 4"/>
+    <text x="${pl - 6}" y="${y(D.inicial) + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${Math.round(D.inicial)}</text>
+    <text x="${pl - 6}" y="${y(mx) + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${mx !== D.inicial ? Math.round(mx) : ""}</text>
+    <text x="${pl - 6}" y="${y(mn) + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${mn !== D.inicial ? Math.round(mn) : ""}</text>
+    <path d="${linea}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>
+    ${pts.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.s)}" r="3" fill="${color}"><title>${fmt(p.d)}: ${eur(p.s)}</title></circle>`).join("")}
+    <text x="${x(0)}" y="${H - 5}" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(pts[0].d)}</text>
+    <text x="${x(pts.length - 1)}" y="${H - 5}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${fmt(ult.d)}</text>
+  </svg>`;
+})();
+
+function tabla(grupos) {
+  const filas = grupos.map(([n, l]) => [n, resumen(l)]).filter(([, r]) => r.n + r.pend > 0);
+  if (!filas.length) return '<p class="vacio">Todavía no hay apuestas.</p>';
+  return `<table><tr><th>Grupo</th><th class="n">Acert.</th><th class="n">Benef.</th><th class="n">Rent.</th></tr>` +
+    filas.map(([n, r]) => `<tr><td>${n}${r.pend ? ` <span style="color:var(--muted);font-size:11px">(${r.pend} en juego)</span>` : ""}</td>
+      <td class="n">${r.n ? `${r.ok}/${r.n}` : "—"}</td><td class="n ${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : "—"}</td>
+      <td class="n">${r.n ? pct(r.roi) : "—"}</td></tr>`).join("") + "</table>";
+}
+const tipos = [...new Set(ap.map(a => a.tipo))];
+$("tipos").innerHTML = tabla(tipos.map(t => [t, ap.filter(a => a.tipo === t)]));
+const tramos = [["Cuota < 1,30", a => a.cuota < 1.3], ["1,30 – 1,50", a => a.cuota >= 1.3 && a.cuota < 1.5], ["1,50 o más", a => a.cuota >= 1.5]];
+$("otros").innerHTML = tabla([...new Set(ap.map(deporte))].map(d => [d, ap.filter(a => deporte(a) === d)])) +
+  '<div style="height:10px"></div>' + tabla(tramos.map(([n, f]) => [n, ap.filter(f)]));
+
+// Lista por días (lo más reciente arriba)
+const porDia = {};
+ap.forEach((a, i) => (porDia[a.fecha] ||= []).push(a));
+const dias = Object.keys(porDia).sort().reverse();
+$("nap").textContent = `${ap.length} en total`;
+const icono = p => p.ok === true ? "✅" : p.ok === false ? "❌" : p.ok === null ? "➖" : "⏳";
+$("lista").innerHTML = dias.length ? dias.map(d => {
+  const l = porDia[d], r = resumen(l);
+  return `<div class="dia"><h3><span>${d.slice(8, 10)}/${d.slice(5, 7)}</span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></h3>` +
+    l.map((a, i) => {
+      const cls = a.ok === true ? "g" : a.ok === false ? "p" : "";
+      const est = a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
+      return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}</span>
+        <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}</span></span></div>` +
+        a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + "</div>";
+    }).join("") + "</div>";
+}).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
+</script>

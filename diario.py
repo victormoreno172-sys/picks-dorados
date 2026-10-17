@@ -77,7 +77,8 @@ web.escribir(datos_app)
 # Apuestas del día por Telegram (pasadas las 00:00) y banca simulada
 try:
     import apuestas
-    apuestas.actualizar(por_dia)
+    import bot_web
+    bot_web.escribir(apuestas.actualizar(por_dia))
 except Exception as e:
     import traceback
     print(f"aviso: apuestas no disponibles: {e}")
