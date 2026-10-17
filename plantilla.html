@@ -1167,6 +1167,37 @@ $("umbral").textContent = pct(DATOS.umbral);
 $("demo").hidden = !DATOS.demo;
 if (!delDeporte(DATOS.dias[0]).length) { const i = DATOS.dias.findIndex(d => delDeporte(d).length); if (i > 0) est.dia = i; }
 pintar();
+
+// ---------------------------------------------------------------- botón "atrás" del móvil
+// Cada pantalla nueva (partido, liga, equipo...) se apunta en el historial, así el botón
+// atrás del móvil vuelve a la pantalla anterior en vez de salir de la app.
+const CAMPOS_NAV = ["vista", "liga", "lid", "ltab", "jor", "equipo", "compEq", "sel", "dia", "dep", "tab", "volverA"];
+const fotoNav = () => Object.fromEntries(CAMPOS_NAV.map(k => [k, est[k] ?? null]));
+const claveNav = () => [est.vista, est.vista === "liga" ? est.liga : "", ["clasif"].includes(est.vista) ? est.lid + "|" + (est.equipo || "") : "",
+  est.vista === "partido" ? est.dia + "|" + est.sel : ""].join("#");
+let ultimaNav = claveNav();
+try { history.replaceState({ app: true, prof: 0, s: fotoNav() }, ""); } catch (e) {}
+// Los botones ← de la app hacen lo mismo que el atrás del móvil
+document.addEventListener("click", e => {
+  const b = e.target.closest('[aria-label="Volver"], [data-salirequipo], .volver [data-vista]');
+  if (b && history.state && history.state.app && history.state.prof > 0) { e.stopImmediatePropagation(); e.preventDefault(); history.back(); }
+}, true);
+document.addEventListener("click", () => {
+  const k = claveNav();
+  if (k === ultimaNav) return;
+  ultimaNav = k;
+  const prof = ((history.state && history.state.prof) || 0) + 1;
+  try { history.pushState({ app: true, prof, s: fotoNav() }, ""); } catch (e) {}
+});
+window.addEventListener("popstate", e => {
+  const st = e.state && e.state.app ? e.state.s : { vista: "comps" };
+  for (const k of CAMPOS_NAV) if (k in st) est[k] = st[k];
+  if (est.vista === "partido" && !(DATOS.dias[est.dia] && DATOS.dias[est.dia].partidos[est.sel])) est.vista = "comps";
+  ultimaNav = claveNav();
+  $("menudep").hidden = true;
+  pintarDias(); pintarSelector(); pintarLista();
+  window.scrollTo({ top: 0 });
+});
 // ---------------------------------------------------------------- marcadores en directo (ESPN, desde el móvil)
 async function enDirecto() {
   const dia = DATOS.dias.find(d => d.fecha === AHORA.fecha);
