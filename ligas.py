@@ -29,7 +29,32 @@ LIGAS = [
     ("conference", "Conference League", "soccer", "uefa.europa.conf"),
     ("nba", "NBA", "basketball", "nba"),
 ]
-AÑO_NATURAL = {"usa.1", "arg.1"}  # temporadas de enero a diciembre
+# Copas y torneos sin clasificación (solo calendario por rondas)
+COPAS = [
+    ("copadelrey", "Copa del Rey", "esp.copa_del_rey"), ("supercopa", "Supercopa de España", "esp.super_cup"),
+    ("facup", "FA Cup", "eng.fa"), ("carabao", "Copa de la Liga inglesa", "eng.league_cup"),
+    ("coppa", "Coppa Italia", "ita.coppa_italia"), ("pokal", "DFB-Pokal", "ger.dfb_pokal"),
+    ("coupe", "Coupe de France", "fra.coupe_de_france"), ("knvb", "Copa de Holanda", "ned.cup"),
+    ("taca", "Taça de Portugal", "por.taca.portugal"), ("copaarg", "Copa Argentina", "arg.copa"),
+    ("libertadores", "Copa Libertadores", "conmebol.libertadores"),
+    ("sudamericana", "Copa Sudamericana", "conmebol.sudamericana"),
+]
+AÑO_NATURAL = {"usa.1", "arg.1", "arg.copa", "conmebol.libertadores", "conmebol.sudamericana"}
+RONDAS = [("round of 128", "Ronda de 128"), ("round of 64", "Treintaidosavos"), ("round of 32", "Dieciseisavos"),
+          ("round of 16", "Octavos de final"), ("quarterfinal", "Cuartos de final"), ("quarter-final", "Cuartos de final"),
+          ("semifinal", "Semifinales"), ("semi-final", "Semifinales"), ("final", "Final"),
+          ("first round", "Primera ronda"), ("second round", "Segunda ronda"), ("third round", "Tercera ronda"),
+          ("fourth round", "Cuarta ronda"), ("fifth round", "Quinta ronda"), ("preliminary", "Ronda previa"),
+          ("qualifying", "Previa"), ("group", "Fase de grupos"), ("knockout", "Playoff")]
+
+
+def _ronda(t: str) -> str:
+    b = (t or "").lower()
+    for k, v in RONDAS:
+        if k in b:
+            ida = " (ida)" if "1st leg" in b or "first leg" in b else " (vuelta)" if "2nd leg" in b or "second leg" in b else ""
+            return v + ida
+    return ""  # temporadas de enero a diciembre
 
 # Zonas propias para el basket (ESPN no las da para Europa)
 ZONAS_BASKET = {
@@ -167,7 +192,9 @@ def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
                 continue
             vistos.add(e.get("id"))
             es = ficha._estado(c, eq) or {}
-            partidos.append({"f": dt.date().isoformat(), "h": dt.strftime("%H:%M"),
+            notas = c.get("notes") or e.get("notes") or []
+            partidos.append({"il": eq["home"]["team"].get("id", ""), "iv": eq["away"]["team"].get("id", ""),
+                             "r": _ronda((notas[0] or {}).get("headline", "") if notas else ""),"f": dt.date().isoformat(), "h": dt.strftime("%H:%M"),
                              "l": eq["home"]["team"].get("displayName", ""), "v": eq["away"]["team"].get("displayName", ""),
                              "el": eq["home"]["team"].get("logo", ""), "ev": eq["away"]["team"].get("logo", ""),
                              "m": es.get("m", ""), "st": es.get("st", "pre"),
@@ -196,6 +223,26 @@ def _jornadas_liga(partidos: list) -> list[dict]:
         medio = fechas[len(fechas) // 2]
         cerca = [f for f in fechas if abs((date.fromisoformat(f) - date.fromisoformat(medio)).days) <= 4] or fechas
         out.append({"t": f"Jornada {n}", "desde": cerca[0], "hasta": cerca[-1], "p": b})
+    return out
+
+
+def _rondas_copa(partidos: list) -> list[dict]:
+    """Copas: bloques de fechas seguidas; el título es la ronda si ESPN la dice."""
+    bloques: list[list] = []
+    for p in partidos:
+        d = date.fromisoformat(p["f"])
+        if bloques and (d - date.fromisoformat(bloques[-1][-1]["f"])).days <= 3 \
+                and (not p.get("r") or p["r"] == bloques[-1][-1].get("r")):
+            bloques[-1].append(p)
+        else:
+            bloques.append([p])
+    out = []
+    for i, b in enumerate(bloques, 1):
+        rondas = [p.get("r") for p in b if p.get("r")]
+        titulo = max(set(rondas), key=rondas.count) if rondas else f"Ronda {i}"
+        if any(x["t"] == titulo for x in out):
+            titulo += f" · {_dia_corto(b[0]['f'])}"
+        out.append({"t": titulo, "desde": b[0]["f"], "hasta": b[-1]["f"], "p": b})
     return out
 
 
@@ -357,6 +404,44 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
         archivos.append((lid, {"nombre": nombre, "dep": "f" if deporte == "soccer" else "b",
                                "tipo": "futbol" if deporte == "soccer" else "nba", "grupos": grupos,
                                "jornadas": jor, "actual": _actual(jor, hoy)}))
+    todos: list[tuple[str, dict]] = [(d["nombre"], p) for _, d in archivos if d["tipo"] == "futbol"
+                                     for j in d["jornadas"] for p in j["p"]]
+    for lid, nombre, slug in COPAS:
+        try:
+            cal = _calendario_espn("soccer", slug, hoy)
+        except Exception as e:  # noqa: BLE001
+            print(f"  aviso copas {nombre}: {e}")
+            continue
+        if not cal:
+            continue
+        jor = _rondas_copa(cal)
+        archivos.append((lid, {"nombre": nombre, "dep": "f", "tipo": "copa", "grupos": [], "jornadas": jor,
+                               "actual": _actual(jor, hoy)}))
+        todos += [(nombre, p) for p in cal]
+    # Cada equipo con TODOS sus partidos: liga, copas y competiciones europeas
+    por_id: dict[str, list] = {}
+    for comp, p in todos:
+        for k in (p.get("il"), p.get("iv")):
+            if k:
+                por_id.setdefault(k, []).append((comp, p))
+    for _, d in archivos:
+        if d["dep"] != "f":
+            continue
+        ids: dict[str, str] = {}
+        for j in d["jornadas"]:
+            for p in j["p"]:
+                ids.setdefault(p["l"], p.get("il", ""))
+                ids.setdefault(p["v"], p.get("iv", ""))
+        otras = {}
+        for eq, i in ids.items():
+            ext = [dict(p, c=comp) for comp, p in por_id.get(i, []) if comp != d["nombre"]]
+            if ext:
+                otras[eq] = sorted(ext, key=lambda p: (p["f"], p["h"]))
+        d["otras"] = otras
+    for _, d in archivos:  # fuera lo que el móvil no necesita
+        for lista in [p for j in d["jornadas"] for p in j["p"]] + [p for o in d.get("otras", {}).values() for p in o]:
+            for k in ("il", "iv", "r", "fase"):
+                lista.pop(k, None)
     archivos += _basket_europa(datos_app, hoy)
     for lid, d in archivos:
         d["leyenda"] = _leyenda(d["grupos"])
@@ -364,7 +449,7 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
         d["generado"] = datetime.now(ficha.TZ).strftime("%d/%m %H:%M")
         with open(os.path.join(carpeta, f"{lid}.json"), "w", encoding="utf-8") as f:
             json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
-        indice.append({"id": lid, "n": d["nombre"], "dep": d["dep"], "eq": len(d["equipos"]),
+        indice.append({"id": lid, "n": d["nombre"], "dep": d["dep"], "tipo": d["tipo"], "eq": len(d["equipos"]),
                        "j": len(d["jornadas"])})
     with open(os.path.join(carpeta, "indice.json"), "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False)

@@ -372,6 +372,10 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .jp .jm { display: grid; gap: 4px; font: 700 14px var(--mono); text-align: right; }
 .jp.in .jm, .jp.in .jh b { color: var(--red); }
 .jp .res { width: 22px; height: 22px; font-size: 11px; justify-self: end; }
+.ctag { font: 600 10px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 10px; padding: 0 16px 4px; scrollbar-width: none; }
+.chips button { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 12px var(--body); padding: 7px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.chips button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .eqgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .eqgrid button { display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 10px; font: 600 13px var(--body); color: var(--ink); text-align: left; cursor: pointer; min-width: 0; }
 .eqgrid button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -558,6 +562,10 @@ const PAISES = {
   "Championship": ["🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Inglaterra"], "Serie A": ["🇮🇹", "Italia"], "Bundesliga": ["🇩🇪", "Alemania"],
   "Ligue 1": ["🇫🇷", "Francia"], "Eredivisie": ["🇳🇱", "Países Bajos"], "Liga Portugal": ["🇵🇹", "Portugal"],
   "MLS": ["🇺🇸", "Estados Unidos"], "Liga Argentina": ["🇦🇷", "Argentina"],
+  "Copa del Rey": ["🇪🇸", "España"], "Supercopa de España": ["🇪🇸", "España"], "FA Cup": ["🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Inglaterra"],
+  "Copa de la Liga inglesa": ["🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Inglaterra"], "Coppa Italia": ["🇮🇹", "Italia"], "DFB-Pokal": ["🇩🇪", "Alemania"],
+  "Coupe de France": ["🇫🇷", "Francia"], "Copa de Holanda": ["🇳🇱", "Países Bajos"], "Taça de Portugal": ["🇵🇹", "Portugal"],
+  "Copa Argentina": ["🇦🇷", "Argentina"], "Copa Libertadores": ["🌎", "Sudamérica · CONMEBOL"], "Copa Sudamericana": ["🌎", "Sudamérica · CONMEBOL"],
   "Champions League": ["🇪🇺", "Europa · UEFA"], "Europa League": ["🇪🇺", "Europa · UEFA"], "Conference League": ["🇪🇺", "Europa · UEFA"],
   "NBA": ["🇺🇸", "Estados Unidos"], "NBA · Pretemporada": ["🇺🇸", "Estados Unidos"], "Euroliga": ["🇪🇺", "Europa"],
   "Eurocup": ["🇪🇺", "Europa"], "Basketball Champions League": ["🇪🇺", "Europa · FIBA"], "Liga ACB": ["🇪🇸", "España"],
@@ -781,8 +789,8 @@ function pintarIndiceLigas() {
   const orden = (a, b) => ordenLiga(a.n) - ordenLiga(b.n) || a.n.localeCompare(b.n);
   const favs = LIGAS.indice.filter(l => est.ligasFav.has(l.n)).sort(orden);
   if (favs.length) h += `<h2 class="sec">Favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
-  for (const [dep, titulo] of [["f", "⚽ Fútbol"], ["b", "🏀 Baloncesto"]]) {
-    const ls = LIGAS.indice.filter(l => l.dep === dep && !est.ligasFav.has(l.n)).sort(orden);
+  for (const [dep, titulo, copa] of [["f", "⚽ Fútbol · Ligas", false], ["f", "🏆 Fútbol · Copas", true], ["b", "🏀 Baloncesto", false]]) {
+    const ls = LIGAS.indice.filter(l => l.dep === dep && (l.tipo === "copa") === copa && !est.ligasFav.has(l.n)).sort(orden);
     if (ls.length) h += `<h2 class="sec">${titulo}</h2><div class="comps">${ls.map(fila).join("")}</div>`;
   }
   $("vista").innerHTML = h;
@@ -800,17 +808,18 @@ function enLaApp(p) {
 function filaJornada(p, equipo) {
   const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
   const fd = new Date(p.f + "T12:00:00"), fecha = `${f2(fd.getDate())}.${f2(fd.getMonth() + 1)}.`;
+  const tagc = p.c ? `<small class="ctag">${infoLiga(p.c).flag} ${esc(p.c)}</small>` : "";
   const hora = p.st === "in" ? `<b>● VIVO</b>` : p.st === "post" ? `<b>FIN</b>` : p.st === "susp" ? `<b>Apl.</b>` : `<b>${esc(p.h || "--:--")}</b>`;
   const app = p.st !== "post" ? enLaApp(p) : null;
   let derecha = mar ? `<span class="jm"><span>${a}</span><span>${b}</span></span>` : `<span></span>`;
   if (equipo && mar) { const yo = p.l === equipo ? a : b, el = p.l === equipo ? b : a, r = yo > el ? "W" : yo < el ? "L" : "D";
     derecha = `<span class="jm"><span>${a}</span><span>${b}</span></span>`;
     return `<div class="jp ${p.st}" style="grid-template-columns:54px minmax(0,1fr) 28px 24px"><span class="jh">${fecha}${hora}</span>
-      <span class="je"><div class="${a > b ? "gana" : ""}">${miniEsc(p.el, p.l)}<span>${esc(p.l)}</span></div><div class="${b > a ? "gana" : ""}">${miniEsc(p.ev, p.v)}<span>${esc(p.v)}</span></div></span>
+      <span class="je">${tagc}<div class="${a > b ? "gana" : ""}">${miniEsc(p.el, p.l)}<span>${esc(p.l)}</span></div><div class="${b > a ? "gana" : ""}">${miniEsc(p.ev, p.v)}<span>${esc(p.v)}</span></div></span>
       ${derecha}<span class="res r${r}">${{ W: "V", D: "E", L: "D" }[r]}</span></div>`; }
   const tag = app ? "button" : "div", attrs = app ? ` data-abrirdia="${app[0]}" data-abrirp="${app[1]}"` : "";
   return `<${tag} class="jp ${p.st}${app ? " ir" : ""}"${attrs}><span class="jh">${fecha}${hora}</span>
-    <span class="je"><div class="${mar && a > b ? "gana" : ""}">${miniEsc(p.el, p.l)}<span>${esc(p.l)}</span></div>
+    <span class="je">${tagc}<div class="${mar && a > b ? "gana" : ""}">${miniEsc(p.el, p.l)}<span>${esc(p.l)}</span></div>
     <div class="${mar && b > a ? "gana" : ""}">${miniEsc(p.ev, p.v)}<span>${esc(p.v)}</span></div></span>
     ${app && !mar ? `<span class="jm" style="color:var(--gold)">%</span>` : derecha}</${tag}>`;
 }
@@ -837,7 +846,8 @@ function pintarClasif() {
   if (!L) { cargarLiga(id); $("vista").innerHTML = h + `<div class="vacio">Cargando…</div>`; return; }
   if (L.error) { $("vista").innerHTML = h + `<div class="vacio">No se pudo cargar esta liga. Prueba con ↻ más tarde.</div>`; return; }
   if (est.equipo) return pintarEquipo(L, h);
-  const tabs = [["tabla", "Clasificación"], ["jor", L.tipo === "nba" ? "Partidos" : "Jornadas"], ["eq", "Equipos"]];
+  const tabs = [["tabla", "Clasificación"], ["jor", L.tipo === "nba" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", "Equipos"]];
+  if (L.tipo === "copa") { tabs.shift(); if (est.ltab === "tabla") est.ltab = "jor"; }
   h += `<nav class="ltabs">${tabs.map(([k, n]) => `<button data-ltab="${k}" aria-pressed="${est.ltab === k}">${n}</button>`).join("")}</nav>`;
   if (est.ltab === "tabla") {
     if (!L.grupos.length || !L.grupos.some(g => g.filas.length)) h += `<div class="vacio">Todavía no hay clasificación.</div>`;
@@ -866,7 +876,8 @@ function pintarEquipo(L, h) {
   const n = est.equipo, logo = (L.equipos.find(e => e[0] === n) || [])[1];
   let fila = null, grupo = null;
   for (const g of L.grupos) { const f = g.filas.find(x => x.eq === n); if (f) { fila = f; grupo = g; } }
-  const todos = L.jornadas.flatMap(j => j.p).filter(p => p.l === n || p.v === n);
+  const propios = L.jornadas.flatMap(j => j.p).filter(p => p.l === n || p.v === n).map(p => Object.assign({ c: L.nombre }, p));
+  const todos = propios.concat((L.otras || {})[n] || []).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
   const jugados = todos.filter(p => p.st === "post" && p.m).reverse(), proximos = todos.filter(p => p.st !== "post");
   h = h.replace('data-volverliga="1"', 'data-salirequipo="1"');
   h += `<div class="eqcab">${miniEsc(logo, n)}<div><b>${esc(n)}</b><small>${fila ? `${fila.pos}º${grupo.n ? " · " + esc(grupo.n) : ""}${fila.zona ? " · " + esc(fila.zona[1]) : ""}` : ""}</small></div></div>`;
@@ -874,7 +885,15 @@ function pintarEquipo(L, h) {
     const k = L.tipo === "futbol" ? [["Pts", fila.pts], ["G", fila.g], ["E", fila.e], ["P", fila.p]] : [["V", fila.g], ["D", fila.p], ["PJ", fila.pj], ["Pos", fila.pos + "º"]];
     h += `<div class="eqkpi">${k.map(([a, b]) => `<div><b>${esc(b)}</b><small>${a}</small></div>`).join("")}</div>`;
   }
-  if (proximos.length) h += `<h2 class="sec">Próximos</h2>` + proximos.slice(0, 6).map(p => filaJornada(p)).join("");
+  const comps = [...new Set(todos.map(p => p.c))];
+  if (comps.length > 1) h += `<div class="chips">${["Todas", ...comps].map(c => `<button data-compeq="${esc(c)}" aria-pressed="${(est.compEq || "Todas") === c}">${c === "Todas" ? "Todas" : infoLiga(c).flag + " " + esc(c)}</button>`).join("")}</div>`;
+  if (est.compEq && est.compEq !== "Todas" && comps.includes(est.compEq)) {
+    const f = p => p.c === est.compEq; return pintarEquipoLista(h, todos.filter(f), jugados.filter(f), proximos.filter(f), n, grupo, L);
+  }
+  return pintarEquipoLista(h, todos, jugados, proximos, n, grupo, L);
+}
+function pintarEquipoLista(h, todos, jugados, proximos, n, grupo, L) {
+  if (proximos.length) h += `<h2 class="sec">Próximos</h2>` + proximos.slice(0, 8).map(p => filaJornada(p)).join("");
   if (jugados.length) h += `<h2 class="sec">Resultados</h2>` + jugados.map(p => filaJornada(p, n)).join("");
   if (!todos.length) h += `<div class="vacio">Sin partidos en el calendario.</div>`;
   if (grupo) h += `<h2 class="sec">Clasificación</h2>` + tablaClasif(L, grupo, n);
@@ -1061,13 +1080,14 @@ document.addEventListener("click", e => {
   if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
-  if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = "tabla"; est.jor = null; est.equipo = null;
+  if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ltab) { est.ltab = b.dataset.ltab; pintarLista(); return; }
   if (b.dataset.jor !== undefined) { est.jor = +b.dataset.jor; est.ltab = "jor"; pintarLista(); return; }
-  if (b.dataset.equipo !== undefined) { est.equipo = b.dataset.equipo; window.scrollTo({ top: 0 }); pintarLista(); return; }
-  if (b.dataset.salirequipo) { est.equipo = null; pintarLista(); return; }
+  if (b.dataset.equipo !== undefined) { est.equipo = b.dataset.equipo; est.compEq = null; window.scrollTo({ top: 0 }); pintarLista(); return; }
+  if (b.dataset.salirequipo) { est.equipo = null; est.compEq = null; pintarLista(); return; }
+  if (b.dataset.compeq !== undefined) { est.compEq = b.dataset.compeq; pintarLista(); return; }
   if (b.dataset.abrirdia !== undefined) { est.dia = +b.dataset.abrirdia; const p = DATOS.dias[est.dia].partidos[+b.dataset.abrirp];
     est.dep = p.dep || "f"; est.volverA = "clasif"; est.vista = "partido"; est.sel = +b.dataset.abrirp; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = b.dataset.ligaIr; window.scrollTo({ top: 0 }); pintarLista(); return; }
