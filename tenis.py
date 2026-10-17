@@ -93,6 +93,15 @@ def _get(tour: str, dia: date | None, horas: float | None):
     return partidos
 
 
+GRAND_SLAMS = ("australian open", "roland garros", "french open", "wimbledon", "us open")
+
+
+def es_grand_slam(tour: str, torneo: str) -> bool:
+    """Al mejor de 5 sets solo juegan los hombres en los Grand Slam (ESPN marca 5 en todo el ATP)."""
+    t = torneo.lower()
+    return tour == "ATP" and any(g in t for g in GRAND_SLAMS)
+
+
 def _parsear(tour: str, datos: dict) -> list[Partido]:
     out = []
     for ev in (datos or {}).get("events", []):
@@ -118,7 +127,7 @@ def _parsear(tour: str, datos: dict) -> list[Partido]:
                         continue  # sin ganador claro (walkover raro): fuera
                     out.append(Partido(
                         tour, str(c.get("id")), dt.date(), dt.strftime("%H:%M"), torneo,
-                        (c.get("round") or {}).get("displayName") or "", 5 if sets_max >= 5 else 3,
+                        (c.get("round") or {}).get("displayName") or "", 5 if sets_max >= 5 and es_grand_slam(tour, torneo) else 3,
                         f"{tour}-{a['athlete'].get('id') or a['athlete'].get('displayName')}",
                         f"{tour}-{b['athlete'].get('id') or b['athlete'].get('displayName')}",
                         a["athlete"].get("displayName") or "?", b["athlete"].get("displayName") or "?",
