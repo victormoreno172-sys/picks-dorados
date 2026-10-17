@@ -224,7 +224,14 @@ function tabla(grupos) {
 const tipos = [...new Set(ap.map(a => a.tipo))];
 $("tipos").innerHTML = tabla(tipos.map(t => [t, ap.filter(a => a.tipo === t)]));
 const tramos = [["Cuota < 1,30", a => a.cuota < 1.3], ["1,30 – 1,50", a => a.cuota >= 1.3 && a.cuota < 1.5], ["1,50 o más", a => a.cuota >= 1.5]];
-$("otros").innerHTML = tabla([...new Set(ap.map(deporte))].map(d => [d, ap.filter(a => deporte(a) === d)])) +
+// Por deporte: una combinada con partidos de varios deportes cuenta en cada uno de ellos,
+// con el importe (y la ganancia) repartido según cuántos partidos tiene de cada deporte
+const NOMBRE_DEP = { f: "⚽ Fútbol", b: "🏀 Basket", te: "🎾 Tenis", e: "🎮 Esports" };
+const trozos = ap.flatMap(a => { const n = a.piernas.length, cuenta = {};
+  a.piernas.forEach(p => { const d = p.dep || "f"; cuenta[d] = (cuenta[d] || 0) + 1; });
+  return Object.entries(cuenta).map(([d, k]) => Object.assign({}, a, { importe: a.importe * k / n, _dep: d })); });
+const ordenDep = ["f", "b", "te", "e"].filter(d => trozos.some(t => t._dep === d));
+$("otros").innerHTML = tabla(ordenDep.map(d => [NOMBRE_DEP[d], trozos.filter(t => t._dep === d)])) +
   '<div style="height:10px"></div>' + tabla(tramos.map(([n, f]) => [n, ap.filter(f)]));
 
 // Lista por días (lo más reciente arriba)
