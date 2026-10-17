@@ -9,8 +9,8 @@ Cada día, de todo un poco (lo pidió el usuario: volumen y movimiento):
     las de cuota real de Winamax y las mejor pagadas. Hasta 6. Las que tienen valor (ganan a la
     larga) llevan más importe; las demás, el mínimo.
   - COMBINADA DOBLE y COMBINADA TRIPLE con los picks más seguros (78 %+) de partidos distintos.
-  - Importes pequeños: 1-3 % de la banca por sencilla, 1,5 % la doble, 1 % la triple; nunca más
-    del 15 % de la banca en un día.
+  - Importe: el 5 % de la banca del momento en cada apuesta (lo decidió el usuario); como mucho
+    8 apuestas, un 40 % de la banca en un día. Si la banca baja, los importes bajan con ella.
   - De momento fútbol y basket (los que se pueden corregir solos con el resultado).
 """
 from __future__ import annotations
@@ -28,7 +28,8 @@ RUTA = os.path.join(os.path.dirname(historial.RUTA), "banca.json")
 TZ = ZoneInfo(config.ZONA_HORARIA)
 PROB_MIN, CUOTA_MIN = 0.70, 1.20
 PROB_COMBI, CUOTA_PIERNA = 0.78, 1.12
-MAX_SENCILLAS, MAX_EXPOSICION = 6, 0.15
+MAX_SENCILLAS, MAX_EXPOSICION = 6, 0.40
+PORCENTAJE = config.PORCENTAJE_APUESTA  # cada apuesta, este % de la banca del momento
 PEOR_VALOR = -0.08   # no se apuesta nada que la casa pague muy por debajo de lo que vale
 
 
@@ -111,7 +112,7 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
                   and PEOR_VALOR <= k.prob * k.cuota - 1 <= 0.25]
         if buenos:
             partidos.append((a, buenos))
-    redondo = lambda x: max(0.5, round(x * 2) / 2)
+    redondo = lambda x: max(0.1, round(x, 1))
     apuestas, usados = [], set()
 
     # Sencillas: el mejor de cada partido (cuota real antes que ≈, y el mejor pagado)
@@ -123,10 +124,8 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
             cand.append((a, k))
     cand.sort(key=lambda x: (not x[1].estimada, x[1].prob * x[1].cuota), reverse=True)
     for a, k in cand[:MAX_SENCILLAS]:
-        ev = k.prob * k.cuota - 1
-        frac = min(0.03, max(0.01, ev / (k.cuota - 1) / 4)) if ev > 0 else 0.01
         apuestas.append({"tipo": "Sencilla", "piernas": [_pierna(a, k)], "cuota": round(k.cuota, 2),
-                         "prob": round(k.prob, 3), "importe": redondo(banca * frac)})
+                         "prob": round(k.prob, 3), "importe": redondo(banca * PORCENTAJE)})
         usados.add(id(a))
 
     # Combinadas con los picks más seguros de partidos distintos (mejor si no están en las sencillas)
@@ -137,13 +136,13 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
             k = max(ks, key=lambda k: (k.prob * k.cuota, k.prob))
             seguros.append((id(a) in usados, -(k.prob * k.cuota), a, k))
     seguros.sort(key=lambda x: (x[0], x[1]))
-    for n, frac, nombre in ((2, 0.015, "Combinada doble"), (3, 0.01, "Combinada triple")):
+    for n, nombre in ((2, "Combinada doble"), (3, "Combinada triple")):
         if len(seguros) >= n:
             piernas = seguros[:n] if n == 2 else (seguros[2:5] if len(seguros) >= 5 else seguros[:3])
             cuota = round(prod(k.cuota for *_, k in piernas), 2)
             apuestas.append({"tipo": nombre, "piernas": [_pierna(a, k) for *_, a, k in piernas],
                              "cuota": cuota, "prob": round(prod(k.prob for *_, k in piernas), 3),
-                             "importe": redondo(banca * frac)})
+                             "importe": redondo(banca * PORCENTAJE)})
 
     # Tope del día
     total, elegidas = 0.0, []

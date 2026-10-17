@@ -10,6 +10,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
 # Canal o chat donde se publica el resumen diario (ej: @mi_canal o -100123456789)
 TELEGRAM_CANAL = os.getenv("TELEGRAM_CANAL", "")
 BANCA_INICIAL = float(os.getenv("BANCA") or 70)  # banca con la que empieza el bot de apuestas (€)
+PORCENTAJE_APUESTA = 0.05  # cada apuesta del bot: 5 % de la banca del momento
 HORA_PUBLICACION = os.getenv("HORA_PUBLICACION", "09:00")  # hora de Madrid
 ZONA_HORARIA = "Europe/Madrid"
 
