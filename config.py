@@ -100,6 +100,8 @@ UMBRAL_VALOR = 0.05     # VALOR: la cuota real paga al menos un 5% más de lo qu
 # saben de lesiones, alineaciones, etc. En esports el modelo coincide mucho con la casa: 0.7.
 PESO_MERCADO = 0.85
 PESO_MERCADO_ESPORTS = 0.7
+BASKET_FACTOR_MARGEN = 1.25  # basket europeo: el modelo se queda corto en las diferencias...
+BASKET_SUMA_TOTAL = 3.0      # ...y unos 3 puntos corto en el total (calibrado con Winamax)
 TEMPORADAS_HISTORICO = 3  # temporadas que se usan para entrenar
 
 # Mercados que casi siempre superan el umbral y pagan muy poco: no se destacan.
