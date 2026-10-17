@@ -942,6 +942,32 @@ $("umbral").textContent = pct(DATOS.umbral);
 $("demo").hidden = !DATOS.demo;
 if (!delDeporte(DATOS.dias[0]).length) { const i = DATOS.dias.findIndex(d => delDeporte(d).length); if (i > 0) est.dia = i; }
 pintar();
+// ---------------------------------------------------------------- marcadores en directo (ESPN, desde el móvil)
+async function enDirecto() {
+  const dia = DATOS.dias.find(d => d.fecha === AHORA.fecha);
+  if (!dia) return;
+  const ligas = new Set(dia.partidos.filter(p => p.fi && p.fi.id && p.fi.slug && !/^b-/.test(p.fi.slug)
+    && empezado(dia, p) && !(p.res && p.res.st === "post")).map(p => p.fi.slug));
+  let cambio = false;
+  for (const slug of ligas) {
+    try {
+      const dep = slug === "nba" ? "basketball" : "soccer";
+      const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${dep}/${slug}/scoreboard?dates=${AHORA.fecha.replace(/-/g, "")}`, { cache: "no-store" });
+      const j = await r.json();
+      for (const e of j.events || []) {
+        const c = e.competitions[0], t = c.status.type, p = dia.partidos.find(x => x.fi && x.fi.id === e.id);
+        if (!p || !["in", "post"].includes(t.state)) continue;
+        const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
+        const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : (c.status.displayClock || "Vivo") };
+        if (JSON.stringify(res) !== JSON.stringify(p.res)) { p.res = res; cambio = true; }
+      }
+    } catch (e) {}
+  }
+  if (cambio && document.activeElement !== $("busca")) pintarLista();
+}
+enDirecto();
+setInterval(enDirecto, 60000);
+
 // Cada minuto: si algún partido ha empezado, se quita de la lista y del Top
 setInterval(() => {
   const antes = DATOS.dias.reduce((s, d) => s + pendientes(d).length, 0);
