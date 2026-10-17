@@ -425,6 +425,12 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rev b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rev small { display: block; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rsep { text-align: center; font: 700 11px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); background: var(--gold-soft); border-radius: 999px; padding: 5px; margin: 6px 0; }
+.todos.endirecto { margin-bottom: 10px; }
+.todos.endirecto .punto { width: 22px; display: grid; place-items: center; }
+.todos.endirecto .punto::before { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--muted); }
+.todos.endirecto.hay .punto::before { background: var(--red); box-shadow: 0 0 0 4px var(--red-soft); animation: latido 1.6s ease-in-out infinite; }
+.todos.endirecto.hay b { color: var(--red); }
+.cnt.vivo-c { background: var(--red-soft); color: var(--red-ink); }
 </style>
 
 <div class="wrap">
@@ -691,6 +697,15 @@ function bloqueLiga(liga, lista) {
     ${lista.map(([p, i]) => filaPartido(p, i)).join("")}</section>`;
 }
 
+// Partidos del deporte elegido que se están jugando ahora mismo (día de hoy)
+function enVivo() {
+  const i = DATOS.dias.findIndex(d => d.fecha === AHORA.fecha);
+  if (i < 0) return [];
+  const antes = est.dia; est.dia = i;
+  const l = DATOS.dias[i].partidos.filter(p => (p.dep || "f") === est.dep && (estado(p) || {}).st === "in");
+  est.dia = antes;
+  return l;
+}
 function pintarLista() {
   guardarNav();
   document.querySelector("header").hidden = ["partido", "ligas", "clasif"].includes(est.vista);  // estas pantallas tienen su propia cabecera
@@ -709,6 +724,8 @@ function pintarLista() {
         <span class="cnt">${porLiga[l].length}</span></button>
         <button class="lfav" data-ligafav="${esc(l)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>`; };
     const favs = ligas.filter(l => est.ligasFav.has(l)), resto = ligas.filter(l => !est.ligasFav.has(l));
+    const nVivo = enVivo().length;
+    h += `<button class="todos endirecto ${nVivo ? "hay" : ""}" data-endirecto="1"><span class="punto"></span><b>En directo</b><span class="cnt vivo-c">${nVivo}</span></button>`;
     h += `<button class="todos" data-vista="todos"><span class="lst">☰</span><b>Todos los partidos</b><span class="cnt rojo">${vis.length}</span></button>`;
     if (favs.length) h += `<h2 class="sec">Competiciones favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
     h += `<h2 class="sec">${favs.length ? "Más competiciones" : "Competiciones"}</h2>` +
@@ -717,6 +734,11 @@ function pintarLista() {
   } else {
     let titulo = "Todos los partidos", sel = ligas;
     if (est.vista === "liga") { titulo = infoLiga(est.liga).nombre; sel = ligas.filter(l => l === est.liga); }
+    if (est.vista === "directo") {
+      titulo = "🔴 En directo";
+      for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => { const e = estado(p); return e && e.st === "in"; });
+      sel = ligas.filter(l => porLiga[l].length);
+    }
     if (est.vista === "favs") {
       titulo = "Favoritos";
       const dia = DATOS.dias[est.dia];
@@ -727,7 +749,7 @@ function pintarLista() {
     h += `<div class="volver"><button data-vista="comps">‹</button><b>${esc(titulo)}</b><span>${sel.reduce((s, l) => s + porLiga[l].length, 0)} partidos</span></div>`;
     if (est.vista === "liga") { cargarIndice(); const li = idDeLiga(est.liga); if (li) h += `<button class="irtabla" data-lid="${esc(li.id)}">Clasificación y jornadas <span>›</span></button>`; }
     h += sel.length ? sel.map(l => bloqueLiga(l, porLiga[l])).join("")
-      : `<div class="vacio">${est.vista === "favs" ? "Toca la ☆ de un partido para tenerlo aquí." : "No hay partidos."}</div>`;
+      : `<div class="vacio">${est.vista === "favs" ? "Toca la ☆ de un partido para tenerlo aquí." : est.vista === "directo" ? `Ahora mismo no hay partidos de ${DEPORTES.find(d => d[0] === est.dep)[1].toLowerCase()} en directo.` : "No hay partidos."}</div>`;
   }
   $("vista").innerHTML = h;
 }
@@ -1274,6 +1296,8 @@ document.addEventListener("click", e => {
   if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "auto"; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
+  if (b.dataset.endirecto) { const i = DATOS.dias.findIndex(d => d.fecha === AHORA.fecha); if (i >= 0) est.dia = i;
+    est.vista = "directo"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
   if (b.dataset.refrescar) { const r = est.vista === "partido" && DATOS.dias[est.dia].partidos[est.sel];
     if (r && r.fi && RESUMEN[r.fi.id]) RESUMEN[r.fi.id].t = 0;  // el resumen se vuelve a pedir ya
     enDirecto(); comprobar(true); pintarLista(); return; }
