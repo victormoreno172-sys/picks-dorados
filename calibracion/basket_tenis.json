@@ -6,7 +6,7 @@
   "liga": "WTA · BNB Ningbo Open · dura",
   "local": "Polina Kudermetova",
   "visitante": "Anastasia Zakharova",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    1.34,
    1.16
@@ -34,7 +34,7 @@
   "liga": "WTA · BNB Ningbo Open · dura",
   "local": "Yulia Putintseva",
   "visitante": "Alycia Parks",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    1.57,
    0.9
@@ -62,32 +62,24 @@
   "liga": "ATP · Almaty Open · dura",
   "local": "Rei Sakamoto",
   "visitante": "Gabriel Diallo",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
-   2.61,
-   1.37
+   1.61,
+   0.84
   ],
   "prob_app": {
-   "Gana Rei Sakamoto": 0.7749,
-   "Gana Gabriel Diallo": 0.2251,
-   "Rei Sakamoto -1.5 sets": 0.5746,
-   "Gabriel Diallo +1.5 sets": 0.4254,
-   "Gabriel Diallo -1.5 sets": 0.1203,
-   "Rei Sakamoto +1.5 sets": 0.8797,
-   "Rei Sakamoto -2.5 sets": 0.283,
-   "Gabriel Diallo +2.5 sets": 0.717,
-   "Gabriel Diallo -2.5 sets": 0.0405,
-   "Rei Sakamoto +2.5 sets": 0.9595,
-   "Más de 3.5 sets": 0.6765,
-   "Menos de 3.5 sets": 0.3235,
-   "Más de 4.5 sets": 0.3051,
-   "Menos de 4.5 sets": 0.6949,
-   "Resultado Rei Sakamoto 3-1 Gabriel Diallo": 0.2916,
-   "Resultado Rei Sakamoto 3-0 Gabriel Diallo": 0.283,
-   "Resultado Rei Sakamoto 3-2 Gabriel Diallo": 0.2003,
-   "Resultado Rei Sakamoto 2-3 Gabriel Diallo": 0.1048,
-   "Resultado Rei Sakamoto 1-3 Gabriel Diallo": 0.0798,
-   "Resultado Rei Sakamoto 0-3 Gabriel Diallo": 0.0405
+   "Gana Rei Sakamoto": 0.7271,
+   "Gana Gabriel Diallo": 0.2729,
+   "Rei Sakamoto -1.5 sets": 0.4311,
+   "Gabriel Diallo +1.5 sets": 0.5689,
+   "Gabriel Diallo -1.5 sets": 0.118,
+   "Rei Sakamoto +1.5 sets": 0.882,
+   "Más de 2.5 sets": 0.451,
+   "Menos de 2.5 sets": 0.549,
+   "Resultado Rei Sakamoto 2-0 Gabriel Diallo": 0.4311,
+   "Resultado Rei Sakamoto 2-1 Gabriel Diallo": 0.2961,
+   "Resultado Rei Sakamoto 1-2 Gabriel Diallo": 0.1549,
+   "Resultado Rei Sakamoto 0-2 Gabriel Diallo": 0.118
   },
   "winamax": {}
  },
@@ -98,32 +90,24 @@
   "liga": "ATP · Rolex Shanghai Masters · dura",
   "local": "Rafael Jodar",
   "visitante": "Alejandro Davidovich Fokina",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
-   2.18,
-   1.94
+   1.32,
+   1.18
   ],
   "prob_app": {
-   "Gana Rafael Jodar": 0.5537,
-   "Gana Alejandro Davidovich Fokina": 0.4463,
-   "Rafael Jodar -1.5 sets": 0.3568,
-   "Alejandro Davidovich Fokina +1.5 sets": 0.6432,
-   "Alejandro Davidovich Fokina -1.5 sets": 0.2707,
-   "Rafael Jodar +1.5 sets": 0.7293,
-   "Rafael Jodar -2.5 sets": 0.1478,
-   "Alejandro Davidovich Fokina +2.5 sets": 0.8522,
-   "Alejandro Davidovich Fokina -2.5 sets": 0.1047,
-   "Rafael Jodar +2.5 sets": 0.8953,
-   "Más de 3.5 sets": 0.7475,
-   "Menos de 3.5 sets": 0.2525,
-   "Más de 4.5 sets": 0.3725,
-   "Menos de 4.5 sets": 0.6275,
-   "Resultado Rafael Jodar 3-1 Alejandro Davidovich Fokina": 0.209,
-   "Resultado Rafael Jodar 3-2 Alejandro Davidovich Fokina": 0.197,
-   "Resultado Rafael Jodar 2-3 Alejandro Davidovich Fokina": 0.1756,
-   "Resultado Rafael Jodar 1-3 Alejandro Davidovich Fokina": 0.166,
-   "Resultado Rafael Jodar 3-0 Alejandro Davidovich Fokina": 0.1478,
-   "Resultado Rafael Jodar 0-3 Alejandro Davidovich Fokina": 0.1047
+   "Gana Rafael Jodar": 0.543,
+   "Gana Alejandro Davidovich Fokina": 0.457,
+   "Rafael Jodar -1.5 sets": 0.2795,
+   "Alejandro Davidovich Fokina +1.5 sets": 0.7205,
+   "Alejandro Davidovich Fokina -1.5 sets": 0.2221,
+   "Rafael Jodar +1.5 sets": 0.7779,
+   "Más de 2.5 sets": 0.4984,
+   "Menos de 2.5 sets": 0.5016,
+   "Resultado Rafael Jodar 2-0 Alejandro Davidovich Fokina": 0.2795,
+   "Resultado Rafael Jodar 2-1 Alejandro Davidovich Fokina": 0.2635,
+   "Resultado Rafael Jodar 1-2 Alejandro Davidovich Fokina": 0.2349,
+   "Resultado Rafael Jodar 0-2 Alejandro Davidovich Fokina": 0.2221
   },
   "winamax": {}
  },
@@ -134,7 +118,7 @@
   "liga": "Liga ACB",
   "local": "Basket Zaragoza",
   "visitante": "Força Lleida CE",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    91.21,
    86.73
@@ -172,7 +156,7 @@
   "liga": "Greek Basket League",
   "local": "Panathinaikos BC",
   "visitante": "Peristeri BC",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    87.58,
    73.54
@@ -210,7 +194,7 @@
   "liga": "Lega Basket",
   "local": "Napoli Basket",
   "visitante": "Olimpia Milano",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    86.78,
    85.45
@@ -248,7 +232,7 @@
   "liga": "Liga ACB",
   "local": "Real Madrid Baloncesto",
   "visitante": "Bilbao Basket",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    95.08,
    83.46
@@ -286,7 +270,7 @@
   "liga": "Liga ACB",
   "local": "Valencia Basket",
   "visitante": "CB Murcia",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    95.52,
    87.16
@@ -324,7 +308,7 @@
   "liga": "Liga ACB",
   "local": "Joventut Badalona",
   "visitante": "FC Barcelona Basquet",
-  "generado": "17/10 16:23",
+  "generado": "17/10 16:24",
   "esperado": [
    85.67,
    85.15
