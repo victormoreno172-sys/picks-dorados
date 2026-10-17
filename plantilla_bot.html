@@ -85,9 +85,28 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
 .disp span { font-size: 13px; color: var(--muted); }
 .disp b { font: 700 22px var(--mono); color: var(--ink); text-align: right; }
 .disp small { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+
+.pest { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 12px; padding: 4px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+.pest button { border: 0; background: none; color: var(--muted); font: 700 14px var(--display); letter-spacing: .08em; text-transform: uppercase; padding: 9px; border-radius: 10px; cursor: pointer; }
+.pest button[aria-pressed="true"] { background: rgba(57, 245, 160, .14); color: var(--ok); box-shadow: inset 0 0 0 1px rgba(57, 245, 160, .35); }
+.csv { border: 1px solid rgba(57, 245, 160, .4); background: rgba(57, 245, 160, .08); color: var(--ok); border-radius: 999px; padding: 4px 10px; font: 600 11px var(--body); cursor: pointer; letter-spacing: 0; text-transform: none; }
+.tscroll { overflow-x: auto; margin: 0 -14px; padding: 0 14px; }
+.excel { border-collapse: collapse; font: 500 12px var(--mono); white-space: nowrap; min-width: 100%; }
+.excel th { position: sticky; top: 0; background: #0b1018; color: var(--muted); font-weight: 600; text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.excel td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.excel th:first-child, .excel td:first-child { position: sticky; left: 0; background: #0b1018; text-align: left; z-index: 1; }
+.excel tbody tr:nth-child(even) td { background: rgba(255, 255, 255, .02); }
+.excel tfoot td { font-weight: 700; color: var(--ink); border-top: 2px solid var(--line); border-bottom: 0; }
 </style>
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
+  <nav class="pest" id="pest"><button data-p="resumen" aria-pressed="true">Resumen</button><button data-p="diario" aria-pressed="false">Diario</button></nav>
+  <div id="vDiario" hidden>
+    <section class="caja"><h2>Resumen por días <small id="ndias"></small></h2><div class="kpis" id="kdiario"></div></section>
+    <section class="caja"><h2>Tabla diaria <button class="csv" id="csv">⬇ Excel (CSV)</button></h2><div class="tscroll" id="tdiaria"></div>
+      <p class="nota">Saldo = dinero en Winamax. Apostado = lo que metiste ese día. Cobrado = lo que te devolvieron las acertadas de ese día. ROI = ganancia ÷ apostado. Los días con apuestas sin resolver salen marcados con ⏳.</p></section>
+  </div>
+  <div id="vResumen">
   <section class="caja hero" aria-label="Banca">
     <div style="font:500 12px var(--mono);color:var(--muted)">SALDO AHORA EN WINAMAX</div>
     <div class="num" id="saldo"></div>
@@ -100,6 +119,7 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
   <section class="caja"><h2>Por deporte y cuota</h2><div id="otros"></div></section>
   <section class="caja"><h2>Apuestas <small id="nap"></small></h2><div id="lista"></div>
     <p class="nota">El saldo supone que cada apuesta se hizo con el importe y la cuota que dijo el bot (en las de "pide ≥ X", con esa cuota mínima). Juega con responsabilidad. +18.</p></section>
+  </div>
 </div>
 <script>
 const D = __DATOS__;
@@ -237,4 +257,73 @@ document.addEventListener("click", e => {
   try { localStorage.setItem("ajustesBot", JSON.stringify(OV)); } catch (err) {}
   location.reload();
 });
+
+// ---------------------------------------------------------------- pestaña Diario (tipo Excel)
+const cobro = a => a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0;
+const filasDiario = (() => {
+  const dias = [...new Set(ap.map(a => a.fecha))].sort();
+  let saldoIni = D.inicial, acum = 0;
+  return dias.map(d => {
+    const l = ap.filter(a => a.fecha === d), cer = l.filter(cerrada), pend = l.filter(a => !("ok" in a));
+    const apostado = l.reduce((s, a) => s + a.importe, 0), cobrado = l.reduce((s, a) => s + cobro(a), 0);
+    const ganancia = cer.reduce((s, a) => s + gan(a), 0), apCer = cer.reduce((s, a) => s + a.importe, 0);
+    const saldoFin = saldoIni - apostado + cobrado;
+    acum += ganancia;
+    const ganadas = cer.filter(a => a.ok);
+    const f = {
+      d, saldoIni, apostado, cobrado, ganancia, roi: apCer ? ganancia / apCer : null, saldoFin, n: l.length, ok: ganadas.length, cer: cer.length,
+      pend: pend.length, acumPct: acum / D.inicial, mejor: ganadas.length ? Math.max(...ganadas.map(a => a.cuota)) : null,
+      sencillas: l.filter(a => a.tipo === "Sencilla").length, combis: l.filter(a => a.tipo !== "Sencilla").length,
+    };
+    saldoIni = saldoFin;
+    return f;
+  });
+})();
+const fechaC = d => d.slice(8, 10) + "/" + d.slice(5, 7);
+const num2 = x => x.toFixed(2).replace(".", ",");
+function pintarDiario() {
+  const F = filasDiario, cerrados = F.filter(f => f.cer);
+  $("ndias").textContent = `${F.length} día${F.length === 1 ? "" : "s"}`;
+  const pos = cerrados.filter(f => f.ganancia > 0).length;
+  const mejor = cerrados.reduce((m, f) => !m || f.ganancia > m.ganancia ? f : m, null);
+  const peor = cerrados.reduce((m, f) => !m || f.ganancia < m.ganancia ? f : m, null);
+  const media = cerrados.length ? cerrados.reduce((s, f) => s + f.ganancia, 0) / cerrados.length : 0;
+  $("kdiario").innerHTML = [
+    [cerrados.length ? `${pos}/${cerrados.length}` : "—", "días en positivo"],
+    [cerrados.length ? sig(media) : "—", "ganancia media al día"],
+    [R.n ? pct(R.roi) : "—", "ROI total"],
+    [mejor ? sig(mejor.ganancia) : "—", mejor ? "mejor día (" + fechaC(mejor.d) + ")" : "mejor día"],
+    [peor ? sig(peor.ganancia) : "—", peor ? "peor día (" + fechaC(peor.d) + ")" : "peor día"],
+    [F.length ? eur(F[F.length - 1].saldoFin) : eur(D.inicial), "saldo actual"],
+  ].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("");
+  if (!F.length) { $("tdiaria").innerHTML = '<p class="vacio">Todavía no hay días con apuestas.</p>'; return; }
+  const cab = ["Día", "Saldo inicio", "Apostado", "Cobrado", "Ganancia", "ROI día", "Saldo fin", "Acertadas", "Apuestas", "Mejor cuota", "Acumulado"];
+  const tot = F.reduce((t, f) => ({ apostado: t.apostado + f.apostado, cobrado: t.cobrado + f.cobrado, ganancia: t.ganancia + f.ganancia, ok: t.ok + f.ok, cer: t.cer + f.cer, n: t.n + f.n }),
+    { apostado: 0, cobrado: 0, ganancia: 0, ok: 0, cer: 0, n: 0 });
+  const cls = x => x > 0 ? "pos" : x < 0 ? "neg" : "";
+  $("tdiaria").innerHTML = `<table class="excel"><thead><tr>${cab.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
+    F.slice().reverse().map(f => `<tr><td>${fechaC(f.d)}${f.pend ? " ⏳" : ""}</td><td>${num2(f.saldoIni)}</td><td>${num2(f.apostado)}</td><td>${num2(f.cobrado)}</td>
+      <td class="${cls(f.ganancia)}">${f.cer ? sig(f.ganancia).replace(" €", "") : "—"}</td><td class="${cls(f.roi || 0)}">${f.roi === null ? "—" : pct(f.roi)}</td>
+      <td><b>${num2(f.saldoFin)}</b></td><td>${f.cer ? f.ok + "/" + f.cer : "—"}</td><td>${f.sencillas}S + ${f.combis}C</td><td>${f.mejor ? num2(f.mejor) : "—"}</td>
+      <td class="${cls(f.acumPct)}">${pct(f.acumPct)}</td></tr>`).join("") +
+    `</tbody><tfoot><tr><td>Total</td><td>${num2(D.inicial)}</td><td>${num2(tot.apostado)}</td><td>${num2(tot.cobrado)}</td><td class="${cls(tot.ganancia)}">${sig(tot.ganancia).replace(" €", "")}</td>
+      <td>${tot.cer ? pct(R.roi) : "—"}</td><td><b>${num2(F[F.length - 1].saldoFin)}</b></td><td>${tot.cer ? tot.ok + "/" + tot.cer : "—"}</td><td>${tot.n}</td><td></td><td></td></tr></tfoot></table>`;
+}
+pintarDiario();
+$("csv").addEventListener("click", () => {
+  const filas = [["Dia", "Saldo inicio", "Apostado", "Cobrado", "Ganancia", "ROI dia %", "Saldo fin", "Acertadas", "Resueltas", "Apuestas", "Mejor cuota acertada", "Acumulado %"]]
+    .concat(filasDiario.map(f => [f.d, f.saldoIni, f.apostado, f.cobrado, f.ganancia, f.roi === null ? "" : f.roi * 100, f.saldoFin, f.ok, f.cer, f.n, f.mejor || "", f.acumPct * 100]
+      .map(x => typeof x === "number" ? x.toFixed(2).replace(".", ",") : x)));
+  const csv = "\ufeff" + filas.map(r => r.join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "bot-dorado-diario.csv"; a.click();
+});
+document.getElementById("pest").addEventListener("click", e => {
+  const b = e.target.closest("button[data-p]"); if (!b) return;
+  for (const x of document.querySelectorAll("#pest button")) x.setAttribute("aria-pressed", String(x === b));
+  $("vResumen").hidden = b.dataset.p !== "resumen"; $("vDiario").hidden = b.dataset.p !== "diario";
+  try { localStorage.setItem("pestBot", b.dataset.p); } catch (err) {}
+});
+try { const p = localStorage.getItem("pestBot"); if (p) document.querySelector(`#pest [data-p="${p}"]`).click(); } catch (err) {}
 </script>
