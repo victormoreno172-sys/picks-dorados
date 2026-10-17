@@ -80,6 +80,11 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
 .acc button { border: 1px solid var(--line); background: rgba(255, 255, 255, .04); color: var(--ink); border-radius: 999px; padding: 5px 10px; font: 600 12px var(--body); cursor: pointer; }
 .ap.x .acc { opacity: 1; }
 .nota2 { font-size: 12px; color: var(--muted); }
+
+.disp { margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 204, 77, .25); background: rgba(255, 204, 77, .06); display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; }
+.disp span { font-size: 13px; color: var(--muted); }
+.disp b { font: 700 22px var(--mono); color: var(--ink); text-align: right; }
+.disp small { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
 </style>
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
@@ -87,6 +92,7 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
     <div style="font:500 12px var(--mono);color:var(--muted)">BANCA</div>
     <div class="num" id="saldo"></div>
     <div class="sub" id="variacion"></div>
+    <div class="disp" id="disponible"></div>
     <div class="kpis" id="kpis"></div>
   </section>
   <section class="caja"><h2>Evolución <small id="rango"></small></h2><div id="grafica"></div></section>
@@ -137,6 +143,7 @@ const enJuego = ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
 $("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Probabilidades</a>';
 $("saldo").textContent = eur(saldo);
 $("variacion").innerHTML = `<span class="${saldo >= D.inicial ? "pos" : "neg"}">${sig(saldo - D.inicial)} (${pct(saldo / D.inicial - 1)})</span> <span style="color:var(--muted)">desde ${eur(D.inicial)}</span>`;
+$("disponible").innerHTML = `<span>💳 Saldo en tu cuenta ahora</span><b>${eur(saldo - enJuego)}</b><small>${enJuego > 0 ? `${eur(enJuego)} en apuestas sin resolver · si las aciertas todas: ${eur(saldo - enJuego + ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe * a.cuota, 0))}` : "No tienes apuestas en juego"}</small>`;
 
 function resumen(lista) {
   const c = lista.filter(cerrada), apost = c.reduce((s, a) => s + a.importe, 0), b = c.reduce((s, a) => s + gan(a), 0);
