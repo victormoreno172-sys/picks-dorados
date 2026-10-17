@@ -764,9 +764,22 @@ function lineas(eq) {
   for (const n of cuentas) { out.push(resto.slice(k, k + n).sort((a, b) => a.l - b.l)); k += n; }
   return out;
 }
+// Colores de camiseta: el del club; si el visitante se parece al local, su color alternativo
+const rgb = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+const distCol = (a, b) => { const x = rgb(a), y = rgb(b); return x && y ? Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) : 999; };
+const tintaSobre = h => { const c = rgb(h); if (!c) return "#fff"; return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) > 160 ? "#0b1220" : "#fff"; };
+function coloresCamiseta(fi) {
+  const c = (fi && fi.col) || [];
+  const norm = x => x && /^#?[0-9a-f]{6}$/i.test(x) ? "#" + x.replace("#", "") : null;
+  let l = norm((c[0] || [])[0]) || norm((c[0] || [])[1]), v = norm((c[1] || [])[0]) || norm((c[1] || [])[1]);
+  if (!l) l = "#ffb703";
+  if (!v || distCol(l, v) < 90) { const alt = norm((c[1] || [])[1]); v = alt && distCol(l, alt) >= 90 ? alt : (tintaSobre(l) === "#fff" ? "#f8fafc" : "#0b1220"); }
+  return [l, v];
+}
 function campoAlineaciones(al, p) {
   const L = al.l && lineas(al.l), V = al.v && lineas(al.v);
   if (!L && !V) return `<div class="alin">${["l", "v"].map(k => al[k] ? `<div class="alcol"><h4>${esc(k === "l" ? p.local : p.visitante)}</h4>${al[k].tit.map(j => `<div class="jug"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${esc(j[2])}</span></div>`).join("")}</div>` : "").join("")}</div>`;
+  const cols = coloresCamiseta(p.fi);
   // Local arriba (portería arriba, ataca hacia abajo); visitante abajo. y en % del alto del campo
   const fichas = (lin, arriba, cls) => {
     if (!lin) return "";
@@ -777,7 +790,8 @@ function campoAlineaciones(al, p) {
       return fila.map((x, k) => {
         let xx = (k + 1) / (fila.length + 1) * 100;
         if (arriba) xx = 100 - xx;  // el local mira hacia abajo: su izquierda queda a la derecha
-        return `<div class="pj ${cls}" style="left:${xx.toFixed(1)}%;top:${y.toFixed(1)}%"><span class="pc">${esc(x.j[0] || "")}</span><span class="pn">${esc(apellido(x.j[1]))}</span></div>`;
+        const fondo = cls === "loc" ? cols[0] : cols[1];
+        return `<div class="pj ${cls}" style="left:${xx.toFixed(1)}%;top:${y.toFixed(1)}%"><span class="pc" style="background:${fondo};color:${tintaSobre(fondo)};border-color:${distCol(fondo, "#ffffff") < 60 ? "#94a3b8" : "#fff"}">${esc(x.j[0] || "")}</span><span class="pn">${esc(apellido(x.j[1]))}</span></div>`;
       }).join("");
     }).join("");
   };

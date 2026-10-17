@@ -84,6 +84,7 @@ def _eventos(deporte: str, slug: str, dia: date) -> list[dict]:
             out.append({"id": e["id"], "fecha": dt.date(), "hora": dt.strftime("%H:%M"),
                         "local": eq["home"]["team"]["displayName"], "visitante": eq["away"]["team"]["displayName"],
                         "esc": [eq["home"]["team"].get("logo", ""), eq["away"]["team"].get("logo", "")],
+                        "col": [[eq[k]["team"].get("color") or "", eq[k]["team"].get("alternateColor") or ""] for k in ("home", "away")],
                         "estadio": ", ".join(x for x in (v.get("fullName"), (v.get("address") or {}).get("city")) if x),
                         "estado": _estado(c, eq)})
         except (KeyError, IndexError, ValueError, TypeError):
@@ -184,7 +185,8 @@ def enriquecer(datos_app: dict):
             e = _emparejar(p, fecha, evs)
             if not e:
                 continue
-            fi = {"id": e["id"], "slug": ds[1], "esc": e["esc"], "estadio": e["estadio"], "n": [e["local"], e["visitante"]]}
+            fi = {"id": e["id"], "slug": ds[1], "esc": e["esc"], "estadio": e["estadio"], "n": [e["local"], e["visitante"]],
+                  "col": e.get("col")}
             if e.get("estado"):
                 p["res"] = e["estado"]
             if (fecha - hoy).days < DIAS_CON_DETALLE:
