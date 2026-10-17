@@ -132,6 +132,9 @@ const pct = x => (x >= 0 ? "+" : "−") + Math.abs(x * 100).toFixed(1).replace("
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
 const cerrada = a => a.ok === true || a.ok === false;
+// Apuestas hechas antes de empezar la banca ("previa"): su importe no salió de la banca inicial,
+// así que al saldo le suma todo lo cobrado (y si se pierde, no le resta nada)
+const ganBanca = a => a.previa ? (a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0) : gan(a);
 const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.piernas.every(p => (p.dep || "f") === "f") ? "⚽ Fútbol" : "Mixtas";
 
 // Ajustes a mano (en este móvil): apuesta no hecha, o acertada / fallada
@@ -149,7 +152,7 @@ const ap = D.apuestas.filter(a => !a.excluida);
 // Si has quitado o corregido alguna, los importes de los días aún sin jugar se recalculan
 // (cada apuesta el 5 % de lo que queda tras las anteriores, en el mismo orden)
 if (Object.keys(OV).length) {
-  const cerradas = ap.filter(cerrada).reduce((s, a) => s + gan(a), 0);
+  const cerradas = ap.filter(cerrada).reduce((s, a) => s + ganBanca(a), 0);
   const dias = [...new Set(ap.map(a => a.fecha))].sort();
   for (const d of dias) {
     const del = ap.filter(a => a.fecha === d);
@@ -160,8 +163,8 @@ if (Object.keys(OV).length) {
   }
 }
 const cer = ap.filter(cerrada);
-const saldo = D.inicial + ap.reduce((s, a) => s + gan(a), 0);
-const enJuego = ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
+const saldo = D.inicial + ap.reduce((s, a) => s + ganBanca(a), 0);
+const enJuego = ap.filter(a => !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
 $("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Partidos</a>';
 // Ajuste a mano (solo en este móvil): para que el número grande sea justo lo que pone Winamax
 let AJ = null;
@@ -213,7 +216,7 @@ $("kpis").innerHTML = [
   const dias = [...new Set(cer.map(a => a.fecha))].sort();
   if (!dias.length) { $("grafica").innerHTML = '<p class="vacio">La gráfica aparece cuando se resuelvan las primeras apuestas.</p>'; return; }
   let s = D.inicial; const pts = [{ d: "inicio", s }];
-  for (const d of dias) { s += cer.filter(a => a.fecha === d).reduce((t, a) => t + gan(a), 0); pts.push({ d, s }); }
+  for (const d of dias) { s += cer.filter(a => a.fecha === d).reduce((t, a) => t + ganBanca(a), 0); pts.push({ d, s }); }
   const W = 520, H = 170, pl = 40, pr = 8, pt = 10, pb = 22;
   const vals = pts.map(p => p.s), mn = Math.min(...vals, D.inicial), mx = Math.max(...vals, D.inicial), rg = (mx - mn) || 1;
   const x = i => pl + (W - pl - pr) * (pts.length === 1 ? 0.5 : i / (pts.length - 1));
@@ -293,8 +296,8 @@ const filasDiario = (() => {
   let saldoIni = D.inicial, acum = 0;
   return dias.map(d => {
     const l = ap.filter(a => a.fecha === d), cer = l.filter(cerrada), pend = l.filter(a => !("ok" in a));
-    const apostado = l.reduce((s, a) => s + a.importe, 0), cobrado = l.reduce((s, a) => s + cobro(a), 0);
-    const ganancia = cer.reduce((s, a) => s + gan(a), 0), apCer = cer.reduce((s, a) => s + a.importe, 0);
+    const apostado = l.filter(a => !a.previa).reduce((s, a) => s + a.importe, 0), cobrado = l.reduce((s, a) => s + cobro(a), 0);
+    const ganancia = cer.reduce((s, a) => s + ganBanca(a), 0), apCer = cer.reduce((s, a) => s + a.importe, 0);
     const saldoFin = saldoIni - apostado + cobrado;
     acum += ganancia;
     const ganadas = cer.filter(a => a.ok);

@@ -60,7 +60,9 @@ def _ganancia(a: dict) -> float:
 
 
 def saldo(b: dict) -> float:
-    return round(b["inicial"] + sum(_ganancia(a) for a in b["apuestas"]), 2)
+    # "previa": apuesta hecha antes de empezar la banca; su importe no salió de ella
+    extra = sum(a["importe"] for a in b["apuestas"] if a.get("previa") and "ok" in a)
+    return round(b["inicial"] + sum(_ganancia(a) for a in b["apuestas"]) + extra, 2)
 
 
 def corregir(b: dict):
@@ -255,7 +257,7 @@ def actualizar(por_dia: dict):
     else:
         dia = None
     if dia and (b.get("ultimo_envio") or "") < dia.isoformat():
-        pendiente = sum(a["importe"] for a in b["apuestas"] if "ok" not in a)  # dinero aún en juego
+        pendiente = sum(a["importe"] for a in b["apuestas"] if "ok" not in a and not a.get("previa"))  # dinero aún en juego
         elegidas = elegir(por_dia.get(dia, []), saldo(b) - pendiente, ahora)
         texto = mensaje(elegidas, b, dia)
         print(texto)
