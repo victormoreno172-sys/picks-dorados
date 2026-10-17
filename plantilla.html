@@ -692,6 +692,7 @@ function bloqueLiga(liga, lista) {
 }
 
 function pintarLista() {
+  guardarNav();
   document.querySelector("header").hidden = ["partido", "ligas", "clasif"].includes(est.vista);  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
   if (est.vista === "ligas") return pintarIndiceLigas();
@@ -933,7 +934,8 @@ function pintarFicha() {
   $("vista").innerHTML = `<div class="ficha">
     <div class="fbar"><button class="ico" data-vista="${est.volverA || "comps"}" aria-label="Volver">←</button>
       <span class="fdep">${ICONO_DEP[est.dep]} ${DEPORTES.find(d => d[0] === est.dep)[1]}</span>
-      <button class="ico" data-fav="${est.sel}" aria-pressed="${fav}" aria-label="Favorito">${fav ? "★" : "☆"}</button></div>
+      <span style="display:flex;gap:8px"><button class="ico" data-refrescar="1" aria-label="Actualizar">↻</button>
+      <button class="ico" data-fav="${est.sel}" aria-pressed="${fav}" aria-label="Favorito">${fav ? "★" : "☆"}</button></span></div>
     <button class="fliga" data-liga-ir="${esc(p.liga)}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b>${esc(p.local)}</b></div>
@@ -1272,6 +1274,9 @@ document.addEventListener("click", e => {
   if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "auto"; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
+  if (b.dataset.refrescar) { const r = est.vista === "partido" && DATOS.dias[est.dia].partidos[est.sel];
+    if (r && r.fi && RESUMEN[r.fi.id]) RESUMEN[r.fi.id].t = 0;  // el resumen se vuelve a pedir ya
+    enDirecto(); comprobar(true); pintarLista(); return; }
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
@@ -1381,6 +1386,30 @@ document.addEventListener("click", () => {
   const prof = ((history.state && history.state.prof) || 0) + 1;
   try { history.pushState({ app: true, prof, s: fotoNav() }, ""); } catch (e) {}
 });
+// Si la app se recarga (botón ↻, datos nuevos o deslizar hacia abajo) vuelve a la misma pantalla
+function guardarNav() {
+  if (!window.__navListo) return;  // hasta haber recuperado la pantalla anterior, no se pisa
+  try {
+    const d = DATOS.dias[est.dia], p = d && est.vista === "partido" ? d.partidos[est.sel] : null;
+    sessionStorage.setItem("navApp", JSON.stringify(Object.assign(fotoNav(), { pk: p ? clavePartido(d, p) : null, t: Date.now() })));
+  } catch (e) {}
+}
+(function restaurarNav() {
+  let g = null;
+  try { g = JSON.parse(sessionStorage.getItem("navApp") || "null"); } catch (e) {}
+  window.__navListo = true;
+  if (!g || Date.now() - g.t > 6 * 3600 * 1000) return;
+  for (const k of CAMPOS_NAV) if (k in g && g[k] !== null) est[k] = g[k];
+  if (est.vista === "partido") {
+    let ok = false;
+    DATOS.dias.forEach((d, i) => { const j = d.partidos.findIndex(p => clavePartido(d, p) === g.pk); if (j >= 0 && !ok) { est.dia = i; est.sel = j; ok = true; } });
+    if (!ok) est.vista = g.volverA || "comps";
+  }
+  if (est.dia >= DATOS.dias.length) est.dia = 0;
+  ultimaNav = claveNav();
+  try { history.replaceState({ app: true, prof: 0, s: fotoNav() }, ""); } catch (e) {}
+  pintarDias(); pintarSelector(); pintarLista();
+})();
 window.addEventListener("popstate", e => {
   const st = e.state && e.state.app ? e.state.s : { vista: "comps" };
   for (const k of CAMPOS_NAV) if (k in st) est[k] = st[k];
