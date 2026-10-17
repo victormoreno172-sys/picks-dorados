@@ -319,6 +319,15 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .res { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 7px; font: 700 12px var(--mono); color: #fff; background: var(--muted); }
 .res.rW { background: #16a34a; } .res.rD { background: #94a3b8; } .res.rL { background: var(--red); }
 .fpart .fm { font: 700 13px var(--mono); }
+
+/* ---------- partidos empezados / terminados ---------- */
+.vivo { color: var(--red); font-weight: 700; }
+.fin { color: var(--muted); font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .04em; }
+.fp.empezado.post .eqs b { font-weight: 500; }
+.esp.marc { font: 700 15px/1.25 var(--mono); color: var(--ink); }
+.fp.empezado.in .esp.marc { color: var(--red); }
+@keyframes latido { 50% { opacity: .35; } }
+.vivo { animation: latido 1.6s ease-in-out infinite; }
 </style>
 
 <div class="wrap">
@@ -410,7 +419,7 @@ function ahoraMadrid() {
 let AHORA = ahoraMadrid();
 const empezado = (d, p) => d.fecha < AHORA.fecha || (d.fecha === AHORA.fecha && !!p.hora && p.hora <= AHORA.hora);
 const pendientes = d => d.partidos.filter(p => !empezado(d, p));
-const delDeporte = d => est.dep === "t" ? pendientes(d) : pendientes(d).filter(p => (p.dep || "f") === est.dep);
+const delDeporte = d => est.dep === "t" ? pendientes(d) : d.partidos.filter(p => (p.dep || "f") === est.dep);
 const diasVisibles = () => DATOS.dias.map((d, i) => i).filter(i => i === 0 || delDeporte(DATOS.dias[i]).length);
 
 function pintarDeportes() {
@@ -510,7 +519,7 @@ function partidosVisibles() {
   const dia = DATOS.dias[est.dia];
   const q = quitarAcentos((est.busca || "").trim());
   return dia.partidos.map((p, i) => [p, i])
-    .filter(([p]) => (p.dep || "f") === est.dep && !empezado(dia, p))
+    .filter(([p]) => (p.dep || "f") === est.dep)
     .filter(([p]) => !q || quitarAcentos(`${p.local} ${p.visitante} ${p.liga}`).includes(q));
 }
 
@@ -524,6 +533,30 @@ function detalle(p) {
     : `<div class="marcador">Marcador más probable <b>${esc(p.marcador)}</b> (${pct(p.pm)})</div></div>`);
 }
 
+// Estado del partido: por jugar, en juego o terminado (con el marcador si lo hay)
+function estado(p) {
+  const dia = DATOS.dias[est.dia];
+  if (p.res) return p.res;
+  if (!empezado(dia, p)) return null;
+  const [h, m] = (p.hora || "00:00").split(":").map(Number), [hh, mm] = AHORA.hora.split(":").map(Number);
+  const mins = dia.fecha < AHORA.fecha ? 999 : (hh * 60 + mm) - (h * 60 + m);
+  return { st: mins < 130 ? "in" : "post", m: "", det: mins < 130 ? "Vivo" : "Fin" };
+}
+// ¿Se cumplió el mercado con este marcador? (null si no se sabe)
+function acierta(mercado, m) {
+  const r = /^(\d+)-(\d+)$/.exec(m || ""); if (!r) return null;
+  const a = +r[1], b = +r[2], t = a + b;
+  const tabla = { "Gana local (1)": a > b, "Empate (X)": a === b, "Gana visitante (2)": b > a, "Local o empate (1X)": a >= b,
+    "Visitante o empate (X2)": b >= a, "No hay empate (12)": a !== b, "Ambos marcan: Sí": a > 0 && b > 0, "Ambos marcan: No": !(a > 0 && b > 0),
+    "Local marca": a > 0, "Visitante marca": b > 0, "Gana local": a > b, "Gana visitante": b > a };
+  if (mercado in tabla) return tabla[mercado];
+  let x = /^(Más|Menos) de ([\d.]+) (goles|puntos)$/.exec(mercado);
+  if (x) return x[1] === "Más" ? t > +x[2] : t < +x[2];
+  x = /^Hándicap (local|visitante) ([+-][\d.]+)$/.exec(mercado);
+  if (x) return (x[1] === "local" ? a - b : b - a) + +x[2] > 0;
+  return null;
+}
+
 function filaPartido(p, idx) {
   const id = est.dia + "-" + idx, abierto = est.abiertos.has(id);
   const basket = p.dep === "b";
@@ -534,12 +567,15 @@ function filaPartido(p, idx) {
   const corto = m => m.replace(/^Hándicap local/, "Local").replace(/^Hándicap visitante/, "Visit.").replace(/^Más de /, "Más ")
     .replace(/^Menos de /, "Menos ").replace(/ goles$/, "").replace(/ puntos$/, " pts").replace(/^Resultado /, "")
     .replace(/ \((1X|X2|12|1|X|2)\)$/, " ($1)").replace(/^Ambos marcan: /, "Ambos: ");
-  return `<article class="fp ${abierto ? "abierto" : ""}" id="p-${id}">
+  const es = estado(p), mar = es && /^(\d+)-(\d+)$/.exec(es.m || "");
+  const ok = es && es.st === "post" && mp ? acierta(mp.m, es.m) : null;
+  const hora = !es ? esc(p.hora || "--:--") : es.st === "in" ? `<span class="vivo">● ${esc(es.det)}</span>` : es.st === "susp" ? "Apl." : `<span class="fin">${esc(es.det === "Final" || es.det === "Fin" ? "FIN" : es.det)}</span>`;
+  return `<article class="fp ${abierto ? "abierto" : ""} ${es ? "empezado " + es.st : ""}" id="p-${id}">
     <button class="fpcab" data-abrir="${idx}">
-      <span class="hora">${esc(p.hora || "--:--")}</span>
+      <span class="hora">${hora}</span>
       <span class="eqs"><b>${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
-      <span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>
-      ${mp ? `<span class="pk ${mp.d ? "d" : ""}"><b>${pct(mp.p)}</b><small>${esc(corto(mp.m))}</small></span>` : "<span></span>"}
+      ${mar ? `<span class="esp marc"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>`}
+      ${mp ? `<span class="pk ${mp.d ? "d" : ""}"><b>${ok === true ? "✅ " : ok === false ? "❌ " : ""}${pct(mp.p)}</b><small>${esc(corto(mp.m))}</small></span>` : "<span></span>"}
     </button>
     <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
     ${abierto ? detalle(p) : ""}
@@ -639,7 +675,10 @@ function pintarFicha() {
     <button class="fliga" data-liga-ir="${esc(p.liga)}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b>${esc(p.local)}</b></div>
-      <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]}</small><b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small></div>
+      <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
+        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + es.det : es.det)}</small>`;
+        if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
+        return `<b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small>`; })()}</div>
       <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b>${esc(p.visitante)}</b></div>
     </div>
     ${fi.estadio ? `<div class="festadio">🏟️ ${esc(fi.estadio)}</div>` : ""}
@@ -651,7 +690,7 @@ function pintarSelector() {
   const d = DEPORTES.find(x => x[0] === est.dep);
   $("selector").innerHTML = `<span class="ic">${ICONO_DEP[est.dep]}</span>${d[1]}<span class="tri">▾</span>`;
   $("menudep").innerHTML = DEPORTES.map(([k, n]) => {
-    const total = DATOS.dias.reduce((s, d) => s + pendientes(d).filter(p => (p.dep || "f") === k).length, 0);
+    const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
   }).join("");
   document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "favs" ? "favs" : $("cajabusca").hidden ? "comps" : "buscar")));

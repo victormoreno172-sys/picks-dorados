@@ -66,6 +66,7 @@ datos_app = web.a_json({d: por_dia[d] for d in dias}, hoy)
 # Ficha de cada partido: escudos, estadio, alineaciones, clasificación y forma (ESPN)
 try:
     import ficha
+    ficha.recuperar_empezados(datos_app, "previo.json")
     ficha.enriquecer(datos_app)
 except Exception as e:
     import traceback

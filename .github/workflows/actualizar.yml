@@ -46,6 +46,12 @@ jobs:
             git show FETCH_HEAD:banca.json > historial/banca.json 2>/dev/null || rm -f historial/banca.json
           fi
 
+      - name: Recuperar la versión anterior de la app (para los partidos ya empezados)
+        run: |
+          if git fetch -q --depth 1 origin gh-pages; then
+            git show FETCH_HEAD:datos.json > previo.json 2>/dev/null || rm -f previo.json
+          fi
+
       - name: Calcular predicciones y generar la app
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}

@@ -73,7 +73,9 @@ def _sim(a: str, b: str) -> float:
 
 def _eventos(deporte: str, slug: str, dia: date) -> list[dict]:
     out = []
-    for e in (_get(deporte, slug, "scoreboard", {"dates": f"{dia:%Y%m%d}"}, 3).get("events") or []):
+    hoy = datetime.now(TZ).date()
+    horas = 0.15 if abs((dia - hoy).days) <= 1 else 3  # hoy: marcadores frescos
+    for e in (_get(deporte, slug, "scoreboard", {"dates": f"{dia:%Y%m%d}"}, horas).get("events") or []):
         try:
             c = e["competitions"][0]
             eq = {t["homeAway"]: t for t in c["competitors"]}
@@ -82,10 +84,27 @@ def _eventos(deporte: str, slug: str, dia: date) -> list[dict]:
             out.append({"id": e["id"], "fecha": dt.date(), "hora": dt.strftime("%H:%M"),
                         "local": eq["home"]["team"]["displayName"], "visitante": eq["away"]["team"]["displayName"],
                         "esc": [eq["home"]["team"].get("logo", ""), eq["away"]["team"].get("logo", "")],
-                        "estadio": ", ".join(x for x in (v.get("fullName"), (v.get("address") or {}).get("city")) if x)})
+                        "estadio": ", ".join(x for x in (v.get("fullName"), (v.get("address") or {}).get("city")) if x),
+                        "estado": _estado(c, eq)})
         except (KeyError, IndexError, ValueError, TypeError):
             continue
     return out
+
+
+def _estado(c: dict, eq: dict) -> dict | None:
+    """Marcador y estado de ESPN: None si no ha empezado."""
+    t = ((c.get("status") or {}).get("type") or {})
+    st = t.get("state")
+    if st not in ("in", "post"):
+        return None
+    if t.get("name") in ("STATUS_POSTPONED", "STATUS_CANCELED"):
+        return {"st": "susp", "m": "", "det": "Aplazado"}
+    try:
+        m = f"{int(eq['home']['score'])}-{int(eq['away']['score'])}"
+    except (KeyError, ValueError, TypeError):
+        m = ""
+    det = "Final" if st == "post" else ((c.get("status") or {}).get("displayClock") or t.get("shortDetail") or "En juego")
+    return {"st": st, "m": m, "det": det}
 
 
 def _emparejar(p: dict, fecha: date, eventos: list[dict]) -> dict | None:
@@ -166,6 +185,8 @@ def enriquecer(datos_app: dict):
             if not e:
                 continue
             fi = {"id": e["id"], "slug": ds[1], "esc": e["esc"], "estadio": e["estadio"], "n": [e["local"], e["visitante"]]}
+            if e.get("estado"):
+                p["res"] = e["estado"]
             if (fecha - hoy).days < DIAS_CON_DETALLE:
                 horas = 0.5 if fecha == hoy else 3
                 s = _get(*ds, "summary", {"event": e["id"]}, horas)
@@ -225,7 +246,12 @@ def _otros_deportes(datos_app: dict, tablas: dict):
     n = 0
     for dia in datos_app.get("dias", []):
         for p in dia["partidos"]:
-            if p.get("fi") or p.get("dep") not in ("b", "te", "e"):
+            if p.get("dep") not in ("b", "te", "e"):
+                continue
+            r = _resultado_propio(p, dia["fecha"])
+            if r:
+                p["res"] = r
+            if p.get("fi"):
                 continue
             clave = (dia["fecha"], p["local"], p["visitante"])
             fi = {"n": [p["local"], p["visitante"]]}
@@ -258,3 +284,49 @@ def _otros_deportes(datos_app: dict, tablas: dict):
             p["fi"] = fi
             n += 1
     print(f"  fichas de basket europeo, tenis y esports: {n}")
+
+
+def _resultado_propio(p: dict, fecha: str) -> dict | None:
+    """Resultado de basket europeo, tenis y esports con nuestros propios datos."""
+    import baloncesto, esports, tenis
+    if p["dep"] == "b":
+        for j in baloncesto.JUGADOS:
+            if j.fecha.isoformat() == fecha and j.local == p["local"] and j.visitante == p["visitante"]:
+                return {"st": "post", "m": f"{j.pl}-{j.pv}", "det": "Final"}
+    elif p["dep"] == "te":
+        for h in tenis.HIST:
+            if h.fecha.isoformat() == fecha and {h.n1, h.n2} == {p["local"], p["visitante"]}:
+                a, b = (h.s1, h.s2) if h.n1 == p["local"] else (h.s2, h.s1)
+                return {"st": "post", "m": f"{a}-{b}", "det": "Ret." if h.retirada else "Final"}
+    elif p["dep"] == "e":
+        for x in esports.HIST:
+            if x.fecha.isoformat() == fecha and {x.n1, x.n2} == {p["local"], p["visitante"]}:
+                a, b = (x.m1, x.m2) if x.n1 == p["local"] else (x.m2, x.m1)
+                return {"st": "post", "m": f"{a}-{b}", "det": "Final"}
+    return None
+
+
+def recuperar_empezados(datos_app: dict, ruta_previa: str):
+    """Los partidos de hoy que ya han empezado desaparecen de los cálculos (ya no hay cuotas antes
+    del partido). Se recuperan de la versión anterior de la app, con sus probabilidades, para
+    poder enseñarlos con el resultado."""
+    try:
+        with open(ruta_previa, encoding="utf-8") as f:
+            previo = json.load(f)
+    except (OSError, ValueError):
+        return
+    hoy = datetime.now(TZ).date().isoformat()
+    ayer = (datetime.now(TZ).date() - timedelta(days=1)).isoformat()
+    previos = {d["fecha"]: d for d in previo.get("dias", [])}
+    n = 0
+    for dia in datos_app.get("dias", []):
+        if dia["fecha"] not in (hoy, ayer) or dia["fecha"] not in previos:
+            continue
+        ya = {(p["liga"], p["local"], p["visitante"]) for p in dia["partidos"]}
+        for p in previos[dia["fecha"]]["partidos"]:
+            if (p["liga"], p["local"], p["visitante"]) not in ya:
+                p.pop("res", None)
+                dia["partidos"].append(p)
+                n += 1
+        dia["partidos"].sort(key=lambda p: (p.get("hora") or "99", p["liga"]))
+    print(f"  partidos ya empezados recuperados de la versión anterior: {n}")
