@@ -89,6 +89,8 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
             if not k.cuota or k.prob < PROB_MIN or k.cuota < CUOTA_MIN:
                 continue
             ev = k.prob * k.cuota - 1
+            if ev > 0.25:  # tanta ventaja contra la casa casi siempre es un error de datos
+                continue
             if ev < (VALOR_APROX if k.estimada else VALOR_REAL):
                 continue
             if mejor is None or ev > mejor[0]:
