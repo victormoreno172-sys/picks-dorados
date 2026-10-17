@@ -19,12 +19,16 @@ P={
  {"Local o empate (1X)":1.62,"No hay empate (12)":1.36,"Visitante o empate (X2)":1.30,"Ambos marcan: Sí":2.15,"Ambos marcan: No":1.64,
 "Más de 0.5 goles":1.09,"Menos de 0.5 goles":6.5,"Más de 1.5 goles":1.49,"Menos de 1.5 goles":2.45,"Más de 2.5 goles":2.50,"Menos de 2.5 goles":1.47,"Más de 3.5 goles":4.90,"Menos de 3.5 goles":1.15,
 "Local marca":1.56,"Visitante marca":1.34}),
+"Cincinnati-Columbus":({"Gana local (1)":2.2,"Empate (X)":3.8,"Gana visitante (2)":2.45},
+ {"Local o empate (1X)":1.46,"No hay empate (12)":1.25,"Visitante o empate (X2)":1.58,"Ambos marcan: Sí":1.33,"Ambos marcan: No":3.05,
+"Más de 1.5 goles":1.08,"Menos de 1.5 goles":6.5,"Más de 2.5 goles":1.34,"Menos de 2.5 goles":3.00,"Más de 3.5 goles":1.86,"Menos de 3.5 goles":1.86,"Más de 4.5 goles":2.95,"Menos de 4.5 goles":1.36,
+"Local marca":1.12,"Visitante marca":1.15}),
 "Forest-Arsenal":({"Gana local (1)":5.5,"Empate (X)":3.75,"Gana visitante (2)":1.54,"Más de 2.5 goles":1.92,"Menos de 2.5 goles":1.86},
  {"Local o empate (1X)":2.30,"No hay empate (12)":1.28,"Visitante o empate (X2)":1.15,"Ambos marcan: Sí":1.96,"Ambos marcan: No":1.82,
 "Más de 0.5 goles":1.06,"Menos de 0.5 goles":9.5,"Más de 1.5 goles":1.30,"Menos de 1.5 goles":3.55,"Más de 3.5 goles":3.25,"Menos de 3.5 goles":1.34,
 "Local marca":1.66,"Visitante marca":1.14}),
 }
-TOT={'Racing-Independiente':2.245,'Belgrano-River':1.869,'Leeds-United':2.728,'Forest-Arsenal':2.269,'RM-Sevilla':3.37}
+TOT={'Cincinnati-Columbus':3.692,'Racing-Independiente':2.245,'Belgrano-River':1.869,'Leeds-United':2.728,'Forest-Arsenal':2.269,'RM-Sevilla':3.37}
 def run(rho=0.0, verbose=True):
     errs=[]
     for n,(c,w) in P.items():
