@@ -411,6 +411,20 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .pj.loc .pc { background: var(--grad); color: #1a1200; }
 .pj.vis .pc { background: #0b1220; color: #fff; }
 .pj .pn { max-width: 70px; font: 600 10.5px/1.1 var(--body); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.7); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- resumen del partido ---------- */
+.resumen { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--sombra); padding: 8px 10px; }
+.rev { display: grid; grid-template-columns: 1fr 44px 1fr; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.rev:first-child { border-top: 0; }
+.rev .rmin { grid-column: 2; grid-row: 1; text-align: center; font: 700 12px var(--mono); color: var(--muted); }
+.rev .rtx { display: flex; align-items: center; gap: 7px; min-width: 0; grid-row: 1; }
+.rev.l .rtx, .rev.c .rtx { grid-column: 1; flex-direction: row-reverse; text-align: right; }
+.rev.v .rtx { grid-column: 3; }
+.rev .rico { font-size: 16px; flex: none; }
+.rev .rtx span:last-child { min-width: 0; }
+.rev b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rev small { display: block; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsep { text-align: center; font: 700 11px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); background: var(--gold-soft); border-radius: 999px; padding: 5px; margin: 6px 0; }
 </style>
 
 <div class="wrap">
@@ -808,6 +822,79 @@ function suplentes(al, p) {
   const h = col("l", p.local) + col("v", p.visitante);
   return h ? `<h2 class="sec">Suplentes</h2><div class="alin">${h}</div>` : "";
 }
+
+// ---------------------------------------------------------------- resumen del partido (en directo)
+// El móvil pide a ESPN los eventos del partido: goles, tarjetas, cambios y lesiones
+const RESUMEN = {};
+function cargarResumen(fi) {
+  const k = fi.id, r = RESUMEN[k];
+  if (r && (r.cargando || Date.now() - r.t < 55000)) return;
+  RESUMEN[k] = Object.assign(r || {}, { cargando: true });
+  fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${fi.slug}/summary?event=${fi.id}`, { cache: "no-store" })
+    .then(x => x.json()).then(j => { RESUMEN[k] = { t: Date.now(), ev: eventosResumen(j) }; })
+    .catch(() => { RESUMEN[k] = { t: Date.now(), error: true, ev: (r && r.ev) || null }; })
+    .finally(() => { if (est.vista === "partido" && est.tab === "resumen") pintarLista(); });
+}
+function eventosResumen(j) {
+  const comp = ((j.header || {}).competitions || [])[0] || {};
+  const cs = comp.competitors || [], home = cs.find(c => c.homeAway === "home") || {}, away = cs.find(c => c.homeAway === "away") || {};
+  const idL = (home.team || {}).id, nomL = (home.team || {}).displayName || "", nomV = (away.team || {}).displayName || "";
+  const out = []; let gl = 0, gv = 0;
+  for (const e of j.keyEvents || []) {
+    const tipo = ((e.type || {}).text || "").toLowerCase(), txt = e.text || "", min = (e.clock || {}).displayValue || "";
+    const lado = e.team ? ((e.team.id === idL) ? "l" : "v") : "c";
+    const nom = (e.participants || []).map(x => (x.athlete || {}).displayName).filter(Boolean);
+    let ico = "", t = "", sub = "";
+    if (/own goal/.test(tipo)) { ico = "⚽"; t = nom[0] || ""; sub = "en propia puerta"; }
+    else if (/penalty/.test(tipo) && /(missed|saved)/.test(tipo)) { ico = "❌"; t = nom[0] || ""; sub = "penalti fallado"; }
+    else if (/penalty/.test(tipo) && /(scored|goal)/.test(tipo)) { ico = "⚽"; t = nom[0] || ""; sub = "de penalti"; }
+    else if (/goal/.test(tipo) || e.scoringPlay) { ico = "⚽"; t = nom[0] || ""; if (nom[1]) sub = "asist. " + nom[1]; }
+    else if (/(second yellow|yellow.*red)/.test(tipo)) { ico = "🟨🟥"; t = nom[0] || ""; sub = "segunda amarilla"; }
+    else if (/yellow/.test(tipo)) { ico = "🟨"; t = nom[0] || ""; }
+    else if (/red/.test(tipo)) { ico = "🟥"; t = nom[0] || ""; sub = "roja directa"; }
+    else if (/substitution/.test(tipo)) {
+      const m = /\.\s*(.+?) replaces (.+?)(?: because of an injury)?\.?$/i.exec(txt);
+      ico = /injury/i.test(txt) ? "🚑" : "🔄";
+      t = m ? m[1] : nom[0] || ""; sub = (/injury/i.test(txt) ? "sale lesionado " : "sale ") + (m ? m[2] : nom[1] || "");
+      out.push({ min, lado, ico, t, sub, cambio: true }); continue;
+    }
+    else if (/half.?time/.test(tipo)) { out.push({ sep: `Descanso · ${gl}-${gv}` }); continue; }
+    else if (/(full.?time|end regular|match ends|end of)/.test(tipo)) { out.push({ sep: `Final · ${gl}-${gv}` }); continue; }
+    else if (/var/.test(tipo)) { ico = "📺"; t = "Revisión del VAR"; sub = txt.replace(/^VAR Decision:\s*/i, ""); }
+    else continue;
+    if (ico === "⚽") { if ((lado === "l") !== /propia/.test(sub)) gl++; else gv++; sub = (sub ? sub + " · " : "") + `${gl}-${gv}`; }
+    out.push({ min, lado, ico, t, sub });
+  }
+  // Lesiones que no acaban en cambio (vienen en la narración)
+  for (const c of j.commentary || []) {
+    const m = /injury\s+(.+?)\s+\((.+?)\)/i.exec(c.text || "");
+    if (!m || !/delay/i.test(c.text)) continue;
+    const min = (c.time || {}).displayValue || "";
+    if (out.some(x => x.ico === "🚑" && x.min === min)) continue;
+    out.push({ min, lado: m[2] === nomL ? "l" : m[2] === nomV ? "v" : "c", ico: "🚑", t: m[1], sub: "lesión" });
+  }
+  const n = x => { const r = /(\d+)(?:'\+(\d+))?/.exec(x.min || ""); return r ? +r[1] + (r[2] ? +r[2] / 100 : 0) : 999; };
+  const seps = out.filter(x => x.sep), evs = out.filter(x => !x.sep).sort((a, b) => n(a) - n(b));
+  const res = [];
+  for (const e of evs) {
+    if (seps.length && /^Descanso/.test(seps[0].sep) && n(e) > 45.99 && !res.some(x => x.sep)) res.push(seps.shift());
+    res.push(e);
+  }
+  return res.concat(seps);
+}
+function pintarResumen(p) {
+  const fi = p.fi || {};
+  if (!fi.id || !fi.slug || /^b-|^nba$/.test(fi.slug)) return `<div class="vacio">No hay resumen para este partido.</div>`;
+  const es = estado(p);
+  if (!es) return `<div class="vacio">El resumen aparece cuando empiece el partido: goles, tarjetas, cambios y lesiones al momento.</div>`;
+  cargarResumen(fi);
+  const r = RESUMEN[fi.id];
+  if (!r || !r.ev) return `<div class="vacio">${r && r.error ? "No se pudo cargar el resumen. Vuelve a intentarlo en un momento." : "Cargando resumen…"}</div>`;
+  if (!r.ev.length) return `<div class="vacio">De momento no ha pasado nada destacable.</div>`;
+  return `<div class="resumen">` + r.ev.map(e => e.sep ? `<div class="rsep">${esc(e.sep)}</div>` :
+    `<div class="rev ${e.lado}"><span class="rmin">${esc(e.min)}</span><div class="rtx"><span class="rico">${e.ico}</span><span><b>${esc(e.t)}</b>${e.sub ? `<small>${esc(e.sub)}</small>` : ""}</span></div></div>`).join("") +
+    `<p class="nota" style="text-align:center">Se actualiza solo cada minuto${es.st === "post" ? "" : " mientras se juega"}.</p></div>`;
+}
 function pintarFicha() {
   const dia = DATOS.dias[est.dia], p = dia.partidos[est.sel];
   if (!p) { est.vista = "comps"; return pintarLista(); }
@@ -816,12 +903,17 @@ function pintarFicha() {
   const fav = est.favs.has(clavePartido(dia, p));
   const basket = p.dep === "b", num = x => basket ? Math.round(x) : (+x).toFixed(1);
   const tabs = [["prob", "Probabilidades"]];
+  const empezo = !!estado(p), conResumen = p.dep === "f" && fi.id && fi.slug && !/^b-/.test(fi.slug);
+  if (conResumen && empezo) tabs.unshift(["resumen", "Resumen"]);
   if (p.dep === "f" || fi.alin) tabs.push(["alin", "Alineaciones"]);
   if (fi.slug && DATOS.tablas && DATOS.tablas[fi.slug]) tabs.push(["tabla", "Clasificación"]);
   if (fi.forma) tabs.push(["forma", p.dep === "te" ? "Últimos partidos" : "Últimos partidos"]);
+  if (est.tab === "auto") est.tab = tabs[0][0];
   if (!tabs.some(t => t[0] === est.tab)) est.tab = "prob";
   let cont = "";
-  if (est.tab === "prob") {
+  if (est.tab === "resumen") {
+    cont = pintarResumen(p);
+  } else if (est.tab === "prob") {
     const total = p.gl + p.gv || 1;
     cont = `<div class="fesp"><div><b>${num(p.gl)}</b><span>${basket ? "puntos" : p.dep === "te" ? "sets" : p.dep === "e" ? "mapas" : "goles"} esperados</span><b>${num(p.gv)}</b></div>
       <div class="xgbar"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div></div>` + detalle(p);
@@ -1178,7 +1270,7 @@ document.addEventListener("click", e => {
   if (b.id === "lupa" || b.dataset.nav === "buscar") { const c = $("cajabusca"); c.hidden = !c.hidden; if (!c.hidden) { $("busca").focus(); } else { est.busca = ""; $("busca").value = ""; } pintarSelector(); pintarLista(); return; }
   if (b.dataset.nav) { est.vista = b.dataset.nav; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
-  if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarLista(); return; }
+  if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "auto"; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
@@ -1323,6 +1415,7 @@ async function enDirecto() {
 }
 enDirecto();
 setInterval(enDirecto, 60000);
+setInterval(() => { if (!document.hidden && est.vista === "partido" && est.tab === "resumen") pintarLista(); }, 60000);
 
 // Cada minuto: si algún partido ha empezado, se quita de la lista y del Top
 setInterval(() => {
