@@ -657,7 +657,30 @@
    "Local marca": 0.7057,
    "Visitante marca": 0.5881
   },
-  "winamax": {},
+  "winamax": {
+   "capturado": "2026-10-17 15:56",
+   "Local o empate (1X)": 1.27,
+   "No hay empate (12)": 1.35,
+   "Visitante o empate (X2)": 1.68,
+   "Ambos marcan: Sí": 1.96,
+   "Ambos marcan: No": 1.76,
+   "Más de 0.5 goles": 1.07,
+   "Menos de 0.5 goles": 7.25,
+   "Más de 1.5 goles": 1.39,
+   "Menos de 1.5 goles": 2.8,
+   "Más de 2.5 goles": 2.25,
+   "Menos de 2.5 goles": 1.58,
+   "Más de 3.5 goles": 4.1,
+   "Menos de 3.5 goles": 1.2,
+   "Local marca": 1.27,
+   "Local no marca": 3.45,
+   "Visitante marca": 1.5,
+   "Visitante no marca": 2.4,
+   "Local más de 1.5": 2.3,
+   "Local menos de 1.5": 1.54,
+   "Visitante más de 1.5": 3.5,
+   "Visitante menos de 1.5": 1.27
+  },
   "prueba_dificil": true
  },
  {

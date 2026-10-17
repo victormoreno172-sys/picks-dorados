@@ -67,10 +67,35 @@ def _quitar_margen(cuotas: dict[str, float], grupo: list[str]) -> dict[str, floa
 
 
 # Calibrado con cuotas reales de Winamax (capturas de Real Madrid - Sevilla y Leeds - Man United,
-# 17/10/2026): la casa no reparte su margen en proporción, sino casi a partes iguales entre las
+# Racing - Independiente y Forest - Arsenal, 17/10/2026): la casa no reparte su margen en proporción, sino casi a partes iguales entre las
 # opciones (el favorito paga casi lo justo y la opción poco probable bastante menos). Y no se queda
 # lo mismo en todos los mercados. Factor = cuánto margen respecto al de más/menos 2.5 goles.
-FACTOR_MARGEN = (("Ambos marcan", 1.6), (" marca", 1.5), ("o empate", 1.0), ("No hay empate", 1.0), ("goles", 0.8))
+FACTOR_MARGEN = (("Ambos marcan", 1.0), (" marca", 1.5))  # "Local marca"/"Visitante marca" (no "Ambos marcan", que va como el resto)
+
+
+# Las casas cuentan con más empates y marcadores cortos (0-0, 1-1) de los que da un Poisson puro:
+# corrección de Dixon-Coles. Con -0.07 las cuotas de goles deducidas solo del 1X2 cuadran con
+# Winamax (Racing - Independiente, sin línea de goles en la API).
+RHO_MERCADO = -0.07
+
+
+def tabla_mercado(lam: float, mu: float, rho: float = RHO_MERCADO):
+    import numpy as np
+    from scipy.stats import poisson
+    g = np.arange(11)
+    m = np.outer(poisson.pmf(g, lam), poisson.pmf(g, mu))
+    m[0, 0] *= 1 - lam * mu * rho
+    m[0, 1] *= 1 + lam * rho
+    m[1, 0] *= 1 + mu * rho
+    m[1, 1] *= 1 - rho
+    return m / m.sum()
+
+
+def cuota_estimada(mercado: str, pm: float, margen: float) -> float:
+    """Cuota que pondría la casa a un mercado de probabilidad pm (sin margen)."""
+    margen = min(0.08, max(0.03, margen))
+    f = next((v for clave, v in FACTOR_MARGEN if clave in mercado), 1.0)
+    return round(max(1.01, 1 / min(0.995, pm + f * margen / 2)), 2)
 
 
 def estimar_cuotas(picks: list["Pick"], prob_mercado: dict[str, float], margen: float):
@@ -81,8 +106,7 @@ def estimar_cuotas(picks: list["Pick"], prob_mercado: dict[str, float], margen: 
         if pk.cuota is None and pk.mercado in prob_mercado:
             pm = prob_mercado[pk.mercado]
             if 0.03 < pm < 0.97:
-                f = next((v for clave, v in FACTOR_MARGEN if clave in pk.mercado), 1.0)
-                pk.cuota = round(max(1.01, 1 / min(0.995, pm + f * margen / 2)), 2)
+                pk.cuota = cuota_estimada(pk.mercado, pm, margen)
                 pk.estimada = True
 
 
@@ -119,7 +143,7 @@ def goles_del_mercado(cuotas: dict[str, float]) -> tuple[float, float, float] | 
 
     def probs(x):
         lam, mu = np.exp(x)
-        m = np.outer(poisson.pmf(g, lam), poisson.pmf(g, mu))
+        m = tabla_mercado(lam, mu)
         i, j = np.indices(m.shape)
         out = [m[i > j].sum(), m[i == j].sum()]
         if ou:
@@ -167,11 +191,7 @@ def analizar(p: PartidoProximo, modelo: ModeloDixonColes) -> Analisis | None:
         # La casa "dice" unos goles esperados: con ellos sale su tabla de marcadores y,
         # de ahí, su opinión sobre TODOS los mercados de goles.
         lm, mm, margen = mercado
-        from scipy.stats import poisson
-        import numpy as np
-        g = np.arange(11)
-        tabla_m = np.outer(poisson.pmf(g, lm), poisson.pmf(g, mm))
-        tabla_m /= tabla_m.sum()
+        tabla_m = tabla_mercado(lm, mm)
         prob_mercado = mercados(tabla_m)
         # Mezcla modelo + mercado en todos los mercados (el mercado sabe de lesiones, rotaciones...)
         tabla = (1 - w) * tabla + w * tabla_m
@@ -179,7 +199,7 @@ def analizar(p: PartidoProximo, modelo: ModeloDixonColes) -> Analisis | None:
         # Cuotas estimadas (≈) para los mercados que la casa no nos ha dado, con su mismo margen
         for m, pm_ in prob_mercado.items():
             if m not in cuotas and 0.02 < pm_ < 0.98:
-                cuotas[m] = round(max(1.01, 1 / (pm_ * (1 + margen))), 2)
+                cuotas[m] = cuota_estimada(m, pm_, margen)
                 estimadas.add(m)
         lam, mu = (1 - w) * lam + w * lm, (1 - w) * mu + w * mm
     else:

@@ -11,6 +11,10 @@ P={
  {"Local o empate (1X)":1.44,"No hay empate (12)":1.32,"Visitante o empate (X2)":1.58,"Ambos marcan: Sí":1.56,"Ambos marcan: No":2.40,
 "Más de 1.5 goles":1.20,"Menos de 1.5 goles":4.50,"Más de 3.5 goles":2.55,"Menos de 3.5 goles":1.50,
 "Más de 0.5 goles":1.04,"Menos de 0.5 goles":13.5,"Local marca":1.19,"Visitante marca":1.24}),
+"Racing-Independiente":({"Gana local (1)":2.0,"Empate (X)":3.0,"Gana visitante (2)":3.35},
+ {"Local o empate (1X)":1.27,"No hay empate (12)":1.35,"Visitante o empate (X2)":1.68,"Ambos marcan: Sí":1.96,"Ambos marcan: No":1.76,
+"Más de 0.5 goles":1.07,"Menos de 0.5 goles":7.25,"Más de 1.5 goles":1.39,"Menos de 1.5 goles":2.80,"Más de 2.5 goles":2.25,"Menos de 2.5 goles":1.58,"Más de 3.5 goles":4.10,"Menos de 3.5 goles":1.20,
+"Local marca":1.27,"Visitante marca":1.50}),
 "Forest-Arsenal":({"Gana local (1)":5.5,"Empate (X)":3.75,"Gana visitante (2)":1.54,"Más de 2.5 goles":1.92,"Menos de 2.5 goles":1.86},
  {"Local o empate (1X)":2.30,"No hay empate (12)":1.28,"Visitante o empate (X2)":1.15,"Ambos marcan: Sí":1.96,"Ambos marcan: No":1.82,
 "Más de 0.5 goles":1.06,"Menos de 0.5 goles":9.5,"Más de 1.5 goles":1.30,"Menos de 1.5 goles":3.55,"Más de 3.5 goles":3.25,"Menos de 3.5 goles":1.34,
@@ -20,7 +24,7 @@ def run(rho=0.0, verbose=True):
     errs=[]
     for n,(c,w) in P.items():
         l,m,mg=analisis.goles_del_mercado(c)
-        g=np.arange(11); M=np.outer(poisson.pmf(g,l),poisson.pmf(g,m)); M/=M.sum(); pm=mercados(M)
+        M=analisis.tabla_mercado(l,m); pm=mercados(M)
         picks=[analisis.Pick(k,pm[k]) for k in w]; analisis.estimar_cuotas(picks,pm,mg)
         if verbose: print(n, "λ %.2f μ %.2f margen %.3f"%(l,m,mg))
         for p in picks:
@@ -37,7 +41,7 @@ for fb,fm,fd,ft in itertools.product([1,1.3,1.6,2,2.5],[0.8,1,1.2,1.5],[0.5,0.67
     errs=[]
     for n,(c,w) in P.items():
         l,m,mg=analisis.goles_del_mercado(c)
-        g=np.arange(11); M=np.outer(poisson.pmf(g,l),poisson.pmf(g,m)); M/=M.sum(); pm=mercados(M)
+        M=analisis.tabla_mercado(l,m); pm=mercados(M)
         picks=[analisis.Pick(k,pm[k]) for k in w]; analisis.estimar_cuotas(picks,pm,mg)
         errs+=[abs(np.log(p.cuota/w[p.mercado])) for p in picks if p.cuota]
     e=np.mean(errs)
