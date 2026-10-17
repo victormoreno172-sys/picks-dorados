@@ -265,6 +265,8 @@ def actualizar(por_dia: dict):
             if chat:
                 import bot
                 enviado = bool(bot.llamar("sendMessage", chat_id=chat, text=texto, parse_mode="HTML").get("ok"))
+        if config.NTFY_TOPIC:  # notificación al móvil con la app ntfy
+            enviado = avisar_ntfy(f"🟡 Apuestas del {dia:%d/%m}", texto) or enviado
         # Se apuntan siempre: si Telegram no está configurado, se ven en la app del bot
         if enviado or not config.TELEGRAM_TOKEN:
             b["ultimo_envio"] = dia.isoformat()
@@ -272,3 +274,18 @@ def actualizar(por_dia: dict):
     print(f"  banca: {saldo(b):.2f} € ({len(b['apuestas'])} apuestas)")
     guardar(b)
     return b
+
+
+def avisar_ntfy(titulo: str, texto_html: str) -> bool:
+    """Notificación push al móvil (app gratuita ntfy, tema privado en el secreto NTFY_TOPIC)."""
+    import re
+    import requests
+    plano = re.sub(r"</?(b|i)>", "", texto_html)
+    try:
+        r = requests.post(f"https://ntfy.sh/{config.NTFY_TOPIC}", data=plano.encode("utf-8"), timeout=30,
+                          headers={"Title": titulo.encode("utf-8"), "Tags": "moneybag",
+                                   "Click": "https://victormoreno172-sys.github.io/picks-dorados/bot/"})
+        return r.ok
+    except requests.RequestException as e:
+        print(f"  aviso ntfy: {e}")
+        return False
