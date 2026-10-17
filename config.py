@@ -36,6 +36,7 @@ LIGAS = {
 LIGAS_ESPN = {
     "MLS": ("🇺🇸 MLS", "usa.1"),
     "ARG": ("🇦🇷 Liga Argentina", "arg.1"),
+    "BRA": ("🇧🇷 Brasileirão", "bra.1"),
 }
 
 # --- Competiciones europeas (calendario de TheSportsDB) ---------------------

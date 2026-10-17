@@ -24,7 +24,7 @@ LIGAS = [
     ("seriea", "Serie A", "soccer", "ita.1"), ("bundesliga", "Bundesliga", "soccer", "ger.1"),
     ("ligue1", "Ligue 1", "soccer", "fra.1"), ("eredivisie", "Eredivisie", "soccer", "ned.1"),
     ("portugal", "Liga Portugal", "soccer", "por.1"), ("mls", "MLS", "soccer", "usa.1"),
-    ("argentina", "Liga Argentina", "soccer", "arg.1"),
+    ("argentina", "Liga Argentina", "soccer", "arg.1"), ("brasil", "Brasileirão", "soccer", "bra.1"),
     ("champions", "Champions League", "soccer", "uefa.champions"), ("europa", "Europa League", "soccer", "uefa.europa"),
     ("conference", "Conference League", "soccer", "uefa.europa.conf"),
     ("nba", "NBA", "basketball", "nba"),
@@ -35,11 +35,11 @@ COPAS = [
     ("facup", "FA Cup", "eng.fa"), ("carabao", "Copa de la Liga inglesa", "eng.league_cup"),
     ("coppa", "Coppa Italia", "ita.coppa_italia"), ("pokal", "DFB-Pokal", "ger.dfb_pokal"),
     ("coupe", "Coupe de France", "fra.coupe_de_france"), ("knvb", "Copa de Holanda", "ned.cup"),
-    ("taca", "Taça de Portugal", "por.taca.portugal"), ("copaarg", "Copa Argentina", "arg.copa"),
+    ("taca", "Taça de Portugal", "por.taca.portugal"), ("copaarg", "Copa Argentina", "arg.copa"), ("copabrasil", "Copa do Brasil", "bra.copa_do_brazil"),
     ("libertadores", "Copa Libertadores", "conmebol.libertadores"),
     ("sudamericana", "Copa Sudamericana", "conmebol.sudamericana"),
 ]
-AÑO_NATURAL = {"usa.1", "arg.1", "arg.copa", "conmebol.libertadores", "conmebol.sudamericana"}
+AÑO_NATURAL = {"usa.1", "arg.1", "bra.1", "bra.copa_do_brazil", "arg.copa", "conmebol.libertadores", "conmebol.sudamericana"}
 RONDAS = [("round of 128", "Ronda de 128"), ("round of 64", "Treintaidosavos"), ("round of 32", "Dieciseisavos"),
           ("round of 16", "Octavos de final"), ("quarterfinal", "Cuartos de final"), ("quarter-final", "Cuartos de final"),
           ("semifinal", "Semifinales"), ("semi-final", "Semifinales"), ("final", "Final"),
