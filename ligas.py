@@ -93,7 +93,7 @@ def _clasif_espn(deporte: str, slug: str) -> list[dict]:
                         "pj": n("wins") + n("losses"), "pct": v("winPercent"), "gb": v("gamesBehind", "-"),
                         "racha": v("streak"), "pos": n("playoffSeed") or 0}
             if nota.get("description"):
-                fila["zona"] = [nota.get("color") or "#94a3b8", _traducir(nota["description"])]
+                fila["zona"] = ["#" + (nota.get("color") or "94a3b8").lstrip("#"), _traducir(nota["description"])]
             filas.append(fila)
         if not filas:
             continue
@@ -133,6 +133,29 @@ def _temporada(slug: str, hoy: date) -> tuple[date, date]:
     return inicio, date(a + 1, 6, 30)
 
 
+DIAG: list = []
+
+
+def _scoreboard_rango(deporte: str, slug: str, desde: date, hasta: date, horas: float) -> dict:
+    """Partidos de un mes. Prueba varias formas de pedírselo a ESPN y apunta qué ha funcionado."""
+    import requests
+    url = ficha.BASE.format(deporte=deporte, slug=slug, que="scoreboard")
+    intentos = [{"dates": f"{desde:%Y%m%d}-{hasta:%Y%m%d}", "limit": 500},
+                {"dates": f"{desde:%Y%m%d}-{hasta:%Y%m%d}"}, {"dates": f"{desde:%Y%m}"}]
+    for params in intentos:
+        try:
+            r = requests.get(url, params=params, headers=ficha.UA, timeout=30)
+            info = [slug, f"{desde:%Y-%m}", str(params), r.status_code]
+            datos = r.json() if r.ok else {}
+            n = len(datos.get("events") or [])
+            DIAG.append(info + [n, list(datos.keys())[:6]])
+            if n:
+                return datos
+        except Exception as e:  # noqa: BLE001
+            DIAG.append([slug, f"{desde:%Y-%m}", str(params), "error", str(e)[:200]])
+    return {}
+
+
 def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
     inicio, fin = _temporada(slug, hoy)
     partidos, vistos = [], set()
@@ -141,7 +164,7 @@ def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
         sig = date(m.year + (m.month == 12), m.month % 12 + 1, 1)
         ultimo = sig - timedelta(days=1)
         horas = 24 * 20 if ultimo < hoy - timedelta(days=3) else 2 if m <= hoy else 12
-        datos = ficha._get(deporte, slug, "scoreboard", {"dates": f"{m:%Y%m%d}-{ultimo:%Y%m%d}", "limit": 900}, horas)
+        datos = _scoreboard_rango(deporte, slug, m, ultimo, horas)
         for e in datos.get("events") or []:
             if e.get("id") in vistos:
                 continue
@@ -283,8 +306,8 @@ def _leyenda(grupos: list) -> list:
     for g in grupos:
         for f in g["filas"]:
             z = f.get("zona")
-            if z and tuple(z) not in vistas:
-                vistas.add(tuple(z))
+            if z and z[1] not in vistas:
+                vistas.add(z[1])
                 out.append(z)
     return out
 
@@ -330,6 +353,8 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
             json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
         indice.append({"id": lid, "n": d["nombre"], "dep": d["dep"], "eq": len(d["equipos"]),
                        "j": len(d["jornadas"])})
+    with open(os.path.join(carpeta, "diag.json"), "w", encoding="utf-8") as f:
+        json.dump(DIAG[:80], f, ensure_ascii=False)
     with open(os.path.join(carpeta, "indice.json"), "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False)
     print(f"  ligas: {len(indice)} competiciones con clasificación y calendario")
