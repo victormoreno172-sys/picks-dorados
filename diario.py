@@ -4,8 +4,14 @@ Lo que se ejecuta solo cada mañana en GitHub:
   2. Genera la app web (carpeta web/).
   3. Si hay token de Telegram y ENVIAR_TELEGRAM=true, publica el resumen de hoy en el canal.
 """
+import builtins
 import os
+import time
 from datetime import datetime
+
+# Cada línea del registro lleva los segundos desde el inicio (para ver qué tarda)
+_T0, _print = time.time(), builtins.print
+builtins.print = lambda *a, **k: _print(f"[{time.time() - _T0:4.0f}s]", *a, **k)
 from zoneinfo import ZoneInfo
 
 import config
