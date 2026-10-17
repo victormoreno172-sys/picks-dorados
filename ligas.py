@@ -72,7 +72,11 @@ def _num(x, defecto=0):
 
 # ---------------------------------------------------------------- clasificación
 def _clasif_espn(deporte: str, slug: str) -> list[dict]:
-    datos = ficha._get(deporte, slug, "standings", {}, 2, base=STANDINGS)
+    datos = {}
+    if deporte == "basketball":  # temporada regular, no la pretemporada
+        datos = ficha._get(deporte, slug, "standings", {"seasontype": 2}, 2, base=STANDINGS)
+    if not (datos.get("children") or datos.get("standings")):
+        datos = ficha._get(deporte, slug, "standings", {}, 2, base=STANDINGS)
     hijos = datos.get("children") or ([datos] if datos.get("standings") else [])
     grupos = []
     for h in hijos:
@@ -133,26 +137,12 @@ def _temporada(slug: str, hoy: date) -> tuple[date, date]:
     return inicio, date(a + 1, 6, 30)
 
 
-DIAG: list = []
-
-
 def _scoreboard_rango(deporte: str, slug: str, desde: date, hasta: date, horas: float) -> dict:
-    """Partidos de un mes. Prueba varias formas de pedírselo a ESPN y apunta qué ha funcionado."""
-    import requests
-    url = ficha.BASE.format(deporte=deporte, slug=slug, que="scoreboard")
-    intentos = [{"dates": f"{desde:%Y%m}", "limit": 500}, {"dates": f"{desde:%Y%m}"}]
-    for params in intentos:
-        try:
-            r = requests.get(url, params=params, headers=ficha.UA, timeout=30)
-            info = [slug, f"{desde:%Y-%m}", str(params), r.status_code]
-            datos = r.json() if r.ok else {}
-            n = len(datos.get("events") or [])
-            DIAG.append(info + [n, list(datos.keys())[:6]])
-            if n:
-                return datos
-        except Exception as e:  # noqa: BLE001
-            DIAG.append([slug, f"{desde:%Y-%m}", str(params), "error", str(e)[:200]])
-    return {}
+    """Partidos de un mes (ESPN acepta dates=AAAAMM; los rangos de días dan error 400)."""
+    datos = ficha._get(deporte, slug, "scoreboard", {"dates": f"{desde:%Y%m}", "limit": 500}, horas)
+    if not datos.get("events"):
+        datos = ficha._get(deporte, slug, "scoreboard", {"dates": f"{desde:%Y%m}"}, horas)
+    return datos
 
 
 def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
@@ -187,10 +177,34 @@ def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
     return partidos
 
 
+def _jornadas_liga(partidos: list) -> list[dict]:
+    """Liga a doble vuelta: la jornada de un partido es el nº de partido que juega cada equipo
+    (el mayor de los dos). Así un aplazado no descuadra el resto de jornadas."""
+    cuenta: dict[str, int] = {}
+    por_j: dict[int, list] = {}
+    for p in partidos:  # ya vienen ordenados por fecha
+        a, b = cuenta.get(p["l"], 0) + 1, cuenta.get(p["v"], 0) + 1
+        cuenta[p["l"]], cuenta[p["v"]] = a, b
+        por_j.setdefault(max(a, b), []).append(p)
+    out = []
+    for n in sorted(por_j):
+        b = sorted(por_j[n], key=lambda p: (p["f"], p["h"]))
+        for p in b:
+            p.pop("fase", None)
+        fechas = sorted(p["f"] for p in b)
+        # el rango de fechas sin contar aplazados sueltos muy alejados
+        medio = fechas[len(fechas) // 2]
+        cerca = [f for f in fechas if abs((date.fromisoformat(f) - date.fromisoformat(medio)).days) <= 4] or fechas
+        out.append({"t": f"Jornada {n}", "desde": cerca[0], "hasta": cerca[-1], "p": b})
+    return out
+
+
 def _jornadas(partidos: list, n_equipos: int, por_dia: bool = False, uefa: bool = False) -> list[dict]:
     """Agrupa los partidos en jornadas por fechas (los de una jornada se juegan en 1-4 días seguidos)."""
     if not partidos:
         return []
+    if not por_dia and not uefa:
+        return _jornadas_liga(partidos)
     bloques: list[list] = []
     for p in partidos:
         d = date.fromisoformat(p["f"])
@@ -232,7 +246,7 @@ def _dia_corto(f: str) -> str:
 
 def _actual(jornadas: list, hoy: date) -> int:
     for i, j in enumerate(jornadas):
-        if j["hasta"] >= hoy.isoformat() or any(p["st"] != "post" for p in j["p"]):
+        if j["hasta"] >= hoy.isoformat() or sum(p["st"] != "post" for p in j["p"]) > len(j["p"]) // 2:
             return i
     return max(0, len(jornadas) - 1)
 
@@ -352,8 +366,6 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
             json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
         indice.append({"id": lid, "n": d["nombre"], "dep": d["dep"], "eq": len(d["equipos"]),
                        "j": len(d["jornadas"])})
-    with open(os.path.join(carpeta, "diag.json"), "w", encoding="utf-8") as f:
-        json.dump(DIAG[:80], f, ensure_ascii=False)
     with open(os.path.join(carpeta, "indice.json"), "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False)
     print(f"  ligas: {len(indice)} competiciones con clasificación y calendario")
