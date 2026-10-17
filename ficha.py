@@ -124,7 +124,7 @@ def _forma(s: dict) -> dict | None:
         for e in (t.get("events") or [])[:5]:
             partidos.append({"r": e.get("gameResult", ""), "m": e.get("score", ""), "a": e.get("atVs", ""),
                              "o": (e.get("opponent") or {}).get("displayName", ""), "f": (e.get("gameDate") or "")[:10]})
-        out[lado] = partidos
+        out[lado] = sorted(partidos, key=lambda e: e["f"], reverse=True)  # el más reciente primero
     return out or None
 
 
