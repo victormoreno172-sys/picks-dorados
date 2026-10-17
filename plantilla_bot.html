@@ -160,7 +160,7 @@ if (Object.keys(OV).length) {
 const cer = ap.filter(cerrada);
 const saldo = D.inicial + ap.reduce((s, a) => s + gan(a), 0);
 const enJuego = ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
-$("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Probabilidades</a>';
+$("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Partidos</a>';
 const siTodas = saldo - enJuego + ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe * a.cuota, 0);
 $("saldo").textContent = eur(saldo - enJuego);
 $("variacion").innerHTML = `<span class="${saldo >= D.inicial ? "pos" : "neg"}">${sig(saldo - D.inicial)} (${pct(saldo / D.inicial - 1)})</span> <span style="color:var(--muted)">desde ${eur(D.inicial)}</span>`;

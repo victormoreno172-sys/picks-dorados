@@ -84,6 +84,16 @@ except Exception as e:
 
 web.escribir(datos_app)
 
+# Pestaña Ligas: clasificaciones, jornadas y equipos (un archivo por liga)
+try:
+    import ligas
+    print(f"[{datetime.now():%H:%M:%S}] ligas")
+    ligas.escribir(datos_app)
+except Exception as e:
+    import traceback
+    print(f"aviso: ligas no disponibles: {e}")
+    traceback.print_exc()
+
 # Apuestas del día por Telegram (pasadas las 00:00) y banca simulada
 try:
     import apuestas

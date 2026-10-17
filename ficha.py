@@ -35,15 +35,15 @@ SLUGS = {
 DIAS_CON_DETALLE = 3  # alineaciones, clasificación y forma solo para los próximos días
 
 
-def _get(deporte: str, slug: str, que: str, params: dict, horas: float) -> dict:
+def _get(deporte: str, slug: str, que: str, params: dict, horas: float, base: str = BASE) -> dict:
     os.makedirs(CACHE, exist_ok=True)
-    nombre = f"{deporte}_{slug}_{que}_" + "_".join(f"{k}{v}" for k, v in sorted(params.items())) + ".json"
+    nombre = ("v2_" if base != BASE else "") + f"{deporte}_{slug}_{que}_" + "_".join(f"{k}{v}" for k, v in sorted(params.items())) + ".json"
     ruta = os.path.join(CACHE, nombre.replace("/", "-"))
     if os.path.exists(ruta) and time.time() - os.path.getmtime(ruta) < horas * 3600:
         with open(ruta, encoding="utf-8") as f:
             return json.load(f)
     try:
-        r = requests.get(BASE.format(deporte=deporte, slug=slug, que=que), params=params, headers=UA, timeout=30)
+        r = requests.get(base.format(deporte=deporte, slug=slug, que=que), params=params, headers=UA, timeout=30)
         r.raise_for_status()
         datos = r.json()
     except (requests.RequestException, ValueError) as e:
