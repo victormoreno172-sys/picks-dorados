@@ -66,6 +66,9 @@ ZONAS_BASKET = {
     "BSL": [(1, 8, "#16a34a", "Playoffs")], "GBL": [(1, 8, "#16a34a", "Playoffs")],
     "ABA": [(1, 4, "#16a34a", "Playoffs")], "LKL": [(1, 8, "#16a34a", "Playoffs")],
 }
+# Ligas de fútbol a las que ESPN no les pone zonas
+ZONAS_FUTBOL = {"bra.1": [(1, 4, "#16a34a", "Copa Libertadores"), (5, 6, "#86efac", "Previa de Libertadores"),
+                          (7, 12, "#2563eb", "Copa Sudamericana"), (-4, -1, "#e11d48", "Descenso")]}
 ZONAS_NBA = [(1, 6, "#16a34a", "Playoffs"), (7, 10, "#2563eb", "Play-in")]
 
 TRADUCCION = [  # (texto de ESPN en minúsculas contiene..., texto en español). El orden importa.
@@ -128,6 +131,8 @@ def _clasif_espn(deporte: str, slug: str) -> list[dict]:
             continue
         if deporte == "soccer":
             filas.sort(key=lambda f: (f["pos"] or 999, -f["pts"], -f["dg"]))
+            if slug in ZONAS_FUTBOL and not any("zona" in f for f in filas):
+                _poner_zonas(filas, ZONAS_FUTBOL[slug])
         else:
             filas.sort(key=lambda f: (-(f["g"] / max(1, f["pj"])), f["p"]))
             _poner_zonas(filas, ZONAS_NBA, sobrescribir=False)
