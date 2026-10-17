@@ -143,7 +143,10 @@ def _cargar(lista: list[dict]) -> list[Partido]:
     for d in lista:
         d = dict(d)
         d["fecha"] = date.fromisoformat(d["fecha"])
-        out.append(Partido(**d))
+        p = Partido(**d)
+        if p.sets_max == 5 and not es_grand_slam(p.tour, p.torneo):  # caché guardada antes del arreglo
+            p.sets_max = 3
+        out.append(p)
     return out
 
 
