@@ -854,9 +854,20 @@ function cargarResumen(fi) {
   if (r && (r.cargando || Date.now() - r.t < 55000)) return;
   RESUMEN[k] = Object.assign(r || {}, { cargando: true });
   fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${fi.slug}/summary?event=${fi.id}`, { cache: "no-store" })
-    .then(x => x.json()).then(j => { RESUMEN[k] = { t: Date.now(), ev: eventosResumen(j) }; })
+    .then(x => x.json()).then(j => { RESUMEN[k] = { t: Date.now(), ev: eventosResumen(j) }; marcadorDeResumen(k, j); })
     .catch(() => { RESUMEN[k] = { t: Date.now(), error: true, ev: (r && r.ev) || null }; })
     .finally(() => { if (est.vista === "partido" && est.tab === "resumen") pintarLista(); });
+}
+// El resumen también trae el marcador y el minuto: se usa por si el de la lista no ha llegado
+function marcadorDeResumen(id, j) {
+  try {
+    const c = j.header.competitions[0], t = c.status.type;
+    if (!["in", "post"].includes(t.state)) return;
+    const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
+    const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : (c.status.displayClock || t.shortDetail || "Vivo") };
+    if (!/^\d+-\d+$/.test(res.m)) return;
+    for (const d of DATOS.dias) for (const p of d.partidos) if (p.fi && p.fi.id === id) p.res = res;
+  } catch (e) {}
 }
 function eventosResumen(j) {
   const comp = ((j.header || {}).competitions || [])[0] || {};
@@ -1444,25 +1455,33 @@ window.addEventListener("popstate", e => {
   window.scrollTo({ top: 0 });
 });
 // ---------------------------------------------------------------- marcadores en directo (ESPN, desde el móvil)
+// ESPN agrupa los partidos por la fecha de EE. UU.: los de madrugada en España salen en el día
+// anterior. Por eso se mira hoy y ayer (y los partidos de ayer que sigan jugándose pasada la medianoche).
+const fechaMenos = (f, n) => { const d = new Date(f + "T12:00:00"); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
 async function enDirecto() {
-  const dia = DATOS.dias.find(d => d.fecha === AHORA.fecha);
-  if (!dia) return;
-  const ligas = new Set(dia.partidos.filter(p => p.fi && p.fi.id && p.fi.slug && !/^b-/.test(p.fi.slug)
-    && empezado(dia, p) && !(p.res && p.res.st === "post")).map(p => p.fi.slug));
+  const fechas = [AHORA.fecha, fechaMenos(AHORA.fecha, 1)];
+  const cand = [];
+  for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
+    for (const p of dia.partidos)
+      if (p.fi && p.fi.id && p.fi.slug && !/^b-/.test(p.fi.slug) && empezado(dia, p) && !(p.res && p.res.st === "post")) cand.push(p);
+  if (!cand.length) return;
+  const ligas = new Set(cand.map(p => p.fi.slug));
   let cambio = false;
   for (const slug of ligas) {
-    try {
-      const dep = slug === "nba" ? "basketball" : "soccer";
-      const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${dep}/${slug}/scoreboard?dates=${AHORA.fecha.replace(/-/g, "")}`, { cache: "no-store" });
-      const j = await r.json();
-      for (const e of j.events || []) {
-        const c = e.competitions[0], t = c.status.type, p = dia.partidos.find(x => x.fi && x.fi.id === e.id);
-        if (!p || !["in", "post"].includes(t.state)) continue;
-        const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
-        const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : (c.status.displayClock || "Vivo") };
-        if (JSON.stringify(res) !== JSON.stringify(p.res)) { p.res = res; cambio = true; }
-      }
-    } catch (e) {}
+    const dep = slug === "nba" ? "basketball" : "soccer";
+    for (const f of fechas) {
+      try {
+        const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${dep}/${slug}/scoreboard?dates=${f.replace(/-/g, "")}`, { cache: "no-store" });
+        const j = await r.json();
+        for (const e of j.events || []) {
+          const c = e.competitions[0], t = c.status.type, p = cand.find(x => x.fi.id === e.id);
+          if (!p || !["in", "post"].includes(t.state)) continue;
+          const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
+          const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : (c.status.displayClock || "Vivo") };
+          if (JSON.stringify(res) !== JSON.stringify(p.res)) { p.res = res; cambio = true; }
+        }
+      } catch (e) {}
+    }
   }
   if (cambio && document.activeElement !== $("busca")) pintarLista();
 }
