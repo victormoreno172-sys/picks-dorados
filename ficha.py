@@ -186,16 +186,18 @@ def enriquecer(datos_app: dict):
 
 
 # ---------------------------------------------------- basket europeo, tenis y esports
-def _forma_de(nombre: str, partidos: list, campos) -> list:
-    """Últimos 5 de un equipo/jugador. campos(p) -> (fecha, local, visitante, tanteo_l, tanteo_v)."""
-    out = []
+def _forma_de(nombre: str, partidos: list, campos, sin_local: bool = False) -> list:
+    """Últimos 5 de un equipo/jugador (tanteo desde su punto de vista).
+    campos(p) -> (fecha, local, visitante, tanteo_l, tanteo_v)."""
+    out, vistos = [], set()
     for p in partidos:
         f, l, v, a, b = campos(p)
-        if nombre not in (l, v) or a is None:
+        if nombre not in (l, v) or a is None or (f, l, v) in vistos:
             continue
+        vistos.add((f, l, v))
         mio, suyo = (a, b) if nombre == l else (b, a)
-        out.append({"r": "W" if mio > suyo else "L" if mio < suyo else "D", "m": f"{a}-{b}",
-                    "a": "vs" if nombre == l else "@", "o": v if nombre == l else l, "f": f.isoformat()})
+        out.append({"r": "W" if mio > suyo else "L" if mio < suyo else "D", "m": f"{mio}-{suyo}",
+                    "a": "vs" if sin_local or nombre == l else "@", "o": v if nombre == l else l, "f": f.isoformat()})
     return sorted(out, key=lambda e: e["f"], reverse=True)[:5]
 
 
@@ -244,13 +246,13 @@ def _otros_deportes(datos_app: dict, tablas: dict):
             elif p["dep"] == "te":
                 fi.update(tenis.INFO.get(clave, {}))
                 campos = lambda h: (h.fecha, h.n1, h.n2, h.s1, h.s2)
-                fi["forma"] = {"l": _forma_de(p["local"], tenis.HIST, campos),
-                               "v": _forma_de(p["visitante"], tenis.HIST, campos)}
+                fi["forma"] = {"l": _forma_de(p["local"], tenis.HIST, campos, True),
+                               "v": _forma_de(p["visitante"], tenis.HIST, campos, True)}
             else:
                 fi.update(esports.INFO.get(clave, {}))
                 campos = lambda s: (s.fecha, s.n1, s.n2, s.m1, s.m2)
-                fi["forma"] = {"l": _forma_de(p["local"], esports.HIST, campos),
-                               "v": _forma_de(p["visitante"], esports.HIST, campos)}
+                fi["forma"] = {"l": _forma_de(p["local"], esports.HIST, campos, True),
+                               "v": _forma_de(p["visitante"], esports.HIST, campos, True)}
             if not (fi["forma"]["l"] or fi["forma"]["v"]):
                 fi.pop("forma")
             p["fi"] = fi
