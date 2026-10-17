@@ -103,7 +103,7 @@ const ap = D.apuestas;
 const cer = ap.filter(cerrada);
 const saldo = D.inicial + ap.reduce((s, a) => s + gan(a), 0);
 const enJuego = ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
-$("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Picks Dorados</a>';
+$("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Probabilidades</a>';
 $("saldo").textContent = eur(saldo);
 $("variacion").innerHTML = `<span class="${saldo >= D.inicial ? "pos" : "neg"}">${sig(saldo - D.inicial)} (${pct(saldo / D.inicial - 1)})</span> <span style="color:var(--muted)">desde ${eur(D.inicial)}</span>`;
 

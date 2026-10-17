@@ -1,4 +1,4 @@
-<title>Picks Dorados</title>
+<title>Probabilidades</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -204,23 +204,98 @@ h1 span { background: var(--grad); -webkit-background-clip: text; background-cli
 .tlin.hecha .chk { background: var(--grad); border-color: transparent; }
 .busca input { border-radius: 14px; box-shadow: var(--sombra); }
 .caja h2, .grupo h3, .aciertos h2 { letter-spacing: .06em; }
+
+/* ---------- estilo "app de resultados": deporte arriba, días, competiciones, partidos compactos ---------- */
+.wrap { padding-bottom: 96px; }
+header { padding-block: 10px 0; }
+.barra { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.selector { display: flex; align-items: center; gap: 10px; border: 0; background: none; color: var(--ink); font: 700 26px/1 var(--display); letter-spacing: -.01em; padding: 6px 0; cursor: pointer; }
+.selector .ic { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; border-radius: 12px; background: var(--surface); box-shadow: var(--sombra); border: 1px solid var(--line); }
+.selector .tri { font-size: 16px; color: var(--gold); }
+.iconos { display: flex; gap: 8px; }
+.ico { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 700 20px/1 var(--body); box-shadow: var(--sombra); cursor: pointer; }
+.ico.gira { animation: gira .8s linear infinite; } @keyframes gira { to { transform: rotate(360deg); } }
+.menudep { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.menudep .dep { display: flex; flex-direction: row !important; align-items: center !important; justify-content: flex-start; gap: 10px; padding: 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); font: 700 16px var(--display); text-transform: none; letter-spacing: 0; box-shadow: var(--sombra); }
+.menudep .dep small { margin-left: auto; color: var(--muted); }
+.menudep .dep[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.busca { margin-top: 8px; }
+.dias { display: flex; gap: 0; margin: 8px -16px 0; padding: 0 8px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+.dia { flex: 1 0 64px; border: 0; background: none; box-shadow: none; border-radius: 0; color: var(--muted); padding: 8px 4px 10px; font: 700 14px/1.1 var(--display); letter-spacing: .06em; position: relative; }
+.dia small { font: 600 12px var(--mono); color: inherit; margin-top: 3px; }
+.dia[aria-pressed="true"] { background: none; color: var(--gold); box-shadow: none; }
+.dia[aria-pressed="true"]::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--grad); }
+#vista { margin-top: 12px; }
+.todos { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); font: 600 16px var(--body); box-shadow: var(--sombra); cursor: pointer; text-align: left; }
+.todos .lst { font-size: 20px; color: var(--muted); }
+.cnt { margin-left: auto; min-width: 34px; text-align: center; font: 700 13px var(--mono); padding: 4px 8px; border-radius: 9px; background: var(--bar); color: var(--ink); }
+.cnt.rojo { background: var(--grad); color: #1b1200; }
+h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.comps { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--sombra); overflow: hidden; }
+.comp { display: flex; align-items: center; border-top: 1px solid var(--line); }
+.comp:first-child { border-top: 0; }
+.compir { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 12px 6px 12px 14px; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.flag { flex: none; width: 36px; height: 26px; display: grid; place-items: center; font-size: 22px; border-radius: 6px; background: var(--bar); overflow: hidden; }
+.nl { min-width: 0; display: flex; flex-direction: column; }
+.nl small { font: 600 11px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nl b { font: 700 16px/1.2 var(--display); overflow-wrap: anywhere; }
+.lfav { flex: none; width: 44px; height: 44px; border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+.lfav[aria-pressed="true"] { color: var(--gold); }
+.volver { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.volver button { width: 36px; height: 36px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 700 22px/1 var(--body); cursor: pointer; box-shadow: var(--sombra); }
+.volver b { font: 700 20px var(--display); }
+.volver span { margin-left: auto; font: 500 12px var(--mono); color: var(--muted); }
+.bliga { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--sombra); overflow: hidden; margin-bottom: 12px; }
+.cabliga { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 0; border-bottom: 1px solid var(--line); background: linear-gradient(90deg, rgba(255, 183, 3, .10), transparent); color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.cabliga .flecha { margin-left: auto; color: var(--muted); font-size: 22px; }
+.fp { position: relative; border-top: 1px solid var(--line); }
+.bliga .fp:nth-child(2) { border-top: 0; }
+.fpcab { width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) 30px 84px; align-items: center; gap: 8px; padding: 10px 44px 10px 12px; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.fp.abierto .fpcab { background: var(--bar); }
+.hora { font: 700 13px var(--mono); color: var(--muted); }
+.eqs { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.eqs b { font: 600 15px/1.15 var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.esp { display: flex; flex-direction: column; gap: 4px; font: 600 12px/1.25 var(--mono); color: var(--muted); text-align: right; }
+.pk { text-align: right; line-height: 1.1; }
+.pk b { display: block; font: 700 16px var(--mono); color: var(--muted); }
+.pk small { display: block; font: 500 10px var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk.d b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pk.d small { color: var(--gold-ink); }
+.fp .estrella { top: 50%; transform: translateY(-50%); right: 2px; }
+.fp.abierto .estrella { top: 26px; }
+.fp .det { border-top: 1px dashed var(--line); }
+.abajo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, .86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
+.abajo button, .abajo a { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none; color: var(--muted); font: 600 11px var(--body); text-decoration: none; padding: 6px 0; cursor: pointer; }
+.abajo span { font-size: 20px; line-height: 1; }
+.abajo [aria-pressed="true"] { color: var(--gold); }
+.abajo [aria-pressed="true"] span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 </style>
 
 <div class="wrap">
   <header>
-    <div class="brand"><h1>Picks <span>Dorados</span></h1><div class="upd"><span id="upd"></span> <a class="refrescar" href="bot/" style="text-decoration:none">🤖 Bot</a> <button id="refrescar" class="refrescar" aria-label="Actualizar">🔄 Actualizar</button></div></div>
+    <div class="barra">
+      <button class="selector" id="selector" aria-haspopup="true" aria-expanded="false"></button>
+      <div class="iconos">
+        <button class="ico" id="lupa" aria-label="Buscar">⌕</button>
+        <button class="ico" id="refrescar" aria-label="Actualizar">↻</button>
+      </div>
+    </div>
+    <div class="menudep" id="menudep" hidden></div>
     <div id="avisoAct" class="avisoact" hidden></div>
     <div class="demo" id="demo" hidden>Datos de ejemplo con equipos inventados. La versión real se rellena sola cada día.</div>
-    <nav class="deportes" id="deportes" aria-label="Deporte"></nav>
+    <div class="busca" id="cajabusca" hidden><input type="search" id="busca" placeholder="Buscar equipo o competición" autocomplete="off" aria-label="Buscar equipo o competición"></div>
     <nav class="dias" id="dias" aria-label="Día"></nav>
-    <div class="filtros" id="filtros"></div>
+    <div id="deportes" hidden></div><div id="filtros" hidden></div>
   </header>
-  <div class="busca"><input type="search" id="busca" placeholder="Buscar equipo o competición" autocomplete="off" aria-label="Buscar equipo o competición"></div>
-  <section class="top" id="top"></section>
-  <main class="lista" id="lista"></main>
+  <main id="vista"></main>
+  <section class="top" id="top" hidden></section>
+  <main class="lista" id="lista" hidden></main>
   <section class="aciertos" id="aciertos" hidden></section>
   <footer>
-    <div class="leyenda">
+    <details><summary style="cursor:pointer;font-weight:600;color:var(--ink)">Cómo leer la app</summary>
+    <div class="leyenda" style="margin-top:8px">
       <div><span class="sw"></span><span><b>Dorado</b>: probabilidad de al menos <span id="umbral"></span>.</span></div>
       <div><span class="val" style="margin:0">VALOR</span><span>La cuota real de la casa paga al menos un 5% más de lo que vale según la app.</span></div>
       <div><span style="font:700 12px var(--mono)">1.27</span><span><b>app</b>: la cuota que calcula la app (1 ÷ probabilidad). Por debajo de ella la apuesta no compensa.</span></div>
@@ -229,8 +304,16 @@ h1 span { background: var(--grad); -webkit-background-clip: text; background-cli
       <div><span style="font:700 12px var(--mono)">≈1.45</span><span>Cuota estimada de la casa: calculada a partir de su 1X2 y su línea de goles. Compruébala en Winamax antes de apostar.</span></div>
     </div>
     <p style="margin:6px 0 0">Fútbol: modelo Dixon-Coles sobre las últimas temporadas, combinado con las cuotas del mercado. Baloncesto: ratings de ataque y defensa de cada equipo, combinados con las líneas de las casas cuando las hay (NBA). Tenis (ATP y WTA): Elo general y por superficie de cada jugador. Esports (CS2, Valorant y LoL, torneos de nivel S y A): fuerza de cada equipo según los mapas o partidas ganados y perdidos. Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p>
+    </details>
+    <p style="margin:0">Actualizado: <span id="upd"></span></p>
   </footer>
 </div>
+<nav class="abajo" aria-label="Secciones">
+  <button data-nav="comps" aria-pressed="true"><span>◎</span>Partidos</button>
+  <button data-nav="favs" aria-pressed="false"><span>☆</span>Favoritos</button>
+  <button data-nav="buscar" aria-pressed="false"><span>⌕</span>Buscar</button>
+  <a href="bot/"><span>⚡</span>Bot</a>
+</nav>
 
 <script>
 const DATOS = __DATOS__;
@@ -248,7 +331,9 @@ const GRUPOS = {
       ["Mapas / partidas", m => /(mapas|partidas)$/.test(m)],
       ["Resultado exacto", m => /^Resultado /.test(m)]],
 };
-const DEPORTES = [["f", "Fútbol"], ["b", "Basket"], ["te", "Tenis"], ["e", "Esports"], ["t", "Top"]];
+// El Top sigue existiendo en el código (y el bot usa los mismos datos), pero no se enseña
+const DEPORTES = [["f", "Fútbol"], ["b", "Basket"], ["te", "Tenis"], ["e", "Esports"]];
+const ICONO_DEP = { f: "⚽", b: "🏀", te: "🎾", e: "🎮" };
 const est = { dep: "f", dia: 0, soloOro: false, soloRojo: false, liga: null, abiertos: new Set(),
               rp: DATOS.rojo_p || 0.7, rc: DATOS.rojo_c || 1.4, ajustes: false,
               orden: "hora", busca: "", soloFav: false, favs: new Set(), apostadas: new Set() };
@@ -262,7 +347,9 @@ try { const g = JSON.parse(localStorage.getItem("rojo") || "null"); if (g) { est
 // Rojo: probable Y con cuota real de la casa que todavía paga algo
 const esRojo = k => false;  // el rojo se quitó de la app
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
-if (!["f", "b", "te", "e", "t"].includes(est.dep)) est.dep = "f";
+if (!["f", "b", "te", "e"].includes(est.dep)) est.dep = "f";
+est.vista = "comps";
+try { est.ligasFav = new Set(JSON.parse(localStorage.getItem("ligasFav") || "[]")); } catch (e) { est.ligasFav = new Set(); }
 
 const $ = id => document.getElementById(id);
 const pct = p => Math.round(p * 100) + "%";
@@ -285,12 +372,14 @@ function pintarDeportes() {
   }).join("");
 }
 
+const SEM = ["DO", "LU", "MA", "MI", "JU", "VI", "SÁ"];
 function pintarDias() {
   const vis = diasVisibles();
   if (!vis.includes(est.dia)) est.dia = vis.find(i => delDeporte(DATOS.dias[i]).length) ?? 0;
   $("dias").innerHTML = vis.map(i => { const d = DATOS.dias[i];
-    const rojos = delDeporte(d).filter(p => p.picks.some(esRojo)).length;
-    return `<button class="dia" aria-pressed="${i === est.dia}" data-i="${i}">${esc(d.etiqueta)}<small>${esc(d.fecha_corta)} · ${delDeporte(d).length}${rojos ? ` · <b style="color:var(--red)">${rojos}●</b>` : ""}</small></button>`; }).join("");
+    const f = new Date(d.fecha + "T12:00:00");
+    const arriba = d.fecha === AHORA.fecha ? "HOY" : SEM[f.getDay()];
+    return `<button class="dia" aria-pressed="${i === est.dia}" data-i="${i}"><span>${arriba}</span><small>${d.fecha.slice(8, 10)}.${d.fecha.slice(5, 7)}.</small></button>`; }).join("");
 }
 
 function pintarFiltros() {
@@ -347,20 +436,118 @@ function tarjeta(p, idx) {
   </article>`;
 }
 
-function pintarLista() {
+// ---------------------------------------------------------------- competiciones
+const PAISES = {
+  "LaLiga": ["🇪🇸", "España"], "Segunda División": ["🇪🇸", "España"], "Premier League": ["🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Inglaterra"],
+  "Championship": ["🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Inglaterra"], "Serie A": ["🇮🇹", "Italia"], "Bundesliga": ["🇩🇪", "Alemania"],
+  "Ligue 1": ["🇫🇷", "Francia"], "Eredivisie": ["🇳🇱", "Países Bajos"], "Liga Portugal": ["🇵🇹", "Portugal"],
+  "MLS": ["🇺🇸", "Estados Unidos"], "Liga Argentina": ["🇦🇷", "Argentina"],
+  "Champions League": ["🇪🇺", "Europa · UEFA"], "Europa League": ["🇪🇺", "Europa · UEFA"], "Conference League": ["🇪🇺", "Europa · UEFA"],
+  "NBA": ["🇺🇸", "Estados Unidos"], "NBA · Pretemporada": ["🇺🇸", "Estados Unidos"], "Euroliga": ["🇪🇺", "Europa"],
+  "Eurocup": ["🇪🇺", "Europa"], "Basketball Champions League": ["🇪🇺", "Europa · FIBA"], "Liga ACB": ["🇪🇸", "España"],
+  "Lega Basket": ["🇮🇹", "Italia"], "LNB Élite": ["🇫🇷", "Francia"], "Süper Lig": ["🇹🇷", "Turquía"],
+  "Greek Basket League": ["🇬🇷", "Grecia"], "LKL": ["🇱🇹", "Lituania"], "BBL": ["🇩🇪", "Alemania"], "ABA Liga": ["🌍", "Adriático"],
+};
+const ORDEN_LIGAS = Object.keys(PAISES);
+function infoLiga(l) {
+  if (PAISES[l]) return { flag: PAISES[l][0], pais: PAISES[l][1], nombre: l };
+  const partes = l.split(" · ");
+  if (/^(ATP|WTA)$/.test(partes[0])) return { flag: "🎾", pais: partes[0] + (partes[2] ? " · " + partes[2] : ""), nombre: partes[1] || l };
+  if (/^(CS2|VAL|LOL)$/.test(partes[0])) return { flag: "🎮", pais: { CS2: "Counter-Strike 2", VAL: "Valorant", LOL: "League of Legends" }[partes[0]] + (partes[2] ? " · " + partes[2] : ""), nombre: partes[1] || l };
+  return { flag: "🏆", pais: "", nombre: l };
+}
+const ordenLiga = l => { const i = ORDEN_LIGAS.indexOf(l); return i < 0 ? 999 : i; };
+
+function partidosVisibles() {
   const dia = DATOS.dias[est.dia];
-  const delDia = dia.partidos.map((p, i) => [p, i]).filter(([p]) => (p.dep || "f") === est.dep && !empezado(dia, p));
-  const q = quitarAcentos(est.busca.trim());
-  const lista = delDia
-    .filter(([p]) => !est.liga || p.liga === est.liga)
-    .filter(([p]) => !est.soloOro || p.picks.some(k => k.d))
-    .filter(([p]) => !est.soloRojo || p.picks.some(esRojo))
-    .filter(([p]) => !est.soloFav || est.favs.has(clavePartido(dia, p)))
+  const q = quitarAcentos((est.busca || "").trim());
+  return dia.partidos.map((p, i) => [p, i])
+    .filter(([p]) => (p.dep || "f") === est.dep && !empezado(dia, p))
     .filter(([p]) => !q || quitarAcentos(`${p.local} ${p.visitante} ${p.liga}`).includes(q));
-  if (est.orden === "prob") lista.sort(([a], [b]) => ((mejorPick(b) || {}).p || 0) - ((mejorPick(a) || {}).p || 0));
-  pintarTop(delDia, q);
-  $("lista").innerHTML = lista.length ? lista.map(([p, i]) => tarjeta(p, i)).join("")
-    : `<div class="vacio">${delDia.length ? "Ningún partido cumple el filtro." : "No hay partidos de las competiciones que seguimos este día."}</div>`;
+}
+
+function detalle(p) {
+  const basket = p.dep === "b", esp = p.dep === "e", ten = p.dep === "te";
+  return `<div class="det">` + GRUPOS[basket ? "b" : esp ? "e" : ten ? "te" : "f"].map(([nombre, f]) => {
+    const filas = p.picks.filter(k => f(k.m)).sort((a, b) => b.p - a.p);
+    return filas.length ? `<div class="grupo"><h3>${nombre}<span class="colcuota">${casaCorta(p)}</span></h3>${filas.map(k => filaMercado(k, p)).join("")}</div>` : "";
+  }).join("") + (basket
+    ? `<div class="marcador">Resultado esperado <b>${esc(p.marcador)}</b></div></div>`
+    : `<div class="marcador">Marcador más probable <b>${esc(p.marcador)}</b> (${pct(p.pm)})</div></div>`);
+}
+
+function filaPartido(p, idx) {
+  const id = est.dia + "-" + idx, abierto = est.abiertos.has(id);
+  const basket = p.dep === "b";
+  const num = x => basket ? Math.round(x) : (+x).toFixed(1);
+  // El pick que se enseña: el más probable que no sea obvio (por debajo del 92 %)
+  const mp = p.picks.slice().sort((a, b) => b.p - a.p).find(k => k.p < 0.92) || p.picks[0];
+  const fav = est.favs.has(clavePartido(DATOS.dias[est.dia], p));
+  const corto = m => m.replace(/^Hándicap local/, "Local").replace(/^Hándicap visitante/, "Visit.").replace(/^Más de /, "Más ")
+    .replace(/^Menos de /, "Menos ").replace(/ goles$/, "").replace(/ puntos$/, " pts").replace(/^Resultado /, "")
+    .replace(/ \((1X|X2|12|1|X|2)\)$/, " ($1)").replace(/^Ambos marcan: /, "Ambos: ");
+  return `<article class="fp ${abierto ? "abierto" : ""}" id="p-${id}">
+    <button class="fpcab" data-id="${id}" aria-expanded="${abierto}">
+      <span class="hora">${esc(p.hora || "--:--")}</span>
+      <span class="eqs"><b>${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
+      <span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>
+      ${mp ? `<span class="pk ${mp.d ? "d" : ""}"><b>${pct(mp.p)}</b><small>${esc(corto(mp.m))}</small></span>` : "<span></span>"}
+    </button>
+    <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
+    ${abierto ? detalle(p) : ""}
+  </article>`;
+}
+
+function bloqueLiga(liga, lista) {
+  const inf = infoLiga(liga);
+  return `<section class="bliga"><button class="cabliga" data-liga-ir="${esc(liga)}"><span class="flag">${inf.flag}</span>
+    <span class="nl"><small>${esc(inf.pais)}</small><b>${esc(inf.nombre)}</b></span><span class="flecha">›</span></button>
+    ${lista.map(([p, i]) => filaPartido(p, i)).join("")}</section>`;
+}
+
+function pintarLista() {
+  const vis = partidosVisibles();
+  const porLiga = {};
+  vis.forEach(x => (porLiga[x[0].liga] ||= []).push(x));
+  const ligas = Object.keys(porLiga).sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b));
+  let h = "";
+  if (est.vista === "comps" && !(est.busca || "").trim()) {
+    const fila = l => { const inf = infoLiga(l), fav = est.ligasFav.has(l);
+      return `<div class="comp"><button class="compir" data-liga-ir="${esc(l)}"><span class="flag">${inf.flag}</span>
+        <span class="nl"><small>${esc(inf.pais)}</small><b>${esc(inf.nombre)}</b></span>
+        <span class="cnt">${porLiga[l].length}</span></button>
+        <button class="lfav" data-ligafav="${esc(l)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>`; };
+    const favs = ligas.filter(l => est.ligasFav.has(l)), resto = ligas.filter(l => !est.ligasFav.has(l));
+    h += `<button class="todos" data-vista="todos"><span class="lst">☰</span><b>Todos los partidos</b><span class="cnt rojo">${vis.length}</span></button>`;
+    if (favs.length) h += `<h2 class="sec">Competiciones favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
+    h += `<h2 class="sec">${favs.length ? "Más competiciones" : "Competiciones"}</h2>` +
+      (resto.length ? `<div class="comps">${resto.map(fila).join("")}</div>` : `<div class="vacio">No hay más partidos este día.</div>`);
+    if (!ligas.length) h = `<div class="vacio">No quedan partidos de ${DEPORTES.find(d => d[0] === est.dep)[1].toLowerCase()} este día.</div>`;
+  } else {
+    let titulo = "Todos los partidos", sel = ligas;
+    if (est.vista === "liga") { titulo = infoLiga(est.liga).nombre; sel = ligas.filter(l => l === est.liga); }
+    if (est.vista === "favs") {
+      titulo = "Favoritos";
+      const dia = DATOS.dias[est.dia];
+      for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => est.favs.has(clavePartido(dia, p)));
+      sel = ligas.filter(l => porLiga[l].length);
+    }
+    if ((est.busca || "").trim()) titulo = "Resultados de la búsqueda";
+    h += `<div class="volver"><button data-vista="comps">‹</button><b>${esc(titulo)}</b><span>${sel.reduce((s, l) => s + porLiga[l].length, 0)} partidos</span></div>`;
+    h += sel.length ? sel.map(l => bloqueLiga(l, porLiga[l])).join("")
+      : `<div class="vacio">${est.vista === "favs" ? "Toca la ☆ de un partido para tenerlo aquí." : "No hay partidos."}</div>`;
+  }
+  $("vista").innerHTML = h;
+}
+
+function pintarSelector() {
+  const d = DEPORTES.find(x => x[0] === est.dep);
+  $("selector").innerHTML = `<span class="ic">${ICONO_DEP[est.dep]}</span>${d[1]}<span class="tri">▾</span>`;
+  $("menudep").innerHTML = DEPORTES.map(([k, n]) => {
+    const total = DATOS.dias.reduce((s, d) => s + pendientes(d).filter(p => (p.dep || "f") === k).length, 0);
+    return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
+  }).join("");
+  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "favs" ? "favs" : $("cajabusca").hidden ? "comps" : "buscar")));
 }
 
 function pintarAjustes() { return; }
@@ -519,26 +706,22 @@ function pintarTopDia() {
 }
 
 function pintar() {
-  if (est.dep === "t") {
-    pintarDeportes(); pintarDias();
-    for (const id of ["filtros", "lista", "aciertos"]) $(id).hidden = true;
-    $("busca").parentElement.hidden = true;
-    $("dias").hidden = false;
-    pintarTopDia();
-    return;
-  }
-  $("busca").parentElement.hidden = false;
-  const h = est.dep === "h";
-  pintarDeportes();
-  for (const id of ["dias", "filtros", "lista"]) $(id).hidden = h;
-  $("aciertos").hidden = !h;
-  if (h) { pintarAciertos(); pintarAjustes(); return; }
-  pintarDias(); pintarFiltros(); pintarLista(); pintarAjustes();
+  $("menudep").hidden = true;
+  $("selector").setAttribute("aria-expanded", "false");
+  pintarDias(); pintarSelector(); pintarLista();
 }
 
 document.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b) return;
+  if (b.id === "selector") { const m = $("menudep"); m.hidden = !m.hidden; b.setAttribute("aria-expanded", String(!m.hidden)); return; }
+  if (b.id === "lupa" || b.dataset.nav === "buscar") { const c = $("cajabusca"); c.hidden = !c.hidden; if (!c.hidden) { $("busca").focus(); } else { est.busca = ""; $("busca").value = ""; } pintarSelector(); pintarLista(); return; }
+  if (b.dataset.nav) { est.vista = b.dataset.nav; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
+  if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
+  if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = b.dataset.ligaIr; window.scrollTo({ top: 0 }); pintarLista(); return; }
+  if (b.dataset.ligafav !== undefined) { const l = b.dataset.ligafav; est.ligasFav.has(l) ? est.ligasFav.delete(l) : est.ligasFav.add(l);
+    try { localStorage.setItem("ligasFav", JSON.stringify([...est.ligasFav])); } catch (e) {} pintarLista(); return; }
+  if (b.dataset.dep) { est.vista = "comps"; }
   if (b.dataset.per) { est.periodo = b.dataset.per; pintarAciertos(); }
   else if (b.dataset.dep) { est.dep = b.dataset.dep; est.liga = null; try { localStorage.setItem("dep", est.dep); } catch (e) {} pintar(); }
   else if (b.dataset.i !== undefined) { est.dia = +b.dataset.i; pintar(); window.scrollTo({ top: 0 }); }
@@ -576,6 +759,7 @@ document.addEventListener("click", e => {
 });
 
 $("busca").addEventListener("input", e => { est.busca = e.target.value; pintarLista(); });
+est.busca = "";
 $("upd").textContent = "act. " + DATOS.generado;
 // --- Actualizar: busca si hay datos más nuevos publicados y, si los hay, recarga la app
 const ACCIONES = "https://github.com/victormoreno172-sys/picks-dorados/actions/workflows/actualizar.yml";
@@ -588,10 +772,10 @@ async function hayNuevos() {
 const recargar = () => location.replace(location.pathname + "?v=" + Date.now());
 async function comprobar(manual) {
   const b = $("refrescar"), aviso = $("avisoAct");
-  if (manual) { b.disabled = true; b.textContent = "⏳ Buscando..."; }
+  if (manual) { b.disabled = true; b.classList.add("gira"); }
   try {
     const nuevo = await hayNuevos();
-    if (nuevo) { b.textContent = "⏳ Cargando..."; recargar(); return; }
+    if (nuevo) { recargar(); return; }
     if (manual) {
       aviso.hidden = false;
       aviso.innerHTML = `Ya tienes lo último (${esc(DATOS.generado)}). La app se actualiza sola varias veces al día. ` +
@@ -601,7 +785,7 @@ async function comprobar(manual) {
   } catch (e) {
     if (manual) { aviso.hidden = false; aviso.textContent = "No se pudo comprobar (¿sin conexión?). Prueba otra vez en un momento."; }
   }
-  if (manual) { b.disabled = false; b.textContent = "🔄 Actualizar"; }
+  if (manual) { b.disabled = false; b.classList.remove("gira"); }
 }
 $("refrescar").addEventListener("click", () => comprobar(true));
 comprobar(false);  // al abrir la app: si hay datos nuevos, se cargan solos
