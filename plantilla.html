@@ -390,6 +390,27 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .eqkpi small { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .irtabla { display: flex; align-items: center; justify-content: space-between; width: 100%; margin: 0 0 12px; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 11px 14px; font: 600 14px var(--body); color: var(--ink); cursor: pointer; }
 .irtabla span { color: var(--gold); font-weight: 700; }
+
+/* ---------- campo de fútbol (alineaciones) ---------- */
+.campo { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--sombra); overflow: hidden; }
+.campo .cab { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 14px; }
+.campo .cab b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--display); }
+.campo .cab small { font: 700 13px var(--mono); color: var(--gold); }
+.campo .cab .escudo { width: 26px; height: 26px; border-radius: 6px; font-size: 10px; }
+.cesped { position: relative; aspect-ratio: 68 / 118; margin: 0 10px; border-radius: 10px; overflow: hidden;
+  background: repeating-linear-gradient(180deg, #2f9e57 0 8.33%, #2a9250 8.33% 16.66%); border: 2px solid rgba(255,255,255,.85); }
+.cesped i { position: absolute; border: 2px solid rgba(255,255,255,.75); pointer-events: none; }
+.cesped .lm { left: 0; right: 0; top: 50%; height: 0; border-width: 2px 0 0; }
+.cesped .cc { left: 50%; top: 50%; width: 26%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; }
+.cesped .ar { left: 21%; right: 21%; height: 14%; }
+.cesped .ar-t { top: -2px; border-top: 0; } .cesped .ar-b { bottom: -2px; border-bottom: 0; }
+.cesped .ap { left: 37%; right: 37%; height: 5%; }
+.cesped .ap-t { top: -2px; border-top: 0; } .cesped .ap-b { bottom: -2px; border-bottom: 0; }
+.pj { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; width: 70px; z-index: 1; }
+.pj .pc { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--mono); box-shadow: 0 2px 6px rgba(0,0,0,.35); border: 2px solid #fff; }
+.pj.loc .pc { background: var(--grad); color: #1a1200; }
+.pj.vis .pc { background: #0b1220; color: #fff; }
+.pj .pn { max-width: 70px; font: 600 10.5px/1.1 var(--body); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.7); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
 
 <div class="wrap">
@@ -702,6 +723,77 @@ const escudo = (url, nombre) => url ? `<img class="escudo" src="${esc(url)}" alt
   : `<span class="escudo ini">${esc(iniciales(nombre))}</span>`;
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const DIAS_L = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+// ---------------------------------------------------------------- alineaciones sobre el campo
+// Profundidad (de la portería hacia arriba) y lado según la posición que da ESPN
+function profundidad(pos) {
+  const q = (pos || "").toUpperCase().replace(/-[LRC]$/, "");
+  if (q === "G" || q === "GK") return 0;
+  if (/^(CD|CB|D|SW|LB|RB|LCB|RCB)$/.test(q)) return 1;
+  if (/^(LWB|RWB|WB)$/.test(q)) return 1.4;
+  if (/^(DM|CDM|LDM|RDM)$/.test(q)) return 2;
+  if (/^(CM|M|LM|RM|LCM|RCM)$/.test(q)) return 2.5;
+  if (/^(AM|CAM|LAM|RAM)$/.test(q)) return 3;
+  if (/^(LW|RW|W)$/.test(q)) return 3.5;
+  if (/^(F|CF|ST|S|FW|LF|RF)$/.test(q)) return 4;
+  return 2.5;
+}
+function lado(pos) {
+  const p = (pos || "").toUpperCase();
+  if (/-L$/.test(p)) return /^(CD|CB|DM|CM)/.test(p) ? -0.5 : -1;
+  if (/-R$/.test(p)) return /^(CD|CB|DM|CM)/.test(p) ? 0.5 : 1;
+  if (/^L/.test(p)) return -1;
+  if (/^R/.test(p)) return 1;
+  return 0;
+}
+const apellido = n => { const w = String(n).trim().split(/\s+/); return w.length > 1 ? w[w.length - 1] : w[0]; };
+// Devuelve las líneas (de defensa a ataque), cada una ordenada de izquierda a derecha; null si no cuadra
+function lineas(eq) {
+  const tit = eq.tit || [];
+  const nums = (eq.form || "").split("-").map(Number).filter(n => n > 0);
+  if (tit.length !== 11) return null;
+  const portero = tit.find(j => profundidad(j[2]) === 0) || tit[0];
+  const resto = tit.filter(j => j !== portero).map((j, i) => ({ j, d: profundidad(j[2]), l: lado(j[2]), i }))
+    .sort((a, b) => a.d - b.d || a.i - b.i);
+  let cuentas = nums.reduce((s, n) => s + n, 0) === 10 ? nums : null;
+  if (!cuentas) {  // sin formación: agrupar por profundidad
+    const g = {}; resto.forEach(x => (g[Math.round(x.d)] ||= []).push(x)); cuentas = Object.keys(g).sort().map(k => g[k].length);
+  }
+  const out = [[{ j: portero, l: 0 }]];
+  let k = 0;
+  for (const n of cuentas) { out.push(resto.slice(k, k + n).sort((a, b) => a.l - b.l)); k += n; }
+  return out;
+}
+function campoAlineaciones(al, p) {
+  const L = al.l && lineas(al.l), V = al.v && lineas(al.v);
+  if (!L && !V) return `<div class="alin">${["l", "v"].map(k => al[k] ? `<div class="alcol"><h4>${esc(k === "l" ? p.local : p.visitante)}</h4>${al[k].tit.map(j => `<div class="jug"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${esc(j[2])}</span></div>`).join("")}</div>` : "").join("")}</div>`;
+  // Local arriba (portería arriba, ataca hacia abajo); visitante abajo. y en % del alto del campo
+  const fichas = (lin, arriba, cls) => {
+    if (!lin) return "";
+    const n = lin.length;
+    return lin.map((fila, i) => {
+      const y0 = i === 0 ? 5 : 15 + (i - 1) * (28 / Math.max(1, n - 2));
+      const y = arriba ? y0 : 100 - y0;
+      return fila.map((x, k) => {
+        let xx = (k + 1) / (fila.length + 1) * 100;
+        if (arriba) xx = 100 - xx;  // el local mira hacia abajo: su izquierda queda a la derecha
+        return `<div class="pj ${cls}" style="left:${xx.toFixed(1)}%;top:${y.toFixed(1)}%"><span class="pc">${esc(x.j[0] || "")}</span><span class="pn">${esc(apellido(x.j[1]))}</span></div>`;
+      }).join("");
+    }).join("");
+  };
+  return `<div class="campo">
+    <div class="cab cab-l">${escudo((p.fi || {}).esc ? p.fi.esc[0] : "", p.local)}<b>${esc(p.local)}</b><small>${esc((al.l || {}).form || "")}</small></div>
+    <div class="cesped"><i class="lm"></i><i class="cc"></i><i class="ar ar-t"></i><i class="ar ar-b"></i><i class="ap ap-t"></i><i class="ap ap-b"></i>
+      ${fichas(L, true, "loc")}${fichas(V, false, "vis")}</div>
+    <div class="cab cab-v">${escudo((p.fi || {}).esc ? p.fi.esc[1] : "", p.visitante)}<b>${esc(p.visitante)}</b><small>${esc((al.v || {}).form || "")}</small></div>
+  </div>`;
+}
+function suplentes(al, p) {
+  const col = (k, nombre) => { const a = al[k]; if (!a || !a.sup.length) return "";
+    return `<div class="alcol"><h4>${esc(nombre)}</h4>` + a.sup.map(j => `<div class="jug sup"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${esc(/^SUB/i.test(j[2] || "") ? "" : j[2] || "")}</span></div>`).join("") + `</div>`; };
+  const h = col("l", p.local) + col("v", p.visitante);
+  return h ? `<h2 class="sec">Suplentes</h2><div class="alin">${h}</div>` : "";
+}
 function pintarFicha() {
   const dia = DATOS.dias[est.dia], p = dia.partidos[est.sel];
   if (!p) { est.vista = "comps"; return pintarLista(); }
@@ -722,13 +814,7 @@ function pintarFicha() {
   } else if (est.tab === "alin") {
     const al = fi.alin;
     if (!al) cont = `<div class="vacio">Las alineaciones salen más o menos <b>una hora antes</b> del partido. Vuelve a mirarlo entonces (la app se actualiza sola).</div>`;
-    else {
-      const col = (lado, nombre) => { const a = al[lado]; if (!a) return `<div class="alcol"><h4>${esc(nombre)}</h4><p class="vacio">Sin datos</p></div>`;
-        return `<div class="alcol"><h4>${esc(nombre)}${a.form ? ` <small>${esc(a.form)}</small>` : ""}</h4>` +
-          a.tit.map(j => `<div class="jug"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${esc(j[2])}</span></div>`).join("") +
-          (a.sup.length ? `<h5>Suplentes</h5>` + a.sup.map(j => `<div class="jug sup"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span></div>`).join("") : "") + `</div>`; };
-      cont = `<div class="alin">${col("l", p.local)}${col("v", p.visitante)}</div>`;
-    }
+    else cont = campoAlineaciones(al, p) + suplentes(al, p);
   } else if (est.tab === "tabla") {
     const t = DATOS.tablas[fi.slug], nombres = (fi.n || []).map(quitarAcentos);
     cont = `<table class="tabla2"><tr><th>#</th><th>Equipo</th><th>PJ</th><th>${p.dep === "b" ? "DIF" : "DG"}</th><th>${p.dep === "b" ? "V" : "PTS"}</th></tr>` +
