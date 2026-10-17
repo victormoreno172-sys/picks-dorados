@@ -1,25 +1,19 @@
 <title>Bot Dorado</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Mismo lenguaje que Picks Dorados: tinta verde, oro solo para el dinero y lo que destaca */
 :root {
-  --bg: #eef2ee; --surface: #ffffff; --ink: #12261c; --muted: #5d6f64; --line: #d6dfd8;
-  --gold: #a87408; --gold-soft: #f6e6b8; --ok: #18794a; --ok-soft: #d8f0df; --red: #c0262d; --red-soft: #fbe1df;
-  --wait: #6b7a71; --bar: #dfe7e1;
-  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
-  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Negro y futurista: cristal oscuro, neón verde para lo que gana, oro para el dinero */
+  --bg: #04060a; --surface: rgba(255, 255, 255, .035); --ink: #e8eef8; --muted: #8391a7; --line: rgba(255, 255, 255, .09);
+  --gold: #ffcc4d; --gold-soft: rgba(255, 204, 77, .12); --ok: #39f5a0; --ok-soft: rgba(57, 245, 160, .12);
+  --red: #ff4d6d; --red-soft: rgba(255, 77, 109, .14); --wait: #8391a7; --bar: rgba(255, 255, 255, .06);
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
-  --gold: #f2bf3e; --gold-soft: #3a2c08; --ok: #6fdc9f; --ok-soft: #12382a; --red: #ff6b6f; --red-soft: #3d1214; --wait: #93a79a; --bar: #1d3226;
-  color-scheme: dark } }
-:root[data-theme="dark"] {
-  --bg: #0b1711; --surface: #12221a; --ink: #e8efe9; --muted: #93a79a; --line: #233a2d;
-  --gold: #f2bf3e; --gold-soft: #3a2c08; --ok: #6fdc9f; --ok-soft: #12382a; --red: #ff6b6f; --red-soft: #3d1214; --wait: #93a79a; --bar: #1d3226;
-  color-scheme: dark }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.45 var(--body); -webkit-font-smoothing: antialiased; }
@@ -56,6 +50,29 @@ tr:last-child td { border-bottom: 0; }
 .badge.g { background: var(--ok-soft); color: var(--ok); } .badge.p { background: var(--red-soft); color: var(--red); }
 .nota { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
 .vacio { color: var(--muted); font-size: 14px; }
+
+/* ---------- capa futurista ---------- */
+body { background: radial-gradient(900px 500px at 100% -10%, rgba(57, 245, 160, .10), transparent 60%),
+  radial-gradient(800px 500px at -20% 20%, rgba(255, 204, 77, .08), transparent 60%), #04060a; background-attachment: fixed; }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+  background-image: linear-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .03) 1px, transparent 1px);
+  background-size: 32px 32px; mask-image: linear-gradient(#000, transparent 75%); }
+header { border-bottom-color: var(--line); }
+h1 { letter-spacing: .02em; }
+h1 span { color: var(--ok); text-shadow: 0 0 18px rgba(57, 245, 160, .55); }
+.caja { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 20px 40px -24px rgba(0, 0, 0, .9); }
+.hero { background: linear-gradient(160deg, rgba(57, 245, 160, .10), rgba(255, 255, 255, .02) 55%); border-color: rgba(57, 245, 160, .22); }
+.hero .num { font-family: var(--display); font-weight: 700; letter-spacing: -.02em; text-shadow: 0 0 28px rgba(255, 204, 77, .35); }
+.kpi { background: rgba(255, 255, 255, .025); border-radius: 12px; }
+.kpi b { font-size: 17px; }
+.pos { text-shadow: 0 0 12px rgba(57, 245, 160, .35); }
+h2 { font-family: var(--display); font-weight: 700; letter-spacing: .08em; font-size: 15px; color: #c7d2e4; }
+.ap { background: rgba(255, 255, 255, .03); border-radius: 14px; }
+.ap.g { box-shadow: -6px 0 18px -10px rgba(57, 245, 160, .7); }
+.ap.p { box-shadow: -6px 0 18px -10px rgba(255, 77, 109, .7); }
+svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
+.upd a { color: var(--ok); }
 </style>
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>

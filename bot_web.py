@@ -11,7 +11,7 @@ import web
 
 CARPETA = os.path.join(web.SALIDA, "bot")
 MANIFEST = {"name": "Bot Dorado", "short_name": "Bot Dorado", "lang": "es", "start_url": "./", "scope": "./",
-            "display": "standalone", "background_color": "#0b1711", "theme_color": "#0b1711",
+            "display": "standalone", "background_color": "#04060a", "theme_color": "#04060a",
             "icons": [{"src": "icono.svg", "sizes": "any", "type": "image/svg+xml"},
                       {"src": "icono.png", "sizes": "512x512", "type": "image/png"}]}
 
@@ -20,7 +20,7 @@ def html(datos: dict) -> str:
     with open(os.path.join(web.CARPETA, "plantilla_bot.html"), encoding="utf-8") as f:
         cuerpo = f.read()
     js = json.dumps(datos, ensure_ascii=False).replace("</", "<\\/")
-    cabecera = web.CABECERA.replace("Picks Dorados", "Bot Dorado")
+    cabecera = web.CABECERA.replace("Picks Dorados", "Bot Dorado").replace("#0b1711", "#04060a")
     return cabecera + cuerpo.replace("__DATOS__", js) + "\n</body>\n</html>\n"
 
 

@@ -45,7 +45,7 @@ ICONO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 MANIFEST = {
     "name": "Picks Dorados", "short_name": "Picks", "lang": "es",
     "start_url": "./", "display": "standalone",
-    "background_color": "#0b1711", "theme_color": "#0b1711",
+    "background_color": "#f5f7fb", "theme_color": "#f5f7fb",
     "icons": [{"src": "icono.svg", "sizes": "any", "type": "image/svg+xml"},
               {"src": "icono.png", "sizes": "512x512", "type": "image/png"}],
 }
@@ -91,7 +91,7 @@ def html(datos: dict, documento_completo: bool = True) -> str:
     # json seguro dentro de <script>
     js = json.dumps(datos, ensure_ascii=False).replace("</", "<\\/")
     cuerpo = cuerpo.replace("__DATOS__", js)
-    return (CABECERA + cuerpo + "\n</body>\n</html>\n") if documento_completo else cuerpo
+    return (CABECERA.replace("#0b1711", "#f5f7fb") + cuerpo + "\n</body>\n</html>\n") if documento_completo else cuerpo
 
 
 def _icono_png(ruta: str):
