@@ -196,20 +196,18 @@ def analizar(p: PartidoProximo, modelo: ModeloDixonColes) -> Analisis | None:
     cuotas = dict(p.cuotas)
     # Control de seguridad: si las cuotas de la casa dicen lo contrario que nuestro modelo
     # (p. ej. el favorito al revés), lo más probable es que se hayan emparejado con otro partido
-    # o con local/visitante cambiados. Si al darles la vuelta cuadran, se giran; si no, se descartan.
+    # o con local/visitante cambiados: se descartan.
     imp = _quitar_margen(cuotas, GRUPOS_1X2)
     if imp:
         p1, p2 = probs["Gana local (1)"], probs["Gana visitante (2)"]
         d = abs(imp[GRUPOS_1X2[0]] - p1) + abs(imp[GRUPOS_1X2[2]] - p2)
         d_giro = abs(imp[GRUPOS_1X2[2]] - p1) + abs(imp[GRUPOS_1X2[0]] - p2)
         if d > 0.6:
-            if d_giro < 0.3:
-                print(f"  aviso cuotas: {p.local} - {p.visitante} venían al revés, se giran")
-                cuotas[GRUPOS_1X2[0]], cuotas[GRUPOS_1X2[2]] = cuotas[GRUPOS_1X2[2]], cuotas[GRUPOS_1X2[0]]
-            else:
-                print(f"  aviso cuotas: {p.local} - {p.visitante} no cuadran con el modelo, se ignoran")
-                cuotas = {}
-                p.casa = ""
+            # No se giran nunca solas (podría ser el modelo el que se equivoca): se descartan
+            print(f"  aviso cuotas: {p.local} - {p.visitante} no cuadran con el modelo"
+                  f"{' (parecen al revés)' if d_giro < 0.3 else ''}, se ignoran")
+            cuotas = {}
+            p.casa = ""
     estimadas: set[str] = set()
     implicitas = {**_quitar_margen(cuotas, GRUPOS_1X2), **_quitar_margen(cuotas, GRUPOS_OU)}
     mercado = goles_del_mercado(cuotas, lam + mu)
