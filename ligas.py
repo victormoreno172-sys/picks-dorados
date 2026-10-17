@@ -140,8 +140,7 @@ def _scoreboard_rango(deporte: str, slug: str, desde: date, hasta: date, horas: 
     """Partidos de un mes. Prueba varias formas de pedírselo a ESPN y apunta qué ha funcionado."""
     import requests
     url = ficha.BASE.format(deporte=deporte, slug=slug, que="scoreboard")
-    intentos = [{"dates": f"{desde:%Y%m%d}-{hasta:%Y%m%d}", "limit": 500},
-                {"dates": f"{desde:%Y%m%d}-{hasta:%Y%m%d}"}, {"dates": f"{desde:%Y%m}"}]
+    intentos = [{"dates": f"{desde:%Y%m}", "limit": 500}, {"dates": f"{desde:%Y%m}"}]
     for params in intentos:
         try:
             r = requests.get(url, params=params, headers=ficha.UA, timeout=30)
