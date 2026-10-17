@@ -11,7 +11,8 @@ Cada día, de todo un poco (lo pidió el usuario: volumen y movimiento):
   - COMBINADA DOBLE y COMBINADA TRIPLE con los picks más seguros (78 %+) de partidos distintos.
   - Importe: cada apuesta es el 5 % del dinero que queda tras hacer las anteriores, en el orden
     del mensaje (lo decidió el usuario). Como mucho 8 apuestas al día.
-  - De momento fútbol y basket (los que se pueden corregir solos con el resultado).
+  - Fútbol y basket (los que se pueden corregir solos con el resultado). Basket sin cuota en la
+    API: hasta 2 sencillas con la cuota mínima que hay que encontrar en Winamax.
 """
 from __future__ import annotations
 
@@ -28,7 +29,7 @@ RUTA = os.path.join(os.path.dirname(historial.RUTA), "banca.json")
 TZ = ZoneInfo(config.ZONA_HORARIA)
 PROB_MIN, CUOTA_MIN = 0.70, 1.20
 PROB_COMBI, CUOTA_PIERNA = 0.78, 1.12
-MAX_SENCILLAS, MAX_EXPOSICION = 6, 0.40
+MAX_SENCILLAS = 6
 PORCENTAJE = config.PORCENTAJE_APUESTA  # cada apuesta, este % de la banca del momento
 PEOR_VALOR = -0.08   # no se apuesta nada que la casa pague muy por debajo de lo que vale
 
@@ -97,7 +98,7 @@ def _pierna(a, k) -> dict:
     p = a.partido
     return {"fecha": p.fecha.isoformat(), "hora": p.hora, "liga": p.liga, "local": p.local,
             "visitante": p.visitante, "mercado": k.mercado, "prob": round(float(k.prob), 3),
-            "cuota": float(k.cuota), "estimada": bool(k.estimada)}
+            "cuota": float(k.cuota or 0), "estimada": bool(k.estimada)}
 
 
 def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
@@ -144,12 +145,29 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
                              "cuota": cuota, "prob": round(prod(k.prob for *_, k in piernas), 3),
                              "importe": redondo(banca * PORCENTAJE)})
 
-    # Tope del día
-    total, elegidas = 0.0, []
-    for ap in apuestas:
-        if total + ap["importe"] <= banca * MAX_EXPOSICION:
-            elegidas.append(ap)
-            total += ap["importe"]
+    # Basket sin cuota en la API (ACB, Lega, Grecia...): hasta 2 sencillas, con la cuota mínima que
+    # hay que encontrar en Winamax (la de la app + 3 %). El saldo se calcula con esa cuota mínima.
+    sin_cuota = []
+    for a in lista:
+        p = a.partido
+        if _deporte(a) != "b" or id(a) in usados or any(k.cuota for k in a.picks):
+            continue
+        if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
+            continue
+        ks = [k for k in a.picks if PROB_MIN <= k.prob and round(1.03 / k.prob, 2) >= CUOTA_MIN]
+        if ks:
+            k = max(ks, key=lambda k: k.prob)
+            pi = _pierna(a, k)
+            pi["cuota"], pi["minima"] = round(1.03 / k.prob + 0.005, 2), True
+            sin_cuota.append({"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"],
+                              "prob": round(k.prob, 3), "importe": redondo(banca * PORCENTAJE)})
+    sin_cuota.sort(key=lambda ap: -ap["prob"])
+    apuestas = [x for x in apuestas if x["tipo"] == "Sencilla"] + sin_cuota[:2] + \
+               [x for x in apuestas if x["tipo"] != "Sencilla"]
+
+    # Como mucho 10 apuestas (6 sencillas de fútbol/basket con cuota, 2 de basket sin cuota y las
+    # 2 combinadas). Con importes en cadena al 5 %, 10 apuestas son ~40 % de la banca.
+    elegidas = apuestas[:10]
     for ap in elegidas:
         ap["fecha"] = ap["piernas"][0]["fecha"]
     sencillas = sorted([ap for ap in elegidas if ap["tipo"] == "Sencilla"], key=lambda ap: ap["piernas"][0]["hora"] or "99")
@@ -166,8 +184,10 @@ def importes_en_cadena(apuestas: list[dict], disponible: float):
 
 
 def _linea_pierna(pi: dict) -> str:
+    cuota = (f"pide ≥ {pi['cuota']:.2f}" if pi.get("minima")
+             else f"{'≈' if pi['estimada'] else ''}{pi['cuota']:.2f}")
     return (f"{pi['hora'] or '?'} · {pi['local']} – {pi['visitante']}\n"
-            f"   👉 {pi['mercado']} ({pi['prob']:.0%}) · {'≈' if pi['estimada'] else ''}{pi['cuota']:.2f}")
+            f"   👉 {pi['mercado']} ({pi['prob']:.0%}) · {cuota}")
 
 
 def _ayer(b: dict, dia: date) -> str:
@@ -195,6 +215,8 @@ def mensaje(elegidas: list[dict], b: dict, dia: date) -> str:
         t.append(f"Total del día: <b>{sum(ap['importe'] for ap in elegidas):.2f} €</b>")
         if any(pi["estimada"] for ap in elegidas for pi in ap["piernas"]):
             t.append("≈ = cuota estimada: si en Winamax pagan menos, mira la siguiente o sáltala.")
+        if any(pi.get("minima") for ap in elegidas for pi in ap["piernas"]):
+            t.append("pide ≥ X = sin cuota en la API: apuéstala solo si Winamax paga X o más.")
     else:
         t.append("Hoy no hay partidos de fútbol o basket que cumplan lo mínimo (70 %+).")
     t.append(f"\n💰 Banca: <b>{s:.2f} €</b> (empezó con {b['inicial']:.0f} €, {s / b['inicial'] - 1:+.1%})"
