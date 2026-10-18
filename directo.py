@@ -74,7 +74,8 @@ def candidatos(datos: dict, ahora: datetime) -> dict:
                 ini = datetime.fromisoformat(f"{dia['fecha']}T{p.get('hora') or '00:00'}").replace(tzinfo=TZ)
             except ValueError:
                 continue
-            if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=5):
+            # esports: las series largas (Bo5) y los retrasos alargan mucho los partidos
+            if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=8 if dep == "e" else 5):
                 out[dep].append({"clave": f"{dia['fecha']}|{p['local']}|{p['visitante']}", "local": p["local"],
                                  "visitante": p["visitante"], "liga": p.get("liga") or ""})
     return out
@@ -261,6 +262,17 @@ def main():
     subprocess.run(["git", "checkout", "-q", "--orphan", "directo-tmp"], check=False)
     subprocess.run(["git", "rm", "-rqf", "--cached", "."], check=False)
     inicio, datos, t_datos, ultimo, t_pub = time.time(), {}, 0, None, 0
+    # Los partidos ya terminados se siguen publicando (con su resultado) hasta el día siguiente,
+    # aunque hayan salido de la ventana de "en juego"; se recuperan de la vuelta anterior.
+    finales: dict = {}
+    try:
+        previo = subprocess.run(["git", "show", "origin/directo:directo.json"], capture_output=True, text=True)
+        if previo.returncode != 0:
+            subprocess.run(["git", "fetch", "-q", "--depth", "1", "origin", "directo"], check=False)
+            previo = subprocess.run(["git", "show", "FETCH_HEAD:directo.json"], capture_output=True, text=True)
+        finales = {k: v for k, v in (json.loads(previo.stdout or "{}").get("res") or {}).items() if v.get("st") == "post"}
+    except (ValueError, OSError):
+        finales = {}
     while time.time() - inicio < DURACION:
         ahora = datetime.now(TZ)
         if time.time() - t_datos > 600:
@@ -275,6 +287,10 @@ def main():
             res.update(basket(cand["b"], ahora))
         if cand["e"]:
             res.update(esports(cand["e"]))
+        limite = (ahora - timedelta(days=1)).date().isoformat()
+        finales = {k: v for k, v in finales.items() if k[:10] >= limite}
+        finales.update({k: v for k, v in res.items() if v.get("st") == "post"})
+        res = {**finales, **res}
         contenido = {"ts": ahora.strftime("%H:%M:%S"), "res": res}
         if res != ultimo or (res and time.time() - t_pub > 150):  # y cada 2,5 min para que se vea que está vivo
             publicar(contenido)

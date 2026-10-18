@@ -2482,7 +2482,18 @@ function buscarEn(cand, casa, fuera) {
   }
   return mejor;
 }
-function ponerRes(p, res) { if (JSON.stringify(res) === JSON.stringify(p.res)) return false; p.res = res; return true; }
+// Los resultados finales se guardan en el móvil: así no desaparecen cuando el partido sale del directo
+const RES_FINALES = (() => { try { return JSON.parse(localStorage.getItem("resFinales") || "{}"); } catch (e) { return {}; } })();
+function guardarFinal(p, res) {
+  if (!res || res.st !== "post") return;
+  const d = DATOS.dias.find(d => d.partidos.includes(p)); if (!d) return;
+  RES_FINALES[d.fecha + "|" + p.local + "|" + p.visitante] = res;
+  const lim = new Date(Date.now() - 3 * 864e5).toISOString().slice(0, 10);
+  for (const k of Object.keys(RES_FINALES)) if (k.slice(0, 10) < lim) delete RES_FINALES[k];
+  try { localStorage.setItem("resFinales", JSON.stringify(RES_FINALES)); } catch (e) {}
+}
+for (const d of DATOS.dias) for (const p of d.partidos) { const r = RES_FINALES[d.fecha + "|" + p.local + "|" + p.visitante]; if (r && !(p.res && p.res.st === "post")) p.res = r; }
+function ponerRes(p, res) { if (JSON.stringify(res) === JSON.stringify(p.res)) return false; p.res = res; guardarFinal(p, res); return true; }
 async function json(url, ms = 12000) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
   try { const r = await fetch(url, { cache: "no-store", signal: c.signal }); if (!r.ok) throw new Error(r.status); return await r.json(); }
