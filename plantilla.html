@@ -597,6 +597,15 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .tlley span { display: inline-flex; align-items: center; gap: 5px; }
 .tlley i { width: 12px; height: 6px; border-radius: 3px; display: inline-block; }
 .tlley i.hoyi { width: 2px; height: 10px; background: var(--red); }
+
+.tinfo { position: relative; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--j1); border-radius: 16px; padding: 12px 14px; margin: 12px 0 10px; box-shadow: var(--sombra); }
+.tinfo > small { display: block; font: 700 10px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.tinfo p { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.tinfo dl { margin: 10px 0 0; display: grid; gap: 8px; }
+.tinfo dl div { display: grid; gap: 2px; }
+.tinfo dt { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.tinfo dd { margin: 0; font-size: 13px; line-height: 1.4; }
+.tinfo button { margin-top: 10px; border: 0; background: none; padding: 4px 0; font: 700 12.5px/1.2 var(--body, inherit); color: var(--j1); cursor: pointer; }
 </style>
 
 <div class="wrap">
@@ -1430,6 +1439,87 @@ function tarjetasJuegos() {
   return `<div class="jcards">${Object.entries(JUEGOS_INFO).map(([k, J]) => { const T = temporadaJuego(k);
     return `<button class="jcard" data-juego="${k}" style="--j1:${J.c1};--j2:${J.c2}"><b>${esc(J.nombre)}</b><small>${T.ahora.length ? "● " + esc(T.ahora[0].n) : T.prox ? "Próximo: " + esc(T.prox.n) : "Temporada " + T.y}</small></button>`; }).join("")}</div>`;
 }
+
+// ---------------------------------------------------------------- ficha de cada torneo de esports
+// Primero los torneos concretos (con datos comprobados) y después las series habituales, para que
+// los torneos nuevos de esas series también tengan descripción. Si no encaja nada, texto general del juego.
+// q = qué es · d = dónde · f = formato · p = premio · j = qué se juega
+const INFO_TORNEOS = [
+  // ---- Counter-Strike 2
+  [/^CS2 · Thunderpick World Championship 2026/i, { fe: "14 – 18 oct 2026", q: "Torneo anual de la casa de apuestas Thunderpick. Reúne en una fase final a equipos invitados y a otros que llegan desde clasificatorios.",
+    d: "Malta · estudio BLAST Arena (presencial)", f: "8 equipos en dos grupos de doble eliminación; los 4 mejores de cada grupo pasan a eliminatorias directas. Todo al mejor de 3, salvo la final (mejor de 5).",
+    p: "1.000.000 $", j: "No es un Major ni da plaza para uno: se juegan el premio y el prestigio. FURIA llegaba como campeón vigente." }],
+  [/^CS2 · 1win Private Club/i, { q: "Serie de torneos online de la casa de apuestas 1win. Mezcla equipos invitados con otros que salen de un clasificatorio cerrado previo.",
+    d: "Online", f: "Eliminatoria directa, partidos al mejor de 3.", p: "No publicado", j: "Dinero y rodaje entre grandes torneos. No da plaza para Majors." }],
+  [/^CS2 · Stake Ranked/i, { q: "Circuito de segundo nivel de StarLadder con Stake: seis \"episodios\" en 2026 por Europa. Es el escaparate de los equipos que quieren subir al primer nivel.",
+    d: "Europa · presencial (LAN); la fase previa es online en FACEIT", f: "Clasificatorio abierto y cerrado; fase final de 8 equipos a doble eliminación, todo al mejor de 3.",
+    p: "100.000 $ por episodio (25.000 $ al campeón)", j: "Premio y visibilidad para equipos que aspiran a jugar los torneos grandes." }],
+  [/^CS2 · PGL Masters Bucharest 2026/i, { fe: "24 – 31 oct 2026", q: "Torneo de primer nivel de PGL, la empresa rumana que ha organizado varios Majors. Es uno de los últimos grandes torneos antes del Major de Singapur.",
+    d: "Bucarest (Rumanía) · PGL Studios, presencial", f: "16 equipos. Fase suiza (con 3 victorias pasas, con 3 derrotas fuera) y eliminatorias de 8. Todo al mejor de 3, salvo la final (mejor de 5).",
+    p: "1.250.000 $ (mitad premios, mitad pagos a los clubes). El campeón: 225.000 $ + 225.000 $", j: "Cuenta para el ranking de Valve (VRS), que decide quién es invitado al Major de Singapur (corte el 2 de noviembre). No da plaza directa." }],
+  [/^CS2 · .*Major/i, { q: "Los Majors son los torneos más importantes de Counter-Strike: los patrocina Valve y solo hay dos al año. Ganar un Major es lo máximo en CS.",
+    f: "Varias fases suizas en las que se van sumando los mejores equipos, y unas eliminatorias finales de 8 en estadio.", j: "El título más prestigioso del juego, y las pegatinas del torneo dentro del juego (que dan dinero a los equipos)." }],
+  [/^CS2 · (IEM|Intel Extreme Masters)/i, { q: "Intel Extreme Masters (IEM), de ESL: la serie de torneos más veterana de Counter-Strike y una de las más importantes después de los Majors.",
+    j: "Premio, prestigio y puntos para el ranking de Valve (VRS), que decide las invitaciones a los Majors." }],
+  [/^CS2 · BLAST/i, { q: "Torneo de BLAST, uno de los dos grandes organizadores del circuito de Counter-Strike (junto a ESL).", j: "Premio, prestigio y puntos para el ranking de Valve (VRS)." }],
+  [/^CS2 · ESL Pro League/i, { q: "ESL Pro League: la liga más antigua del Counter-Strike moderno, con muchos de los mejores equipos del mundo.", j: "Premio, prestigio y puntos para el ranking de Valve (VRS)." }],
+  [/^CS2 · PGL/i, { q: "Torneo de PGL, organizador rumano que ha hecho varios Majors. Suele jugarse en Rumanía o en grandes sedes internacionales.", j: "Premio y puntos para el ranking de Valve (VRS), que decide las invitaciones a los Majors." }],
+  [/^CS2 · (Esports World Cup|EWC)/i, { q: "Esports World Cup: el gran festival de esports de Arabia Saudí, con torneos de muchos juegos a la vez y uno de los premios más altos del año." }],
+  // ---- Valorant
+  [/^VAL · VALORANT Champions 2026/i, { fe: "24 sep – 18 oct 2026", q: "El Mundial de Valorant. Es el último y más importante torneo del VCT, el circuito oficial de Riot Games.",
+    d: "Shanghái (China) · Mercedes-Benz Arena", f: "16 equipos, 4 de cada región. Grupos de 4 a doble eliminación y luego playoffs de 8 a doble eliminación. Al mejor de 3; la final y la final de perdedores, al mejor de 5.",
+    p: "2.250.000 $ (1.000.000 $ para el campeón)", j: "Ser campeón del mundo. Entran los 2 mejores de cada región en el Stage 2 y el resto por los puntos del circuito de la temporada." }],
+  [/^VAL · VALORANT Game Changers Championship 2026/i, { fe: "22 oct – 1 nov 2026", q: "El torneo final del circuito Game Changers, la competición de Riot para mujeres y géneros marginados. Es la 5ª edición.",
+    d: "São Paulo (Brasil) · Riot Games Arena", f: "10 equipos a doble eliminación: con dos derrotas, fuera. Al mejor de 3; la final y la final de perdedores, al mejor de 5.",
+    p: "500.000 $ (180.000 $ para el campeón)", j: "El título mundial de Game Changers. Llegan los campeones de cada región (EMEA, Norteamérica, Brasil, Latinoamérica, Pacífico y China)." }],
+  [/^VAL · .*Champions/i, { q: "VALORANT Champions: el Mundial de Valorant y el último torneo de la temporada del VCT.", j: "El título de campeón del mundo y el mayor premio del año." }],
+  [/^VAL · .*Masters/i, { q: "Masters: uno de los dos torneos internacionales de mitad de temporada del VCT, donde se enfrentan los mejores equipos de las cuatro regiones.", j: "Título internacional y puntos del circuito para clasificarse a Champions." }],
+  [/^VAL · .*Kickoff/i, { q: "Kickoff: el torneo con el que arranca cada temporada del VCT en cada región.", j: "Las plazas para el primer Masters del año y los primeros puntos del circuito." }],
+  [/^VAL · .*Game Changers/i, { q: "Game Changers: el circuito de Valorant de Riot para mujeres y géneros marginados, con torneos en cada región y un campeonato mundial al final del año.", j: "Plaza y puntos para el Game Changers Championship." }],
+  [/^VAL · VCT/i, { q: "Torneo regional del VCT, el circuito oficial de Valorant de Riot Games (Américas, EMEA, Pacífico y China).", j: "Puntos del circuito y plazas para los Masters y para Champions." }],
+  // ---- League of Legends
+  [/^LOL · Worlds 2026/i, { fe: "15 oct – 14 nov 2026", q: "El Mundial de League of Legends, el torneo más importante del año. Se juega por la Summoner's Cup.",
+    d: "EE. UU.: Play-In en Los Ángeles, fase suiza y eliminatorias en Allen (Texas) y final el 14 de noviembre en el Barclays Center de Nueva York",
+    f: "19 equipos. Play-In (4 equipos, solo pasa 1), fase suiza de 16 (con 3 victorias pasas, con 3 derrotas fuera) y eliminatorias de 8 al mejor de 5.",
+    p: "Sin anunciar (en 2025 fueron 5.000.000 $)", j: "Ser campeón del mundo. Van 3 equipos de LCK, LPL, LEC, LCS y LCP, 2 de CBLOL y plazas extra según el resultado del MSI." }],
+  [/^LOL · Demacia Cup/i, { fe: "3 – 17 oct 2026", q: "Clásico torneo chino de invierno que en 2026 se abre al mundo: invita a equipos que se quedaron a las puertas del Mundial.",
+    d: "Fase online y final presencial en Pekín (sede de JDG)", f: "12 equipos de 6 ligas (LPL, LCK, LEC, LCS, LCP y CBLOL); los 8 mejores pasan a la final presencial.",
+    p: "1.500.000 yuanes (unos 210.000 $)", j: "Premio y prestigio para los equipos que no fueron al Mundial." }],
+  [/^LOL · EMEA Masters/i, { fe: "Desde el 21 sep 2026", q: "El torneo de las ligas regionales europeas (ERL), el escalón por debajo de la LEC. Juegan los mejores de cada liga nacional, como la Superliga española.",
+    d: "Online, organizado por Riot Games", f: "Más de 40 equipos de las ligas nacionales de Europa, Oriente Medio y África.", j: "Ser el mejor equipo del segundo nivel europeo; es el escaparate para dar el salto a la LEC." }],
+  [/^LOL · LGC/i, { fe: "Mayo – octubre 2026", q: "League Game Changers (LGC): el circuito femenino de LoL en EMEA, abierto a quien se identifique como mujer. Lo organiza N.E.O, que también hace las EMEA Masters.",
+    d: "EMEA", f: "Varias fases entre mayo y octubre que dan puntos; los 6 mejores van a los playoffs de octubre, junto a invitados de competiciones nacionales.", j: "El título del circuito Game Changers de LoL en Europa." }],
+  [/^LOL · (MSI|Mid-Season)/i, { q: "Mid-Season Invitational (MSI): el gran torneo internacional de mitad de año, con los campeones de cada región.", j: "Título internacional y plazas extra para el Mundial para la región que llegue más lejos." }],
+  [/^LOL · First Stand/i, { q: "First Stand: el primer torneo internacional del año, con los campeones de la primera fase de cada liga.", j: "Título internacional al inicio de la temporada." }],
+  [/^LOL · (LEC|LCK|LPL|LCS|LCP|CBLOL|LTA)/i, { q: "Liga regional de primer nivel de League of Legends (LEC en Europa, LCK en Corea, LPL en China, LCS en Norteamérica, LCP en Asia-Pacífico y CBLOL en Brasil).", j: "Puntos y plazas para los torneos internacionales (First Stand, MSI y el Mundial)." }],
+];
+const INFO_JUEGO = {
+  CS2: "Torneo de Counter-Strike 2 de primer nivel (S o A) que sigue la app.",
+  VAL: "Torneo de Valorant de primer nivel (S o A) que sigue la app.",
+  LOL: "Torneo de League of Legends de primer nivel (S o A) que sigue la app.",
+};
+function infoTorneo(nombre, L) {
+  const hit = INFO_TORNEOS.find(([re]) => re.test(nombre));
+  const k = juegoDeLiga(nombre), I = Object.assign({}, hit ? hit[1] : { q: INFO_JUEGO[k] || "Torneo que sigue la app." });
+  const fechas = (L.jornadas || []).flatMap(j => [j.desde, j.hasta]).filter(Boolean).sort();
+  // Las fechas guardadas son de una edición: si el torneo es de otro año, se usan las de la app
+  const anyo = (I.fe || "").match(/20\d\d/);
+  if (anyo && !nombre.includes(anyo[0])) delete I.fe;
+  if (I.fe) I.fechas = I.fe;
+  else if (fechas.length) I.fechas = fechas[0] === fechas[fechas.length - 1] ? fechaCorta(fechas[0]) : `${fechaCorta(fechas[0])} – ${fechaCorta(fechas[fechas.length - 1])}`;
+  return I;
+}
+function tarjetaInfoTorneo(nombre, L) {
+  const I = infoTorneo(nombre, L), k = juegoDeLiga(nombre), J = JUEGOS_INFO[k] || { c1: "#64748b", c2: "#0b1220" };
+  const filas = [["📍", "Dónde", I.d], ["📅", I.fe ? "Fechas" : "Partidos en la app", I.fechas], ["👥", "Equipos", (L.equipos || []).length ? String(L.equipos.length) : ""],
+    ["⚔️", "Formato", I.f], ["💰", "Premio", I.p], ["🏆", "Qué se juega", I.j]].filter(x => x[2]);
+  // Siempre a la vista: qué es, dónde y premio. Lo demás, al tocar "Más".
+  const abierta = est.tinfo === nombre, base = filas.filter(x => ["Dónde", "Premio"].includes(x[1])), resto = filas.filter(x => !base.includes(x));
+  const dl = fs => fs.length ? `<dl>${fs.map(([ic, t, v]) => `<div><dt>${ic} ${t}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : "";
+  return `<div class="tinfo" style="--j1:${J.c1}"><small>Sobre el torneo</small><p>${esc(I.q)}</p>${dl(base)}${abierta ? dl(resto) : ""}
+    ${resto.length ? `<button data-tinfo="${esc(nombre)}">${abierta ? "Ver menos ▴" : "Formato, fechas y qué se juega ▾"}</button>` : ""}</div>`;
+}
+
 function pintarJuego() {
   cargarIndice();
   const k = est.juego, J = JUEGOS_INFO[k];
@@ -1551,6 +1641,7 @@ function pintarClasif() {
   const tabs = [["tabla", L.tipo === "ranking" ? "Ranking" : "Clasificación"], ["jor", L.tipo === "nba" || L.dep === "e" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", tenis ? "Jugadores" : "Equipos"]];
   if (L.tipo === "copa") { tabs.splice(0, 1); if (est.ltab === "tabla") est.ltab = "jor"; }
   if (!L.jornadas.length) { const i = tabs.findIndex(t => t[0] === "jor"); if (i >= 0) tabs.splice(i, 1); if (est.ltab === "jor") est.ltab = tabs[0][0]; }
+  if (L.dep === "e" && L.tipo !== "ranking") h += tarjetaInfoTorneo(nombre, L);
   h += `<nav class="ltabs">${tabs.map(([k, n]) => `<button data-ltab="${k}" aria-pressed="${est.ltab === k}">${n}</button>`).join("")}</nav>`;
   if (est.ltab === "tabla") {
     if (!L.grupos.length || !L.grupos.some(g => g.filas.length)) h += `<div class="vacio">Todavía no hay clasificación.</div>`;
@@ -2061,6 +2152,7 @@ document.addEventListener("click", e => {
     enDirecto(); comprobar(true); pintarLista(); return; }
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
+  if (b.dataset.tinfo !== undefined) { est.tinfo = est.tinfo === b.dataset.tinfo ? null : b.dataset.tinfo; pintarLista(); return; }
   if (b.dataset.juego) { est.vista = "juego"; est.juego = b.dataset.juego; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligasdep) { est.ligasDep = b.dataset.ligasdep; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
