@@ -1959,34 +1959,17 @@ async function directoOtros(fechas) {
       } catch (e) {}
     }
   }
-  // 🏀 Basket europeo: Sofascore (todas las ligas) y, si falla, la API oficial de la Euroliga/Eurocup
-  if (cand.b.length) {
-    let ok = false;
+  // 🏀 Basket europeo y 🎮 esports: el "servidor de directo" (GitHub, cada minuto) deja los marcadores en un archivo
+  if (cand.b.length || cand.e.length) {
     try {
-      const j = await json("https://api.sofascore.com/api/v1/sport/basketball/events/live");
-      ok = true;
-      const PER = { "1st quarter": "1C", "2nd quarter": "2C", "3rd quarter": "3C", "4th quarter": "4C", "halftime": "Desc.", "overtime": "Prór.", "pause": "Pausa", "ended": "Final" };
-      for (const ev of j.events || []) {
-        const x = buscarEn(cand.b, (ev.homeTeam || {}).name, (ev.awayTeam || {}).name); if (!x) continue;
-        const a = (ev.homeScore || {}).current, b = (ev.awayScore || {}).current; if (a == null || b == null) continue;
-        const desc = ((ev.status || {}).description || "").toLowerCase(), fin = (ev.status || {}).type === "finished";
-        const [s1, s2] = x[1] ? [b, a] : [a, b];
-        cambio = ponerRes(x[0], { st: fin ? "post" : "in", m: `${s1}-${s2}`, det: fin ? "Final" : (PER[desc] || "Vivo") }) || cambio;
-      }
-    } catch (e) {}
-    if (!ok) for (const comp of ["E", "U"]) {
-      try {
-        const temp = (AHORA.fecha.slice(5, 7) >= "08" ? +AHORA.fecha.slice(0, 4) : +AHORA.fecha.slice(0, 4) - 1);
-        const j = await json(`https://api-live.euroleague.net/v2/competitions/${comp}/seasons/${comp}${temp}/games`);
-        for (const g of j.data || []) {
-          if (!(g.date || "").startsWith(AHORA.fecha) && !(g.date || "").startsWith(fechas[1])) continue;
-          const x = buscarEn(cand.b, (g.local || {}).club && g.local.club.name, (g.road || {}).club && g.road.club.name); if (!x) continue;
-          const a = (g.local || {}).score, b = (g.road || {}).score; if (a == null || b == null || (!a && !b)) continue;
-          const [s1, s2] = x[1] ? [b, a] : [a, b];
-          cambio = ponerRes(x[0], { st: g.played ? "post" : "in", m: `${s1}-${s2}`, det: g.played ? "Final" : "Vivo" }) || cambio;
+      const j = await json(`https://raw.githubusercontent.com/victormoreno172-sys/picks-dorados/directo/directo.json?t=${Date.now()}`);
+      const res = j.res || {};
+      for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
+        for (const p of dia.partidos) {
+          const r = res[`${dia.fecha}|${p.local}|${p.visitante}`];
+          if (r && !(p.res && p.res.st === "post" && r.st === "in")) cambio = ponerRes(p, r) || cambio;
         }
-      } catch (e) {}
-    }
+    } catch (e) {}
   }
   return cambio;
 }
