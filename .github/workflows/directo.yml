@@ -24,7 +24,7 @@ jobs:
           python directo.py
       # El cron de GitHub a veces no salta: cada vuelta lanza la siguiente para que el directo no se pare nunca
       - name: Siguiente vuelta
-        if: always()
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run directo.yml --ref "${{ github.ref_name }}" --repo "${{ github.repository }}"
