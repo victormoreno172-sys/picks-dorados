@@ -813,6 +813,13 @@ function estado(p) {
   const dia = DATOS.dias[est.dia];
   if (p.res) return p.res;
   if (!empezado(dia, p)) return null;
+  // Tenis y esports: los partidos suelen empezar más tarde de su hora (van uno detrás de otro).
+  // Sin confirmación de una fuente en directo, se deja como pendiente, no como "Vivo".
+  if (p.dep === "te" || p.dep === "e") {
+    const [h, m] = (p.hora || "00:00").split(":").map(Number), [hh, mm] = AHORA.hora.split(":").map(Number);
+    const mins = dia.fecha < AHORA.fecha ? 9999 : (hh * 60 + mm) - (h * 60 + m);
+    return mins > 360 ? { st: "post", m: "", det: "Fin" } : null;
+  }
   const [h, m] = (p.hora || "00:00").split(":").map(Number), [hh, mm] = AHORA.hora.split(":").map(Number);
   const mins = dia.fecha < AHORA.fecha ? 999 : (hh * 60 + mm) - (h * 60 + m);
   return { st: mins < 130 ? "in" : "post", m: "", det: mins < 130 ? "Vivo" : "Fin" };
