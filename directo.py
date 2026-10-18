@@ -146,6 +146,11 @@ def esports(cand: list) -> dict:
                         s1, s2 = s2, s1
                     mapas.append([(juego.get("map_name") or "").replace("de_", "").title(), s1, s2])
                 r["mapas"] = mapas
+                # Mapa que se está jugando ahora (la fuente solo da el marcador al terminar cada mapa)
+                if not fin:
+                    for juego in g:
+                        if juego.get("status") == "current" and juego.get("map_name"):
+                            r["det"] = f"Mapa {juego.get('number') or a + b + 1} · {(juego.get('map_name') or '').replace('de_', '').title()}"
             except (requests.RequestException, ValueError, TypeError):
                 pass
             res[x[0]["clave"]] = r
