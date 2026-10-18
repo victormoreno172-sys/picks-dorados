@@ -114,7 +114,7 @@ def historico(juego: str, hoy: date) -> list[Serie]:
     """Partidos terminados del último año. Se guardan y solo se piden los nuevos."""
     disc = JUEGOS[juego][1]
     os.makedirs(CACHE, exist_ok=True)
-    ruta = os.path.join(CACHE, f"hist_{juego}.json")
+    ruta = os.path.join(CACHE, f"hist2_{juego}.json")  # v2: guarda también torneo y logos
     try:
         with open(ruta, encoding="utf-8") as f:
             guardados = json.load(f)
@@ -135,8 +135,10 @@ def historico(juego: str, hoy: date) -> list[Serie]:
                 guardados[str(m["id"])] = {k: m.get(k) for k in ("id", "start_date", "status", "tier", "bo_type",
                                                                    "team1_id", "team2_id", "team1_score",
                                                                    "team2_score")}
-                guardados[str(m["id"])]["team1"] = {"name": (m.get("team1") or {}).get("name")}
-                guardados[str(m["id"])]["team2"] = {"name": (m.get("team2") or {}).get("name")}
+                for t in ("team1", "team2"):
+                    guardados[str(m["id"])][t] = {"name": (m.get(t) or {}).get("name"),
+                                                  "image_url": (m.get(t) or {}).get("image_url") or ""}
+                guardados[str(m["id"])]["tournament"] = {"name": ((m.get("tournament") or {}).get("name") or "")}
                 nuevos += 1
         # Paramos al llegar a lo que ya teníamos o a partidos de hace más de un año
         if ya == len(res) or res[-1].get("start_date", "") < limite:

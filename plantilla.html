@@ -522,6 +522,12 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .pj .pout { font: 600 9px/1 var(--body); color: rgba(255,255,255,.75); text-shadow: 0 1px 2px rgba(0,0,0,.7); max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jug.sup.entro { color: var(--ink); font-weight: 600; }
 .sube { color: #16a34a; font: 700 11px var(--mono); }
+
+/* escudos pequeños en la lista de partidos y en Mis apuestas */
+.fp .eqs b, .mpierna .me b { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.fp .eqs b span, .mpierna .me b span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fp .eqs .mini, .mpierna .me .mini { width: 18px; height: 18px; }
+.fp .eqs .mini.ini, .mpierna .me .mini.ini { font-size: 7px; }
 </style>
 
 <div class="wrap">
@@ -819,7 +825,7 @@ function filaPartido(p, idx) {
   return `<article class="fp ${abierto ? "abierto" : ""} ${es ? "empezado " + es.st : ""}" id="p-${id}">
     <button class="fpcab" data-abrir="${idx}">
       <span class="hora">${hora}</span>
-      <span class="eqs"><b>${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
+      <span class="eqs"><b>${miniEsc(((p.fi || {}).esc || [])[0], p.local)}<span>${esc(p.local)}</span></b><b>${miniEsc(((p.fi || {}).esc || [])[1], p.visitante)}<span>${esc(p.visitante)}</span></b></span>
       ${mar ? `<span class="esp marc"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : AJ.verEsperados ? `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>` : "<span></span>"}
       <span class="tikd">${partidoApostado(p) ? "🎟️" : ""}</span>
     </button>
@@ -1176,8 +1182,11 @@ function pintarFicha() {
 
 // ---------------------------------------------------------------- pestaña Ligas
 const LIGAS = { indice: null, datos: {}, cargando: {} };
-const miniEsc = (url, n) => url ? `<img class="mini" src="${esc(url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`
-  : `<span class="mini ini">${esc(iniciales(n || "?"))}</span>`;
+function miniEsc(url, n) {
+  const ini = esc(iniciales(n || "?"));
+  return url ? `<img class="mini" src="${esc(url)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;mini ini&quot;>${ini}</span>'">`
+    : `<span class="mini ini">${ini}</span>`;
+}
 function cargarIndice() {
   if (LIGAS.indice || LIGAS.cargando.indice) return;
   LIGAS.cargando.indice = true;
@@ -1442,7 +1451,7 @@ function pintarMisApuestas() {
       const tag = x ? "button" : "div", attrs = x ? ` data-abrirdia="${x[0]}" data-abrirp="${x[1]}" data-desde="misap"` : "";
       return `<${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
         <span class="mh">${hora}</span>
-        <span class="me"><b>${esc(pi.local)}</b><b>${esc(pi.visitante)}</b><small>${esc(pi.mercado)} · ${pi.minima ? "pide ≥ " : pi.estimada ? "≈" : ""}${(+pi.cuota).toFixed(2)}</small></span>
+        <span class="me"><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[0] : "", pi.local)}<span>${esc(pi.local)}</span></b><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[1] : "", pi.visitante)}<span>${esc(pi.visitante)}</span></b><small>${esc(pi.mercado)} · ${pi.minima ? "pide ≥ " : pi.estimada ? "≈" : ""}${(+pi.cuota).toFixed(2)}</small></span>
         <span class="mm">${mar ? `<span>${mar[1]}</span><span>${mar[2]}</span>` : ""}</span>
         <span class="ms">${sem}</span></${tag}>`;
     }).join("");

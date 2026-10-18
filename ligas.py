@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import date, datetime, timedelta
 
 import config
@@ -198,6 +199,9 @@ def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
             vistos.add(e.get("id"))
             es = ficha._estado(c, eq) or {}
             notas = c.get("notes") or e.get("notes") or []
+            for lado in ("home", "away"):
+                if re.match(r"^TBD", eq[lado]["team"].get("displayName", "") or ""):
+                    eq[lado]["team"]["displayName"], eq[lado]["team"]["logo"] = "Por decidir", ""
             partidos.append({"il": eq["home"]["team"].get("id", ""), "iv": eq["away"]["team"].get("id", ""),
                              "r": _ronda((notas[0] or {}).get("headline", "") if notas else ""),"f": dt.date().isoformat(), "h": dt.strftime("%H:%M"),
                              "l": eq["home"]["team"].get("displayName", ""), "v": eq["away"]["team"].get("displayName", ""),
@@ -551,6 +555,62 @@ def _esports(hoy: date) -> list[tuple[str, dict]]:
                         "grupos": [{"n": "", "filas": filas}], "jornadas": jor, "actual": _actual(jor, hoy)}))
     return out
 
+# ---------------------------------------------------------------- escudos que faltan
+PAIS_DE = {"copadelrey": "Spain", "supercopa": "Spain", "segunda": "Spain", "laliga": "Spain", "facup": "England",
+           "carabao": "England", "championship": "England", "coppa": "Italy", "pokal": "Germany", "coupe": "France",
+           "knvb": "Netherlands", "taca": "Portugal", "copaarg": "Argentina", "copabrasil": "Brazil", "brasil": "Brazil",
+           "argentina": "Argentina", "mls": "USA"}
+
+
+def _completar_escudos(archivos: list):
+    """Primero con los escudos que ya salen en otras competiciones; luego, TheSportsDB."""
+    try:
+        import escudos
+    except ImportError:
+        return
+    conocidos: dict[str, str] = {}
+    for _, d in archivos:
+        for j in d["jornadas"]:
+            for p in j["p"]:
+                for n, u in ((p["l"], p.get("el")), (p["v"], p.get("ev"))):
+                    if u:
+                        conocidos.setdefault(n, u)
+        for g in d["grupos"]:
+            for f in g["filas"]:
+                if f.get("logo"):
+                    conocidos.setdefault(f["eq"], f["logo"])
+    n_nuevos = 0
+    for lid, d in archivos:
+        if d.get("dep") != "f":
+            continue
+        pais = PAIS_DE.get(lid, "")
+        def logo(n):
+            nonlocal n_nuevos
+            if n in conocidos or n == "Por decidir":
+                return conocidos.get(n, "")
+            u = escudos.escudo(n, pais)
+            if u:
+                conocidos[n] = u
+                n_nuevos += 1
+            return u
+        for j in d["jornadas"]:
+            for p in j["p"]:
+                if not p.get("el"):
+                    p["el"] = logo(p["l"])
+                if not p.get("ev"):
+                    p["ev"] = logo(p["v"])
+        for g in d["grupos"]:
+            for f in g["filas"]:
+                if not f.get("logo"):
+                    f["logo"] = logo(f["eq"])
+        for lista in (d.get("otras") or {}).values():
+            for p in lista:
+                p["el"] = p.get("el") or conocidos.get(p["l"], "")
+                p["ev"] = p.get("ev") or conocidos.get(p["v"], "")
+    escudos.guardar()
+    print(f"  escudos: {n_nuevos} encontrados en TheSportsDB")
+
+
 # ---------------------------------------------------------------- todo junto
 def _leyenda(grupos: list) -> list:
     vistas, out = set(), []
@@ -641,6 +701,7 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
             import traceback
             print(f"  aviso ligas {extra.__name__}: {e}")
             traceback.print_exc()
+    _completar_escudos(archivos)
     for lid, d in archivos:
         d["leyenda"] = _leyenda(d["grupos"])
         d["equipos"] = _equipos(d["grupos"], d["jornadas"])
