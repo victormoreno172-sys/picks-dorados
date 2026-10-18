@@ -1205,9 +1205,13 @@ function pintarIndiceLigas() {
       <span class="nl"><small>${esc(inf.pais)}</small><b>${esc(inf.nombre)}</b></span><span class="cnt">${l.eq}</span></button>
       <button class="lfav" data-ligafav="${esc(l.n)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>`; };
   const orden = (a, b) => ordenLiga(a.n) - ordenLiga(b.n) || a.n.localeCompare(b.n);
-  const favs = LIGAS.indice.filter(l => est.ligasFav.has(l.n)).sort(orden);
+  // Pestañas por deporte (empieza en el deporte que estés mirando)
+  const deps = [["f", "⚽ Fútbol"], ["b", "🏀 Baloncesto"]].filter(([d]) => LIGAS.indice.some(l => l.dep === d));
+  if (!est.ligasDep || !deps.some(d => d[0] === est.ligasDep)) est.ligasDep = deps.some(d => d[0] === est.dep) ? est.dep : "f";
+  h += `<nav class="ltabs">${deps.map(([d, n]) => `<button data-ligasdep="${d}" aria-pressed="${est.ligasDep === d}">${n} <small>${LIGAS.indice.filter(l => l.dep === d).length}</small></button>`).join("")}</nav>`;
+  const favs = LIGAS.indice.filter(l => l.dep === est.ligasDep && est.ligasFav.has(l.n)).sort(orden);
   if (favs.length) h += `<h2 class="sec">Favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
-  for (const [dep, titulo, copa] of [["f", "⚽ Fútbol · Ligas", false], ["f", "🏆 Fútbol · Copas", true], ["b", "🏀 Baloncesto", false]]) {
+  for (const [dep, titulo, copa] of [["f", "Ligas", false], ["f", "Copas", true], ["b", "Ligas", false]].filter(x => x[0] === est.ligasDep)) {
     const ls = LIGAS.indice.filter(l => l.dep === dep && (l.tipo === "copa") === copa && !est.ligasFav.has(l.n)).sort(orden);
     if (ls.length) h += `<h2 class="sec">${titulo}</h2><div class="comps">${ls.map(fila).join("")}</div>`;
   }
@@ -1642,6 +1646,7 @@ document.addEventListener("click", e => {
     enDirecto(); comprobar(true); pintarLista(); return; }
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
+  if (b.dataset.ligasdep) { est.ligasDep = b.dataset.ligasdep; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ltab) { est.ltab = b.dataset.ltab; pintarLista(); return; }
   if (b.dataset.jor !== undefined) { est.jor = +b.dataset.jor; est.ltab = "jor"; pintarLista(); return; }
