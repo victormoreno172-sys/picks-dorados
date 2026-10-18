@@ -149,8 +149,11 @@ def esports_extra(juego: str, disc: int, dias: int = 30) -> list:
                 s = esports._a_serie(juego, m)
                 if not s:
                     continue
-                if abs((s.fecha - hoy.date()).days) > dias:
-                    fuera = True
+                dif = (s.fecha - hoy.date()).days
+                if abs(dif) > dias:
+                    # Los "próximos" viejos que nunca se actualizaron no cortan la búsqueda: solo lo muy lejano
+                    if (estado == "finished" and dif < 0) or (estado != "finished" and dif > 0):
+                        fuera = True
                     continue
                 out.append(s)
             if fuera or len(res) < 100:
