@@ -497,6 +497,20 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .mpierna .ms { font: 700 11px var(--body); text-align: right; }
 .mpierna.bien .ms { color: #16a34a; } .mpierna.mal .ms { color: var(--red); }
 .mpierna.bien .mm { color: #16a34a; } .mpierna.mal .mm { color: var(--red); }
+
+/* ---------- mercado que has apostado (color en Ajustes) ---------- */
+.fila.mia { background: var(--apuesta-suave); border-radius: 10px; padding: 6px 8px; margin: 2px -8px; box-shadow: inset 3px 0 0 var(--apuesta); }
+.fila.mia .n { font-weight: 700; color: var(--apuesta); }
+.fila.mia .pc { color: var(--apuesta); }
+.fila.mia .bar i { background: var(--apuesta) !important; opacity: 1; box-shadow: 0 0 8px var(--apuesta), 0 0 2px var(--apuesta); }
+.fila.mia .bar { height: 4px; overflow: visible; }
+.tuap { display: inline-block; margin-left: 6px; font: 800 9px var(--body); letter-spacing: .06em; color: #fff; background: var(--apuesta); padding: 2px 6px; border-radius: 999px; vertical-align: middle; box-shadow: 0 0 10px var(--apuesta); }
+:root[data-tema="oscuro"] .fila.mia { background: color-mix(in srgb, var(--apuesta) 16%, transparent); }
+.tik { font-style: normal; font-size: 11px; margin-right: 4px; }
+.colores { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.colores button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.colores button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.colores input[type=color] { width: 40px; height: 36px; border: 0; background: none; padding: 0; cursor: pointer; }
 </style>
 
 <div class="wrap">
@@ -577,7 +591,7 @@ try { const g = JSON.parse(localStorage.getItem("rojo") || "null"); if (g) { est
 const esRojo = k => false;  // el rojo se quitó de la app
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
 // ---------------------------------------------------------------- ajustes (guardados en el móvil)
-let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [] };
+let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorOro: null, colorApuesta: "#c026ff" };
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 function aplicarTema() {
@@ -589,9 +603,25 @@ function aplicarUmbral() {
   if (DATOS.umbral0 === undefined) DATOS.umbral0 = DATOS.umbral;
   const u = AJ.umbral || DATOS.umbral0;
   DATOS.umbral = u;
-  for (const d of DATOS.dias) for (const p of d.partidos) for (const k of p.picks || []) k.d = k.p >= u;
+  // Se compara el % que se ve en pantalla (74,9 % sale como 75 % y cuenta como 75 %)
+  const lim = Math.round(u * 100);
+  for (const d of DATOS.dias) for (const p of d.partidos) for (const k of p.picks || []) k.d = Math.round(k.p * 100) >= lim;
 }
-aplicarTema(); aplicarUmbral();
+// Colores elegidos en Ajustes: el de los picks destacados (dorado) y el de tus apuestas (morado fosforito)
+function mezclar(hex, con, t) { const a = parseInt(hex.slice(1), 16), b = parseInt(con.slice(1), 16);
+  const c = [16, 8, 0].map(s => Math.round(((a >> s) & 255) * (1 - t) + ((b >> s) & 255) * t));
+  return "#" + c.map(x => x.toString(16).padStart(2, "0")).join(""); }
+function aplicarColores() {
+  const r = document.documentElement.style;
+  if (AJ.colorOro && /^#[0-9a-f]{6}$/i.test(AJ.colorOro)) {
+    const c = AJ.colorOro;
+    r.setProperty("--gold", c); r.setProperty("--grad", `linear-gradient(135deg, ${mezclar(c, "#ffffff", .15)} 0%, ${mezclar(c, "#000000", .18)} 100%)`);
+    r.setProperty("--gold-ink", mezclar(c, "#000000", .55)); r.setProperty("--gold-soft", mezclar(c, "#ffffff", .85));
+  } else ["--gold", "--grad", "--gold-ink", "--gold-soft"].forEach(v => r.removeProperty(v));
+  const ap = /^#[0-9a-f]{6}$/i.test(AJ.colorApuesta || "") ? AJ.colorApuesta : "#c026ff";
+  r.setProperty("--apuesta", ap); r.setProperty("--apuesta-suave", mezclar(ap, "#ffffff", .86));
+}
+aplicarTema(); aplicarUmbral(); aplicarColores();
 if (AJ.depInicio !== "ultimo" && ["f", "b", "te", "e"].includes(AJ.depInicio)) est.dep = AJ.depInicio;
 if (!["f", "b", "te", "e"].includes(est.dep)) est.dep = "f";
 est.vista = "comps";
@@ -639,13 +669,23 @@ function pintarFiltros() {
     ligas.map(l => `<button class="chip" data-f="liga" data-l="${esc(l)}" aria-pressed="${est.liga === l}">${esc(l)}</button>`).join("");
 }
 
+// ¿Has apostado este mercado de este partido? (Mis apuestas, sin las quitadas)
+function mercadosApostados() {
+  if (!MIS.datos) return new Set();
+  if (MIS._set && MIS._t === MIS.t) return MIS._set;
+  const s = new Set();
+  for (const a of misApuestasActivasTodas()) for (const pi of a.piernas) s.add(`${pi.local}|${pi.visitante}|${pi.mercado}`);
+  MIS._set = s; MIS._t = MIS.t; return s;
+}
+const partidoApostado = p => { const s = mercadosApostados(); for (const k of s) if (k.startsWith(`${p.local}|${p.visitante}|`)) return true; return false; };
 function filaMercado(k, p) {
+  const mia = p && mercadosApostados().has(`${p.local}|${p.visitante}|${k.m}`);
   const valor = (esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
   const justa = (1 / k.p).toFixed(2);
   const cuota = k.c
     ? `<span class="${veredicto(k)}">${k.e ? "≈" : ""}${k.c.toFixed(2)}</span><small>app ${justa}</small>`
     : `<span>–</span><small>app ${justa}</small>`;
-  return `<div class="fila ${esRojo(k) ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
+  return `<div class="fila ${mia ? "mia" : esRojo(k) ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}${mia ? '<span class="tuap">🎟️ TU APUESTA</span>' : ""}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
 
@@ -767,7 +807,7 @@ function filaPartido(p, idx) {
   return `<article class="fp ${abierto ? "abierto" : ""} ${es ? "empezado " + es.st : ""}" id="p-${id}">
     <button class="fpcab" data-abrir="${idx}">
       <span class="hora">${hora}</span>
-      <span class="eqs"><b>${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
+      <span class="eqs"><b>${partidoApostado(p) ? '<i class="tik">🎟️</i>' : ""}${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
       ${mar ? `<span class="esp marc"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>`}
       ${mp ? `<span class="pk ${mp.d ? "d" : ""}"><b>${ok === true ? "✅ " : ok === false ? "❌ " : ""}${pct(mp.p)}</b><small>${esc(corto(mp.m))}</small></span>` : "<span></span>"}
     </button>
@@ -1216,6 +1256,10 @@ function pintarEquipoLista(h, todos, jugados, proximos, n, grupo, L) {
 }
 
 
+function paleta(clave, actual, colores) {
+  return `<div class="colores">${colores.map(c => `<button data-color="${clave}" data-v="${c}" style="background:${c}" aria-pressed="${actual.toLowerCase() === c}" aria-label="Color ${c}"></button>`).join("")}
+    <input type="color" data-colorlibre="${clave}" value="${actual}" aria-label="Elegir otro color"></div>`;
+}
 function pintarPantallaAjustes() {
   const seg = (clave, opciones) => `<div class="seg">${opciones.map(([v, t]) => `<button data-aj="${clave}" data-v="${v}" aria-pressed="${String(AJ[clave]) === String(v)}">${t}</button>`).join("")}</div>`;
   const u = Math.round((AJ.umbral || DATOS.umbral0) * 100);
@@ -1232,6 +1276,10 @@ function pintarPantallaAjustes() {
       <p>Qué deporte se enseña al abrir: el último que miraste o siempre el mismo.</p></section>
     <section class="ajb"><h3>Picks dorados</h3><div class="ajrange"><input type="range" id="ajumbral" min="55" max="90" step="1" value="${u}"><b id="ajumbralv">${u}%</b></div>
       <p>Los mercados con esta probabilidad o más salen en dorado. Por defecto ${Math.round(DATOS.umbral0 * 100)} %.${AJ.umbral ? ` <a href="#" data-ajreset="umbral">Volver al de por defecto</a>` : ""}</p></section>
+    <section class="ajb"><h3>Color de los picks destacados</h3>${paleta("colorOro", AJ.colorOro || "#ffb703", ["#ffb703", "#fb8500", "#16a34a", "#2563eb", "#e11d48", "#0ea5e9"])}
+      <p>El color de los mercados que pasan del % de arriba.${AJ.colorOro ? ` <a href="#" data-ajreset="colorOro">Volver al dorado</a>` : ""}</p></section>
+    <section class="ajb"><h3>Color de mis apuestas</h3>${paleta("colorApuesta", AJ.colorApuesta || "#c026ff", ["#c026ff", "#a3e635", "#00e5ff", "#ff2bd6", "#ff6b00", "#ffe600"])}
+      <p>Así se pinta en la ficha del partido el mercado que has apostado (y el 🎟️ de la lista).</p></section>
     <section class="ajb"><h3>Competiciones que ves</h3><p style="margin:0 0 6px">Quita las que no te interesen y no saldrán en Partidos.</p>${listaLigas}</section>
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       <p>Todo esto se guarda solo en este móvil.</p></section>
@@ -1254,6 +1302,13 @@ function cargarMisApuestas(forzar) {
   fetch("bot/datos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json())
     .then(d => { MIS.datos = d; MIS.t = Date.now(); }).catch(() => { MIS.datos = MIS.datos || { apuestas: [], error: true }; })
     .finally(() => { MIS.cargando = false; contarMisApuestas(); if (est.vista === "misap") pintarLista(); });
+}
+function misApuestasActivasTodas() {
+  // Para pintar mercados: todas las que no has quitado de los últimos días
+  if (!MIS.datos) return [];
+  let OVb = {}; try { OVb = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); } catch (e) {}
+  const desde = fechaMenos(AHORA.fecha, 2);
+  return (MIS.datos.apuestas || []).filter(a => a.fecha >= desde && OVb[claveApBot(a)] !== "x");
 }
 function misApuestasActivas() {
   if (!MIS.datos) return [];
@@ -1511,6 +1566,7 @@ document.addEventListener("click", e => {
   if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "auto"; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
   if (b.dataset.misrefrescar) { cargarMisApuestas(true); enDirecto(); return; }
+  if (b.dataset.color) { AJ[b.dataset.color] = b.dataset.v; guardarAjustes(); aplicarColores(); pintarLista(); return; }
   if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); pintarLista(); return; }
   if (b.dataset.ajborrar === "favs") { if (!confirm("¿Borrar todos tus partidos y competiciones favoritos?")) return;
     est.favs = new Set(); est.ligasFav = new Set(); try { localStorage.removeItem("favs"); localStorage.removeItem("ligasFav"); } catch (e) {} pintarLista(); return; }
@@ -1578,10 +1634,12 @@ document.addEventListener("change", e => {
     AJ.ocultas = e.target.checked ? AJ.ocultas.filter(x => x !== l) : [...new Set([...AJ.ocultas, l])];
     guardarAjustes();
   }
+  if (e.target.dataset && e.target.dataset.colorlibre) { AJ[e.target.dataset.colorlibre] = e.target.value; guardarAjustes(); aplicarColores(); pintarLista(); }
   if (e.target.id === "ajumbral") { AJ.umbral = +e.target.value / 100; guardarAjustes(); aplicarUmbral(); pintarLista(); }
 });
 document.addEventListener("input", e => { if (e.target.id === "ajumbral") $("ajumbralv").textContent = e.target.value + "%"; });
 document.addEventListener("click", e => { const a = e.target.closest("[data-ajreset]"); if (!a) return; e.preventDefault();
+  if (a.dataset.ajreset === "colorOro") { AJ.colorOro = null; guardarAjustes(); aplicarColores(); pintarLista(); return; }
   AJ.umbral = null; guardarAjustes(); aplicarUmbral(); pintarLista(); });
 if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (AJ.tema === "auto") aplicarTema(); });
 est.busca = "";
