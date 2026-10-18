@@ -954,8 +954,22 @@ function estimadasTenis(dia) {
   return out;
 }
 // Ronda corta para la lista: solo las importantes (Final, Semis, Cuartos, 3er puesto)
+// Fase y ronda de un partido de esports: la de la ficha o, si no la trae, la del cuadro del torneo (Ligas)
+function rondaDe(p) {
+  if ((p.fi || {}).ronda) return p.fi.ronda;
+  if (p.dep !== "e" || !LIGAS.indice) { if (p.dep === "e") cargarIndice(); return ""; }
+  const li = idDeLiga(ligaBase(p.liga));
+  if (!li) return "";
+  const L = LIGAS.datos[li.id];
+  if (!L) { cargarLiga(li.id); return ""; }
+  for (const j of L.jornadas || []) for (const x of j.p) {
+    if (x.r && ((x.l === p.local && x.v === p.visitante) || (x.l === p.visitante && x.v === p.local)) && Math.abs(Date.parse(x.f) - Date.parse(DATOS.dias[est.dia] ? DATOS.dias[est.dia].fecha : x.f)) < 2 * 864e5)
+      return `${j.t} · ${x.r}`;
+  }
+  return "";
+}
 function rondaCorta(p) {
-  const r = (((p.fi || {}).ronda || "").split(" · ").pop() || "");
+  const r = (rondaDe(p).split(" · ").pop() || "");
   if (/^Final$/.test(r)) return "FINAL";
   if (/^Final del cuadro/.test(r)) return "Final cuadro";
   if (/^Semifinal/.test(r)) return "Semis";
@@ -1369,7 +1383,7 @@ function pintarFicha() {
         return `<b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small>`; })()}</div>
       <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b class="${tam(p.visitante)}">${esc(p.visitante)}</b></div>
     </div>
-    ${fi.ronda ? (() => { const t = fi.ronda.split(" · "), r = t.pop();
+    ${rondaDe(p) ? (() => { const t = rondaDe(p).split(" · "), r = t.pop();
         return `<div class="fronda ${/^Final$/.test(r) ? "final" : ""}"><b>${/^Final$/.test(r) ? "🏆 " : ""}${esc(r)}</b><small>${esc(t.join(" · "))}</small></div>`; })()
       : fi.estadio && p.dep !== "e" ? `<div class="festadio">🏟️ ${esc(fi.estadio)}</div>` : ""}
     <nav class="ftabs">${tabs.map(([k, n]) => `<button data-tab="${k}" aria-pressed="${est.tab === k}">${n}</button>`).join("")}</nav>
@@ -1388,7 +1402,7 @@ function cargarIndice() {
   LIGAS.cargando.indice = true;
   fetch("ligas/indice.json?t=" + Math.floor(Date.now() / 600000)).then(r => r.json())
     .then(x => { LIGAS.indice = x; }).catch(() => { LIGAS.indice = []; })
-    .finally(() => { if (["ligas", "liga", "favs", "juego"].includes(est.vista)) pintarLista(); });
+    .finally(() => { if (["ligas", "liga", "favs", "juego", "comps", "todos", "directo", "partido"].includes(est.vista)) pintarLista(); });
 }
 function cargarLiga(id) {
   if (LIGAS.datos[id] || LIGAS.cargando[id]) return;
@@ -1396,7 +1410,7 @@ function cargarLiga(id) {
   fetch(`ligas/${id}.json?t=` + Math.floor(Date.now() / 600000)).then(r => r.json())
     .then(x => { LIGAS.datos[id] = x; if (est.jor == null) est.jor = x.actual || 0; })
     .catch(() => { LIGAS.datos[id] = { error: true }; })
-    .finally(() => { LIGAS.cargando[id] = false; if ((est.vista === "clasif" && est.lid === id) || est.vista === "juego") pintarLista(); });
+    .finally(() => { LIGAS.cargando[id] = false; if ((est.vista === "clasif" && est.lid === id) || !["clasif", "buscar", "ajustes", "misap"].includes(est.vista)) pintarLista(); });
 }
 const idDeLiga = nombre => (LIGAS.indice || []).find(l => claveComp(l.n) === claveComp(nombre));
 
