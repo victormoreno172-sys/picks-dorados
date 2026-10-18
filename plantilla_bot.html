@@ -120,7 +120,8 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
   <section class="caja"><h2>Por tipo</h2><div id="tipos"></div></section>
   <section class="caja"><h2>Por deporte y cuota</h2><div id="otros"></div></section>
   <section class="caja"><h2>Apuestas <small id="nap"></small></h2><div id="lista"></div>
-    <p class="nota">El saldo supone que cada apuesta se hizo con el importe y la cuota que dijo el bot (en las de "pide ≥ X", con esa cuota mínima). Juega con responsabilidad. +18.</p></section>
+    <p class="nota">El saldo usa la cuota real si la has puesto con 💶; si no, la que dijo el bot (en las de "pide ≥ X", esa cuota mínima). Juega con responsabilidad. +18.</p>
+    <button class="ajsaldo" id="copiarCuotas" style="margin-top:8px">📋 Copiar cuotas reales para calibrar</button></section>
   </div>
 </div>
 <script>
@@ -141,8 +142,15 @@ const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.pie
 const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
 let OV = {};
 try { OV = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); } catch (e) {}
+// Cuota real a la que metiste cada apuesta en Winamax (para el dinero exacto y para calibrar)
+let CR = {};
+try { CR = JSON.parse(localStorage.getItem("cuotasReales") || "{}"); } catch (e) {}
 D.apuestas.forEach(a => {
   a.key = claveAp(a);
+  if (CR[a.key]) {
+    a.cuota_bot = a.cuota; a.cuota = CR[a.key];
+    if (a.ok === true && a.piernas.every(p => p.ok !== null)) a.cuota_final = a.cuota;
+  }
   const o = OV[a.key];
   if (o === "x") a.excluida = true;
   else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
@@ -271,15 +279,38 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       const cls = a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
       const est = a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
       const o = OV[a.key];
-      const acc = `<div class="acc">` + (o
+      const cr = a.excluida ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}">${a.cuota_bot ? "💶 Winamax " + a.cuota.toFixed(2).replace(".", ",") + " · cambiar" : "💶 Cuota real"}</button>`;
+      const acc = `<div class="acc">` + cr + (o
         ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span><button data-k="${esc(a.key)}" data-ov="">↺ Deshacer</button>`
         : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No la hice</button><button data-k="${esc(a.key)}" data-ov="g">✅ Acertada</button><button data-k="${esc(a.key)}" data-ov="p">❌ Fallada</button>`) + `</div>`;
-      return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}</span>
+      return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}${a.cuota_bot ? ` <small style="color:var(--muted);font-weight:400">(bot ${a.cuota_bot.toFixed(2).replace(".", ",")})</small>` : ""}</span>
         <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}${a.manual ? " ✎" : ""}</span></span></div>` +
         a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + acc + "</div>";
     }).join("") + "</div>";
 }).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
 
+document.addEventListener("click", e => {
+  const c = e.target.closest("button[data-cuota]");
+  if (!c) return;
+  const t = prompt(`¿A qué cuota la metiste en Winamax? (el bot decía ${c.dataset.bot.replace(".", ",")})\nDéjalo vacío para quitarla.`, CR[c.dataset.cuota] ? String(CR[c.dataset.cuota]).replace(".", ",") : "");
+  if (t === null) return;
+  const v = parseFloat(t.replace(",", "."));
+  if (!t.trim()) delete CR[c.dataset.cuota];
+  else if (isNaN(v) || v < 1.01 || v > 100) return alert("No he entendido la cuota. Escríbela así: 1,32");
+  else CR[c.dataset.cuota] = Math.round(v * 100) / 100;
+  try { localStorage.setItem("cuotasReales", JSON.stringify(CR)); } catch (err) {}
+  location.reload();
+});
+// Copiar las cuotas reales para mandárselas a Claude y calibrar las estimadas
+document.addEventListener("click", e => {
+  if (!e.target.closest("#copiarCuotas")) return;
+  const lineas = D.apuestas.filter(a => a.cuota_bot).map(a => `${a.fecha} | ${a.tipo} | ` +
+    a.piernas.map(p => `${p.local} - ${p.visitante}: ${p.mercado} (${p.minima ? "pide≥" : p.estimada ? "≈" : ""}${p.cuota.toFixed(2)})`).join(" + ") +
+    ` | bot ${a.cuota_bot.toFixed(2)} | Winamax ${a.cuota.toFixed(2)}`);
+  const txt = "Cuotas reales del bot:\n" + lineas.join("\n");
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => alert(`Copiadas ${lineas.length} cuotas. Pégalas en el chat con Claude.`))
+    .catch(() => prompt("Copia este texto:", txt));
+});
 document.addEventListener("click", e => {
   const b = e.target.closest("button[data-ov]");
   if (!b) return;
