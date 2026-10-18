@@ -147,12 +147,12 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
                              "cuota": cuota, "prob": round(prod(k.prob for *_, k in piernas), 3),
                              "importe": redondo(banca * PORCENTAJE)})
 
-    # Basket sin cuota en la API (ACB, Lega, Grecia...): hasta 2 sencillas, con la cuota mínima que
+    # Basket y tenis sin cuota en la API (ACB, Lega, torneos pequeños de tenis...): sencillas con la cuota mínima que
     # hay que encontrar en Winamax (la de la app + 3 %). El saldo se calcula con esa cuota mínima.
     sin_cuota = []
     for a in lista:
         p = a.partido
-        if _deporte(a) != "b" or id(a) in usados or any(k.cuota for k in a.picks):
+        if _deporte(a) not in ("b", "te") or id(a) in usados or any(k.cuota for k in a.picks):
             continue
         if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
             continue
@@ -164,7 +164,9 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
             sin_cuota.append({"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"],
                               "prob": round(k.prob, 3), "importe": redondo(banca * PORCENTAJE)})
     sin_cuota.sort(key=lambda ap: -ap["prob"])
-    apuestas = [x for x in apuestas if x["tipo"] == "Sencilla"] + sin_cuota[:2] + \
+    # Si hay pocas con cuota real (días flojos de fútbol), más hueco para las de "pide ≥" (tenis y basket)
+    hueco = max(2, min(5, MAX_SENCILLAS + 2 - len([x for x in apuestas if x["tipo"] == "Sencilla"])))
+    apuestas = [x for x in apuestas if x["tipo"] == "Sencilla"] + sin_cuota[:hueco] + \
                [x for x in apuestas if x["tipo"] != "Sencilla"]
 
     # Como mucho 10 apuestas (6 sencillas de fútbol/basket con cuota, 2 de basket sin cuota y las
