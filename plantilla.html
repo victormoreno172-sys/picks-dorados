@@ -1965,7 +1965,7 @@ async function directoOtros(fechas) {
       let j = await json(`https://raw.githubusercontent.com/victormoreno172-sys/picks-dorados/directo/directo.json?t=${Date.now()}`).catch(() => null);
       // raw.githubusercontent puede tardar hasta 5 min en refrescar: si viene viejo, se pide a la API de GitHub
       const min = t => { const [h, m] = (t || "0:0").split(":").map(Number); return h * 60 + m; };
-      if (!j || Math.abs(min(AHORA.hora) - min(j.ts)) > 2) {
+      if (!j || Math.abs(min(AHORA.hora) - min(j.ts)) > 4) {
         try {
           const r = await fetch(`https://api.github.com/repos/victormoreno172-sys/picks-dorados/contents/directo.json?ref=directo&t=${Date.now()}`,
             { headers: { Accept: "application/vnd.github.raw+json" }, cache: "no-store" });

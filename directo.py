@@ -140,7 +140,7 @@ def main():
     # Rama aparte, un solo commit (se reescribe cada vez)
     subprocess.run(["git", "checkout", "-q", "--orphan", "directo-tmp"], check=False)
     subprocess.run(["git", "rm", "-rqf", "--cached", "."], check=False)
-    inicio, datos, t_datos, ultimo = time.time(), {}, 0, None
+    inicio, datos, t_datos, ultimo, t_pub = time.time(), {}, 0, None, 0
     while time.time() - inicio < DURACION:
         ahora = datetime.now(TZ)
         if time.time() - t_datos > 600:
@@ -156,9 +156,9 @@ def main():
         if cand["e"]:
             res.update(esports(cand["e"]))
         contenido = {"ts": ahora.strftime("%H:%M:%S"), "res": res}
-        if res != ultimo:
+        if res != ultimo or (res and time.time() - t_pub > 150):  # y cada 2,5 min para que se vea que está vivo
             publicar(contenido)
-            ultimo = res
+            ultimo, t_pub = res, time.time()
             print(f"{contenido['ts']} {len(res)} marcadores ({len(cand['b'])} basket, {len(cand['e'])} esports en juego)")
         time.sleep(60 if (cand["b"] or cand["e"]) else 300)
 
