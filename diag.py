@@ -1,18 +1,21 @@
 import requests, json
-UA={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124","Accept":"application/json"}
+H={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36","Accept":"application/json","Accept-Language":"es-ES,es;q=0.9","Referer":"https://www.sofascore.com/","Origin":"https://www.sofascore.com"}
 out={}
-def g(u,**p):
+for u in ["https://api.sofascore.com/api/v1/sport/esports/events/live","https://www.sofascore.com/api/v1/sport/esports/events/live",
+          "https://api.sofascore.app/api/v1/sport/esports/events/live"]:
     try:
-        x=requests.get(u,params=p,headers=UA,timeout=30)
-        try: return [x.status_code,x.json()]
-        except Exception: return [x.status_code,x.text[:800]]
-    except Exception as e: return [0,str(e)]
-m=g("https://api.bo3.gg/api/v1/matches",**{"filter[matches.id][in]":"131674","with":"teams,games"})
-mm=(m[1].get("results") or [{}])[0] if isinstance(m[1],dict) else {}
-out["match"]={k:v for k,v in mm.items() if k not in("bet_updates","team1","team2")}
-out["games"]=g("https://api.bo3.gg/api/v1/games",**{"filter[games.match_id][eq]":"131674"})
-out["slug"]=g("https://api.bo3.gg/api/v1/matches/furia-vs-betboom-18-10-2026")
-for sp in ["", "&sports=17"]:
-    out["365"+sp]=g("https://webws.365scores.com/web/games/allscores/?appTypeId=5&langId=29&timezoneName=Europe/Madrid&userCountryId=2&onlyLiveGames=true"+sp)
-out["365s"]=g("https://webws.365scores.com/web/search/?appTypeId=5&langId=29&query=furia")
-print(json.dumps(out,indent=1,default=str,ensure_ascii=False)[:200000])
+        x=requests.get(u,headers=H,timeout=30); out[u]=[x.status_code,x.text[:3000]]
+    except Exception as e: out[u]=str(e)
+# if events, fetch details for FURIA
+try:
+    for u in list(out):
+        if isinstance(out[u],list) and out[u][0]==200:
+            ev=json.loads(requests.get(u,headers=H,timeout=30).text).get("events",[])
+            out["ev"]=[{k:e.get(k) for k in ("id","homeTeam","awayTeam","homeScore","awayScore","status","tournament")} for e in ev if "FURIA" in json.dumps(e)][:2]
+            if out["ev"]:
+                eid=out["ev"][0]["id"]; base=u.split("/sport/")[0]
+                for p in [f"/event/{eid}", f"/event/{eid}/esports-games"]:
+                    y=requests.get(base+p,headers=H,timeout=30); out[p]=[y.status_code,y.text[:4000]]
+            break
+except Exception as e: out["err"]=str(e)
+print(json.dumps(out,indent=1,ensure_ascii=False))
