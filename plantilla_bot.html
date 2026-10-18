@@ -98,6 +98,13 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
 .excel tbody tr:nth-child(even) td { background: rgba(255, 255, 255, .02); }
 .excel tfoot td { font-weight: 700; color: var(--ink); border-top: 2px solid var(--line); border-bottom: 0; }
 .ajsaldo { display: block; margin: 6px 0 2px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: var(--muted); font: 600 12px var(--body); padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.semaforo { margin: 6px 0 4px; padding: 7px 10px; border-radius: 10px; font-size: 12.5px; line-height: 1.35; }
+.semaforo.sem-verde { background: rgba(57, 245, 160, .1); color: #39f5a0; border: 1px solid rgba(57, 245, 160, .3); }
+.semaforo.sem-rojo { background: rgba(255, 90, 110, .1); color: #ff7a8a; border: 1px solid rgba(255, 90, 110, .3); }
+.semaforo.sem-azul { background: rgba(80, 160, 255, .12); color: #7ab8ff; border: 1px solid rgba(80, 160, 255, .35); }
+.acc button.sem-verde { border-color: rgba(57, 245, 160, .5) !important; color: #39f5a0 !important; }
+.acc button.sem-rojo { border-color: rgba(255, 90, 110, .5) !important; color: #ff7a8a !important; }
+.acc button.sem-azul { border-color: rgba(80, 160, 255, .55) !important; color: #7ab8ff !important; }
 </style>
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
@@ -279,13 +286,14 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       const cls = a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
       const est = a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
       const o = OV[a.key];
-      const cr = a.excluida ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}">${a.cuota_bot ? "💶 Winamax " + a.cuota.toFixed(2).replace(".", ",") + " · cambiar" : "💶 Cuota real"}</button>`;
+      const sem = semaforo(a);
+      const cr = a.excluida ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}" class="${sem ? "sem-" + sem.c : ""}">${a.cuota_bot ? "💶 Winamax " + a.cuota.toFixed(2).replace(".", ",") + " · cambiar" : "💶 Cuota real"}</button>`;
       const acc = `<div class="acc">` + cr + (o
         ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span><button data-k="${esc(a.key)}" data-ov="">↺ Deshacer</button>`
         : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No la hice</button><button data-k="${esc(a.key)}" data-ov="g">✅ Acertada</button><button data-k="${esc(a.key)}" data-ov="p">❌ Fallada</button>`) + `</div>`;
       return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}${a.cuota_bot ? ` <small style="color:var(--muted);font-weight:400">(bot ${a.cuota_bot.toFixed(2).replace(".", ",")})</small>` : ""}</span>
         <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}${a.manual ? " ✎" : ""}</span></span></div>` +
-        a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + acc + "</div>";
+        (sem && !a.excluida ? `<div class="semaforo sem-${sem.c}">${sem.t}</div>` : "") + a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + acc + "</div>";
     }).join("") + "</div>";
 }).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
 
@@ -301,6 +309,18 @@ document.addEventListener("click", e => {
   try { localStorage.setItem("cuotasReales", JSON.stringify(CR)); } catch (err) {}
   location.reload();
 });
+// Semáforo de la cuota real: verde = paga lo que pedía el bot o más; rojo = menos (no compensa);
+// azul = demasiado buena (casi seguro que es otro mercado u otra línea: revísalo)
+function semaforo(a) {
+  if (!a.cuota_bot) return null;
+  const real = a.cuota, bot = a.cuota_bot, v = a.prob ? a.prob * real - 1 : null;
+  const pide = a.piernas.some(p => p.minima);
+  const f = x => x.toFixed(2).replace(".", ",");
+  const vtxt = v === null ? "" : ` · ventaja ${v >= 0 ? "+" : ""}${Math.round(v * 100)} %`;
+  if (real >= bot * 1.2 || (v !== null && v > 0.25)) return { c: "azul", t: `🔵 Demasiado buena: comprueba que sea el mismo mercado y la misma línea (el bot esperaba ${f(bot)})` };
+  if (real + 1e-9 >= bot) return { c: "verde", t: `🟢 Compensa: ${f(real)} ${pide ? "≥ " + f(bot) + " que pedía" : "frente a " + f(bot) + " que esperaba"}${vtxt}` };
+  return { c: "rojo", t: `🔴 No compensa: ${f(real)} ${pide ? "es menos que el " + f(bot) + " que pedía" : "es menos que el " + f(bot) + " que esperaba"}${vtxt}${pide ? ". Mejor no hacerla" : ""}` };
+}
 // Copiar las cuotas reales para mandárselas a Claude y calibrar las estimadas
 document.addEventListener("click", e => {
   if (!e.target.closest("#copiarCuotas")) return;
