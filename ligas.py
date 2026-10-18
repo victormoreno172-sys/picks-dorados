@@ -340,6 +340,19 @@ def _basket_europa(datos_app: dict, hoy: date) -> list[tuple[str, dict]]:
                     partidos.append({"f": dia["fecha"], "h": p.get("hora") or "", "l": p["local"], "v": p["visitante"],
                                      "el": logos.get(p["local"], ""), "ev": logos.get(p["visitante"], ""),
                                      "m": r.get("m", ""), "st": r.get("st", "pre")})
+        # Próximos partidos de toda la temporada (365Scores), aunque aún no tengan probabilidades
+        try:
+            import calendarios
+            equipos = sorted({p["l"] for p in partidos} | {p["v"] for p in partidos})
+            ya = {(p["f"], p["l"], p["v"]) for p in partidos} | {(p["f"], p["v"], p["l"]) for p in partidos}
+            for q in calendarios.proximos_basket(c, equipos):
+                if (q["f"], q["l"], q["v"]) in ya or q["f"] < hoy.isoformat() or q["l"] not in equipos or q["v"] not in equipos:
+                    continue
+                ya.add((q["f"], q["l"], q["v"]))
+                partidos.append({"f": q["f"], "h": q["h"], "l": q["l"], "v": q["v"], "el": logos.get(q["l"], ""),
+                                 "ev": logos.get(q["v"], ""), "m": "", "st": "pre"})
+        except Exception as e:  # noqa: BLE001
+            print(f"  aviso calendario 365 {c}: {e}")
         if len(partidos) < 4:
             continue
         partidos.sort(key=lambda p: (p["f"], p["h"]))
@@ -379,7 +392,7 @@ def _slug(t: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", t).strip("-")[:40]
 
 
-def _tenis(hoy: date) -> list[tuple[str, dict]]:
+def _tenis(hoy: date, nombres_app: set | None = None) -> list[tuple[str, dict]]:
     try:
         import tenis
     except ImportError:
@@ -412,7 +425,7 @@ def _tenis(hoy: date) -> list[tuple[str, dict]]:
         if not filas:
             continue
         # Últimos partidos de cada jugador del ranking (para su ficha)
-        top = {f["eq"] for f in filas}
+        top = {f["eq"] for f in filas} | (nombres_app or set())
         otras: dict[str, list] = {}
         for h in sorted(hist, key=lambda h: h.fecha, reverse=True):
             for n in (h.n1, h.n2):
@@ -465,11 +478,24 @@ def _tenis(hoy: date) -> list[tuple[str, dict]]:
     return out
 
 
-def _esports(hoy: date) -> list[tuple[str, dict]]:
+def _esports(hoy: date, nombres_app: set | None = None) -> list[tuple[str, dict]]:
     try:
         import esports
     except ImportError:
         return []
+    # Además de los torneos grandes, partidos recientes y próximos de todos los niveles
+    try:
+        import calendarios
+        vistos = {s.id for s in list(esports.HIST) + list(esports.PROX)}
+        for juego, (_, disc, _) in esports.JUEGOS.items():
+            for s in calendarios.esports_extra(juego, disc):
+                if s.id in vistos:
+                    continue
+                vistos.add(s.id)
+                (esports.HIST if s.m1 is not None else esports.PROX).append(s)
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso esports extra: {e}")
+    nombres_app = nombres_app or set()
     out = []
     logos: dict[str, str] = {}
     for s in list(esports.HIST) + list(esports.PROX):
@@ -497,7 +523,7 @@ def _esports(hoy: date) -> list[tuple[str, dict]]:
             filas = [{"pos": i, "eq": nombre.get(e, e), "logo": logos.get(nombre.get(e, e), ""), "pj": sum(rec[e]),
                       "g": rec[e][0], "p": rec[e][1], "nivel": round(1500 + 200 * modelo.fuerza[e])}
                      for i, e in enumerate(eqs[:60], 1)]
-            top = {f["eq"] for f in filas}
+            top = {f["eq"] for f in filas} | nombres_app  # también los equipos que salen en la app
             otras: dict[str, list] = {}
             for s in sorted(hist, key=lambda s: s.fecha, reverse=True):
                 for n in (s.n1, s.n2):
@@ -520,10 +546,10 @@ def _esports(hoy: date) -> list[tuple[str, dict]]:
         # Torneos en juego
         torneos: dict[str, list] = {}
         for s in esports.HIST:
-            if s.juego == juego and s.fecha >= hoy - timedelta(days=21):
+            if s.juego == juego and s.fecha >= hoy - timedelta(days=21) and (s.nivel or "").lower() in ("s", "a"):
                 torneos.setdefault(s.torneo, []).append(s)
         for s in esports.PROX:
-            if s.juego == juego:
+            if s.juego == juego and (s.nivel or "").lower() in ("s", "a"):
                 torneos.setdefault(s.torneo, []).append(s)
         for torneo, ss in torneos.items():
             if not torneo.strip() or not any(x.fecha >= hoy - timedelta(days=3) for x in ss) or len(ss) < 3:
@@ -694,12 +720,14 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
             for k in ("il", "iv", "r", "fase"):
                 lista.pop(k, None)
     archivos += _basket_europa(datos_app, hoy)
-    for extra in (_tenis, _esports):
+    nombres_e = {n for d in datos_app.get("dias", []) for p in d["partidos"] if p.get("dep") == "e" for n in (p["local"], p["visitante"])}
+    nombres_t = {n for d in datos_app.get("dias", []) for p in d["partidos"] if p.get("dep") == "te" for n in (p["local"], p["visitante"])}
+    for extra in (lambda h: _tenis(h, nombres_t), lambda h: _esports(h, nombres_e)):
         try:
             archivos += extra(hoy)
         except Exception as e:  # noqa: BLE001
             import traceback
-            print(f"  aviso ligas {extra.__name__}: {e}")
+            print(f"  aviso ligas tenis/esports: {e}")
             traceback.print_exc()
     _completar_escudos(archivos)
     for lid, d in archivos:
