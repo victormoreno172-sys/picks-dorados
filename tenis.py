@@ -348,7 +348,8 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             hist = historico(tour, hoy)
             HIST.extend(hist)
             for h in hist:
-                historial.anotar(h.fecha, h.n1, h.n2, h.s1 or 0, h.s2 or 0)
+                if not h.retirada:  # con abandono las casas suelen anular los sets: no se corrige solo
+                    historial.anotar(h.fecha, h.n1, h.n2, h.s1 or 0, h.s2 or 0)
             prox = proximos(tour, hoy, n_dias)
             PROX.extend(prox)
             print(f"  {tour}: {len(hist)} partidos de historial, {len(prox)} próximos")

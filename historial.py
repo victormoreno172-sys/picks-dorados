@@ -29,10 +29,28 @@ def anotar(fecha: date, local: str, visitante: str, gl: int, gv: int):
 
 
 # ------------------------------------------------------------------ acierto
-def acierta(mercado: str, gl: int, gv: int) -> bool | None:
-    """¿Se cumplió el mercado con este resultado? None si no se sabe corregir."""
+def acierta(mercado: str, gl: int, gv: int, local: str = "", visitante: str = "") -> bool | None:
+    """¿Se cumplió el mercado con este resultado? None si no se sabe corregir.
+    Con los nombres también corrige tenis y esports (sets / mapas / partidas)."""
     t = gl + gv
     m = mercado
+    if local and visitante:
+        unidad = r"(?:sets|mapas|partidas)"
+        if m == f"Gana {local}":
+            return gl > gv
+        if m == f"Gana {visitante}":
+            return gv > gl
+        r = re.match(rf"(Más|Menos) de ([\d.]+) {unidad}$", m)
+        if r:
+            linea = float(r.group(2))
+            return t > linea if r.group(1) == "Más" else t < linea
+        for nombre, margen in ((local, gl - gv), (visitante, gv - gl)):
+            r = re.fullmatch(rf"{re.escape(nombre)} ([+-][\d.]+) {unidad}", m)
+            if r:
+                return margen + float(r.group(1)) > 0
+        r = re.fullmatch(rf"Resultado {re.escape(local)} (\d+)-(\d+) {re.escape(visitante)}", m)
+        if r:
+            return (gl, gv) == (int(r.group(1)), int(r.group(2)))
     tabla = {
         "Gana local (1)": gl > gv, "Empate (X)": gl == gv, "Gana visitante (2)": gl < gv,
         "Local o empate (1X)": gl >= gv, "Visitante o empate (X2)": gl <= gv, "No hay empate (12)": gl != gv,
@@ -115,7 +133,7 @@ def corregir(h: dict, hoy: date):
         if res:
             e["res"] = list(res)
             for k in e["picks"]:
-                ok = acierta(k["m"], *res)
+                ok = acierta(k["m"], *res, e["l"], e["v"])
                 if ok is not None:
                     k["ok"] = ok
             hechos += 1

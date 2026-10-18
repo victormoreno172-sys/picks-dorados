@@ -11,7 +11,7 @@ Cada día, de todo un poco (lo pidió el usuario: volumen y movimiento):
   - COMBINADA DOBLE y COMBINADA TRIPLE con los picks más seguros (78 %+) de partidos distintos.
   - Importe: cada apuesta es el 5 % del dinero que queda tras hacer las anteriores, en el orden
     del mensaje (lo decidió el usuario). Como mucho 8 apuestas al día.
-  - Fútbol y basket (los que se pueden corregir solos con el resultado). Basket sin cuota en la
+  - Fútbol, basket y tenis (los que se pueden corregir solos con el resultado). Basket sin cuota en la
     API: hasta 2 sencillas con la cuota mínima que hay que encontrar en Winamax.
 """
 from __future__ import annotations
@@ -77,7 +77,7 @@ def corregir(b: dict):
             for d in (f, f - timedelta(days=1), f + timedelta(days=1)):
                 res = historial.RESULTADOS.get((d.isoformat(), pi["local"], pi["visitante"]))
                 if res:
-                    ok = historial.acierta(pi["mercado"], *res)
+                    ok = historial.acierta(pi["mercado"], *res, pi["local"], pi["visitante"])
                     if ok is not None:
                         pi["ok"], pi["res"] = ok, list(res)
                     break
@@ -107,7 +107,7 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
     partidos = []
     for a in lista:
         p = a.partido
-        if _deporte(a) not in ("f", "b"):
+        if _deporte(a) not in ("f", "b", "te"):  # tenis: modelo calibrado (calibracion/backtest_tenis.py)
             continue
         if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
             continue  # ya ha empezado
