@@ -1623,8 +1623,15 @@ setInterval(() => { if (!document.hidden) { if (est.vista === "misap") { cargarM
 // ---------------------------------------------------------------- buscador general (botón Buscar de abajo)
 // Busca en todo: partidos de todos los días y deportes, competiciones y equipos/jugadores
 const NOMBRE_DEP_B = { f: "⚽ Fútbol", b: "🏀 Basket", te: "🎾 Tenis", e: "🎮 Esports" };
+let INDICE_BUSCAR = null;
+function cargarIndiceBuscar() {
+  if (INDICE_BUSCAR) return;
+  INDICE_BUSCAR = [];
+  fetch("ligas/buscar.json?t=" + Math.floor(Date.now() / 600000)).then(r => r.json())
+    .then(x => { INDICE_BUSCAR = x; if (est.vista === "buscar") resultadosGenerales(); }).catch(() => {});
+}
 function pintarBuscadorGeneral() {
-  cargarIndice();
+  cargarIndice(); cargarIndiceBuscar();
   if (!$("buscaG")) {
     $("vista").innerHTML = `<div class="lbar"><h2><span>⌕</span><span class="t">Buscar</span></h2></div>
       <div class="bgcaja"><input type="search" id="buscaG" placeholder="Equipo, jugador, liga, juego…" autocomplete="off" aria-label="Buscar en toda la app"></div>
@@ -1653,6 +1660,15 @@ function resultadosGenerales() {
     if (casa(`${p.liga} ${inf.pais} ${extra(p.liga)}`) && !comps.has(p.liga)) comps.set(p.liga, { n: p.liga, dep });
   }));
   for (const l of LIGAS.indice || []) if (casa(`${l.n} ${infoLiga(l.n).pais} ${extra(l.n)}`)) comps.set("idx:" + l.id, { n: l.n, dep: l.dep, lid: l.id });
+  // Equipos y jugadores de todas las ligas, rankings y torneos (aunque no jueguen estos días)
+  const JUEGO_DE = { "e-cs2": "counter strike cs2", "e-val": "valorant", "e-lol": "league of legends lol" };
+  for (const [n, logo, lid, dep] of INDICE_BUSCAR || []) {
+    if (!casa(`${n} ${JUEGO_DE[lid.slice(0, 5)] || ""}`)) continue;
+    const k = dep + n;
+    if (equipos.has(k)) { const e = equipos.get(k); e.lid = e.lid || lid; e.logo = e.logo || logo; continue; }
+    const ind = (LIGAS.indice || []).find(l => l.id === lid);
+    equipos.set(k, { n, logo, dep, liga: ind ? ind.n : "", lid });
+  }
   let h = "";
   if (comps.size) h += `<h2 class="sec">Competiciones · ${comps.size}</h2><div class="comps">` + [...comps.values()].slice(0, 15).map(c => {
     const inf = infoLiga(c.n), li = c.lid ? { id: c.lid } : idDeLiga(c.n);
@@ -1661,7 +1677,7 @@ function resultadosGenerales() {
   if (equipos.size) h += `<h2 class="sec">${equipos.size === 1 ? "Equipo / jugador" : "Equipos y jugadores"} · ${equipos.size}</h2><div class="eqgrid">` + [...equipos.values()].slice(0, 20).map(e => {
     // Tenis y esports: su ficha está en el ranking (con sus últimos y próximos partidos de todos los torneos)
     const pref = (e.liga || "").split(" · ")[0].toLowerCase();
-    let li = idDeLiga(e.liga);
+    let li = e.lid ? { id: e.lid } : idDeLiga(e.liga);
     if (e.dep === "e") li = (LIGAS.indice || []).find(l => l.id === `e-${pref}-ranking`) || li;
     if (e.dep === "te") li = (LIGAS.indice || []).find(l => l.id === `t-${pref}-ranking`) || li;
     return `<button ${li ? `data-lid="${esc(li.id)}" data-equipoir="${esc(e.nEspn || e.n)}"` : `data-buscarpartidos="${esc(e.n)}"`}>${miniEsc(e.logo, e.n)}<span>${esc(e.n)}<small style="display:block;color:var(--muted);font-weight:500;font-size:10px">${esc(NOMBRE_DEP_B[e.dep] || "")}</small></span></button>`; }).join("") + `</div>`;

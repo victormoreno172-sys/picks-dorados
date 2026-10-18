@@ -738,6 +738,22 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
             json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
         indice.append({"id": lid, "n": d["nombre"], "dep": d["dep"], "tipo": d["tipo"], "eq": len(d["equipos"]),
                        "j": len(d["jornadas"])})
+    # Índice para el buscador general: todos los equipos y jugadores de todas las competiciones
+    buscar: dict[str, list] = {}
+    for lid, d in archivos:
+        nombres = {n: l for n, l in d.get("equipos", [])}
+        for n in (d.get("otras") or {}):
+            nombres.setdefault(n, "")
+        for n, logo in nombres.items():
+            if not n or n == "Por decidir":
+                continue
+            k = f'{d["dep"]}|{n}'
+            # Preferimos la liga/ranking (donde está su ficha completa) antes que copas y torneos sueltos
+            peso = 0 if d["tipo"] in ("futbol", "nba", "basket", "ranking") else 1
+            if k not in buscar or peso < buscar[k][4]:
+                buscar[k] = [n, logo or (buscar.get(k) or ["", ""])[1], lid, d["dep"], peso]
+    with open(os.path.join(carpeta, "buscar.json"), "w", encoding="utf-8") as f:
+        json.dump([v[:4] for v in buscar.values()], f, ensure_ascii=False, separators=(",", ":"))
     with open(os.path.join(carpeta, "indice.json"), "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False)
     print(f"  ligas: {len(indice)} competiciones con clasificación y calendario")
