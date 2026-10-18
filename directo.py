@@ -98,11 +98,17 @@ def basket(cand: list, ahora: datetime) -> dict:
                 if not x or ev.get("Tr1") in (None, "") or ev.get("Tr2") in (None, ""):
                     continue
                 a, b = int(ev["Tr1"]), int(ev["Tr2"])
+                # Puntos de cada cuarto (y prórroga)
+                cab, p1, p2 = [], [], []
+                for q, n in (("Q1", "1C"), ("Q2", "2C"), ("Q3", "3C"), ("Q4", "4C"), ("OT", "Pr")):
+                    if ev.get(f"Tr1{q}") not in (None, "") and ev.get(f"Tr2{q}") not in (None, ""):
+                        cab.append(n); p1.append(int(ev[f"Tr1{q}"])); p2.append(int(ev[f"Tr2{q}"]))
                 if x[1]:
-                    a, b = b, a
+                    a, b, p1, p2 = b, a, p2, p1
                 fin = eps in ("FT", "AOT", "AP", "AET")
                 res[x[0]["clave"]] = {"st": "post" if fin else "in", "m": f"{a}-{b}",
-                                      "det": "Final" if fin else PERIODO.get(eps, eps or "Vivo")}
+                                      "det": "Final" if fin else PERIODO.get(eps, eps or "Vivo"),
+                                      "parc": {"cab": cab, "l": p1, "v": p2}}
     return res
 
 
@@ -122,8 +128,27 @@ def esports(cand: list) -> dict:
             if x[1]:
                 a, b = b, a
             fin = estado == "finished"
-            res[x[0]["clave"]] = {"st": "post" if fin else "in", "m": f"{a}-{b}",
-                                  "det": "Final" if fin else f"Mapa {a + b + 1}"}
+            r = {"st": "post" if fin else "in", "m": f"{a}-{b}", "det": "Final" if fin else f"Mapa {a + b + 1}"}
+            # Mapa a mapa (nombre y rondas), desde el punto de vista del local de la app
+            try:
+                g = requests.get("https://api.bo3.gg/api/v1/games", headers=UA, timeout=20,
+                                 params={"filter[games.match_id][eq]": m["id"]}).json().get("results") or []
+                t1 = (m.get("team1") or {}).get("name", "")
+                mapas = []
+                for juego in sorted(g, key=lambda z: z.get("number") or 0):
+                    w, l = juego.get("winner_clan_score"), juego.get("loser_clan_score")
+                    if w is None and juego.get("status") == "upcoming":
+                        mapas.append([(juego.get("map_name") or "").replace("de_", "").title(), None, None])
+                        continue
+                    gana1 = parecido(juego.get("winner_clan_name") or "", t1) >= 0.85
+                    s1, s2 = (w, l) if gana1 else (l, w)
+                    if x[1]:
+                        s1, s2 = s2, s1
+                    mapas.append([(juego.get("map_name") or "").replace("de_", "").title(), s1, s2])
+                r["mapas"] = mapas
+            except (requests.RequestException, ValueError, TypeError):
+                pass
+            res[x[0]["clave"]] = r
     return res
 
 

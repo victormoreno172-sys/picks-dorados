@@ -528,6 +528,29 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .fp .eqs b span, .mpierna .me b span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fp .eqs .mini, .mpierna .me .mini { width: 18px; height: 18px; }
 .fp .eqs .mini.ini, .mpierna .me .mini.ini { font-size: 7px; }
+
+/* ---------- marcador por periodos (basket, tenis, esports) ---------- */
+.mpcaja { background: linear-gradient(160deg, #0b1220 0%, #16213a 100%); color: #e8eef8; border-radius: 20px; padding: 14px 12px 12px; box-shadow: var(--sombra); overflow: hidden; position: relative; }
+.mpcaja::after { content: ""; position: absolute; inset: auto -40px -60px auto; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(255,183,3,.18), transparent 70%); pointer-events: none; }
+.mpcab { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.mpchip { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 5px 11px; font: 700 13px var(--mono); }
+.mpchip i { width: 8px; height: 8px; border-radius: 50%; background: #ff3b5c; box-shadow: 0 0 8px #ff3b5c; animation: latido 1.4s infinite; }
+.mpchip.fin { color: #9fb0c8; }
+.mptit { font: 600 11px var(--display); letter-spacing: .12em; text-transform: uppercase; color: #8a99b2; margin-left: auto; }
+.mptabla { width: 100%; border-collapse: collapse; position: relative; z-index: 1; table-layout: fixed; }
+.mptabla th { font: 600 11px var(--mono); color: #8a99b2; padding: 4px 2px; text-align: center; }
+.mptabla th.actual { color: #ffcf4a; }
+.mptabla tr th:first-child { text-align: left; width: 42%; }
+.mptabla td { text-align: center; font: 600 16px var(--mono); color: #6f7e96; padding: 9px 2px; }
+.mptabla td.gana { color: #fff; }
+.mptabla td.actual { color: #ffcf4a; }
+.mptabla td.mptot, .mptabla th.mptot { width: 54px; }
+.mptabla td.mptot { font: 800 20px var(--mono); color: #ffcf4a; background: rgba(255,255,255,.07); border-radius: 10px; }
+.mptabla tr + tr td.mptot { border-radius: 10px; }
+.mpeq { display: flex; align-items: center; gap: 9px; font: 700 15px var(--display); color: #fff; min-width: 0; }
+.mpeq span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mpeq .mini { width: 26px; height: 26px; background: #fff; border-radius: 7px; padding: 2px; }
+.mpnota { margin: 6px 2px 0; font-size: 12px; color: #8a99b2; }
 </style>
 
 <div class="wrap">
@@ -1113,8 +1136,34 @@ function eventosResumen(j) {
   }
   return res.concat(seps);
 }
+// Marcador por periodos (cuartos, sets o mapas) con diseño propio
+function marcadorPeriodos(p) {
+  const es = estado(p) || {}, r = p.res || {};
+  const fi = p.fi || {};
+  let cab = [], l = [], v = [], tot = (r.m || "").split("-"), titulo = "";
+  if (r.mapas && r.mapas.length) { cab = r.mapas.map((m, i) => m[0] || `M${i + 1}`); l = r.mapas.map(m => m[1]); v = r.mapas.map(m => m[2]); titulo = "Mapas"; }
+  else if (r.parc && r.parc.cab && r.parc.cab.length) { cab = r.parc.cab; l = r.parc.l; v = r.parc.v; titulo = p.dep === "te" ? "Sets" : "Cuartos"; }
+  const vivo = es.st === "in";
+  const chip = vivo ? `<span class="mpchip"><i></i>${esc(es.det || "En juego")}</span>` : es.st === "post" ? `<span class="mpchip fin">Final</span>` : "";
+  const celda = (a, b, i) => { const n = a == null ? "–" : a; const gana = a != null && b != null && +a > +b; const actual = vivo && i === cab.length - 1;
+    return `<td class="${gana ? "gana" : ""}${actual ? " actual" : ""}">${esc(n)}</td>`; };
+  const fila = (lado, nombre, escudoUrl, pts, rivales, total, totRival) => `<tr><th><span class="mpeq">${miniEsc(escudoUrl, nombre)}<span>${esc(nombre)}</span></span></th>` +
+    pts.map((x, i) => celda(x, rivales[i], i)).join("") + `<td class="mptot ${+total > +totRival ? "gana" : ""}">${esc(total ?? "–")}</td></tr>`;
+  const unidad = p.dep === "te" ? "Sets" : p.dep === "e" ? "Mapas" : "Total";
+  return `<div class="mpcaja">
+    <div class="mpcab">${chip}<span class="mptit">${esc(titulo || (vivo ? "En directo" : ""))}</span></div>
+    <table class="mptabla"><tr><th></th>${cab.map((c, i) => `<th class="${vivo && i === cab.length - 1 ? "actual" : ""}">${esc(c)}</th>`).join("")}<th class="mptot">${unidad}</th></tr>
+    ${fila("l", p.local, (fi.esc || [])[0], l, v, tot[0], tot[1])}${fila("v", p.visitante, (fi.esc || [])[1], v, l, tot[1], tot[0])}</table>
+    ${!cab.length ? `<p class="mpnota">${es.st ? "El desglose por " + (p.dep === "te" ? "sets" : p.dep === "e" ? "mapas" : "cuartos") + " aparecerá en cuanto la fuente lo dé." : ""}</p>` : ""}
+  </div>`;
+}
 function pintarResumen(p) {
   const fi = p.fi || {};
+  if (p.dep !== "f") {
+    const es = estado(p);
+    if (!es) return `<div class="vacio">El resumen aparece cuando empiece el partido: marcador por ${p.dep === "te" ? "sets" : p.dep === "e" ? "mapas" : "cuartos"} al momento.</div>`;
+    return marcadorPeriodos(p) + `<p class="nota" style="text-align:center;color:var(--muted);font-size:12px">Se actualiza solo cada minuto.</p>`;
+  }
   if (!fi.id || !fi.slug || /^b-|^nba$/.test(fi.slug)) return `<div class="vacio">No hay resumen para este partido.</div>`;
   const es = estado(p);
   if (!es) return `<div class="vacio">El resumen aparece cuando empiece el partido: goles, tarjetas, cambios y lesiones al momento.</div>`;
@@ -1134,7 +1183,7 @@ function pintarFicha() {
   const fav = est.favs.has(clavePartido(dia, p));
   const basket = p.dep === "b", num = x => basket ? Math.round(x) : (+x).toFixed(1);
   const tabs = [["prob", "Probabilidades"]];
-  const empezo = !!estado(p), conResumen = p.dep === "f" && fi.id && fi.slug && !/^b-/.test(fi.slug);
+  const empezo = !!estado(p), conResumen = p.dep !== "f" || (fi.id && fi.slug && !/^b-/.test(fi.slug));
   if (conResumen && empezo) tabs.unshift(["resumen", "Resumen"]);
   if (p.dep === "f" || fi.alin) tabs.push(["alin", "Alineaciones"]);
   if (fi.slug && DATOS.tablas && DATOS.tablas[fi.slug]) tabs.push(["tabla", "Clasificación"]);
@@ -1367,6 +1416,10 @@ function pintarPantallaAjustes() {
     <section class="ajb"><h3>Competiciones que ves</h3><p style="margin:0 0 6px">Quita las que no te interesen y no saldrán en Partidos.</p>${listaLigas}</section>
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       <p>Todo esto se guarda solo en este móvil.</p></section>
+    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "sofascore", "tenis", "esports"].map(k => { const e = ESTADO_DIRECTO[k];
+      const nombre = { servidor: "Servidor de directo (basket y esports)", sofascore: "Sofascore (reloj del basket)", tenis: "ESPN (tenis)", esports: "bo3.gg (esports)" }[k];
+      return `<div class="ajinfo"><span>${nombre}</span><b>${!e ? "—" : e.ok ? "✅ " + esc(e.t) + (e.act ? " (act. " + esc(e.act) + ")" : "") : "❌ " + esc(e.err || "")}</b></div>`; }).join("")}
+      <p>Solo se consulta lo que se está jugando. "—" = ahora no hacía falta.</p></section>
     <section class="ajb"><h3>Sobre la app</h3>
       <div class="ajinfo"><span>Datos actualizados</span><b>${esc(DATOS.generado || "")}</b></div>
       <div class="ajinfo"><span>Partidos cargados</span><b>${DATOS.dias.reduce((s, d) => s + d.partidos.length, 0)}</b></div>
@@ -1878,6 +1931,12 @@ async function enDirecto() {
           if (!p || !["in", "post"].includes(t.state)) continue;
           const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
           const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : (c.status.displayClock || "Vivo") };
+          if (dep === "basketball") {  // NBA: cuarto, reloj y puntos de cada cuarto
+            const lh = (h.linescores || []).map(x => +x.value || 0), la = (a.linescores || []).map(x => +x.value || 0);
+            res.parc = { cab: lh.map((_, i) => i < 4 ? `${i + 1}C` : "Pr"), l: lh, v: la };
+            const per = (c.status || {}).period || 0;
+            if (t.state === "in") { res.periodo = per > 4 ? "Pr" : `${per}C`; res.reloj = c.status.displayClock || ""; res.det = `${res.periodo} ${res.reloj}`.trim(); }
+          }
           if (JSON.stringify(res) !== JSON.stringify(p.res)) { p.res = res; cambio = true; }
         }
       } catch (e) {}
@@ -1918,6 +1977,7 @@ async function json(url, ms = 12000) {
   try { const r = await fetch(url, { cache: "no-store", signal: c.signal }); if (!r.ok) throw new Error(r.status); return await r.json(); }
   finally { clearTimeout(t); }
 }
+var ESTADO_DIRECTO = {};
 async function directoOtros(fechas) {
   const cand = { te: [], e: [], b: [] };
   for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
@@ -1930,6 +1990,7 @@ async function directoOtros(fechas) {
   let cambio = false;
   const tareas = [];
   // 🎾 Tenis: ESPN (ATP y WTA)
+  if (cand.te.length) ESTADO_DIRECTO.tenis = ESTADO_DIRECTO.tenis || { ok: false, t: AHORA.hora, err: "sin datos aún" };
   if (cand.te.length) for (const tour of ["atp", "wta"]) tareas.push((async () => {
     try {
       const j = await json(`https://site.api.espn.com/apis/site/v2/sports/tennis/${tour}/scoreboard`);
@@ -1942,11 +2003,14 @@ async function directoOtros(fechas) {
         let sa = 0, sb = 0; for (let i = 0; i < cerrados; i++) { if (la[i] > lb[i]) sa++; else if (lb[i] > la[i]) sb++; }
         const [s1, s2, g1, g2] = x[1] ? [sb, sa, lb, la] : [sa, sb, la, lb];
         const juegos = g1.map((v, i) => `${v}-${g2[i]}`).join(" ");
-        cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : (g1.length ? `${g1[g1.length - 1]}-${g2[g2.length - 1]}` : "Vivo"), juegos }) || cambio;
+        cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : (g1.length ? `Set ${g1.length}` : "Vivo"), juegos,
+          parc: { cab: g1.map((_, i) => `S${i + 1}`), l: g1, v: g2 }, sets: [s1, s2] }) || cambio;
+        ESTADO_DIRECTO.tenis = { ok: true, t: AHORA.hora };
       }
     } catch (e) {}
   })());
   // 🎮 Esports: bo3.gg (no deja leerlo directo desde una web: se pasa por un intermediario)
+  if (cand.e.length) ESTADO_DIRECTO.esports = ESTADO_DIRECTO.esports || { ok: false, t: AHORA.hora, err: "sin datos aún" };
   if (cand.e.length) tareas.push((async () => {
     const api = "https://api.bo3.gg/api/v1/matches?filter[matches.status][in]=current,finished&page[limit]=60&sort=-start_date&with=teams";
     for (const url of [`https://api.allorigins.win/raw?url=${encodeURIComponent(api)}`, `https://corsproxy.io/?url=${encodeURIComponent(api)}`]) {
@@ -1956,13 +2020,41 @@ async function directoOtros(fechas) {
           const x = buscarEn(cand.e, (m.team1 || {}).name, (m.team2 || {}).name); if (!x) continue;
           const st = m.status === "finished" ? "post" : "in";
           const a = +m.team1_score || 0, b = +m.team2_score || 0, [s1, s2] = x[1] ? [b, a] : [a, b];
-          cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : `Mapa ${a + b + 1}` }) || cambio;
+          if (!(x[0].res && x[0].res.mapas)) cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : `Mapa ${a + b + 1}` }) || cambio;
         }
+        ESTADO_DIRECTO.esports = { ok: true, t: AHORA.hora };
         break;
       } catch (e) {}
     }
   })());
   // 🏀 Basket europeo y 🎮 esports: el "servidor de directo" (GitHub, cada minuto) deja los marcadores en un archivo
+  if (cand.b.length) tareas.unshift((async () => {
+    try {
+      const j = await json("https://api.sofascore.com/api/v1/sport/basketball/events/live", 9000);
+      ESTADO_DIRECTO.sofascore = { ok: true, t: AHORA.hora, n: (j.events || []).length };
+      const PER = { "1st quarter": "1C", "2nd quarter": "2C", "3rd quarter": "3C", "4th quarter": "4C", "halftime": "Desc.", "overtime": "Pr", "pause": "Pausa" };
+      let ya = false;
+      for (const ev of j.events || []) {
+        const x = buscarEn(cand.b, (ev.homeTeam || {}).name, (ev.awayTeam || {}).name); if (!x) continue;
+        const hs = ev.homeScore || {}, as = ev.awayScore || {}; if (hs.current == null) continue;
+        const desc = ((ev.status || {}).description || "").toLowerCase(), periodo = PER[desc] || "";
+        const qs = ["period1", "period2", "period3", "period4", "overtime"].filter(k => hs[k] != null);
+        let parc = { cab: qs.map(k => k === "overtime" ? "Pr" : k.slice(-1) + "C"), l: qs.map(k => hs[k]), v: qs.map(k => as[k]) };
+        // Reloj del cuarto: Sofascore da los segundos jugados del partido y lo que dura cada cuarto
+        let reloj = "";
+        const tm = ev.time || {}, n = +((desc.match(/^(\d)/) || [])[1] || 0);
+        if (tm.played != null && tm.periodLength && n) {
+          const queda = Math.max(0, tm.periodLength * n - tm.played);
+          reloj = `${String(Math.floor(queda / 60)).padStart(2, "0")}:${String(queda % 60).padStart(2, "0")}`;
+        }
+        let a = hs.current, b = as.current;
+        if (x[1]) { [a, b] = [b, a]; parc = { cab: parc.cab, l: parc.v, v: parc.l }; }
+        const r = { st: "in", m: `${a}-${b}`, det: `${periodo} ${reloj}`.trim() || "Vivo", periodo, reloj, parc };
+        if (ponerRes(x[0], r)) { cambio = true; ya = true; x[0]._sofa = Date.now(); }
+      }
+      if (ya && document.activeElement !== $("busca")) pintarLista();
+    } catch (e) { ESTADO_DIRECTO.sofascore = { ok: false, t: AHORA.hora, err: String(e.message || e).slice(0, 60) }; }
+  })());
   if (cand.b.length || cand.e.length) tareas.unshift((async () => {
     let ya = false;
     try {
@@ -1977,11 +2069,12 @@ async function directoOtros(fechas) {
         } catch (e) {}
       }
       if (!j) throw new Error("sin directo");
+      ESTADO_DIRECTO.servidor = { ok: true, t: AHORA.hora, n: Object.keys(j.res || {}).length, act: j.ts };
       const res = j.res || {};
       for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
         for (const p of dia.partidos) {
           const r = res[`${dia.fecha}|${p.local}|${p.visitante}`];
-          if (r && !(p.res && p.res.st === "post" && r.st === "in") && ponerRes(p, r)) { cambio = true; ya = true; }
+          if (r && !(p.res && p.res.st === "post" && r.st === "in") && !(p._sofa && Date.now() - p._sofa < 90000 && r.st === "in") && ponerRes(p, r)) { cambio = true; ya = true; }
         }
       if (ya && document.activeElement !== $("busca")) pintarLista();  // se enseña ya, sin esperar al resto
     } catch (e) {}
