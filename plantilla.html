@@ -1170,7 +1170,7 @@ function pintarFicha() {
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b>${esc(p.local)}</b></div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
-        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + es.det : es.det)}</small>`;
+        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + es.det : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
         if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
         return `<b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small>`; })()}</div>
       <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b>${esc(p.visitante)}</b></div>
@@ -1463,6 +1463,7 @@ function contarMisApuestas() {
 }
 function pintarMisApuestas() {
   cargarMisApuestas();
+  if (!MIS.vivoT || Date.now() - MIS.vivoT > 50000) { MIS.vivoT = Date.now(); enDirecto(); }
   let h = `<div class="lbar"><h2><span>🎟️</span><span class="t">Mis apuestas</span></h2><button class="ico" data-misrefrescar="1" aria-label="Actualizar">↻</button></div>`;
   if (!MIS.datos) { $("vista").innerHTML = h + `<div class="vacio">Cargando tus apuestas…</div>`; return; }
   const l = misApuestasActivas();
@@ -1862,7 +1863,6 @@ async function enDirecto() {
   for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
     for (const p of dia.partidos)
       if (p.fi && p.fi.id && p.fi.slug && !/^b-/.test(p.fi.slug) && empezado(dia, p) && !(p.res && p.res.st === "post")) cand.push(p);
-  if (!cand.length) return;
   const ligas = new Set(cand.map(p => p.fi.slug));
   let cambio = false;
   for (const slug of ligas) {
@@ -1881,7 +1881,114 @@ async function enDirecto() {
       } catch (e) {}
     }
   }
+  // Tenis, esports y basket europeo: otras fuentes que el móvil puede leer directamente
+  try { if (await directoOtros(fechas)) cambio = true; } catch (e) {}
   if (cambio && document.activeElement !== $("busca")) pintarLista();
+}
+
+// ---------------------------------------------------------------- directo de tenis, esports y basket europeo
+const PALABRAS_FUERA = /\b(bc|kk|sk|bk|fc|cb|club|basket|basketball|basketbol|basquet|pallacanestro|esports|esport|gaming|team|clan)\b/g;
+const nomD = n => quitarAcentos(String(n || "")).replace(/[^a-z0-9 ]/g, " ").replace(PALABRAS_FUERA, " ").replace(/\s+/g, " ").trim();
+function parecido(a, b) {
+  const x = nomD(a), y = nomD(b);
+  if (!x || !y) return 0;
+  if (x === y) return 1;
+  if (x.includes(y) || y.includes(x)) return 0.9;
+  const xs = x.replace(/ /g, ""), ys = y.replace(/ /g, "");
+  if (xs.length > 4 && ys.length > 4 && (xs.includes(ys) || ys.includes(xs))) return 0.85;
+  const tx = new Set(x.split(" ").filter(w => w.length > 2)), ty = y.split(" ").filter(w => w.length > 2);
+  const comun = ty.filter(w => tx.has(w)).length;
+  return comun ? 0.5 + 0.4 * comun / Math.max(tx.size, ty.length) : 0;
+}
+// Busca el partido de la app que corresponde a (casa, fuera); devuelve [partido, invertido]
+function buscarEn(cand, casa, fuera) {
+  let mejor = null, pm = 1.15;
+  for (const p of cand) {
+    const d = parecido(p.local, casa) + parecido(p.visitante, fuera), r = parecido(p.local, fuera) + parecido(p.visitante, casa);
+    if (d > pm) { mejor = [p, false]; pm = d; }
+    if (r > pm) { mejor = [p, true]; pm = r; }
+  }
+  return mejor;
+}
+function ponerRes(p, res) { if (JSON.stringify(res) === JSON.stringify(p.res)) return false; p.res = res; return true; }
+async function json(url, ms = 12000) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
+  try { const r = await fetch(url, { cache: "no-store", signal: c.signal }); if (!r.ok) throw new Error(r.status); return await r.json(); }
+  finally { clearTimeout(t); }
+}
+async function directoOtros(fechas) {
+  const cand = { te: [], e: [], b: [] };
+  for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
+    for (const p of dia.partidos) {
+      const dep = p.dep || "f";
+      if (!cand[dep] || !empezado(dia, p) || (p.res && p.res.st === "post")) continue;
+      if (dep === "b" && p.fi && p.fi.slug === "nba") continue;  // la NBA ya va por ESPN
+      cand[dep].push(p);
+    }
+  let cambio = false;
+  // 🎾 Tenis: ESPN (ATP y WTA)
+  if (cand.te.length) for (const tour of ["atp", "wta"]) {
+    try {
+      const j = await json(`https://site.api.espn.com/apis/site/v2/sports/tennis/${tour}/scoreboard`);
+      for (const ev of j.events || []) for (const g of ev.groupings || []) for (const c of g.competitions || []) {
+        const st = ((c.status || {}).type || {}).state; if (!["in", "post"].includes(st)) continue;
+        const [a, b] = c.competitors || []; if (!a || !b) continue;
+        const x = buscarEn(cand.te, (a.athlete || {}).displayName, (b.athlete || {}).displayName); if (!x) continue;
+        const la = (a.linescores || []).map(l => +l.value || 0), lb = (b.linescores || []).map(l => +l.value || 0);
+        const cerrados = st === "post" ? la.length : Math.max(0, la.length - 1);
+        let sa = 0, sb = 0; for (let i = 0; i < cerrados; i++) { if (la[i] > lb[i]) sa++; else if (lb[i] > la[i]) sb++; }
+        const [s1, s2, g1, g2] = x[1] ? [sb, sa, lb, la] : [sa, sb, la, lb];
+        const juegos = g1.map((v, i) => `${v}-${g2[i]}`).join(" ");
+        cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : (g1.length ? `${g1[g1.length - 1]}-${g2[g2.length - 1]}` : "Vivo"), juegos }) || cambio;
+      }
+    } catch (e) {}
+  }
+  // 🎮 Esports: bo3.gg (no deja leerlo directo desde una web: se pasa por un intermediario)
+  if (cand.e.length) {
+    const api = "https://api.bo3.gg/api/v1/matches?filter[matches.status][in]=current,finished&page[limit]=60&sort=-start_date&with=teams";
+    for (const url of [`https://api.allorigins.win/raw?url=${encodeURIComponent(api)}`, `https://corsproxy.io/?url=${encodeURIComponent(api)}`]) {
+      try {
+        const j = await json(url, 15000);
+        for (const m of j.results || []) {
+          const x = buscarEn(cand.e, (m.team1 || {}).name, (m.team2 || {}).name); if (!x) continue;
+          const st = m.status === "finished" ? "post" : "in";
+          const a = +m.team1_score || 0, b = +m.team2_score || 0, [s1, s2] = x[1] ? [b, a] : [a, b];
+          cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : `Mapa ${a + b + 1}` }) || cambio;
+        }
+        break;
+      } catch (e) {}
+    }
+  }
+  // 🏀 Basket europeo: Sofascore (todas las ligas) y, si falla, la API oficial de la Euroliga/Eurocup
+  if (cand.b.length) {
+    let ok = false;
+    try {
+      const j = await json("https://api.sofascore.com/api/v1/sport/basketball/events/live");
+      ok = true;
+      const PER = { "1st quarter": "1C", "2nd quarter": "2C", "3rd quarter": "3C", "4th quarter": "4C", "halftime": "Desc.", "overtime": "Prór.", "pause": "Pausa", "ended": "Final" };
+      for (const ev of j.events || []) {
+        const x = buscarEn(cand.b, (ev.homeTeam || {}).name, (ev.awayTeam || {}).name); if (!x) continue;
+        const a = (ev.homeScore || {}).current, b = (ev.awayScore || {}).current; if (a == null || b == null) continue;
+        const desc = ((ev.status || {}).description || "").toLowerCase(), fin = (ev.status || {}).type === "finished";
+        const [s1, s2] = x[1] ? [b, a] : [a, b];
+        cambio = ponerRes(x[0], { st: fin ? "post" : "in", m: `${s1}-${s2}`, det: fin ? "Final" : (PER[desc] || "Vivo") }) || cambio;
+      }
+    } catch (e) {}
+    if (!ok) for (const comp of ["E", "U"]) {
+      try {
+        const temp = (AHORA.fecha.slice(5, 7) >= "08" ? +AHORA.fecha.slice(0, 4) : +AHORA.fecha.slice(0, 4) - 1);
+        const j = await json(`https://api-live.euroleague.net/v2/competitions/${comp}/seasons/${comp}${temp}/games`);
+        for (const g of j.data || []) {
+          if (!(g.date || "").startsWith(AHORA.fecha) && !(g.date || "").startsWith(fechas[1])) continue;
+          const x = buscarEn(cand.b, (g.local || {}).club && g.local.club.name, (g.road || {}).club && g.road.club.name); if (!x) continue;
+          const a = (g.local || {}).score, b = (g.road || {}).score; if (a == null || b == null || (!a && !b)) continue;
+          const [s1, s2] = x[1] ? [b, a] : [a, b];
+          cambio = ponerRes(x[0], { st: g.played ? "post" : "in", m: `${s1}-${s2}`, det: g.played ? "Final" : "Vivo" }) || cambio;
+        }
+      } catch (e) {}
+    }
+  }
+  return cambio;
 }
 enDirecto();
 setInterval(enDirecto, 60000);

@@ -104,9 +104,3 @@ except Exception as e:
     print(f"aviso: apuestas no disponibles: {e}")
     traceback.print_exc()
 
-# Diagnóstico temporal de fuentes de marcadores en directo
-try:
-    import diag_cors
-    diag_cors.main()
-except Exception as e:
-    print(f"aviso diag: {e}")
