@@ -1070,7 +1070,6 @@ function pintarLista() {
     const nVivo = enVivo().length;
     h += `<button class="todos endirecto ${nVivo ? "hay" : ""}" data-endirecto="1"><span class="punto"></span><b>En directo</b><span class="cnt vivo-c">${nVivo}</span></button>`;
     h += `<button class="todos" data-vista="todos"><span class="lst">☰</span><b>Todos los partidos</b><span class="cnt rojo">${vis.length}</span></button>`;
-    if (est.dep === "e") h += tarjetasJuegos();
     if (favs.length) h += `<h2 class="sec">Competiciones favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
     h += `<h2 class="sec">${favs.length ? "Más competiciones" : "Competiciones"}</h2>` +
       (resto.length ? `<div class="comps">${resto.map(fila).join("")}</div>` : `<div class="vacio">No hay más partidos este día.</div>`);
