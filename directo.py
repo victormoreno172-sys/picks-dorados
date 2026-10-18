@@ -238,6 +238,10 @@ def esports(cand: list) -> dict:
                         e = d5["envivo"]
                         r["envivo"] = e
                         r["det"] = f"Mapa {e['n']} · {e['mapa']} {e['a']}-{e['b']}"
+                    elif not fin:
+                        n = sum(int(x) for x in d5["m"].split("-")) + 1
+                        if n <= len(d5["mapas"]):
+                            r["det"] = f"Mapa {n} · {d5['mapas'][n - 1][0]}"
                     r["fuente"] = "DRAFT5"
             res[x[0]["clave"]] = r
     return res
