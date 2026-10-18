@@ -522,7 +522,7 @@ def _esports(hoy: date) -> list[tuple[str, dict]]:
             if s.juego == juego:
                 torneos.setdefault(s.torneo, []).append(s)
         for torneo, ss in torneos.items():
-            if not any(x.fecha >= hoy - timedelta(days=3) for x in ss) or len(ss) < 3:
+            if not torneo.strip() or not any(x.fecha >= hoy - timedelta(days=3) for x in ss) or len(ss) < 3:
                 continue
             vistos, partidos = set(), []
             st: dict[str, list] = {}

@@ -73,7 +73,8 @@ class Partido:
 # --------------------------------------------------------------- descarga
 def _get(tour: str, dia: date | None, horas: float | None):
     os.makedirs(CACHE, exist_ok=True)
-    nombre = f"{tour}_{dia:%Y%m%d}.json" if dia else f"{tour}_actual.json"
+    # v2: desde que se separan los cuadros masculino y femenino (la caché vieja los mezclaba)
+    nombre = f"v2_{tour}_{dia:%Y%m%d}.json" if dia else f"v2_{tour}_actual.json"
     ruta = os.path.join(CACHE, nombre)
     if os.path.exists(ruta) and (horas is None or time.time() - os.path.getmtime(ruta) < horas * 3600):
         with open(ruta, encoding="utf-8") as f:
@@ -110,7 +111,11 @@ def _parsear(tour: str, datos: dict) -> list[Partido]:
     for ev in (datos or {}).get("events", []):
         torneo = ev.get("name") or ""
         for g in ev.get("groupings") or []:
-            if "single" not in ((g.get("grouping") or {}).get("displayName") or "").lower():
+            gn = ((g.get("grouping") or {}).get("displayName") or "").lower()
+            if "single" not in gn:
+                continue
+            # En los torneos combinados ESPN mete los dos cuadros en cada circuito: cada uno con el suyo
+            if (tour == "ATP" and "women" in gn) or (tour == "WTA" and "women" not in gn and "men" in gn):
                 continue
             for c in g.get("competitions") or []:
                 try:
