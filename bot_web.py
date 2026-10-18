@@ -30,6 +30,8 @@ def escribir(b: dict, carpeta: str = CARPETA):
              "inicial": b["inicial"], "apuestas": b["apuestas"]}
     with open(os.path.join(carpeta, "index.html"), "w", encoding="utf-8") as f:
         f.write(html(datos))
+    with open(os.path.join(carpeta, "datos.json"), "w", encoding="utf-8") as f:  # para "Mis apuestas" en Partidos
+        json.dump(datos, f, ensure_ascii=False)
     with open(os.path.join(carpeta, "manifest.webmanifest"), "w", encoding="utf-8") as f:
         json.dump(MANIFEST, f, ensure_ascii=False, indent=2)
     with open(os.path.join(carpeta, "icono.svg"), "w", encoding="utf-8") as f:

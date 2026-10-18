@@ -264,7 +264,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .fp .estrella { top: 50%; transform: translateY(-50%); right: 2px; }
 .fp.abierto .estrella { top: 26px; }
 .fp .det { border-top: 1px dashed var(--line); }
-.abajo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: repeat(6, 1fr);
+.abajo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: 1fr 1fr 1fr 76px 1fr 1fr 1fr;
   padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px));
   background: rgba(255, 255, 255, .86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
 .abajo button, .abajo a { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none; color: var(--muted); font: 600 11px var(--body); text-decoration: none; padding: 6px 0; cursor: pointer; }
@@ -464,6 +464,39 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .ajinfo { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-top: 1px solid var(--line); }
 .ajinfo:first-of-type { border-top: 0; }
 .ajinfo span { color: var(--muted); }
+
+/* ---------- botón central "Mis apuestas" (en relieve) ---------- */
+.abajo { overflow: visible; }
+.abajo button, .abajo a { font-size: 10px !important; }
+.abajo .central { position: relative; color: var(--ink); font-weight: 700; }
+.abajo .central .bola { position: relative; width: 62px; height: 62px; margin-top: -30px; margin-bottom: 1px; border-radius: 50%; display: grid; place-items: center; font-size: 28px !important;
+  background: radial-gradient(circle at 32% 28%, #fff3c4 0%, #ffcf4a 22%, #ffb703 48%, #fb8500 100%) !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: initial !important;
+  border: 4px solid var(--bg); box-shadow: 0 10px 22px -6px rgba(251, 133, 0, .65), inset 0 -5px 10px rgba(150, 60, 0, .35), inset 0 4px 8px rgba(255, 255, 255, .6);
+  transition: transform .15s; }
+.abajo .central:active .bola { transform: translateY(2px) scale(.96); box-shadow: 0 4px 10px -4px rgba(251, 133, 0, .6), inset 0 -3px 8px rgba(150, 60, 0, .35); }
+.abajo .central[aria-pressed="true"] { color: var(--gold); }
+.abajo .central[aria-pressed="true"] .bola { box-shadow: 0 0 0 3px rgba(251, 133, 0, .35), 0 10px 22px -6px rgba(251, 133, 0, .75), inset 0 -5px 10px rgba(150, 60, 0, .35), inset 0 4px 8px rgba(255, 255, 255, .6); }
+.abajo .central .bola i { position: absolute; top: -4px; right: -6px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--red); color: #fff;
+  font: 700 12px/22px var(--mono); font-style: normal; border: 2px solid var(--bg); }
+.abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
+@keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+/* ---------- pantalla Mis apuestas ---------- */
+.mtarj { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 18px; box-shadow: var(--sombra); padding: 12px; margin-bottom: 12px; }
+.mtarj.bien { border-left-color: #16a34a; } .mtarj.mal { border-left-color: var(--red); }
+.mcab { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }
+.mest { font: 700 11px var(--body); padding: 4px 9px; border-radius: 999px; background: var(--bar); color: var(--muted); white-space: nowrap; }
+.mest.bien { background: var(--ok-soft); color: var(--ok-ink); } .mest.mal { background: var(--red-soft); color: var(--red-ink); }
+.mdin { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin: 6px 0 8px; }
+.mdin b { color: var(--ink); font-family: var(--mono); }
+.mpierna { display: grid; grid-template-columns: 50px minmax(0, 1fr) 22px 66px; gap: 8px; align-items: center; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); background: none; padding: 9px 0 7px; font: inherit; color: var(--ink); cursor: pointer; }
+.mpierna .mh { font: 600 11px var(--mono); color: var(--muted); text-align: center; }
+.mpierna .me { display: grid; min-width: 0; }
+.mpierna .me b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mpierna .me small { font-size: 11.5px; color: var(--gold-ink); margin-top: 2px; }
+.mpierna .mm { display: grid; font: 700 14px/1.35 var(--mono); text-align: center; }
+.mpierna .ms { font: 700 11px var(--body); text-align: right; }
+.mpierna.bien .ms { color: #16a34a; } .mpierna.mal .ms { color: var(--red); }
+.mpierna.bien .mm { color: #16a34a; } .mpierna.mal .mm { color: var(--red); }
 </style>
 
 <div class="wrap">
@@ -505,6 +538,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
   <button data-nav="comps" aria-pressed="true"><span>◎</span>Partidos</button>
   <button data-nav="favs" aria-pressed="false"><span>☆</span>Favoritos</button>
   <button data-nav="ligas" aria-pressed="false"><span>🏆</span>Ligas</button>
+  <button data-nav="misap" aria-pressed="false" class="central" aria-label="Mis apuestas"><span class="bola">🎟️<i id="nMisAp" hidden></i></span>Mis apuestas</button>
   <button data-nav="buscar" aria-pressed="false"><span>⌕</span>Buscar</button>
   <a href="bot/"><span>⚡</span>Bot</a>
   <button data-nav="ajustes" aria-pressed="false"><span>⚙️</span>Ajustes</button>
@@ -760,7 +794,8 @@ function enVivo() {
 }
 function pintarLista() {
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "ajustes"].includes(est.vista);
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "ajustes", "misap"].includes(est.vista);
+  if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
   if (est.vista === "ligas") return pintarIndiceLigas();
@@ -1208,6 +1243,93 @@ function pintarPantallaAjustes() {
       <p>Son estimaciones, no certezas. Juega con responsabilidad. Solo mayores de 18. Ayuda: jugarbien.es</p></section>
   </div>`;
 }
+
+// ---------------------------------------------------------------- Mis apuestas (las del bot que has hecho)
+// Los datos salen de la app del bot; lo que marcaste allí (🚫 no la hice, 💶 cuota real) se lee de este móvil
+const MIS = { datos: null, cargando: false, t: 0 };
+const claveApBot = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
+function cargarMisApuestas(forzar) {
+  if (MIS.cargando || (!forzar && MIS.datos && Date.now() - MIS.t < 120000)) return;
+  MIS.cargando = true;
+  fetch("bot/datos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json())
+    .then(d => { MIS.datos = d; MIS.t = Date.now(); }).catch(() => { MIS.datos = MIS.datos || { apuestas: [], error: true }; })
+    .finally(() => { MIS.cargando = false; contarMisApuestas(); if (est.vista === "misap") pintarLista(); });
+}
+function misApuestasActivas() {
+  if (!MIS.datos) return [];
+  let OVb = {}, CRb = {};
+  try { OVb = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); CRb = JSON.parse(localStorage.getItem("cuotasReales") || "{}"); } catch (e) {}
+  const ayer = fechaMenos(AHORA.fecha, 1);
+  return (MIS.datos.apuestas || []).map(a => {
+    const k = claveApBot(a), o = OVb[k];
+    const b = Object.assign({}, a, { key: k, cuotaReal: CRb[k] || null });
+    if (o === "g") b.ok = true; else if (o === "p") b.ok = false;
+    b.quitada = o === "x";
+    return b;
+  }).filter(a => !a.quitada && (a.fecha >= AHORA.fecha ||
+    (a.fecha === ayer && !("ok" in a) && a.piernas.some(p => (p.hora || "") >= "21:30" || (p.hora || "99") < "06:00"))));
+}
+// Busca el partido de una selección en los datos de la app -> [día, índice]
+function partidoDePierna(pi) {
+  for (let d = 0; d < DATOS.dias.length; d++) {
+    if (Math.abs(new Date(DATOS.dias[d].fecha) - new Date(pi.fecha)) > 864e5) continue;
+    const i = DATOS.dias[d].partidos.findIndex(p => p.local === pi.local && p.visitante === pi.visitante);
+    if (i >= 0) return [d, i];
+  }
+  return null;
+}
+function estadoEnDia(d, p) { const antes = est.dia; est.dia = d; const e = estado(p); est.dia = antes; return e; }
+function contarMisApuestas() {
+  const el = $("nMisAp"); if (!el) return;
+  const l = misApuestasActivas().filter(a => !("ok" in a));
+  el.hidden = !l.length; el.textContent = l.length;
+  const vivo = l.some(a => a.piernas.some(pi => { const x = partidoDePierna(pi); if (!x) return false; const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]); return e && e.st === "in"; }));
+  document.querySelector(".abajo .central").classList.toggle("envivo", vivo);
+}
+function pintarMisApuestas() {
+  cargarMisApuestas();
+  let h = `<div class="lbar"><h2><span>🎟️</span><span class="t">Mis apuestas</span></h2><button class="ico" data-misrefrescar="1" aria-label="Actualizar">↻</button></div>`;
+  if (!MIS.datos) { $("vista").innerHTML = h + `<div class="vacio">Cargando tus apuestas…</div>`; return; }
+  const l = misApuestasActivas();
+  if (!l.length) { $("vista").innerHTML = h + `<div class="vacio">No tienes apuestas en juego. Las que hagas del bot (las que no marques con 🚫) saldrán aquí con sus partidos en directo.</div>`; return; }
+  const hora = a => a.fecha + (a.piernas.map(p => p.hora || "99").sort()[0]);
+  const enJuego = l.filter(a => !("ok" in a)).sort((x, y) => hora(x).localeCompare(hora(y)));
+  const hechas = l.filter(a => "ok" in a);
+  const euros = x => x.toFixed(2).replace(".", ",") + " €";
+  const tarjeta = a => {
+    const cuota = a.cuotaReal || a.cuota;
+    let vivoOk = true, alguna = false, falla = false;
+    const piernas = a.piernas.map(pi => {
+      const x = partidoDePierna(pi), p = x ? DATOS.dias[x[0]].partidos[x[1]] : null;
+      const e = p ? estadoEnDia(x[0], p) : null;
+      const mar = e && /^(\d+)-(\d+)$/.exec(e.m || "");
+      let va = pi.ok === true ? true : pi.ok === false ? false : mar ? acierta(pi.mercado, e.m) : null;
+      if (va !== null) alguna = true;
+      if (va === false) falla = true;
+      if (va !== true) vivoOk = false;
+      const sem = va === true ? (e && e.st === "in" ? "✅ va bien" : "✅") : va === false ? (e && e.st === "in" ? "❌ va mal" : "❌") : "";
+      const hora = !e ? esc(pi.hora || "--:--") : e.st === "in" ? `<span class="vivo">● ${esc(e.det)}</span>` : e.st === "post" ? `<span class="fin">FIN</span>` : esc(pi.hora || "");
+      const tag = x ? "button" : "div", attrs = x ? ` data-abrirdia="${x[0]}" data-abrirp="${x[1]}" data-desde="misap"` : "";
+      return `<${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
+        <span class="mh">${hora}</span>
+        <span class="me"><b>${esc(pi.local)}</b><b>${esc(pi.visitante)}</b><small>${esc(pi.mercado)} · ${pi.minima ? "pide ≥ " : pi.estimada ? "≈" : ""}${(+pi.cuota).toFixed(2)}</small></span>
+        <span class="mm">${mar ? `<span>${mar[1]}</span><span>${mar[2]}</span>` : ""}</span>
+        <span class="ms">${sem}</span></${tag}>`;
+    }).join("");
+    const estadoAp = a.ok === true ? `<span class="mest bien">Ganada +${euros(a.importe * ((a.cuota_final || cuota) - 1))}</span>`
+      : a.ok === false ? `<span class="mest mal">Perdida −${euros(a.importe)}</span>`
+      : falla ? `<span class="mest mal">Se ha caído una</span>` : alguna && vivoOk ? `<span class="mest bien">Va ganando</span>` : `<span class="mest">En juego</span>`;
+    return `<article class="mtarj ${a.ok === true ? "bien" : a.ok === false || falla ? "mal" : ""}">
+      <div class="mcab"><div><b>${esc(a.tipo)}</b> · cuota ${cuota.toFixed(2).replace(".", ",")}${a.cuotaReal ? " 💶" : ""}</div>${estadoAp}</div>
+      <div class="mdin"><span>Apostado <b>${euros(a.importe)}</b></span><span>Si gana <b>${euros(a.importe * cuota)}</b></span></div>
+      ${piernas}</article>`;
+  };
+  h += (enJuego.length ? `<h2 class="sec">En juego · ${enJuego.length}</h2>` + enJuego.map(tarjeta).join("") : "") +
+       (hechas.length ? `<h2 class="sec">Terminadas</h2>` + hechas.map(tarjeta).join("") : "") +
+       `<p class="nota" style="text-align:center;color:var(--muted);font-size:12px">Se actualiza solo cada minuto. Si en la app del bot marcas una con 🚫, deja de salir aquí.</p>`;
+  $("vista").innerHTML = h;
+}
+setInterval(() => { if (!document.hidden) { if (est.vista === "misap") { cargarMisApuestas(); pintarLista(); } contarMisApuestas(); } }, 60000);
 function pintarSelector() {
   const d = DEPORTES.find(x => x[0] === est.dep);
   $("selector").innerHTML = `<span class="ic">${ICONO_DEP[est.dep]}</span>${d[1]}<span class="tri">▾</span>`;
@@ -1215,7 +1337,7 @@ function pintarSelector() {
     const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
   }).join("");
-  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : $("cajabusca").hidden ? "comps" : "buscar")));
+  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : $("cajabusca").hidden ? "comps" : "buscar")));
 }
 
 function pintarAjustes() { return; }
@@ -1388,6 +1510,7 @@ document.addEventListener("click", e => {
   if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "auto"; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
+  if (b.dataset.misrefrescar) { cargarMisApuestas(true); enDirecto(); return; }
   if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); pintarLista(); return; }
   if (b.dataset.ajborrar === "favs") { if (!confirm("¿Borrar todos tus partidos y competiciones favoritos?")) return;
     est.favs = new Set(); est.ligasFav = new Set(); try { localStorage.removeItem("favs"); localStorage.removeItem("ligasFav"); } catch (e) {} pintarLista(); return; }
@@ -1405,7 +1528,7 @@ document.addEventListener("click", e => {
   if (b.dataset.salirequipo) { est.equipo = null; est.compEq = null; pintarLista(); return; }
   if (b.dataset.compeq !== undefined) { est.compEq = b.dataset.compeq; pintarLista(); return; }
   if (b.dataset.abrirdia !== undefined) { est.dia = +b.dataset.abrirdia; const p = DATOS.dias[est.dia].partidos[+b.dataset.abrirp];
-    est.dep = p.dep || "f"; est.volverA = "clasif"; est.vista = "partido"; est.sel = +b.dataset.abrirp; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
+    est.dep = p.dep || "f"; est.volverA = b.dataset.desde || "clasif"; est.vista = "partido"; est.sel = +b.dataset.abrirp; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = b.dataset.ligaIr; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.ligafav !== undefined) { const l = b.dataset.ligafav; est.ligasFav.has(l) ? est.ligasFav.delete(l) : est.ligasFav.add(l);
     try { localStorage.setItem("ligasFav", JSON.stringify([...est.ligasFav])); } catch (e) {} pintarLista(); return; }
@@ -1553,7 +1676,7 @@ window.addEventListener("popstate", e => {
 // ---------------------------------------------------------------- marcadores en directo (ESPN, desde el móvil)
 // ESPN agrupa los partidos por la fecha de EE. UU.: los de madrugada en España salen en el día
 // anterior. Por eso se mira hoy y ayer (y los partidos de ayer que sigan jugándose pasada la medianoche).
-const fechaMenos = (f, n) => { const d = new Date(f + "T12:00:00"); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+function fechaMenos(f, n) { const d = new Date(f + "T12:00:00"); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
 async function enDirecto() {
   const fechas = [AHORA.fecha, fechaMenos(AHORA.fecha, 1)];
   const cand = [];
@@ -1583,6 +1706,7 @@ async function enDirecto() {
 }
 enDirecto();
 setInterval(enDirecto, 60000);
+cargarMisApuestas();
 setInterval(() => { if (!document.hidden && est.vista === "partido" && est.tab === "resumen") pintarLista(); }, 60000);
 
 // Cada minuto: si algún partido ha empezado, se quita de la lista y del Top
