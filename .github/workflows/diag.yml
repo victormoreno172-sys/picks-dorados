@@ -1,0 +1,24 @@
+name: Diagnóstico
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - uses: actions/cache/restore@v4
+        with:
+          path: cache
+          key: datos-x
+          restore-keys: datos-
+      - run: python -u calibracion/backtest_tenis.py > salida.txt 2>&1; python - <<'P'
+          import json; t=open("salida.txt").read(); i=t.find("{\n"); json.dump({"log": t[:i][-3000:], "res": json.loads(t[i:]) if i>=0 else None}, open("resultado.json","w"), ensure_ascii=False, indent=1)
+          P
+      - run: |
+          git config user.name bot; git config user.email bot@local
+          git checkout --orphan diag-res; git rm -rq --cached . || true
+          git add resultado.json; git commit -qm diag; git push -f origin diag-res
