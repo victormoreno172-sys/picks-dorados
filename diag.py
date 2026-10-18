@@ -1,13 +1,13 @@
-import requests, json
-UA={"User-Agent":"Mozilla/5.0"}
-B="https://api.bo3.gg/api/v1/"
+import json, fases, ligas
 out={}
-t=requests.get(B+"tournaments/thunderpick-world-championship-2026",headers=UA,timeout=40).json()
-out["stages"]=t.get("stages")
-m=requests.get(B+"matches",params={"filter[matches.id][in]":"131674,131673","with":"stage,round"},headers=UA,timeout=40).json()
-out["m"]=[{k:v for k,v in x.items() if k in("id","stage","round","stage_id","round_id","position")} for x in m.get("results",[])]
-for slug in ["valorant-champions-2026","worlds-2026","pgl-masters-bucharest-2026"]:
+for slug in ["thunderpick-world-championship-2026","valorant-champions-2026","worlds-2026","pgl-masters-bucharest-2026","valorant-game-changers-championship-2026","demacia-cup-global-invitational-2026"]:
     try:
-        tt=requests.get(B+"tournaments/"+slug,headers=UA,timeout=40); out[slug]=[tt.status_code, (tt.json().get("stages") if tt.ok else None)]
-    except Exception as e: out[slug]=str(e)
-print(json.dumps(out,indent=1)[:120000])
+        E=fases.estructura(slug, slug)
+        if not E: out[slug]=None; continue
+        jor,gr=ligas._jornadas_fases(E,{})
+        out[slug]={"fases":[f["nombre"]+" ["+f["tipo"]+"] "+",".join(f["grupos"]) for f in E["fases"]],
+                   "jor":[(j["t"],len(j["p"]),[(p["f"],p["l"],p["v"],p["r"],p["m"],p["st"]) for p in j["p"]][:12]) for j in jor],
+                   "grupos":[(g["n"],[(f["eq"],f["g"],f["p"]) for f in g["filas"]]) for g in gr]}
+    except Exception as e:
+        import traceback; out[slug]=traceback.format_exc()
+print(json.dumps(out,indent=1,ensure_ascii=False))

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests && python diag.py > resultado.json
+      - run: pip install -r requirements.txt && python diag.py > resultado.json
       - run: |
           git config user.name bot; git config user.email bot@local
           git checkout --orphan diag-res; git rm -rq --cached . || true

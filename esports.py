@@ -64,6 +64,9 @@ class Serie:
     cuotas: dict | None = None
     img1: str = ""
     img2: str = ""
+    slug: str = ""        # torneo en bo3.gg (para sacar fases y rondas)
+    stage_id: int | None = None
+    round_id: int | None = None
 
 
 HIST: list = []
@@ -105,7 +108,8 @@ def _a_serie(juego: str, m: dict) -> Serie | None:
                      t1.get("name") or "?", t2.get("name") or "?",
                      int(m["team1_score"]) if hecho else None, int(m["team2_score"]) if hecho else None,
                      m.get("bet_updates") if isinstance(m.get("bet_updates"), dict) else None,
-                     t1.get("image_url") or "", t2.get("image_url") or "")
+                     t1.get("image_url") or "", t2.get("image_url") or "",
+                     (m.get("tournament") or {}).get("slug") or "", m.get("stage_id"), m.get("round_id"))
     except (KeyError, ValueError, TypeError):
         return None
 
@@ -134,11 +138,12 @@ def historico(juego: str, hoy: date) -> list[Serie]:
             elif m.get("start_date", "") >= limite:
                 guardados[str(m["id"])] = {k: m.get(k) for k in ("id", "start_date", "status", "tier", "bo_type",
                                                                    "team1_id", "team2_id", "team1_score",
-                                                                   "team2_score")}
+                                                                   "team2_score", "stage_id", "round_id")}
                 for t in ("team1", "team2"):
                     guardados[str(m["id"])][t] = {"name": (m.get(t) or {}).get("name"),
                                                   "image_url": (m.get(t) or {}).get("image_url") or ""}
-                guardados[str(m["id"])]["tournament"] = {"name": ((m.get("tournament") or {}).get("name") or "")}
+                guardados[str(m["id"])]["tournament"] = {"name": ((m.get("tournament") or {}).get("name") or ""),
+                                                         "slug": (m.get("tournament") or {}).get("slug") or ""}
                 nuevos += 1
         # Paramos al llegar a lo que ya teníamos o a partidos de hace más de un año
         if ya == len(res) or res[-1].get("start_date", "") < limite:
@@ -321,6 +326,13 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             HIST.extend(hist)
             for s in prox:
                 INFO[(s.fecha.isoformat(), s.n1, s.n2)] = {"esc": [s.img1, s.img2], "estadio": s.torneo}
+                try:  # fase y ronda del torneo ("Fase 2 · Playoffs · Final")
+                    import fases
+                    r = fases.etiqueta(s.slug or fases.slug_de(s.torneo), s.torneo, s.stage_id, s.round_id)
+                    if r:
+                        INFO[(s.fecha.isoformat(), s.n1, s.n2)]["ronda"] = r
+                except Exception as e:  # noqa: BLE001
+                    print(f"    aviso fases {s.torneo}: {e}")
                 a = analizar_serie(s, modelo)
                 if a:
                     salida.setdefault(s.fecha, []).append(a)

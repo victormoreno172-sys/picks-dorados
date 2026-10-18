@@ -578,9 +578,71 @@ def _esports(hoy: date, nombres_app: set | None = None) -> list[tuple[str, dict]
             for i, f in enumerate(filas, 1):
                 f["pos"] = i
             jor = _jornadas(partidos, len(filas), por_dia=True)
+            grupos_t = [{"n": "", "filas": filas}]
+            # Con las fases del torneo (bo3.gg): Fase 1 · Grupo A, Fase 2 · Playoffs (Semifinales, Final...)
+            try:
+                import fases
+                slug = next((x.slug for x in ss if x.slug), "") or fases.slug_de(torneo)
+                E = fases.estructura(slug, torneo)
+                if E:
+                    jor_f, grupos_f = _jornadas_fases(E, logos)
+                    if jor_f:
+                        jor = jor_f
+                        if grupos_f:
+                            grupos_t = grupos_f
+            except Exception as e:  # noqa: BLE001
+                print(f"  aviso fases {torneo}: {e}")
             out.append((f"e-{juego.lower()}-{_slug(torneo)}", {"nombre": f"{juego} · {torneo}", "dep": "e", "tipo": "basket",
-                        "grupos": [{"n": "", "filas": filas}], "jornadas": jor, "actual": _actual(jor, hoy)}))
+                        "grupos": grupos_t, "jornadas": jor, "actual": _actual(jor, hoy)}))
     return out
+
+def _jornadas_fases(E: dict, logos: dict) -> tuple[list, list]:
+    """Una "jornada" por fase (y por grupo), con la ronda de cada partido; y la tabla de cada grupo."""
+    import fases
+    bloques: dict[tuple, list] = {}
+    tablas: dict[tuple, dict] = {}
+    for f, grupo, ronda, orden, m in fases.partidos(E):
+        t1, t2 = m.get("team1") or {}, m.get("team2") or {}
+        n1, n2 = t1.get("name") or "Por decidir", t2.get("name") or "Por decidir"
+        fe, h = fases.fecha_hora(m.get("start_date") or "")
+        if not fe:
+            continue
+        for t in (t1, t2):
+            if t.get("name") and t.get("image_url"):
+                logos.setdefault(t["name"], t["image_url"])
+        hecho = m.get("status") == "finished"
+        vivo = m.get("status") == "current"
+        a, b = m.get("team1_score"), m.get("team2_score")
+        p = {"f": fe, "h": h, "l": n1, "v": n2, "el": logos.get(n1, t1.get("image_url") or ""), "ev": logos.get(n2, t2.get("image_url") or ""),
+             "m": f"{a}-{b}" if (hecho or vivo) and a is not None and b is not None else "", "st": "post" if hecho else "in" if vivo else "pre",
+             "r": ronda, "_o": (orden, fe, h)}
+        clave = (f["n"], f["nombre"] + (f" · {grupo}" if grupo else ""))
+        bloques.setdefault(clave, []).append(p)
+        # Tabla de los grupos (y de la fase suiza)
+        if f["tipo"] == "grupo" and hecho and t1.get("name") and t2.get("name"):
+            tb = tablas.setdefault(clave, {})
+            for n, x, y in ((n1, a or 0, b or 0), (n2, b or 0, a or 0)):
+                r = tb.setdefault(n, [0, 0, 0])
+                r[0 if x > y else 1] += 1
+                r[2] += x - y
+        elif f["tipo"] == "grupo":
+            tb = tablas.setdefault(clave, {})
+            for n in (n1, n2):
+                if n != "Por decidir":
+                    tb.setdefault(n, [0, 0, 0])
+    jor = []
+    for (n, titulo), ps in sorted(bloques.items(), key=lambda kv: (kv[0][0], kv[0][1])):
+        ps.sort(key=lambda p: p.pop("_o"))
+        jor.append({"t": titulo, "desde": min(p["f"] for p in ps), "hasta": max(p["f"] for p in ps), "p": ps})
+    grupos = []
+    for (n, titulo), tb in sorted(tablas.items()):
+        filas = [{"eq": e, "logo": logos.get(e, ""), "g": r[0], "p": r[1], "pj": r[0] + r[1], "dif": r[2]} for e, r in tb.items()]
+        filas.sort(key=lambda f: (-f["g"], f["p"], -f["dif"]))
+        for i, f in enumerate(filas, 1):
+            f["pos"] = i
+        grupos.append({"n": titulo, "filas": filas})
+    return jor, grupos
+
 
 # ---------------------------------------------------------------- escudos que faltan
 PAIS_DE = {"copadelrey": "Spain", "supercopa": "Spain", "segunda": "Spain", "laliga": "Spain", "facup": "England",
