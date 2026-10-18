@@ -644,6 +644,14 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .mesp .mpnota { color: rgba(255,255,255,.5); font-size: 11px; margin: 12px 2px 0; line-height: 1.4; }
 .mesp .mxlive { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .mesp .mxlive .mscore { color: #fff; font-size: 18px; }
+.mdia { width: 100%; display: grid; grid-template-columns: minmax(0,1fr) auto 18px; align-items: center; gap: 10px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 14px; padding: 11px 12px; margin: 0 0 8px; box-shadow: var(--sombra); cursor: pointer; color: var(--ink); }
+.mdia.bien { border-left-color: #16a34a; } .mdia.mal { border-left-color: var(--red); }
+.mdia .mdf { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mdia .mdf b { font-size: 14px; text-transform: capitalize; }
+.mdia .mdf small { font-size: 11.5px; color: var(--muted); }
+.mdia .mdg { font: 800 15px/1 var(--mono); }
+.mdia.bien .mdg { color: #16a34a; } .mdia.mal .mdg { color: var(--red); }
+.mdia .mdx { color: var(--muted); }
 </style>
 
 <div class="wrap">
@@ -1934,7 +1942,11 @@ function pintarMisApuestas() {
   let h = `<div class="lbar"><h2><span>🎟️</span><span class="t">Mis apuestas</span></h2><button class="ico" data-misrefrescar="1" aria-label="Actualizar">↻</button></div>`;
   if (!MIS.datos) { $("vista").innerHTML = h + `<div class="vacio">Cargando tus apuestas…</div>`; return; }
   const l = misApuestasActivas();
-  if (!l.length) { $("vista").innerHTML = h + `<div class="vacio">No tienes apuestas en juego. Las que hagas del bot (las que no marques con 🚫) saldrán aquí con sus partidos en directo.</div>`; return; }
+  // Días anteriores: todas las del bot que no quitaste, agrupadas por día (de más reciente a más antiguo)
+  const activas = new Set(l.map(a => a.key));
+  const anteriores = calcularApuestasBot(MIS.datos, AHORA.fecha + " " + AHORA.hora).ap
+    .map(a => Object.assign(a, { cuotaReal: a.cuota_bot ? a.cuota : null }))
+    .filter(a => !activas.has(a.key) && a.fecha < AHORA.fecha);
   const hora = a => a.fecha + (a.piernas.map(p => p.hora || "99").sort()[0]);
   const enJuego = l.filter(a => !("ok" in a)).sort((x, y) => hora(x).localeCompare(hora(y)));
   const hechas = l.filter(a => "ok" in a);
@@ -1945,8 +1957,8 @@ function pintarMisApuestas() {
     const piernas = a.piernas.map(pi => {
       const x = partidoDePierna(pi), p = x ? DATOS.dias[x[0]].partidos[x[1]] : null;
       const e = p ? estadoEnDia(x[0], p) : null;
-      const mar = e && /^(\d+)-(\d+)$/.exec(e.m || "");
-      let va = pi.ok === true ? true : pi.ok === false ? false : mar ? acierta(pi.mercado, e.m) : null;
+      const mar = (e && /^(\d+)-(\d+)$/.exec(e.m || "")) || (pi.res ? [0, pi.res[0], pi.res[1]] : null);
+      let va = pi.ok === true ? true : pi.ok === false ? false : mar && e ? acierta(pi.mercado, e.m) : null;
       if (va !== null) alguna = true;
       if (va === false) falla = true;
       if (va !== true) vivoOk = false;
@@ -1961,14 +1973,32 @@ function pintarMisApuestas() {
     }).join("");
     const estadoAp = a.ok === true ? `<span class="mest bien">Ganada +${euros(a.importe * ((a.cuota_final || cuota) - 1))}</span>`
       : a.ok === false ? `<span class="mest mal">Perdida −${euros(a.importe)}</span>`
-      : falla ? `<span class="mest mal">Se ha caído una</span>` : alguna && vivoOk ? `<span class="mest bien">Va ganando</span>` : `<span class="mest">En juego</span>`;
+      : falla ? `<span class="mest mal">Se ha caído una</span>` : alguna && vivoOk ? `<span class="mest bien">Va ganando</span>`
+      : a.fecha < AHORA.fecha ? `<span class="mest">Esperando resultado</span>` : `<span class="mest">En juego</span>`;
     return `<article class="mtarj ${a.ok === true ? "bien" : a.ok === false || falla ? "mal" : ""}">
       <div class="mcab"><div><b>${esc(a.tipo)}</b> · cuota ${cuota.toFixed(2).replace(".", ",")}${a.cuotaReal ? " 💶" : ""}</div>${estadoAp}</div>
       <div class="mdin"><span>Apostado <b>${euros(a.importe)}</b></span><span>Si gana <b>${euros(a.importe * cuota)}</b></span></div>
       ${piernas}</article>`;
   };
+  if (!l.length) h += `<div class="vacio">No tienes apuestas en juego. Las que hagas del bot (las que no marques con 🚫) saldrán aquí con sus partidos en directo.</div>`;
+  let previas = "";
+  if (anteriores.length) {
+    const dias = [...new Set(anteriores.map(a => a.fecha))].sort().reverse();
+    if (!est.misDias) est.misDias = new Set([dias[0]]);   // el último día, abierto
+    const totalG = anteriores.reduce((s2, a) => s2 + (a.ok === true ? a.importe * ((a.cuota_final || a.cuota) - 1) : a.ok === false ? -a.importe : 0), 0);
+    previas = `<h2 class="sec">Días anteriores · ${totalG >= 0 ? "+" : "−"}${euros(Math.abs(totalG))}</h2>` + dias.map(d => {
+      const del = anteriores.filter(a => a.fecha === d), abierto = est.misDias.has(d);
+      const g = del.reduce((s2, a) => s2 + (a.ok === true ? a.importe * ((a.cuota_final || a.cuota) - 1) : a.ok === false ? -a.importe : 0), 0);
+      const ap2 = del.reduce((s2, a) => s2 + a.importe, 0), gan = del.filter(a => a.ok === true).length, per = del.filter(a => a.ok === false).length;
+      const pend = del.length - gan - per, fd = new Date(d + "T12:00:00");
+      return `<button class="mdia ${g > 0 ? "bien" : g < 0 ? "mal" : ""}" data-misdia="${d}" aria-expanded="${abierto}">
+          <span class="mdf"><b>${d === fechaMenos(AHORA.fecha, 1) ? "Ayer" : DIAS_L[fd.getDay()]} ${fd.getDate()} ${MESES[fd.getMonth()]}</b><small>${del.length} apuesta${del.length > 1 ? "s" : ""} · ✅ ${gan} · ❌ ${per}${pend ? ` · ⏳ ${pend}` : ""} · apostado ${euros(ap2)}</small></span>
+          <span class="mdg">${g >= 0 ? "+" : "−"}${euros(Math.abs(g))}</span><span class="mdx">${abierto ? "▴" : "▾"}</span></button>` +
+        (abierto ? del.map(tarjeta).join("") : "");
+    }).join("");
+  }
   h += (enJuego.length ? `<h2 class="sec">En juego · ${enJuego.length}</h2>` + enJuego.map(tarjeta).join("") : "") +
-       (hechas.length ? `<h2 class="sec">Terminadas</h2>` + hechas.map(tarjeta).join("") : "") +
+       (hechas.length ? `<h2 class="sec">Terminadas hoy</h2>` + hechas.map(tarjeta).join("") : "") + previas +
        `<p class="nota" style="text-align:center;color:var(--muted);font-size:12px">Se actualiza solo cada minuto. Si en la app del bot marcas una con 🚫, deja de salir aquí.</p>`;
   $("vista").innerHTML = h;
 }
@@ -2258,6 +2288,7 @@ document.addEventListener("click", e => {
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.tinfo !== undefined) { est.tinfo = est.tinfo === b.dataset.tinfo ? null : b.dataset.tinfo; pintarLista(); return; }
+  if (b.dataset.misdia) { est.misDias = est.misDias || new Set(); const d = b.dataset.misdia; est.misDias.has(d) ? est.misDias.delete(d) : est.misDias.add(d); pintarLista(); return; }
   if (b.dataset.juegofav) { const k = b.dataset.juegofav; est.juegosFav.has(k) ? est.juegosFav.delete(k) : est.juegosFav.add(k);
     try { localStorage.setItem("juegosFav", JSON.stringify([...est.juegosFav])); } catch (e) {} pintarLista(); return; }
   if (b.dataset.juego) { est.vista = "juego"; est.juego = b.dataset.juego; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
