@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  actions: write   # para lanzar la siguiente vuelta al terminar
 concurrency:
   group: directo
   cancel-in-progress: true
@@ -21,3 +22,9 @@ jobs:
       - run: |
           git config user.name "bot"; git config user.email "bot@local"
           python directo.py
+      # El cron de GitHub a veces no salta: cada vuelta lanza la siguiente para que el directo no se pare nunca
+      - name: Siguiente vuelta
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run directo.yml --ref "${{ github.ref_name }}" --repo "${{ github.repository }}"
