@@ -619,6 +619,29 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rtag { display: block; margin-top: 3px; font: 800 8.5px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
 .rtagj { color: var(--ink) !important; }
 .rtagj.final { color: #b45309 !important; }
+
+.mesp .mserie { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 10px; margin: 6px 0 14px; }
+.mesp .meq { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mesp .meq.v { justify-content: flex-end; text-align: right; }
+.mesp .meq b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mesp .mtot { font: 800 30px/1 var(--mono); display: flex; gap: 8px; align-items: center; color: rgba(255,255,255,.55); }
+.mesp .mtot i { font-style: normal; font-size: 20px; opacity: .5; }
+.mesp .mtot b.g, .mesp .mscore b.g { color: #fbbf24; }
+.mesp .mtot b { color: #fff; }
+.mesp .mlista { display: grid; gap: 6px; }
+.mesp .mfila { display: grid; grid-template-columns: 26px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,.05); }
+.mesp .mfila.mxv { background: rgba(239,68,68,.14); box-shadow: inset 0 0 0 1px rgba(239,68,68,.45); }
+.mesp .mfila.mxno { opacity: .4; }
+.mesp .mnum { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 800 12px/1 var(--mono); background: rgba(255,255,255,.1); color: #fff; }
+.mesp .mnom { display: flex; flex-direction: column; min-width: 0; color: #fff; }
+.mesp .mnom b { font-size: 14px; }
+.mesp .mnom small { font-size: 11px; color: rgba(255,255,255,.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mesp .mscore { font: 800 16px/1 var(--mono); display: flex; gap: 6px; color: rgba(255,255,255,.6); }
+.mesp .mscore i { font-style: normal; opacity: .5; }
+.mesp .mxest { background: none; padding: 0; font-size: 12px; color: rgba(255,255,255,.55); display: inline-flex; align-items: center; gap: 6px; }
+.mesp .mxest.mxvivo { color: #fca5a5; font-weight: 700; }
+.mesp .mxest.mxvivo i { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: pulso 1.6s infinite; }
+.mesp .mpnota { color: rgba(255,255,255,.5); font-size: 11px; margin: 12px 2px 0; line-height: 1.4; }
 </style>
 
 <div class="wrap">
@@ -1294,7 +1317,36 @@ function eventosResumen(j) {
   return res.concat(seps);
 }
 // Marcador por periodos (cuartos, sets o mapas) con diseño propio
+// Esports: un mapa por fila (nombre, cómo va y quién lo ganó), más legible que una tabla de columnas
+function mapasEsports(p) {
+  const es = estado(p) || {}, r = p.res || {}, fi = p.fi || {}, mapas = r.mapas || [];
+  const vivo = es.st === "in", tot = (r.m || "0-0").split("-").map(x => +x || 0);
+  const lol = /^LOL/.test(p.liga), unidad = lol ? "Partida" : "Mapa";
+  const bo = +((/Bo(\d)/.exec(p.liga) || [])[1] || mapas.length || 1), k = Math.floor(bo / 2) + 1;
+  const decidido = Math.max(...tot) >= k;
+  const nAct = vivo ? (+((/(?:Mapa|Partida) (\d+)/.exec(es.det || "") || [])[1]) || tot[0] + tot[1] + 1) : 0;
+  const chip = vivo ? `<span class="mpchip"><i></i>${esc((es.det || "En juego").replace(/ · .*/, ""))}</span>` : es.st === "post" ? `<span class="mpchip fin">Final</span>` : "";
+  const filas = (mapas.length ? mapas : Array.from({ length: bo }, () => ["", null, null])).map((m, i) => {
+    const n = i + 1, a = m[1], b = m[2], hecho = a != null && b != null;
+    let estado2, cls = "";
+    if (hecho) { estado2 = `<span class="mscore"><b class="${a > b ? "g" : ""}">${a}</b><i>–</i><b class="${b > a ? "g" : ""}">${b}</b></span>`; cls = "mxh"; }
+    else if (n === nAct) { estado2 = `<span class="mxest mxvivo"><i></i>En juego</span>`; cls = "mxv"; }
+    else if (decidido || (es.st === "post")) { estado2 = `<span class="mxest">No se juega</span>`; cls = "mxno"; }
+    else estado2 = `<span class="mxest">Pendiente</span>`;
+    const ganador = hecho ? (a > b ? 0 : 1) : -1;
+    return `<div class="mfila ${cls}"><span class="mnum">${n}</span><span class="mnom"><b>${esc(m[0] || `${unidad} ${n}`)}</b>${ganador >= 0 ? `<small>Gana ${esc(ganador ? p.visitante : p.local)}</small>` : ""}</span>${estado2}</div>`;
+  }).join("");
+  return `<div class="mpcaja mesp">
+    <div class="mpcab">${chip}<span class="mptit">Al mejor de ${bo}</span></div>
+    <div class="mserie"><span class="meq">${miniEsc((fi.esc || [])[0], p.local)}<b>${esc(p.local)}</b></span>
+      <span class="mtot"><b class="${tot[0] > tot[1] ? "g" : ""}">${tot[0]}</b><i>–</i><b class="${tot[1] > tot[0] ? "g" : ""}">${tot[1]}</b></span>
+      <span class="meq v"><b>${esc(p.visitante)}</b>${miniEsc((fi.esc || [])[1], p.visitante)}</span></div>
+    <div class="mlista">${filas}</div>
+    <p class="mpnota">${lol ? "Partidas" : "Mapas"} terminados con su resultado${lol ? "" : " (rondas)"}. El resultado de cada ${lol ? "partida" : "mapa"} aparece al acabar: la fuente no da el marcador ${lol ? "" : "de rondas "}mientras se juega.</p>
+  </div>`;
+}
 function marcadorPeriodos(p) {
+  if (p.dep === "e") return mapasEsports(p);
   const es = estado(p) || {}, r = p.res || {};
   const fi = p.fi || {};
   let cab = [], l = [], v = [], tot = (r.m || "").split("-"), titulo = "";
