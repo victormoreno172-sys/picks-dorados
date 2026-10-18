@@ -551,6 +551,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .mpeq span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mpeq .mini { width: 26px; height: 26px; background: #fff; border-radius: 7px; padding: 2px; }
 .mpnota { margin: 6px 2px 0; font-size: 12px; color: #8a99b2; }
+.hest { color: var(--gold); font-weight: 700; }
 </style>
 
 <div class="wrap">
@@ -839,6 +840,46 @@ function acierta(mercado, m) {
   return null;
 }
 
+
+// ---------------------------------------------------------------- tenis: hora estimada de los partidos que van detrás
+// En tenis los partidos de una pista van uno detrás de otro. Si el de delante sigue jugándose, se calcula
+// cuánto le queda (por el set y los juegos) y se encadena: así sale la hora a la que empezará de verdad.
+const minDe = h => { const [a, b] = (h || "00:00").split(":").map(Number); return a * 60 + b; };
+const horaDe = m => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(Math.round(m) % 60).padStart(2, "0")}`;
+function quedaTenis(r) {
+  const parc = (r && r.parc) || { l: [], v: [] }, n = parc.l.length || 1;
+  const juegos = n ? (parc.l[n - 1] || 0) + (parc.v[n - 1] || 0) : 0;
+  const enSet = Math.max(6, 42 - juegos * 3.5);           // lo que queda del set en juego
+  const sets = (r && r.sets) || [0, 0];
+  if (n <= 1) return enSet + 54;                          // falta otro set (y quizá un tercero)
+  if (n === 2) return enSet + (sets[0] !== sets[1] ? 15 : 0);  // 1-0 en el 2.º set: puede haber 3.º
+  return enSet;
+}
+function estimadasTenis(dia) {
+  if (dia._est && dia._est.t === AHORA.hora) return dia._est.m;
+  const out = {}, pistas = {};
+  dia.partidos.forEach((p, i) => { if (p.dep === "te" && p.fi && p.fi.estadio) (pistas[p.liga + "|" + p.fi.estadio] ||= []).push(i); });
+  // Solo si el torneo distingue pistas (si todos tienen la misma "sede", no se sabe el orden real)
+  const porTorneo = {};
+  Object.keys(pistas).forEach(k => (porTorneo[k.split("|")[0]] ||= new Set()).add(k));
+  const ahora = minDe(AHORA.hora), hoy = dia.fecha === AHORA.fecha;
+  for (const [k, idx] of Object.entries(pistas)) {
+    if (porTorneo[k.split("|")[0]].size < 2 && !/court|pista|cancha|centre|central/i.test(k)) continue;
+    const orden = idx.slice().sort((a, b) => minDe(dia.partidos[a].hora) - minDe(dia.partidos[b].hora));
+    let t = null, delante = null;
+    for (const i of orden) {
+      const p = dia.partidos[i], r = p.res;
+      if (r && r.st === "post") { t = null; delante = null; continue; }
+      if (r && r.st === "in") { t = (hoy ? ahora : minDe(p.hora)) + quedaTenis(r) + 10; delante = `${p.local.split(" ").pop()}–${p.visitante.split(" ").pop()}`; continue; }
+      const prevista = minDe(p.hora);
+      if (t != null && t > prevista + 5) out[i] = { h: horaDe(t), tras: delante };
+      const empieza = Math.max(prevista, t != null ? t : prevista);
+      t = empieza + 95; delante = `${p.local.split(" ").pop()}–${p.visitante.split(" ").pop()}`;
+    }
+  }
+  dia._est = { t: AHORA.hora, m: out };
+  return out;
+}
 function filaPartido(p, idx) {
   const id = est.dia + "-" + idx, abierto = est.abiertos.has(id);
   const basket = p.dep === "b";
@@ -851,7 +892,8 @@ function filaPartido(p, idx) {
     .replace(/ \((1X|X2|12|1|X|2)\)$/, " ($1)").replace(/^Ambos marcan: /, "Ambos: ");
   const es = estado(p), mar = es && /^(\d+)-(\d+)$/.exec(es.m || "");
   const ok = es && es.st === "post" && mp ? acierta(mp.m, es.m) : null;
-  const hora = !es ? esc(p.hora || "--:--") : es.st === "in" ? `<span class="vivo">● ${esc(es.det)}</span>` : es.st === "susp" ? "Apl." : `<span class="fin">${esc(es.det === "Final" || es.det === "Fin" ? "FIN" : es.det)}</span>`;
+  const estT = p.dep === "te" && !es ? estimadasTenis(DATOS.dias[est.dia])[idx] : null;
+  const hora = !es ? (estT ? `<span class="hest" title="Va detrás de ${esc(estT.tras || "")}">≈${esc(estT.h)}</span>` : esc(p.hora || "--:--")) : es.st === "in" ? `<span class="vivo">● ${esc(es.det)}</span>` : es.st === "susp" ? "Apl." : `<span class="fin">${esc(es.det === "Final" || es.det === "Fin" ? "FIN" : es.det)}</span>`;
   return `<article class="fp ${abierto ? "abierto" : ""} ${es ? "empezado " + es.st : ""}" id="p-${id}">
     <button class="fpcab" data-abrir="${idx}">
       <span class="hora">${hora}</span>
@@ -1228,6 +1270,8 @@ function pintarFicha() {
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
         if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + es.det : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
         if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
+        const e2 = p.dep === "te" ? estimadasTenis(dia)[est.sel] : null;
+        if (e2) return `<b>≈${esc(e2.h)}</b><small>hora estimada · va detrás de ${esc(e2.tras || "otro partido")}</small>`;
         return `<b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small>`; })()}</div>
       <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b>${esc(p.visitante)}</b></div>
     </div>
