@@ -560,6 +560,43 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .bgcaja { margin: 12px 0 4px; }
 .bgcaja input { width: 100%; font: 500 16px var(--body); padding: 13px 16px; border-radius: 14px; border: 1.5px solid var(--gold); background: var(--surface); color: var(--ink); box-shadow: var(--sombra); outline: none; }
 .bgdia { font: 700 12px var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 12px 4px 6px; }
+
+/* Páginas de juego (esports) */
+.jcards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.jcard { text-align: left; border: 0; border-radius: 14px; padding: 12px 10px; min-height: 74px; color: #fff; cursor: pointer;
+  background: linear-gradient(140deg, var(--j1) -40%, var(--j2) 70%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), var(--sombra);
+  display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+.jcard b { font: 800 clamp(11px, 3.3vw, 14px)/1.05 var(--display); letter-spacing: .02em; border-bottom: 2px solid var(--j1); padding-bottom: 4px; align-self: flex-start; }
+.jcard small { font-size: 10px; color: rgba(255,255,255,.75); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.jhero { position: relative; overflow: hidden; border-radius: 20px; padding: 18px 18px 16px; margin: 12px 0 4px; color: #fff;
+  background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--j1) 55%, transparent) 0%, transparent 55%), linear-gradient(160deg, var(--j2), #05080f); box-shadow: var(--sombra); }
+.jhero::after { content: ""; position: absolute; right: -30px; bottom: -40px; width: 160px; height: 160px; border: 18px solid var(--j1); opacity: .18; transform: rotate(45deg); }
+.jhero small { display: block; font: 700 11px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--j1); }
+.jhero .jnom { display: block; font: 900 clamp(24px, 8.5vw, 38px)/1 var(--display); letter-spacing: .01em; margin: 8px 0 2px; overflow-wrap: anywhere; }
+.jhero .jtemp { font: 800 clamp(40px, 15vw, 64px)/1 var(--display); color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,.55); }
+.jhero .jfase { margin-top: 10px; font-size: 13px; color: rgba(255,255,255,.85); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; position: relative; z-index: 1; }
+.jvivo { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34,197,94,.7); animation: pulso 1.6s infinite; }
+@keyframes pulso { 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+.tl { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px 10px; box-shadow: var(--sombra); }
+.tlm, .tlf { display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); gap: 8px; align-items: center; }
+.tlm div { display: grid; grid-template-columns: repeat(12, 1fr); }
+.tlm i { font: 700 9px/1 var(--display); font-style: normal; color: var(--muted); text-align: center; }
+.tlf { padding: 5px 0; border-top: 1px dashed var(--line); }
+.tlf:first-of-type { border-top: 0; }
+.tln { font-size: 11.5px; font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+.tln small { color: var(--muted); }
+.tlp { position: relative; height: 14px; border-radius: 7px;
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 70%, transparent) 0 1px, transparent 1px calc(100% / 12)); }
+.tlp i { position: absolute; top: 2px; bottom: 2px; border-radius: 5px; }
+.tlf.hecho .tlp i { opacity: .38; }
+.tlf.hecho .tln { color: var(--muted); }
+.tlf.ya .tln { color: var(--ink); font-weight: 800; }
+.tlf.ya .tlp i { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 25%, transparent), 0 0 10px currentColor; }
+.tlhoy { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--red); border-radius: 1px; z-index: 1; }
+.tlley { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; font-size: 11px; color: var(--muted); }
+.tlley span { display: inline-flex; align-items: center; gap: 5px; }
+.tlley i { width: 12px; height: 6px; border-radius: 3px; display: inline-block; }
+.tlley i.hoyi { width: 2px; height: 10px; background: var(--red); }
 </style>
 
 <div class="wrap">
@@ -938,13 +975,14 @@ function enVivo() {
 }
 function pintarLista() {
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "ajustes", "misap", "buscar"].includes(est.vista);
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar"].includes(est.vista);
   if (est.vista === "buscar") return pintarBuscadorGeneral();
   if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
   if (est.vista === "ligas") return pintarIndiceLigas();
   if (est.vista === "clasif") return pintarClasif();
+  if (est.vista === "juego") return pintarJuego();
   const vis = partidosVisibles();
   const porLiga = {};
   vis.forEach(x => (porLiga[ligaBase(x[0].liga)] ||= []).push(x));
@@ -960,6 +998,7 @@ function pintarLista() {
     const nVivo = enVivo().length;
     h += `<button class="todos endirecto ${nVivo ? "hay" : ""}" data-endirecto="1"><span class="punto"></span><b>En directo</b><span class="cnt vivo-c">${nVivo}</span></button>`;
     h += `<button class="todos" data-vista="todos"><span class="lst">☰</span><b>Todos los partidos</b><span class="cnt rojo">${vis.length}</span></button>`;
+    if (est.dep === "e") h += tarjetasJuegos();
     if (favs.length) h += `<h2 class="sec">Competiciones favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
     h += `<h2 class="sec">${favs.length ? "Más competiciones" : "Competiciones"}</h2>` +
       (resto.length ? `<div class="comps">${resto.map(fila).join("")}</div>` : `<div class="vacio">No hay más partidos este día.</div>`);
@@ -1309,7 +1348,7 @@ function cargarIndice() {
   LIGAS.cargando.indice = true;
   fetch("ligas/indice.json?t=" + Math.floor(Date.now() / 600000)).then(r => r.json())
     .then(x => { LIGAS.indice = x; }).catch(() => { LIGAS.indice = []; })
-    .finally(() => { if (["ligas", "liga", "favs"].includes(est.vista)) pintarLista(); });
+    .finally(() => { if (["ligas", "liga", "favs", "juego"].includes(est.vista)) pintarLista(); });
 }
 function cargarLiga(id) {
   if (LIGAS.datos[id] || LIGAS.cargando[id]) return;
@@ -1317,9 +1356,119 @@ function cargarLiga(id) {
   fetch(`ligas/${id}.json?t=` + Math.floor(Date.now() / 600000)).then(r => r.json())
     .then(x => { LIGAS.datos[id] = x; if (est.jor == null) est.jor = x.actual || 0; })
     .catch(() => { LIGAS.datos[id] = { error: true }; })
-    .finally(() => { LIGAS.cargando[id] = false; if (est.vista === "clasif" && est.lid === id) pintarLista(); });
+    .finally(() => { LIGAS.cargando[id] = false; if ((est.vista === "clasif" && est.lid === id) || est.vista === "juego") pintarLista(); });
 }
 const idDeLiga = nombre => (LIGAS.indice || []).find(l => claveComp(l.n) === claveComp(nombre));
+
+
+// ---------------------------------------------------------------- páginas de cada juego (Valorant, CS2, LoL)
+// Cabecera con la temporada, cómo se reparte el año (torneos), torneos de la app, próximos partidos y ranking.
+// t: r = ligas regionales, i = internacional, m = mundial / major, f = femenino. "~" = fechas aproximadas.
+const JUEGOS_INFO = {
+  VAL: { nombre: "VALORANT", corto: "Valorant", circuito: "VCT", c1: "#ff4655", c2: "#0f1923", buscar: "valorant val",
+    temporadas: { 2026: [
+      ["Kickoff", "01-15", "02-15", "r"], ["Masters Santiago", "02-28", "03-15", "i"], ["Stage 1", "03-31", "05-24", "r"],
+      ["Masters Londres", "06-06", "06-21", "i"], ["Stage 2", "06-30", "09-06", "r"], ["Champions Shanghái", "09-24", "10-18", "m"],
+      ["Game Changers Championship", "10-15", "11-15", "f", "~"]] },
+    plantilla: [["Kickoff", "01-15", "02-15", "r"], ["Masters 1", "03-01", "03-15", "i"], ["Stage 1", "04-01", "05-25", "r"],
+      ["Masters 2", "06-05", "06-22", "i"], ["Stage 2", "07-01", "09-05", "r"], ["Champions", "09-20", "10-20", "m"]] },
+  CS2: { nombre: "COUNTER-STRIKE 2", corto: "Counter-Strike 2", circuito: "Circuito", c1: "#de9b35", c2: "#1b2838", buscar: "counter strike cs2 csgo cs",
+    temporadas: { 2026: [
+      ["IEM Kraków", "01-28", "02-08", "i"], ["PGL Cluj-Napoca", "02-09", "02-22", "i"], ["BLAST Open Spring", "03-18", "03-29", "i"],
+      ["IEM Río", "04-13", "04-19", "i"], ["IEM Atlanta", "05-11", "05-17", "i"], ["Major de Colonia", "06-02", "06-21", "m"],
+      ["Esports World Cup", "08-12", "08-23", "i"], ["BLAST Open Fall", "08-26", "09-06", "i"], ["ESL Pro League 24", "10-03", "10-11", "i"],
+      ["PGL Masters Bucarest", "10-24", "10-31", "i"], ["IEM Pekín", "11-02", "11-08", "i"], ["Major de Singapur", "11-25", "12-13", "m"]] },
+    plantilla: [["Torneos IEM / BLAST / PGL", "01-20", "05-20", "i"], ["Major 1", "06-01", "06-22", "m"],
+      ["Torneos IEM / BLAST / PGL", "07-20", "11-15", "i"], ["Major 2", "11-20", "12-15", "m"]] },
+  LOL: { nombre: "LEAGUE OF LEGENDS", corto: "League of Legends", circuito: "LoL Esports", c1: "#c89b3c", c2: "#0a1428", buscar: "league of legends lol",
+    temporadas: { 2026: [
+      ["Ligas · Split 1", "01-10", "03-08", "r", "~"], ["First Stand · São Paulo", "03-16", "03-22", "i"], ["Ligas · Split 2", "03-28", "06-21", "r", "~"],
+      ["MSI · Daejeon", "06-28", "07-12", "i"], ["Ligas · Split 3", "07-20", "09-13", "r", "~"], ["Worlds · EE. UU.", "10-15", "11-14", "m"]] },
+    plantilla: [["Ligas · Split 1", "01-10", "03-08", "r"], ["First Stand", "03-15", "03-25", "i"], ["Ligas · Split 2", "03-28", "06-20", "r"],
+      ["MSI", "06-27", "07-13", "i"], ["Ligas · Split 3", "07-20", "09-13", "r"], ["Worlds", "10-01", "11-10", "m"]] },
+};
+const T_EVENTO = { r: ["Ligas regionales", "#64748b"], i: ["Internacional", "#3b82f6"], m: ["Mundial / Major", "#f5b301"], f: ["Femenino", "#d946ef"] };
+const juegoDeLiga = l => { const k = String(l || "").split(" · ")[0]; return JUEGOS_INFO[k] ? k : null; };
+
+function temporadaJuego(k) {
+  const J = JUEGOS_INFO[k], hoy = AHORA.fecha, a = +hoy.slice(0, 4);
+  const lista = (y) => (J.temporadas[y] || J.plantilla).map(([n, d, h, t, aprox]) => ({ n, d: `${y}-${d}`, h: `${y}-${h}`, t, aprox: !!aprox || !J.temporadas[y] }));
+  let y = a, ev = lista(y);
+  // Si ya se acabó todo lo del año, la temporada que toca es la siguiente
+  if (ev.every(e => e.h < hoy) && +hoy.slice(5, 7) >= 11) { y = a + 1; ev = lista(y); }
+  const ahora = ev.filter(e => e.d <= hoy && hoy <= e.h), prox = ev.find(e => e.d > hoy), fin = ev.every(e => e.h < hoy);
+  return { y, ev, ahora, prox, fin };
+}
+const fechaCorta = f => { const d = new Date(f + "T12:00:00"); return `${d.getDate()} ${MESES[d.getMonth()]}`; };
+
+function lineaTemporada(T) {
+  const ini = Date.parse(`${T.y}-01-01T00:00:00`), fin = Date.parse(`${T.y + 1}-01-01T00:00:00`);
+  const x = f => Math.max(0, Math.min(100, (Date.parse(f + "T12:00:00") - ini) / (fin - ini) * 100));
+  const hoyX = AHORA.fecha.startsWith(String(T.y)) ? x(AHORA.fecha) : null;
+  const meses = "EFMAMJJASOND".split("");
+  let h = `<div class="tl"><div class="tlm"><span></span><div>${meses.map(m => `<i>${m}</i>`).join("")}</div></div>`;
+  h += T.ev.map(e => {
+    const izq = x(e.d), anc = Math.max(2.2, x(e.h) - izq), est2 = e.h < AHORA.fecha ? "hecho" : e.d <= AHORA.fecha ? "ya" : "";
+    return `<div class="tlf ${est2}"><span class="tln">${esc(e.n)}${e.aprox ? " <small>~</small>" : ""}</span><div class="tlp">
+      ${hoyX != null ? `<b class="tlhoy" style="left:${hoyX}%"></b>` : ""}<i style="left:${izq}%;width:${anc}%;background:${T_EVENTO[e.t][1]}"></i></div></div>`;
+  }).join("");
+  const tipos = [...new Set(T.ev.map(e => e.t))];
+  h += `<div class="tlley">${tipos.map(t => `<span><i style="background:${T_EVENTO[t][1]}"></i>${T_EVENTO[t][0]}</span>`).join("")}<span><i class="hoyi"></i>Hoy</span></div></div>`;
+  return h;
+}
+
+function filaPartidoApp(d, di, p, i, desde) {
+  const antes = est.dia; est.dia = di; const e = estado(p); est.dia = antes;
+  const mar = e && /^(\d+)-(\d+)$/.exec(e.m || ""), inf = infoLiga(p.liga), fi = p.fi || {};
+  const fd = new Date(d.fecha + "T12:00:00"), dia = d.fecha === AHORA.fecha ? "Hoy" : `${fd.getDate()} ${MESES[fd.getMonth()]}`;
+  return `<button class="jp ir" data-abrirdia="${di}" data-abrirp="${i}" data-desde="${desde}"><span class="jh">${dia}${e ? `<b style="${e.st === "in" ? "color:var(--red)" : ""}">${esc(e.st === "post" ? "FIN" : e.det || "")}</b>` : `<b>${esc(p.hora || "")}</b>`}</span>
+    <span class="je"><small class="ctag">${esc(inf.nombre)}</small><div>${miniEsc((fi.esc || [])[0], p.local)}<span>${esc(p.local)}</span></div><div>${miniEsc((fi.esc || [])[1], p.visitante)}<span>${esc(p.visitante)}</span></div></span>
+    <span class="jm">${mar ? `<span>${mar[1]}</span><span>${mar[2]}</span>` : ""}</span></button>`;
+}
+
+function tarjetasJuegos() {
+  return `<div class="jcards">${Object.entries(JUEGOS_INFO).map(([k, J]) => { const T = temporadaJuego(k);
+    return `<button class="jcard" data-juego="${k}" style="--j1:${J.c1};--j2:${J.c2}"><b>${esc(J.nombre)}</b><small>${T.ahora.length ? "● " + esc(T.ahora[0].n) : T.prox ? "Próximo: " + esc(T.prox.n) : "Temporada " + T.y}</small></button>`; }).join("")}</div>`;
+}
+function pintarJuego() {
+  cargarIndice();
+  const k = est.juego, J = JUEGOS_INFO[k];
+  if (!J) { est.vista = "ligas"; return pintarIndiceLigas(); }
+  const T = temporadaJuego(k);
+  let h = `<div class="lbar"><button class="ico" data-volverliga="1" aria-label="Volver">←</button><h2><span>🎮</span><span class="t">${esc(J.corto)}</span></h2></div>`;
+  // Cabecera grande
+  const fase = T.ahora.length ? `<span class="jvivo"></span>Ahora: <b>${T.ahora.map(e => esc(e.n)).join(" · ")}</b>`
+    : T.prox ? `Próximo: <b>${esc(T.prox.n)}</b> · ${fechaCorta(T.prox.d)}` : `Temporada terminada · la ${T.y + 1} empieza en enero`;
+  h += `<div class="jhero" style="--j1:${J.c1};--j2:${J.c2}"><small>${esc(J.circuito)} · Temporada</small><b class="jnom">${esc(J.nombre)}</b>
+    <div class="jtemp">${T.y}</div><div class="jfase">${fase}</div></div>`;
+  h += `<h2 class="sec">Cómo es la temporada ${T.y}</h2>` + lineaTemporada(T);
+  if (T.ev.some(e => e.aprox)) h += `<p class="nota" style="color:var(--muted);font-size:11px;margin:6px 4px 0">~ fechas aproximadas.</p>`;
+  // Torneos que tiene la app
+  const idx = (LIGAS.indice || []).filter(l => l.dep === "e" && l.n.startsWith(k + " · "));
+  const torneos = idx.filter(l => l.tipo !== "ranking"), rk = idx.find(l => l.tipo === "ranking");
+  if (torneos.length) h += `<h2 class="sec">Torneos en la app</h2><div class="comps">${torneos.map(l => { const inf = infoLiga(l.n), fav = est.ligasFav.has(l.n);
+    return `<div class="comp"><button class="compir" data-lid="${esc(l.id)}"><span class="flag">🏆</span><span class="nl"><small>${esc(inf.pais)}</small><b>${esc(inf.nombre)}</b></span><span class="cnt">${l.eq}</span></button>
+      <button class="lfav" data-ligafav="${esc(l.n)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>`; }).join("")}</div>`;
+  // Próximos partidos (y los que se están jugando)
+  const parts = [];
+  DATOS.dias.forEach((d, di) => d.partidos.forEach((p, i) => {
+    if ((p.dep || "f") !== "e" || juegoDeLiga(p.liga) !== k) return;
+    const antes = est.dia; est.dia = di; const e = estado(p); est.dia = antes;
+    if (!e || e.st !== "post") parts.push([d, di, p, i]);
+  }));
+  if (parts.length) h += `<h2 class="sec">Próximos partidos</h2>` + parts.slice(0, 8).map(([d, di, p, i]) => filaPartidoApp(d, di, p, i, "juego")).join("");
+  // Ranking (los 10 primeros)
+  if (rk) {
+    const L = LIGAS.datos[rk.id];
+    h += `<h2 class="sec">Ranking de equipos</h2>`;
+    if (!L) { cargarLiga(rk.id); h += `<div class="vacio">Cargando ranking…</div>`; }
+    else if (!L.error && L.grupos && L.grupos[0]) {
+      h += tablaClasif(L, { filas: L.grupos[0].filas.slice(0, 10) }).replace(/data-equipo="/g, `data-lid="${esc(rk.id)}" data-equipoir="`);
+      h += `<button class="irtabla" data-lid="${esc(rk.id)}">Ranking completo <span>›</span></button>`;
+    }
+  }
+  $("vista").innerHTML = h;
+}
 
 function pintarIndiceLigas() {
   cargarIndice();
@@ -1335,6 +1484,7 @@ function pintarIndiceLigas() {
   const deps = [["f", "⚽ Fútbol"], ["b", "🏀 Basket"], ["te", "🎾 Tenis"], ["e", "🎮 Esports"]].filter(([d]) => LIGAS.indice.some(l => l.dep === d));
   if (!est.ligasDep || !deps.some(d => d[0] === est.ligasDep)) est.ligasDep = deps.some(d => d[0] === est.dep) ? est.dep : "f";
   h += `<nav class="ltabs">${deps.map(([d, n]) => `<button data-ligasdep="${d}" aria-pressed="${est.ligasDep === d}">${n} <small>${LIGAS.indice.filter(l => l.dep === d).length}</small></button>`).join("")}</nav>`;
+  if (est.ligasDep === "e") h += `<h2 class="sec">Juegos</h2>` + tarjetasJuegos();
   const favs = LIGAS.indice.filter(l => l.dep === est.ligasDep && est.ligasFav.has(l.n)).sort(orden);
   if (favs.length) h += `<h2 class="sec">Favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
   const SECC = { f: [["Ligas", l => l.tipo !== "copa"], ["Copas", l => l.tipo === "copa"]], b: [["Ligas", () => true]],
@@ -1685,6 +1835,8 @@ function resultadosGenerales() {
     equipos.set(k, { n, logo, dep, liga: ind ? ind.n : "", lid, det });
   }
   let h = "";
+  const juegosQ = q.length >= 3 ? Object.entries(JUEGOS_INFO).filter(([k, J]) => casa(`${J.nombre} ${J.corto} ${J.buscar}`)) : [];
+  if (juegosQ.length) h += `<h2 class="sec">Juego</h2><div class="jcards">${juegosQ.map(([k, J]) => `<button class="jcard" data-juego="${k}" style="--j1:${J.c1};--j2:${J.c2}"><b>${esc(J.nombre)}</b><small>Temporada ${temporadaJuego(k).y} · torneos y ranking</small></button>`).join("")}</div>`;
   if (comps.size) h += `<h2 class="sec">Competiciones · ${comps.size}</h2><div class="comps">` + [...comps.values()].slice(0, 15).map(c => {
     const inf = infoLiga(c.n), li = c.lid ? { id: c.lid } : idDeLiga(c.n);
     return `<div class="comp"><button class="compir" ${li ? `data-lid="${esc(li.id)}"` : `data-ligaglobal="${esc(c.n)}" data-ligadep="${c.dep}"`}><span class="flag">${inf.flag}</span>
@@ -1720,7 +1872,7 @@ function pintarSelector() {
     const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
   }).join("");
-  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
+  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
 }
 
 function pintarAjustes() { return; }
@@ -1909,6 +2061,7 @@ document.addEventListener("click", e => {
     enDirecto(); comprobar(true); pintarLista(); return; }
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
+  if (b.dataset.juego) { est.vista = "juego"; est.juego = b.dataset.juego; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligasdep) { est.ligasDep = b.dataset.ligasdep; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ltab) { est.ltab = b.dataset.ltab; pintarLista(); return; }
@@ -2014,9 +2167,9 @@ pintar();
 // ---------------------------------------------------------------- botón "atrás" del móvil
 // Cada pantalla nueva (partido, liga, equipo...) se apunta en el historial, así el botón
 // atrás del móvil vuelve a la pantalla anterior en vez de salir de la app.
-const CAMPOS_NAV = ["vista", "liga", "lid", "ltab", "jor", "equipo", "compEq", "sel", "dia", "dep", "tab", "volverA"];
+const CAMPOS_NAV = ["vista", "juego", "liga", "lid", "ltab", "jor", "equipo", "compEq", "sel", "dia", "dep", "tab", "volverA"];
 const fotoNav = () => Object.fromEntries(CAMPOS_NAV.map(k => [k, est[k] ?? null]));
-const claveNav = () => [est.vista, est.vista === "liga" ? est.liga : "", ["clasif"].includes(est.vista) ? est.lid + "|" + (est.equipo || "") : "",
+const claveNav = () => [est.vista, est.vista === "liga" ? est.liga : est.vista === "juego" ? est.juego : "", ["clasif"].includes(est.vista) ? est.lid + "|" + (est.equipo || "") : "",
   est.vista === "partido" ? est.dia + "|" + est.sel : ""].join("#");
 let ultimaNav = claveNav();
 try { history.replaceState({ app: true, prof: 0, s: fotoNav() }, ""); } catch (e) {}
