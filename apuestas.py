@@ -178,10 +178,28 @@ def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
     return elegidas
 
 
+PCT_MAX = 0.10  # ninguna apuesta pasa del 10 % de lo que queda
+
+
+def porcentaje(ap: dict) -> float:
+    """% de lo que queda que se mete en esta apuesta: el 5 % de base y, si tiene ventaja
+    (probabilidad × cuota > 1), un extra de Kelly a la cuarta parte, hasta el 10 %.
+    Con cuotas estimadas (≈ o "pide ≥") la ventaja cuenta a la mitad, porque no es segura."""
+    c, p = float(ap.get("cuota") or 0), float(ap.get("prob") or 0)
+    if c <= 1.0 or p <= 0:
+        return PORCENTAJE
+    ventaja = p * c - 1
+    if any(pi.get("estimada") or pi.get("minima") for pi in ap.get("piernas", [])):
+        ventaja /= 2
+    kelly = max(0.0, ventaja / (c - 1))
+    return round(min(PCT_MAX, PORCENTAJE + kelly / 4), 4)
+
+
 def importes_en_cadena(apuestas: list[dict], disponible: float):
-    """Cada apuesta es el % del dinero que queda después de hacer las anteriores (en este orden)."""
+    """Cada apuesta es su % del dinero que queda después de hacer las anteriores (en este orden)."""
     for ap in apuestas:
-        ap["importe"] = max(0.1, round(disponible * PORCENTAJE + 1e-9, 2))
+        ap["pct"] = porcentaje(ap)
+        ap["importe"] = max(0.1, round(disponible * ap["pct"] + 1e-9, 2))
         disponible -= ap["importe"]
 
 

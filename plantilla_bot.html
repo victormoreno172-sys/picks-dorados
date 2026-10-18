@@ -167,7 +167,7 @@ if (Object.keys(OV).length) {
     if (del.some(a => "ok" in a)) continue;   // día con algo ya resuelto: se deja como estaba
     const otras = ap.filter(a => a.fecha !== d && !("ok" in a)).reduce((s, a) => s + a.importe, 0);
     let disp = D.inicial + cerradas - otras;
-    for (const a of del) { a.importe = Math.max(0.1, Math.round(disp * 5) / 100); disp -= a.importe; }
+    for (const a of del) { a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100); disp -= a.importe; }
   }
 }
 const cer = ap.filter(cerrada);
