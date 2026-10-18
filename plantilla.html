@@ -611,6 +611,14 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .jstar { position: absolute; top: 6px; right: 8px; color: var(--j1); font-size: 13px; }
 .jfav { position: relative; z-index: 1; margin-top: 12px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); color: #fff; border-radius: 999px; padding: 8px 14px; font: 700 12.5px/1 inherit; cursor: pointer; }
 .jfav[aria-pressed="true"] { background: var(--j1); border-color: var(--j1); color: #111; }
+
+.fronda { margin: 10px auto 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fronda b { font: 800 13px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.fronda.final b { background: linear-gradient(135deg, #fde68a, #f5b301); color: #3a2a00; border-color: #f5b301; box-shadow: 0 6px 18px -8px rgba(245,179,1,.8); }
+.fronda small { font-size: 11.5px; color: var(--muted); }
+.rtag { display: block; margin-top: 3px; font: 800 8.5px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+.rtagj { color: var(--ink) !important; }
+.rtagj.final { color: #b45309 !important; }
 </style>
 
 <div class="wrap">
@@ -945,6 +953,16 @@ function estimadasTenis(dia) {
   dia._est = { t: AHORA.hora, m: out };
   return out;
 }
+// Ronda corta para la lista: solo las importantes (Final, Semis, Cuartos, 3er puesto)
+function rondaCorta(p) {
+  const r = (((p.fi || {}).ronda || "").split(" · ").pop() || "");
+  if (/^Final$/.test(r)) return "FINAL";
+  if (/^Final del cuadro/.test(r)) return "Final cuadro";
+  if (/^Semifinal/.test(r)) return "Semis";
+  if (/^Cuartos/.test(r)) return "Cuartos";
+  if (/^Tercer/.test(r)) return "3er puesto";
+  return "";
+}
 function filaPartido(p, idx) {
   const id = est.dia + "-" + idx, abierto = est.abiertos.has(id);
   const basket = p.dep === "b";
@@ -961,7 +979,7 @@ function filaPartido(p, idx) {
   const hora = !es ? (estT ? `<span class="hest" title="Va detrás de ${esc(estT.tras || "")}">≈${esc(estT.h)}</span>` : esc(p.hora || "--:--")) : es.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(es.det))}</span>` : es.st === "susp" ? "Apl." : `<span class="fin">${esc(es.det === "Final" || es.det === "Fin" ? "FIN" : es.det)}</span>`;
   return `<article class="fp ${abierto ? "abierto" : ""} ${es ? "empezado " + es.st : ""}" id="p-${id}">
     <button class="fpcab" data-abrir="${idx}">
-      <span class="hora">${hora}</span>
+      <span class="hora">${hora}${rondaCorta(p) ? `<small class="rtag">${esc(rondaCorta(p))}</small>` : ""}</span>
       <span class="eqs"><b>${miniEsc(((p.fi || {}).esc || [])[0], p.local)}<span>${esc(p.local)}</span></b><b>${miniEsc(((p.fi || {}).esc || [])[1], p.visitante)}<span>${esc(p.visitante)}</span></b></span>
       ${mar ? `<span class="esp marc"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : AJ.verEsperados ? `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>` : "<span></span>"}
       <span class="tikd">${partidoApostado(p) ? "🎟️" : ""}</span>
@@ -1351,7 +1369,9 @@ function pintarFicha() {
         return `<b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small>`; })()}</div>
       <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b class="${tam(p.visitante)}">${esc(p.visitante)}</b></div>
     </div>
-    ${fi.estadio ? `<div class="festadio">🏟️ ${esc(fi.estadio)}</div>` : ""}
+    ${fi.ronda ? (() => { const t = fi.ronda.split(" · "), r = t.pop();
+        return `<div class="fronda ${/^Final$/.test(r) ? "final" : ""}"><b>${/^Final$/.test(r) ? "🏆 " : ""}${esc(r)}</b><small>${esc(t.join(" · "))}</small></div>`; })()
+      : fi.estadio && p.dep !== "e" ? `<div class="festadio">🏟️ ${esc(fi.estadio)}</div>` : ""}
     <nav class="ftabs">${tabs.map(([k, n]) => `<button data-tab="${k}" aria-pressed="${est.tab === k}">${n}</button>`).join("")}</nav>
     <div class="fcont">${cont}</div></div>`;
 }
@@ -1613,7 +1633,7 @@ function enLaApp(p) {
 function filaJornada(p, equipo) {
   const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
   const fd = new Date(p.f + "T12:00:00"), fecha = `${f2(fd.getDate())}.${f2(fd.getMonth() + 1)}.`;
-  const tagc = p.c ? `<small class="ctag">${infoLiga(p.c).flag} ${esc(p.c)}</small>` : "";
+  const tagc = (p.c ? `<small class="ctag">${infoLiga(p.c).flag} ${esc(p.c)}</small>` : "") + (p.r ? `<small class="ctag rtagj ${p.r === "Final" ? "final" : ""}">${p.r === "Final" ? "🏆 " : ""}${esc(p.r)}</small>` : "");
   const hora = p.st === "in" ? `<b>● VIVO</b>` : p.st === "post" ? `<b>FIN</b>` : p.st === "susp" ? `<b>Apl.</b>` : `<b>${esc(p.h || "--:--")}</b>`;
   const app = p.st !== "post" ? enLaApp(p) : null;
   let derecha = mar ? `<span class="jm"><span>${a}</span><span>${b}</span></span>` : `<span></span>`;
@@ -1652,7 +1672,7 @@ function pintarClasif() {
   if (L.error) { $("vista").innerHTML = h + `<div class="vacio">No se pudo cargar esta liga. Prueba con ↻ más tarde.</div>`; return; }
   if (est.equipo) return pintarEquipo(L, h);
   const tenis = L.dep === "te";
-  const tabs = [["tabla", L.tipo === "ranking" ? "Ranking" : "Clasificación"], ["jor", L.tipo === "nba" || L.dep === "e" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", tenis ? "Jugadores" : "Equipos"]];
+  const tabs = [["tabla", L.tipo === "ranking" ? "Ranking" : "Clasificación"], ["jor", L.dep === "e" && (L.jornadas[0] || {}).t && /^Fase \d/.test(L.jornadas[0].t) ? "Fases" : L.tipo === "nba" || L.dep === "e" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", tenis ? "Jugadores" : "Equipos"]];
   if (L.tipo === "copa") { tabs.splice(0, 1); if (est.ltab === "tabla") est.ltab = "jor"; }
   if (!L.jornadas.length) { const i = tabs.findIndex(t => t[0] === "jor"); if (i >= 0) tabs.splice(i, 1); if (est.ltab === "jor") est.ltab = tabs[0][0]; }
   if (L.dep === "e" && L.tipo !== "ranking") h += tarjetaInfoTorneo(nombre, L);

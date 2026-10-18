@@ -104,7 +104,7 @@ def estructura(slug: str, nombre: str) -> dict | None:
     deciders = []
     for st in T.get("stages") or []:
         titulo = (st.get("title") or "").replace(nombre_bo3, "").strip(" -:·") or (st.get("title") or "")
-        g = re.match(r"(?i)^(.*?)\s*group\s+([a-z0-9]+)$", titulo)
+        g = re.match(r"(?i)^(.*?)\s*group\s+([a-z]|\d{1,2}|[a-z]\d)$", titulo)
         if g:
             clave, grupo = (g.group(1).strip() or "Grupos"), f"Grupo {g.group(2).upper()}"
         elif re.search(r"(?i)decider|3rd place|third place", titulo):
@@ -112,6 +112,8 @@ def estructura(slug: str, nombre: str) -> dict | None:
             continue
         else:
             clave, grupo = titulo, ""
+            if "swiss" in str(st.get("format_type") or "").lower():
+                clave = "Swiss Stage"
         f = grupos.setdefault(clave, {"ini": "9999", "seq": 999, "stages": []})
         f["ini"] = min(f["ini"], st.get("start_date") or "9999")
         f["seq"] = min(f["seq"], st.get("sequence_number") or 999)
@@ -128,7 +130,8 @@ def estructura(slug: str, nombre: str) -> dict | None:
         nombre_fase = f"Fase {i} · {fase_es(clave)}"
         out["fases"].append({"n": i, "nombre": nombre_fase, "stages": f["stages"],
                              "grupos": sorted({g for _, g in f["stages"] if g}),
-                             "tipo": "grupo" if any(g for _, g in f["stages"]) or "swiss" in clave.lower() else "cuadro"})
+                             "tipo": "grupo" if any(g for _, g in f["stages"]) or "swiss" in clave.lower()
+                             or any(str(st.get("format_type") or "").lower() in ("group", "swiss") for st, _ in f["stages"]) else "cuadro"})
         for st, grupo in f["stages"]:
             out["stage"][st.get("id")] = (i, nombre_fase, grupo)
             for r in st.get("rounds") or []:
