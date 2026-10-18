@@ -606,6 +606,11 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .tinfo dt { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .tinfo dd { margin: 0; font-size: 13px; line-height: 1.4; }
 .tinfo button { margin-top: 10px; border: 0; background: none; padding: 4px 0; font: 700 12.5px/1.2 var(--body, inherit); color: var(--j1); cursor: pointer; }
+
+.jcard { position: relative; }
+.jstar { position: absolute; top: 6px; right: 8px; color: var(--j1); font-size: 13px; }
+.jfav { position: relative; z-index: 1; margin-top: 12px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); color: #fff; border-radius: 999px; padding: 8px 14px; font: 700 12.5px/1 inherit; cursor: pointer; }
+.jfav[aria-pressed="true"] { background: var(--j1); border-color: var(--j1); color: #111; }
 </style>
 
 <div class="wrap">
@@ -721,6 +726,7 @@ aplicarTema(); aplicarUmbral(); aplicarColores();
 if (AJ.depInicio !== "ultimo" && ["f", "b", "te", "e"].includes(AJ.depInicio)) est.dep = AJ.depInicio;
 if (!["f", "b", "te", "e"].includes(est.dep)) est.dep = "f";
 est.vista = "comps";
+try { est.juegosFav = new Set(JSON.parse(localStorage.getItem("juegosFav") || "[]")); } catch (e) { est.juegosFav = new Set(); }
 try { est.ligasFav = new Set(JSON.parse(localStorage.getItem("ligasFav") || "[]").map(l => String(l).replace(/ · Bo\d+$/i, ""))); } catch (e) { est.ligasFav = new Set(); }
 
 const $ = id => document.getElementById(id);
@@ -952,7 +958,7 @@ function filaPartido(p, idx) {
   const es = estado(p), mar = es && /^(\d+)-(\d+)$/.exec(es.m || "");
   const ok = es && es.st === "post" && mp ? acierta(mp.m, es.m) : null;
   const estT = p.dep === "te" && !es ? estimadasTenis(DATOS.dias[est.dia])[idx] : null;
-  const hora = !es ? (estT ? `<span class="hest" title="Va detrás de ${esc(estT.tras || "")}">≈${esc(estT.h)}</span>` : esc(p.hora || "--:--")) : es.st === "in" ? `<span class="vivo">● ${esc(es.det)}</span>` : es.st === "susp" ? "Apl." : `<span class="fin">${esc(es.det === "Final" || es.det === "Fin" ? "FIN" : es.det)}</span>`;
+  const hora = !es ? (estT ? `<span class="hest" title="Va detrás de ${esc(estT.tras || "")}">≈${esc(estT.h)}</span>` : esc(p.hora || "--:--")) : es.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(es.det))}</span>` : es.st === "susp" ? "Apl." : `<span class="fin">${esc(es.det === "Final" || es.det === "Fin" ? "FIN" : es.det)}</span>`;
   return `<article class="fp ${abierto ? "abierto" : ""} ${es ? "empezado " + es.st : ""}" id="p-${id}">
     <button class="fpcab" data-abrir="${idx}">
       <span class="hora">${hora}</span>
@@ -1025,23 +1031,24 @@ function pintarLista() {
       const dia = DATOS.dias[est.dia];
       // Partidos con ☆ y todos los partidos de las competiciones con ☆
       // Una competición favorita cuenta aunque el partido lleve detalles (p. ej. "VAL · Torneo · Bo5")
-      const esFav = l => est.ligasFav.has(l) || [...est.ligasFav].some(f => l.startsWith(f + " · "));
+      // Un juego favorito (Valorant, CS2, LoL) cuenta para todos sus torneos
+      const esFav = l => est.ligasFav.has(l) || [...est.ligasFav].some(f => l.startsWith(f + " · ")) || est.juegosFav.has(juegoDeLiga(l));
       for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => esFav(l) || est.favs.has(clavePartido(dia, p)));
       sel = ligas.filter(l => porLiga[l].length);
       sel.sort((x, y) => (esFav(y) - esFav(x)) || ordenLiga(x) - ordenLiga(y));
     }
     if ((est.busca || "").trim()) titulo = "Resultados de la búsqueda";
     let chipsFav = "";
-    if (est.vista === "favs" && est.ligasFav.size) {
+    if (est.vista === "favs" && (est.ligasFav.size || est.juegosFav.size)) {
       cargarIndice();
-      chipsFav = `<div class="chips">${[...est.ligasFav].sort((x, y) => ordenLiga(x) - ordenLiga(y)).map(l => { const inf = infoLiga(l), li = idDeLiga(l);
+      chipsFav = `<div class="chips">${[...est.juegosFav].filter(k => JUEGOS_INFO[k]).map(k => `<button data-juego="${k}">🎮 ${esc(JUEGOS_INFO[k].corto)}</button>`).join("")}${[...est.ligasFav].sort((x, y) => ordenLiga(x) - ordenLiga(y)).map(l => { const inf = infoLiga(l), li = idDeLiga(l);
         return `<button ${li ? `data-lid="${esc(li.id)}"` : `data-liga-ir="${esc(l)}"`}>${inf.flag} ${esc(inf.nombre)}</button>`; }).join("")}</div>`;
     }
     h += `<div class="volver"><button data-vista="comps">‹</button><b>${esc(titulo)}</b><span>${sel.reduce((s, l) => s + porLiga[l].length, 0)} partidos</span></div>`;
     h += chipsFav;
     if (est.vista === "liga") { cargarIndice(); const li = idDeLiga(est.liga); if (li) h += `<button class="irtabla" data-lid="${esc(li.id)}">Clasificación y jornadas <span>›</span></button>`; }
     h += sel.length ? sel.map(l => bloqueLiga(l, porLiga[l])).join("")
-      : `<div class="vacio">${est.vista === "favs" ? (est.ligasFav.size ? "Tus competiciones favoritas no juegan este día. Prueba otro día arriba." : "Toca la ☆ de un partido o de una competición para tenerlo aquí.") : est.vista === "directo" ? `Ahora mismo no hay partidos de ${DEPORTES.find(d => d[0] === est.dep)[1].toLowerCase()} en directo.` : "No hay partidos."}</div>`;
+      : `<div class="vacio">${est.vista === "favs" ? (est.ligasFav.size || est.juegosFav.size ? "Tus competiciones favoritas no juegan este día. Prueba otro día arriba." : "Toca la ☆ de un partido o de una competición para tenerlo aquí.") : est.vista === "directo" ? `Ahora mismo no hay partidos de ${DEPORTES.find(d => d[0] === est.dep)[1].toLowerCase()} en directo.` : "No hay partidos."}</div>`;
   }
   $("vista").innerHTML = h;
 }
@@ -1193,12 +1200,16 @@ function cargarResumen(fi) {
     .finally(() => { if (est.vista === "partido" && (est.tab === "resumen" || est.tab === "alin")) pintarLista(); });
 }
 // El resumen también trae el marcador y el minuto: se usa por si el de la lista no ha llegado
+// ¿Está el partido en el descanso? (ESPN: STATUS_HALFTIME / "Halftime")
+const esDescanso = t => /HALFTIME|half.?time/i.test(`${t.name || ""} ${t.description || ""} ${t.shortDetail || ""}`);
+// Texto del minuto: "HT", "Halftime"… → "Descanso"
+const minutoTxt = d => /^(HT|Halftime|Half.?time|Medio tiempo|Descanso|Int\.?)$/i.test(String(d || "").trim()) ? "Descanso" : d;
 function marcadorDeResumen(id, j) {
   try {
     const c = j.header.competitions[0], t = c.status.type;
     if (!["in", "post"].includes(t.state)) return;
     const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
-    const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : (c.status.displayClock || t.shortDetail || "Vivo") };
+    const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : esDescanso(t) ? "Descanso" : (c.status.displayClock || t.shortDetail || "Vivo") };
     if (!/^\d+-\d+$/.test(res.m)) return;
     for (const d of DATOS.dias) for (const p of d.partidos) if (p.fi && p.fi.id === id) p.res = res;
   } catch (e) {}
@@ -1333,7 +1344,7 @@ function pintarFicha() {
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b></div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
-        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + es.det : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
+        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + minutoTxt(es.det) : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
         if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
         const e2 = p.dep === "te" ? estimadasTenis(dia)[est.sel] : null;
         if (e2) return `<b class="est">≈${esc(e2.h)}</b><small>hora estimada<br>tras ${esc(e2.tras || "otro partido")}</small>`;
@@ -1437,7 +1448,7 @@ function filaPartidoApp(d, di, p, i, desde) {
 
 function tarjetasJuegos() {
   return `<div class="jcards">${Object.entries(JUEGOS_INFO).map(([k, J]) => { const T = temporadaJuego(k);
-    return `<button class="jcard" data-juego="${k}" style="--j1:${J.c1};--j2:${J.c2}"><b>${esc(J.nombre)}</b><small>${T.ahora.length ? "● " + esc(T.ahora[0].n) : T.prox ? "Próximo: " + esc(T.prox.n) : "Temporada " + T.y}</small></button>`; }).join("")}</div>`;
+    return `<button class="jcard" data-juego="${k}" style="--j1:${J.c1};--j2:${J.c2}">${est.juegosFav.has(k) ? `<span class="jstar">★</span>` : ""}<b>${esc(J.nombre)}</b><small>${T.ahora.length ? "● " + esc(T.ahora[0].n) : T.prox ? "Próximo: " + esc(T.prox.n) : "Temporada " + T.y}</small></button>`; }).join("")}</div>`;
 }
 
 // ---------------------------------------------------------------- ficha de cada torneo de esports
@@ -1525,12 +1536,15 @@ function pintarJuego() {
   const k = est.juego, J = JUEGOS_INFO[k];
   if (!J) { est.vista = "ligas"; return pintarIndiceLigas(); }
   const T = temporadaJuego(k);
-  let h = `<div class="lbar"><button class="ico" data-volverliga="1" aria-label="Volver">←</button><h2><span>🎮</span><span class="t">${esc(J.corto)}</span></h2></div>`;
+  const favJ = est.juegosFav.has(k);
+  let h = `<div class="lbar"><button class="ico" data-volverliga="1" aria-label="Volver">←</button><h2><span>🎮</span><span class="t">${esc(J.corto)}</span></h2>
+    <button class="ico" data-juegofav="${k}" aria-pressed="${favJ}" aria-label="Juego favorito">${favJ ? "★" : "☆"}</button></div>`;
   // Cabecera grande
   const fase = T.ahora.length ? `<span class="jvivo"></span>Ahora: <b>${T.ahora.map(e => esc(e.n)).join(" · ")}</b>`
     : T.prox ? `Próximo: <b>${esc(T.prox.n)}</b> · ${fechaCorta(T.prox.d)}` : `Temporada terminada · la ${T.y + 1} empieza en enero`;
   h += `<div class="jhero" style="--j1:${J.c1};--j2:${J.c2}"><small>${esc(J.circuito)} · Temporada</small><b class="jnom">${esc(J.nombre)}</b>
-    <div class="jtemp">${T.y}</div><div class="jfase">${fase}</div></div>`;
+    <div class="jtemp">${T.y}</div><div class="jfase">${fase}</div>
+    <button class="jfav" data-juegofav="${k}" aria-pressed="${favJ}">${favJ ? "★ En favoritos: todos sus partidos" : "☆ Añadir a favoritos (todos sus torneos)"}</button></div>`;
   h += `<h2 class="sec">Cómo es la temporada ${T.y}</h2>` + lineaTemporada(T);
   if (T.ev.some(e => e.aprox)) h += `<p class="nota" style="color:var(--muted);font-size:11px;margin:6px 4px 0">~ fechas aproximadas.</p>`;
   // Torneos que tiene la app
@@ -1846,7 +1860,7 @@ function pintarMisApuestas() {
       if (va === false) falla = true;
       if (va !== true) vivoOk = false;
       const sem = va === true ? (e && e.st === "in" ? "✅ va bien" : "✅") : va === false ? (e && e.st === "in" ? "❌ va mal" : "❌") : "";
-      const hora = !e ? esc(pi.hora || "--:--") : e.st === "in" ? `<span class="vivo">● ${esc(e.det)}</span>` : e.st === "post" ? `<span class="fin">FIN</span>` : esc(pi.hora || "");
+      const hora = !e ? esc(pi.hora || "--:--") : e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(e.det))}</span>` : e.st === "post" ? `<span class="fin">FIN</span>` : esc(pi.hora || "");
       const tag = x ? "button" : "div", attrs = x ? ` data-abrirdia="${x[0]}" data-abrirp="${x[1]}" data-desde="misap"` : "";
       return `<${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
         <span class="mh">${hora}</span>
@@ -2144,7 +2158,7 @@ document.addEventListener("click", e => {
   if (b.dataset.color) { AJ[b.dataset.color] = b.dataset.v; guardarAjustes(); aplicarColores(); pintarLista(); return; }
   if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); pintarLista(); return; }
   if (b.dataset.ajborrar === "favs") { if (!confirm("¿Borrar todos tus partidos y competiciones favoritos?")) return;
-    est.favs = new Set(); est.ligasFav = new Set(); try { localStorage.removeItem("favs"); localStorage.removeItem("ligasFav"); } catch (e) {} pintarLista(); return; }
+    est.favs = new Set(); est.ligasFav = new Set(); est.juegosFav = new Set(); try { localStorage.removeItem("favs"); localStorage.removeItem("ligasFav"); localStorage.removeItem("juegosFav"); } catch (e) {} pintarLista(); return; }
   if (b.dataset.endirecto) { const i = DATOS.dias.findIndex(d => d.fecha === AHORA.fecha); if (i >= 0) est.dia = i;
     est.vista = "directo"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
   if (b.dataset.refrescar) { const r = est.vista === "partido" && DATOS.dias[est.dia].partidos[est.sel];
@@ -2153,6 +2167,8 @@ document.addEventListener("click", e => {
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.tinfo !== undefined) { est.tinfo = est.tinfo === b.dataset.tinfo ? null : b.dataset.tinfo; pintarLista(); return; }
+  if (b.dataset.juegofav) { const k = b.dataset.juegofav; est.juegosFav.has(k) ? est.juegosFav.delete(k) : est.juegosFav.add(k);
+    try { localStorage.setItem("juegosFav", JSON.stringify([...est.juegosFav])); } catch (e) {} pintarLista(); return; }
   if (b.dataset.juego) { est.vista = "juego"; est.juego = b.dataset.juego; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligasdep) { est.ligasDep = b.dataset.ligasdep; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
@@ -2334,12 +2350,12 @@ async function enDirecto() {
           const c = e.competitions[0], t = c.status.type, p = cand.find(x => x.fi.id === e.id);
           if (!p || !["in", "post"].includes(t.state)) continue;
           const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
-          const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : (c.status.displayClock || "Vivo") };
+          const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : esDescanso(t) ? "Descanso" : (c.status.displayClock || "Vivo") };
           if (dep === "basketball") {  // NBA: cuarto, reloj y puntos de cada cuarto
             const lh = (h.linescores || []).map(x => +x.value || 0), la = (a.linescores || []).map(x => +x.value || 0);
             res.parc = { cab: lh.map((_, i) => i < 4 ? `${i + 1}C` : "Pr"), l: lh, v: la };
             const per = (c.status || {}).period || 0;
-            if (t.state === "in") { res.periodo = per > 4 ? "Pr" : `${per}C`; res.reloj = c.status.displayClock || ""; res.det = `${res.periodo} ${res.reloj}`.trim(); }
+            if (t.state === "in") { res.periodo = per > 4 ? "Pr" : `${per}C`; res.reloj = c.status.displayClock || ""; res.det = esDescanso(t) ? "Descanso" : `${res.periodo} ${res.reloj}`.trim(); }
           }
           if (JSON.stringify(res) !== JSON.stringify(p.res)) { p.res = res; cambio = true; }
         }
