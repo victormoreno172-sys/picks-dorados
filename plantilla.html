@@ -2490,6 +2490,7 @@ async function json(url, ms = 12000) {
   finally { clearTimeout(t); }
 }
 var ESTADO_DIRECTO = {};
+const horaAhora = () => { const d = new Date(); return `${d.getHours()}:${d.getMinutes()}`; };
 async function directoOtros(fechas) {
   const cand = { te: [], e: [], b: [] };
   for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
@@ -2568,11 +2569,12 @@ async function directoOtros(fechas) {
       let j = await json(`https://raw.githubusercontent.com/victormoreno172-sys/picks-dorados/directo/directo.json?t=${Date.now()}`).catch(() => null);
       // raw.githubusercontent puede tardar hasta 5 min en refrescar: si viene viejo, se pide a la API de GitHub
       const min = t => { const [h, m] = (t || "0:0").split(":").map(Number); return h * 60 + m; };
-      if (!j || Math.abs(min(AHORA.hora) - min(j.ts)) > 4) {
+      // Si el de raw tiene más de 1 minuto, se pide a la API de GitHub (al momento; si falla, se queda el de raw)
+      if (!j || Math.abs(min(horaAhora()) - min(j.ts)) > 1) {
         try {
           const r = await fetch(`https://api.github.com/repos/victormoreno172-sys/picks-dorados/contents/directo.json?ref=directo&t=${Date.now()}`,
             { headers: { Accept: "application/vnd.github.raw+json" }, cache: "no-store" });
-          if (r.ok) j = await r.json();
+          if (r.ok) { const j2 = await r.json(); if (!j || min(j2.ts) >= min(j.ts)) j = j2; }
         } catch (e) {}
       }
       if (!j) throw new Error("sin directo");
