@@ -155,10 +155,10 @@ h1 span { color: var(--gold); }
 .fila .n { min-width: 0; }
 .fila .bar { display: block; height: 3px; border-radius: 2px; background: var(--bar); margin-top: 4px; overflow: hidden; }
 .fila .bar i { display: block; height: 100%; background: var(--muted); opacity: .6; }
-.fila.d .bar i { background: var(--gold); opacity: 1; }
+.fila.d .bar i { background: var(--pick, var(--gold)); opacity: 1; }
 .fila.d .n { font-weight: 600; }
 .fila .pc { font: 700 14px/1 var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
-.fila.d .pc { color: var(--gold); }
+.fila.d .pc { color: var(--pick, var(--gold)); }
 .fila .cu { font: 500 12px/1.2 var(--mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .fila .cu small { display: block; font-size: 10px; opacity: .8; margin-top: 2px; white-space: nowrap; }
 .bien, .mal { font-weight: 700; border-radius: 4px; padding: 1px 4px; }
@@ -173,7 +173,7 @@ footer { margin-top: 26px; font-size: 13px; color: var(--muted); display: grid; 
 footer b { color: var(--ink); }
 .leyenda { display: grid; gap: 6px; }
 .leyenda div { display: flex; gap: 8px; align-items: baseline; }
-.sw { flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--gold); }
+.sw { flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--pick, var(--gold)); }
 button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { .det { animation: abre .18s ease-out; } @keyframes abre { from { opacity: .4; transform: translateY(-3px); } } }
 
@@ -200,7 +200,7 @@ h1 span { background: var(--grad); -webkit-background-clip: text; background-cli
 .xgbar i { background: linear-gradient(90deg, #00a389, #2dd4bf); }
 .pick { background: linear-gradient(90deg, rgba(255, 183, 3, .22), rgba(255, 183, 3, .06)); border: 1px solid rgba(212, 140, 0, .25); border-radius: 12px; }
 .pick::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--grad); }
-.fila.d .bar i { background: var(--grad); }
+.fila.d .bar i { background: var(--pick-grad, var(--grad)); }
 .tlin.hecha .chk { background: var(--grad); border-color: transparent; }
 .busca input { border-radius: 14px; box-shadow: var(--sombra); }
 .caja h2, .grupo h3, .aciertos h2 { letter-spacing: .06em; }
@@ -259,8 +259,8 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .pk { text-align: right; line-height: 1.1; }
 .pk b { display: block; font: 700 16px var(--mono); color: var(--muted); }
 .pk small { display: block; font: 500 10px var(--body); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pk.d b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.pk.d small { color: var(--gold-ink); }
+.pk.d b { background: var(--pick-grad, var(--grad)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pk.d small { color: var(--pick-ink, var(--gold-ink)); }
 .fp .estrella { top: 50%; transform: translateY(-50%); right: 2px; }
 .fp.abierto .estrella { top: 26px; }
 .fp .det { border-top: 1px dashed var(--line); }
@@ -626,9 +626,10 @@ function aplicarColores() {
   const r = document.documentElement.style;
   if (AJ.colorOro && /^#[0-9a-f]{6}$/i.test(AJ.colorOro)) {
     const c = AJ.colorOro;
-    r.setProperty("--gold", c); r.setProperty("--grad", `linear-gradient(135deg, ${mezclar(c, "#ffffff", .15)} 0%, ${mezclar(c, "#000000", .18)} 100%)`);
-    r.setProperty("--gold-ink", mezclar(c, "#000000", .55)); r.setProperty("--gold-soft", mezclar(c, "#ffffff", .85));
-  } else ["--gold", "--grad", "--gold-ink", "--gold-soft"].forEach(v => r.removeProperty(v));
+    // Solo cambia el color de los picks destacados; la interfaz mantiene su dorado
+    r.setProperty("--pick", c); r.setProperty("--pick-grad", `linear-gradient(135deg, ${mezclar(c, "#ffffff", .15)} 0%, ${mezclar(c, "#000000", .18)} 100%)`);
+    r.setProperty("--pick-ink", mezclar(c, "#000000", .45));
+  } else ["--pick", "--pick-grad", "--pick-ink"].forEach(v => r.removeProperty(v));
   const ap = /^#[0-9a-f]{6}$/i.test(AJ.colorApuesta || "") ? AJ.colorApuesta : "#c026ff";
   r.setProperty("--apuesta", ap); r.setProperty("--apuesta-suave", mezclar(ap, "#ffffff", .86));
 }
