@@ -1206,13 +1206,16 @@ function pintarIndiceLigas() {
       <button class="lfav" data-ligafav="${esc(l.n)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>`; };
   const orden = (a, b) => ordenLiga(a.n) - ordenLiga(b.n) || a.n.localeCompare(b.n);
   // Pestañas por deporte (empieza en el deporte que estés mirando)
-  const deps = [["f", "⚽ Fútbol"], ["b", "🏀 Baloncesto"]].filter(([d]) => LIGAS.indice.some(l => l.dep === d));
+  const deps = [["f", "⚽ Fútbol"], ["b", "🏀 Basket"], ["te", "🎾 Tenis"], ["e", "🎮 Esports"]].filter(([d]) => LIGAS.indice.some(l => l.dep === d));
   if (!est.ligasDep || !deps.some(d => d[0] === est.ligasDep)) est.ligasDep = deps.some(d => d[0] === est.dep) ? est.dep : "f";
   h += `<nav class="ltabs">${deps.map(([d, n]) => `<button data-ligasdep="${d}" aria-pressed="${est.ligasDep === d}">${n} <small>${LIGAS.indice.filter(l => l.dep === d).length}</small></button>`).join("")}</nav>`;
   const favs = LIGAS.indice.filter(l => l.dep === est.ligasDep && est.ligasFav.has(l.n)).sort(orden);
   if (favs.length) h += `<h2 class="sec">Favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
-  for (const [dep, titulo, copa] of [["f", "Ligas", false], ["f", "Copas", true], ["b", "Ligas", false]].filter(x => x[0] === est.ligasDep)) {
-    const ls = LIGAS.indice.filter(l => l.dep === dep && (l.tipo === "copa") === copa && !est.ligasFav.has(l.n)).sort(orden);
+  const SECC = { f: [["Ligas", l => l.tipo !== "copa"], ["Copas", l => l.tipo === "copa"]], b: [["Ligas", () => true]],
+    te: [["Rankings", l => l.tipo === "ranking"], ["Torneos en juego", l => l.tipo !== "ranking"]],
+    e: [["Rankings", l => l.tipo === "ranking"], ["Torneos en juego", l => l.tipo !== "ranking"]] };
+  for (const [titulo, f] of SECC[est.ligasDep] || []) {
+    const ls = LIGAS.indice.filter(l => l.dep === est.ligasDep && f(l) && !est.ligasFav.has(l.n)).sort(orden);
     if (ls.length) h += `<h2 class="sec">${titulo}</h2><div class="comps">${ls.map(fila).join("")}</div>`;
   }
   $("vista").innerHTML = h;
@@ -1248,15 +1251,15 @@ function filaJornada(p, equipo) {
 const f2 = n => String(n).padStart(2, "0");
 
 function tablaClasif(L, grupo, resaltar) {
-  const fut = L.tipo === "futbol", nba = L.tipo === "nba";
-  const cab = fut ? ["PJ", "G", "E", "P", "DG", "PTS"] : nba ? ["V", "D", "%", "PD"] : ["PJ", "V", "D", "DIF"];
+  const fut = L.tipo === "futbol", nba = L.tipo === "nba", rk = L.tipo === "ranking";
+  const cab = fut ? ["PJ", "G", "E", "P", "DG", "PTS"] : nba ? ["V", "D", "%", "PD"] : rk ? ["PJ", "V", "D", "NIVEL"] : ["PJ", "V", "D", "DIF"];
   const celdas = f => fut ? [f.pj, f.g, f.e, f.p, (f.dg > 0 ? "+" : "") + f.dg, f.pts]
-    : nba ? [f.g, f.p, f.pct, f.gb] : [f.pj, f.g, f.p, (f.dif > 0 ? "+" : "") + f.dif];
+    : nba ? [f.g, f.p, f.pct, f.gb] : rk ? [f.pj, f.g, f.p, f.nivel] : [f.pj, f.g, f.p, (f.dif > 0 ? "+" : "") + f.dif];
   return `<table class="cl"><tr><th>#</th><th class="eqh">Equipo</th>${cab.map(c => `<th>${c}</th>`).join("")}</tr>` +
     grupo.filas.map(f => { const c = celdas(f);
       return `<tr${f.eq === resaltar ? ' class="yo" style="background:rgba(255,183,3,.16)"' : ""}><td class="pos" style="${f.zona ? `border-left-color:${esc(f.zona[0])}` : ""}">${f.pos}</td>
       <td class="eqc"><button data-equipo="${esc(f.eq)}">${miniEsc(f.logo, f.eq)}<span>${esc(f.eq)}</span></button></td>
-      ${c.map((x, i) => `<td class="${i === c.length - 1 && fut ? "pts" : i === 0 ? "dim" : ""}">${esc(x ?? "")}</td>`).join("")}</tr>`; }).join("") + `</table>`;
+      ${c.map((x, i) => `<td class="${i === c.length - 1 && (fut || rk) ? "pts" : i === 0 ? "dim" : ""}">${esc(x ?? "")}</td>`).join("")}</tr>`; }).join("") + `</table>`;
 }
 
 function pintarClasif() {
@@ -1268,12 +1271,15 @@ function pintarClasif() {
   if (!L) { cargarLiga(id); $("vista").innerHTML = h + `<div class="vacio">Cargando…</div>`; return; }
   if (L.error) { $("vista").innerHTML = h + `<div class="vacio">No se pudo cargar esta liga. Prueba con ↻ más tarde.</div>`; return; }
   if (est.equipo) return pintarEquipo(L, h);
-  const tabs = [["tabla", "Clasificación"], ["jor", L.tipo === "nba" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", "Equipos"]];
-  if (L.tipo === "copa") { tabs.shift(); if (est.ltab === "tabla") est.ltab = "jor"; }
+  const tenis = L.dep === "te";
+  const tabs = [["tabla", L.tipo === "ranking" ? "Ranking" : "Clasificación"], ["jor", L.tipo === "nba" || L.dep === "e" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", tenis ? "Jugadores" : "Equipos"]];
+  if (L.tipo === "copa") { tabs.splice(0, 1); if (est.ltab === "tabla") est.ltab = "jor"; }
+  if (!L.jornadas.length) { const i = tabs.findIndex(t => t[0] === "jor"); if (i >= 0) tabs.splice(i, 1); if (est.ltab === "jor") est.ltab = tabs[0][0]; }
   h += `<nav class="ltabs">${tabs.map(([k, n]) => `<button data-ltab="${k}" aria-pressed="${est.ltab === k}">${n}</button>`).join("")}</nav>`;
   if (est.ltab === "tabla") {
     if (!L.grupos.length || !L.grupos.some(g => g.filas.length)) h += `<div class="vacio">Todavía no hay clasificación.</div>`;
     else h += L.grupos.map(g => (g.n ? `<div class="grupo-t">${esc(g.n)}</div>` : "") + tablaClasif(L, g)).join("");
+    if (L.nota) h += `<p class="nota" style="color:var(--muted);font-size:12px;margin:10px 4px 0">${esc(L.nota)}</p>`;
     if (L.leyenda && L.leyenda.length) h += `<div class="leyenda2">${L.leyenda.map(z => `<div><i style="background:${esc(z[0])}"></i>${esc(z[1])}</div>`).join("")}</div>`;
   } else if (est.ltab === "jor") {
     const J = L.jornadas;

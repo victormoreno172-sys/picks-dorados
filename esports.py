@@ -68,6 +68,8 @@ class Serie:
 
 HIST: list = []
 INFO: dict[tuple, dict] = {}
+MODELOS: dict = {}   # fuerza de cada equipo por juego (ranking de la pestaña Ligas)
+PROX: list = []
 
 
 # ----------------------------------------------------------------- descarga
@@ -308,10 +310,12 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
         try:
             hist = historico(juego, hoy)
             prox = proximos(juego, hoy, n_dias)
+            PROX.extend(prox)
             print(f"  {juego}: {len(prox)} partidos de nivel S/A en los próximos {n_dias} días")
             if not prox or len(hist) < 100:
                 continue
             modelo = ModeloMapas().ajustar(hist, hoy)
+            MODELOS[juego] = modelo
             HIST.extend(hist)
             for s in prox:
                 INFO[(s.fecha.isoformat(), s.n1, s.n2)] = {"esc": [s.img1, s.img2], "estadio": s.torneo}

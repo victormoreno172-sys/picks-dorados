@@ -365,6 +365,192 @@ def _basket_europa(datos_app: dict, hoy: date) -> list[tuple[str, dict]]:
     return out
 
 
+
+
+# ---------------------------------------------------------------- tenis y esports
+def _slug(t: str) -> str:
+    import re
+    import unicodedata
+    t = unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", t).strip("-")[:40]
+
+
+def _tenis(hoy: date) -> list[tuple[str, dict]]:
+    try:
+        import tenis
+    except ImportError:
+        return []
+    out = []
+    banderas: dict[str, str] = {}
+    for p in list(tenis.HIST) + list(tenis.PROX):
+        if p.flag1:
+            banderas.setdefault(p.n1, p.flag1)
+        if p.flag2:
+            banderas.setdefault(p.n2, p.flag2)
+    for tour, elo in tenis.ELO.items():
+        hist = [h for h in tenis.HIST if h.tour == tour]
+        nombre = {}
+        for h in hist:
+            nombre[h.j1], nombre[h.j2] = h.n1, h.n2
+        hace_un_año = hoy - timedelta(days=365)
+        rec: dict[str, list] = {}
+        for h in hist:
+            if h.fecha < hace_un_año or h.gana1 is None:
+                continue
+            for j, gano in ((h.j1, h.gana1), (h.j2, not h.gana1)):
+                r = rec.setdefault(j, [0, 0])
+                r[0 if gano else 1] += 1
+        candidatos = [j for j in rec if sum(rec[j]) >= 8]
+        candidatos.sort(key=lambda j: -elo.general.get(j, 1500))
+        filas = [{"pos": i, "eq": nombre.get(j, j), "logo": banderas.get(nombre.get(j, j), ""), "pj": sum(rec[j]),
+                  "g": rec[j][0], "p": rec[j][1], "nivel": round(elo.general.get(j, 1500))}
+                 for i, j in enumerate(candidatos[:100], 1)]
+        if not filas:
+            continue
+        # Últimos partidos de cada jugador del ranking (para su ficha)
+        top = {f["eq"] for f in filas}
+        otras: dict[str, list] = {}
+        for h in sorted(hist, key=lambda h: h.fecha, reverse=True):
+            for n in (h.n1, h.n2):
+                if n in top and len(otras.setdefault(n, [])) < 15:
+                    otras[n].append({"f": h.fecha.isoformat(), "h": h.hora or "", "l": h.n1, "v": h.n2,
+                                     "el": banderas.get(h.n1, ""), "ev": banderas.get(h.n2, ""),
+                                     "m": f"{h.s1}-{h.s2}" if h.s1 is not None else "", "st": "post", "c": h.torneo})
+        for p in tenis.PROX:
+            if p.tour != tour:
+                continue
+            for n in (p.n1, p.n2):
+                if n in top:
+                    otras.setdefault(n, []).append({"f": p.fecha.isoformat(), "h": p.hora or "", "l": p.n1, "v": p.n2,
+                                                    "el": banderas.get(p.n1, ""), "ev": banderas.get(p.n2, ""),
+                                                    "m": "", "st": "pre", "c": p.torneo})
+        out.append((f"t-{tour.lower()}-ranking", {"nombre": f"{tour} · Ranking por nivel", "dep": "te", "tipo": "ranking",
+                    "grupos": [{"n": "", "filas": filas}], "jornadas": [], "actual": 0, "otras": otras,
+                    "nota": "Ranking según el nivel que calcula la app (Elo) con los partidos del último año; "
+                            "no es el ranking oficial."}))
+        # Torneos en juego: los que tienen partidos en los últimos 10 días o en los próximos
+        torneos: dict[str, list] = {}
+        for h in hist:
+            if h.fecha >= hoy - timedelta(days=10):
+                torneos.setdefault(h.torneo, []).append(h)
+        for p in tenis.PROX:
+            if p.tour == tour:
+                torneos.setdefault(p.torneo, []).append(p)
+        for torneo, ps in torneos.items():
+            if not any(x.fecha >= hoy - timedelta(days=2) for x in ps) or len(ps) < 4:
+                continue
+            vistos, partidos = set(), []
+            for x in sorted(ps, key=lambda x: (x.fecha, x.hora or "")):
+                k = (x.fecha, x.n1, x.n2)
+                if k in vistos:
+                    continue
+                vistos.add(k)
+                jugado = x.gana1 is not None
+                partidos.append({"f": x.fecha.isoformat(), "h": x.hora or "", "l": x.n1, "v": x.n2,
+                                 "el": banderas.get(x.n1, ""), "ev": banderas.get(x.n2, ""),
+                                 "m": f"{x.s1}-{x.s2}" if jugado and x.s1 is not None else "",
+                                 "st": "post" if jugado else "pre", "r": _ronda(x.ronda) or x.ronda or ""})
+            # Rondas en el orden en que se juegan
+            rondas: dict[str, list] = {}
+            for q in partidos:
+                rondas.setdefault(q.pop("r") or "Partidos", []).append(q)
+            jor = [{"t": r, "desde": min(q["f"] for q in l), "hasta": max(q["f"] for q in l), "p": l}
+                   for r, l in sorted(rondas.items(), key=lambda kv: min(q["f"] for q in kv[1]))]
+            out.append((f"t-{tour.lower()}-{_slug(torneo)}", {"nombre": f"{tour} · {torneo}", "dep": "te", "tipo": "copa",
+                        "grupos": [], "jornadas": jor, "actual": _actual(jor, hoy)}))
+    return out
+
+
+def _esports(hoy: date) -> list[tuple[str, dict]]:
+    try:
+        import esports
+    except ImportError:
+        return []
+    out = []
+    logos: dict[str, str] = {}
+    for s in list(esports.HIST) + list(esports.PROX):
+        if s.img1:
+            logos.setdefault(s.n1, s.img1)
+        if s.img2:
+            logos.setdefault(s.n2, s.img2)
+    juegos = sorted({s.juego for s in esports.HIST} | set(esports.MODELOS))
+    for juego in juegos:
+        hist = [s for s in esports.HIST if s.juego == juego and (s.m1 or s.m2)]
+        modelo = esports.MODELOS.get(juego)
+        nombre = {}
+        for s in hist:
+            nombre[s.eq1], nombre[s.eq2] = s.n1, s.n2
+        if modelo is not None:
+            rec: dict[str, list] = {}
+            for s in hist:
+                if s.fecha < hoy - timedelta(days=120):
+                    continue
+                for e, gano in ((s.eq1, s.m1 > s.m2), (s.eq2, s.m2 > s.m1)):
+                    r = rec.setdefault(e, [0, 0])
+                    r[0 if gano else 1] += 1
+            eqs = [e for e in rec if sum(rec[e]) >= 4 and e in modelo.fuerza]
+            eqs.sort(key=lambda e: -modelo.fuerza[e])
+            filas = [{"pos": i, "eq": nombre.get(e, e), "logo": logos.get(nombre.get(e, e), ""), "pj": sum(rec[e]),
+                      "g": rec[e][0], "p": rec[e][1], "nivel": round(1500 + 200 * modelo.fuerza[e])}
+                     for i, e in enumerate(eqs[:60], 1)]
+            top = {f["eq"] for f in filas}
+            otras: dict[str, list] = {}
+            for s in sorted(hist, key=lambda s: s.fecha, reverse=True):
+                for n in (s.n1, s.n2):
+                    if n in top and len(otras.setdefault(n, [])) < 15:
+                        otras[n].append({"f": s.fecha.isoformat(), "h": s.hora or "", "l": s.n1, "v": s.n2,
+                                         "el": logos.get(s.n1, ""), "ev": logos.get(s.n2, ""),
+                                         "m": f"{s.m1}-{s.m2}", "st": "post", "c": s.torneo})
+            for s in esports.PROX:
+                if s.juego == juego:
+                    for n in (s.n1, s.n2):
+                        if n in top:
+                            otras.setdefault(n, []).append({"f": s.fecha.isoformat(), "h": s.hora or "", "l": s.n1,
+                                                            "v": s.n2, "el": logos.get(s.n1, ""), "ev": logos.get(s.n2, ""),
+                                                            "m": "", "st": "pre", "c": s.torneo})
+            if filas:
+                out.append((f"e-{juego.lower()}-ranking", {"nombre": f"{juego} · Ranking de equipos", "dep": "e",
+                            "tipo": "ranking", "grupos": [{"n": "", "filas": filas}], "jornadas": [], "actual": 0,
+                            "otras": otras, "nota": "Ranking según la fuerza que calcula la app con los mapas de los "
+                                                    "últimos meses (torneos de nivel S y A); no es un ranking oficial."}))
+        # Torneos en juego
+        torneos: dict[str, list] = {}
+        for s in esports.HIST:
+            if s.juego == juego and s.fecha >= hoy - timedelta(days=21):
+                torneos.setdefault(s.torneo, []).append(s)
+        for s in esports.PROX:
+            if s.juego == juego:
+                torneos.setdefault(s.torneo, []).append(s)
+        for torneo, ss in torneos.items():
+            if not any(x.fecha >= hoy - timedelta(days=3) for x in ss) or len(ss) < 3:
+                continue
+            vistos, partidos = set(), []
+            st: dict[str, list] = {}
+            for x in sorted(ss, key=lambda x: (x.fecha, x.hora or "")):
+                k = (x.fecha, x.n1, x.n2)
+                if k in vistos:
+                    continue
+                vistos.add(k)
+                jugado = bool(x.m1 or x.m2)
+                partidos.append({"f": x.fecha.isoformat(), "h": x.hora or "", "l": x.n1, "v": x.n2,
+                                 "el": logos.get(x.n1, ""), "ev": logos.get(x.n2, ""),
+                                 "m": f"{x.m1}-{x.m2}" if jugado else "", "st": "post" if jugado else "pre"})
+                for n in (x.n1, x.n2):
+                    st.setdefault(n, [0, 0, 0])
+                if jugado:
+                    for n, a, b in ((x.n1, x.m1, x.m2), (x.n2, x.m2, x.m1)):
+                        st[n][0 if a > b else 1] += 1
+                        st[n][2] += a - b
+            filas = [{"eq": n, "logo": logos.get(n, ""), "g": r[0], "p": r[1], "pj": r[0] + r[1], "dif": r[2]}
+                     for n, r in st.items()]
+            filas.sort(key=lambda f: (-f["g"], f["p"], -f["dif"]))
+            for i, f in enumerate(filas, 1):
+                f["pos"] = i
+            jor = _jornadas(partidos, len(filas), por_dia=True)
+            out.append((f"e-{juego.lower()}-{_slug(torneo)}", {"nombre": f"{juego} · {torneo}", "dep": "e", "tipo": "basket",
+                        "grupos": [{"n": "", "filas": filas}], "jornadas": jor, "actual": _actual(jor, hoy)}))
+    return out
+
 # ---------------------------------------------------------------- todo junto
 def _leyenda(grupos: list) -> list:
     vistas, out = set(), []
@@ -448,6 +634,13 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
             for k in ("il", "iv", "r", "fase"):
                 lista.pop(k, None)
     archivos += _basket_europa(datos_app, hoy)
+    for extra in (_tenis, _esports):
+        try:
+            archivos += extra(hoy)
+        except Exception as e:  # noqa: BLE001
+            import traceback
+            print(f"  aviso ligas {extra.__name__}: {e}")
+            traceback.print_exc()
     for lid, d in archivos:
         d["leyenda"] = _leyenda(d["grupos"])
         d["equipos"] = _equipos(d["grupos"], d["jornadas"])

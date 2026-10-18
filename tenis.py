@@ -302,6 +302,8 @@ def analizar(p: Partido, elo: EloTenis, hoy: date) -> Analisis | None:
 
 HIST: list = []   # partidos jugados (para "últimos partidos" en la ficha)
 INFO: dict[tuple, dict] = {}
+ELO: dict[str, "EloTenis"] = {}   # modelo de cada circuito (para el ranking de la pestaña Ligas)
+PROX: list = []                    # próximos partidos (para los torneos de la pestaña Ligas)
 
 
 def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
@@ -314,10 +316,12 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             for h in hist:
                 historial.anotar(h.fecha, h.n1, h.n2, h.s1 or 0, h.s2 or 0)
             prox = proximos(tour, hoy, n_dias)
+            PROX.extend(prox)
             print(f"  {tour}: {len(hist)} partidos de historial, {len(prox)} próximos")
             if len(hist) < 300 or not prox:
                 continue
             elo = EloTenis().ajustar(hist)
+            ELO[tour] = elo
             for p in prox:
                 INFO[(p.fecha.isoformat(), p.n1, p.n2)] = {"esc": [p.flag1, p.flag2], "estadio": p.sede or p.torneo}
                 a = analizar(p, elo, hoy)
