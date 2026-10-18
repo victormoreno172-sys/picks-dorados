@@ -1416,8 +1416,8 @@ function pintarPantallaAjustes() {
     <section class="ajb"><h3>Competiciones que ves</h3><p style="margin:0 0 6px">Quita las que no te interesen y no saldrán en Partidos.</p>${listaLigas}</section>
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       <p>Todo esto se guarda solo en este móvil.</p></section>
-    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "sofascore", "tenis", "esports"].map(k => { const e = ESTADO_DIRECTO[k];
-      const nombre = { servidor: "Servidor de directo (basket y esports)", sofascore: "Sofascore (reloj del basket)", tenis: "ESPN (tenis)", esports: "bo3.gg (esports)" }[k];
+    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "r365", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
+      const nombre = { servidor: "Servidor de directo (basket y esports)", r365: "365Scores (reloj del basket)", tenis: "ESPN (tenis)" }[k];
       return `<div class="ajinfo"><span>${nombre}</span><b>${!e ? "—" : e.ok ? "✅ " + esc(e.t) + (e.act ? " (act. " + esc(e.act) + ")" : "") : "❌ " + esc(e.err || "")}</b></div>`; }).join("")}
       <p>Solo se consulta lo que se está jugando. "—" = ahora no hacía falta.</p></section>
     <section class="ajb"><h3>Sobre la app</h3>
@@ -2009,51 +2009,23 @@ async function directoOtros(fechas) {
       }
     } catch (e) {}
   })());
-  // 🎮 Esports: bo3.gg (no deja leerlo directo desde una web: se pasa por un intermediario)
-  if (cand.e.length) ESTADO_DIRECTO.esports = ESTADO_DIRECTO.esports || { ok: false, t: AHORA.hora, err: "sin datos aún" };
-  if (cand.e.length) tareas.push((async () => {
-    const api = "https://api.bo3.gg/api/v1/matches?filter[matches.status][in]=current,finished&page[limit]=60&sort=-start_date&with=teams";
-    for (const url of [`https://api.allorigins.win/raw?url=${encodeURIComponent(api)}`, `https://corsproxy.io/?url=${encodeURIComponent(api)}`]) {
-      try {
-        const j = await json(url, 15000);
-        for (const m of j.results || []) {
-          const x = buscarEn(cand.e, (m.team1 || {}).name, (m.team2 || {}).name); if (!x) continue;
-          const st = m.status === "finished" ? "post" : "in";
-          const a = +m.team1_score || 0, b = +m.team2_score || 0, [s1, s2] = x[1] ? [b, a] : [a, b];
-          if (!(x[0].res && x[0].res.mapas)) cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : `Mapa ${a + b + 1}` }) || cambio;
-        }
-        ESTADO_DIRECTO.esports = { ok: true, t: AHORA.hora };
-        break;
-      } catch (e) {}
-    }
-  })());
-  // 🏀 Basket europeo y 🎮 esports: el "servidor de directo" (GitHub, cada minuto) deja los marcadores en un archivo
+  // 🏀 Reloj del basket: 365Scores (deja leerlo desde el móvil y da cuarto + minutos y segundos)
   if (cand.b.length) tareas.unshift((async () => {
     try {
-      const j = await json("https://api.sofascore.com/api/v1/sport/basketball/events/live", 9000);
-      ESTADO_DIRECTO.sofascore = { ok: true, t: AHORA.hora, n: (j.events || []).length };
-      const PER = { "1st quarter": "1C", "2nd quarter": "2C", "3rd quarter": "3C", "4th quarter": "4C", "halftime": "Desc.", "overtime": "Pr", "pause": "Pausa" };
+      const j = await json("https://webws.365scores.com/web/games/allscores/?appTypeId=5&langId=29&timezoneName=Europe/Madrid&userCountryId=2&sports=2&onlyLiveGames=true", 9000);
+      ESTADO_DIRECTO.r365 = { ok: true, t: AHORA.hora, n: (j.games || []).length };
       let ya = false;
-      for (const ev of j.events || []) {
-        const x = buscarEn(cand.b, (ev.homeTeam || {}).name, (ev.awayTeam || {}).name); if (!x) continue;
-        const hs = ev.homeScore || {}, as = ev.awayScore || {}; if (hs.current == null) continue;
-        const desc = ((ev.status || {}).description || "").toLowerCase(), periodo = PER[desc] || "";
-        const qs = ["period1", "period2", "period3", "period4", "overtime"].filter(k => hs[k] != null);
-        let parc = { cab: qs.map(k => k === "overtime" ? "Pr" : k.slice(-1) + "C"), l: qs.map(k => hs[k]), v: qs.map(k => as[k]) };
-        // Reloj del cuarto: Sofascore da los segundos jugados del partido y lo que dura cada cuarto
-        let reloj = "";
-        const tm = ev.time || {}, n = +((desc.match(/^(\d)/) || [])[1] || 0);
-        if (tm.played != null && tm.periodLength && n) {
-          const queda = Math.max(0, tm.periodLength * n - tm.played);
-          reloj = `${String(Math.floor(queda / 60)).padStart(2, "0")}:${String(queda % 60).padStart(2, "0")}`;
-        }
-        let a = hs.current, b = as.current;
-        if (x[1]) { [a, b] = [b, a]; parc = { cab: parc.cab, l: parc.v, v: parc.l }; }
-        const r = { st: "in", m: `${a}-${b}`, det: `${periodo} ${reloj}`.trim() || "Vivo", periodo, reloj, parc };
-        if (ponerRes(x[0], r)) { cambio = true; ya = true; x[0]._sofa = Date.now(); }
+      for (const g of j.games || []) {
+        const h = g.homeCompetitor || {}, a = g.awayCompetitor || {};
+        const x = buscarEn(cand.b, h.name, a.name); if (!x || h.score == null || h.score < 0) continue;
+        const fin = g.statusGroup === 4, per = (g.shortStatusText || g.statusText || "").replace(/^Desc.*/i, "Desc."), rel = g.gameTimeDisplay || "";
+        let s1 = Math.round(h.score), s2 = Math.round(a.score); if (x[1]) [s1, s2] = [s2, s1];
+        x[0]._reloj = { per, rel, m: `${s1}-${s2}`, t: Date.now() };
+        const r = Object.assign({}, x[0].res || {}, { st: fin ? "post" : "in", m: `${s1}-${s2}`, det: fin ? "Final" : `${per} ${rel}`.trim(), periodo: per, reloj: rel });
+        if (ponerRes(x[0], r)) { cambio = true; ya = true; }
       }
       if (ya && document.activeElement !== $("busca")) pintarLista();
-    } catch (e) { ESTADO_DIRECTO.sofascore = { ok: false, t: AHORA.hora, err: String(e.message || e).slice(0, 60) }; }
+    } catch (e) { ESTADO_DIRECTO.r365 = { ok: false, t: AHORA.hora, err: String(e.message || e).slice(0, 60) }; }
   })());
   if (cand.b.length || cand.e.length) tareas.unshift((async () => {
     let ya = false;
@@ -2074,7 +2046,11 @@ async function directoOtros(fechas) {
       for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
         for (const p of dia.partidos) {
           const r = res[`${dia.fecha}|${p.local}|${p.visitante}`];
-          if (r && !(p.res && p.res.st === "post" && r.st === "in") && !(p._sofa && Date.now() - p._sofa < 90000 && r.st === "in") && ponerRes(p, r)) { cambio = true; ya = true; }
+          if (!r || (p.res && p.res.st === "post" && r.st === "in")) continue;
+          let rr = r;
+          if (p._reloj && Date.now() - p._reloj.t < 120000 && r.st === "in")  // reloj y marcador de 365Scores, cuartos del servidor
+            rr = Object.assign({}, r, { m: p._reloj.m, det: `${p._reloj.per} ${p._reloj.rel}`.trim(), periodo: p._reloj.per, reloj: p._reloj.rel });
+          if (ponerRes(p, rr)) { cambio = true; ya = true; }
         }
       if (ya && document.activeElement !== $("busca")) pintarLista();  // se enseña ya, sin esperar al resto
     } catch (e) {}
