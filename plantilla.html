@@ -870,14 +870,23 @@ function pintarLista() {
     if (est.vista === "favs") {
       titulo = "Favoritos";
       const dia = DATOS.dias[est.dia];
-      for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => est.favs.has(clavePartido(dia, p)));
+      // Partidos con ☆ y todos los partidos de las competiciones con ☆
+      for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => est.ligasFav.has(l) || est.favs.has(clavePartido(dia, p)));
       sel = ligas.filter(l => porLiga[l].length);
+      sel.sort((x, y) => (est.ligasFav.has(y) - est.ligasFav.has(x)) || ordenLiga(x) - ordenLiga(y));
     }
     if ((est.busca || "").trim()) titulo = "Resultados de la búsqueda";
+    let chipsFav = "";
+    if (est.vista === "favs" && est.ligasFav.size) {
+      cargarIndice();
+      chipsFav = `<div class="chips">${[...est.ligasFav].sort((x, y) => ordenLiga(x) - ordenLiga(y)).map(l => { const inf = infoLiga(l), li = idDeLiga(l);
+        return `<button ${li ? `data-lid="${esc(li.id)}"` : `data-liga-ir="${esc(l)}"`}>${inf.flag} ${esc(inf.nombre)}</button>`; }).join("")}</div>`;
+    }
     h += `<div class="volver"><button data-vista="comps">‹</button><b>${esc(titulo)}</b><span>${sel.reduce((s, l) => s + porLiga[l].length, 0)} partidos</span></div>`;
+    h += chipsFav;
     if (est.vista === "liga") { cargarIndice(); const li = idDeLiga(est.liga); if (li) h += `<button class="irtabla" data-lid="${esc(li.id)}">Clasificación y jornadas <span>›</span></button>`; }
     h += sel.length ? sel.map(l => bloqueLiga(l, porLiga[l])).join("")
-      : `<div class="vacio">${est.vista === "favs" ? "Toca la ☆ de un partido para tenerlo aquí." : est.vista === "directo" ? `Ahora mismo no hay partidos de ${DEPORTES.find(d => d[0] === est.dep)[1].toLowerCase()} en directo.` : "No hay partidos."}</div>`;
+      : `<div class="vacio">${est.vista === "favs" ? (est.ligasFav.size ? "Tus competiciones favoritas no juegan este día. Prueba otro día arriba." : "Toca la ☆ de un partido o de una competición para tenerlo aquí.") : est.vista === "directo" ? `Ahora mismo no hay partidos de ${DEPORTES.find(d => d[0] === est.dep)[1].toLowerCase()} en directo.` : "No hay partidos."}</div>`;
   }
   $("vista").innerHTML = h;
 }
@@ -1120,7 +1129,7 @@ function cargarIndice() {
   LIGAS.cargando.indice = true;
   fetch("ligas/indice.json?t=" + Math.floor(Date.now() / 600000)).then(r => r.json())
     .then(x => { LIGAS.indice = x; }).catch(() => { LIGAS.indice = []; })
-    .finally(() => { if (["ligas", "liga"].includes(est.vista)) pintarLista(); });
+    .finally(() => { if (["ligas", "liga", "favs"].includes(est.vista)) pintarLista(); });
 }
 function cargarLiga(id) {
   if (LIGAS.datos[id] || LIGAS.cargando[id]) return;
