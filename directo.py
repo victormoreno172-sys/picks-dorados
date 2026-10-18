@@ -76,7 +76,7 @@ def candidatos(datos: dict, ahora: datetime) -> dict:
                 continue
             if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=5):
                 out[dep].append({"clave": f"{dia['fecha']}|{p['local']}|{p['visitante']}", "local": p["local"],
-                                 "visitante": p["visitante"]})
+                                 "visitante": p["visitante"], "liga": p.get("liga") or ""})
     return out
 
 
@@ -110,6 +110,77 @@ def basket(cand: list, ahora: datetime) -> dict:
                                       "det": "Final" if fin else PERIODO.get(eps, eps or "Vivo"),
                                       "parc": {"cab": cab, "l": p1, "v": p2}}
     return res
+
+
+# ---------------------------------------------------------------- Counter-Strike ronda a ronda (DRAFT5)
+# DRAFT5 (web brasileña de CS) narra muchos partidos ronda a ronda y deja leer sus datos.
+D5_API = "https://api.draft5.gg/matches/"
+D5_H = {**UA, "Accept": "application/json", "Origin": "https://draft5.gg", "Referer": "https://draft5.gg/"}
+_D5 = {"t": 0, "links": []}
+
+
+def _d5_links() -> list:
+    """Partidos que salen en la portada de DRAFT5 (los de hoy y en directo): [(id, texto del enlace)]"""
+    if time.time() - _D5["t"] > 600:
+        try:
+            t = requests.get("https://draft5.gg/", headers={**UA, "Accept": "text/html"}, timeout=25).text
+            _D5["links"] = list({m.group(1): m.group(2) for m in re.finditer(r'/partida/(\d+)-([^"?#]+)', t)}.items())
+            _D5["t"] = time.time()
+        except requests.RequestException:
+            pass
+    return _D5["links"]
+
+
+def draft5(local: str, visitante: str) -> dict | None:
+    """Marcador de la serie, mapa a mapa y rondas del mapa en juego, desde el punto de vista del local."""
+    nl, nv = nom(local).replace(" ", ""), nom(visitante).replace(" ", "")
+    if not nl or not nv:
+        return None
+    mid = None
+    for i, txt in _d5_links():
+        x = nom(txt.replace("-", " ")).replace(" ", "")
+        if nl in x and nv in x:
+            mid = i
+            break
+    if not mid:
+        return None
+    try:
+        d = requests.get(D5_API + mid, headers=D5_H, timeout=20).json().get("data") or {}
+    except (requests.RequestException, ValueError):
+        return None
+    if not d.get("scores"):
+        return None
+    giro = parecido((d.get("teamA") or {}).get("teamName", ""), visitante) > parecido((d.get("teamA") or {}).get("teamName", ""), local)
+    sa, sb = int(d.get("seriesScoreA") or 0), int(d.get("seriesScoreB") or 0)
+    jugados = sa + sb
+    scores = sorted(d["scores"], key=lambda z: z.get("seriesOrder") or 0)
+    ultimo = {}
+    try:  # narración: la última jugada de cada mapa trae el marcador de rondas al momento
+        for ev in requests.get(D5_API + mid + "/live", headers=D5_H, timeout=20).json().get("data") or []:
+            nm = ((ev.get("map") or {}).get("name") or "")
+            if nm and nm not in ultimo and ev.get("scoreA") is not None:
+                ultimo[nm] = (int(ev["scoreA"]), int(ev["scoreB"]))
+    except (requests.RequestException, ValueError, TypeError):
+        pass
+    mapas, envivo = [], None
+    for i, sc in enumerate(scores):
+        nm = ((sc.get("map") or {}).get("mapName") or "")
+        bonito = nm.replace("de_", "").title()
+        a, b = int(sc.get("scoreA") or 0), int(sc.get("scoreB") or 0)
+        if i >= jugados and nm in ultimo and sum(ultimo[nm]) > a + b:
+            a, b = ultimo[nm]
+        if giro:
+            a, b = b, a
+        if i < jugados:
+            mapas.append([bonito, a, b])
+        else:
+            mapas.append([bonito, None, None])
+            if i == jugados and not d.get("isFinished") and (a or b or nm in ultimo):
+                envivo = {"n": i + 1, "mapa": bonito, "a": a, "b": b}
+    if giro:
+        sa, sb = sb, sa
+    fin = bool(d.get("isFinished") or d.get("isOver"))
+    return {"m": f"{sa}-{sb}", "mapas": mapas, "envivo": envivo, "fin": fin}
 
 
 def esports(cand: list) -> dict:
@@ -153,6 +224,21 @@ def esports(cand: list) -> dict:
                             r["det"] = f"Mapa {juego.get('number') or a + b + 1} · {(juego.get('map_name') or '').replace('de_', '').title()}"
             except (requests.RequestException, ValueError, TypeError):
                 pass
+            # Counter-Strike: DRAFT5 da las rondas del mapa en juego (y suele ir por delante)
+            if "CS2" in (x[0].get("liga") or ""):
+                try:
+                    d5 = draft5(x[0]["local"], x[0]["visitante"])
+                except Exception:  # noqa: BLE001
+                    d5 = None
+                if d5:
+                    r["m"], r["mapas"] = d5["m"], d5["mapas"]
+                    if d5["fin"] and not fin:
+                        r["st"], r["det"] = "post", "Final"
+                    elif d5["envivo"] and not fin:
+                        e = d5["envivo"]
+                        r["envivo"] = e
+                        r["det"] = f"Mapa {e['n']} · {e['mapa']} {e['a']}-{e['b']}"
+                    r["fuente"] = "DRAFT5"
             res[x[0]["clave"]] = r
     return res
 

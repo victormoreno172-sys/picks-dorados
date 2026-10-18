@@ -642,6 +642,8 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .mesp .mxest.mxvivo { color: #fca5a5; font-weight: 700; }
 .mesp .mxest.mxvivo i { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: pulso 1.6s infinite; }
 .mesp .mpnota { color: rgba(255,255,255,.5); font-size: 11px; margin: 12px 2px 0; line-height: 1.4; }
+.mesp .mxlive { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.mesp .mxlive .mscore { color: #fff; font-size: 18px; }
 </style>
 
 <div class="wrap">
@@ -1330,7 +1332,11 @@ function mapasEsports(p) {
     const n = i + 1, a = m[1], b = m[2], hecho = a != null && b != null;
     let estado2, cls = "";
     if (hecho) { estado2 = `<span class="mscore"><b class="${a > b ? "g" : ""}">${a}</b><i>–</i><b class="${b > a ? "g" : ""}">${b}</b></span>`; cls = "mxh"; }
-    else if (n === nAct) { estado2 = `<span class="mxest mxvivo"><i></i>En juego</span>`; cls = "mxv"; }
+    else if (n === nAct) {
+      const ev = r.envivo && r.envivo.n === n ? r.envivo : null;  // rondas al momento (DRAFT5)
+      estado2 = ev ? `<span class="mxlive"><span class="mscore"><b class="${ev.a > ev.b ? "g" : ""}">${ev.a}</b><i>–</i><b class="${ev.b > ev.a ? "g" : ""}">${ev.b}</b></span><span class="mxest mxvivo"><i></i>En juego</span></span>`
+        : `<span class="mxest mxvivo"><i></i>En juego</span>`;
+      cls = "mxv"; }
     else if (decidido || (es.st === "post")) { estado2 = `<span class="mxest">No se juega</span>`; cls = "mxno"; }
     else estado2 = `<span class="mxest">Pendiente</span>`;
     const ganador = hecho ? (a > b ? 0 : 1) : -1;
@@ -1342,7 +1348,7 @@ function mapasEsports(p) {
       <span class="mtot"><b class="${tot[0] > tot[1] ? "g" : ""}">${tot[0]}</b><i>–</i><b class="${tot[1] > tot[0] ? "g" : ""}">${tot[1]}</b></span>
       <span class="meq v"><b>${esc(p.visitante)}</b>${miniEsc((fi.esc || [])[1], p.visitante)}</span></div>
     <div class="mlista">${filas}</div>
-    <p class="mpnota">${lol ? "Partidas" : "Mapas"} terminados con su resultado${lol ? "" : " (rondas)"}. El resultado de cada ${lol ? "partida" : "mapa"} aparece al acabar: la fuente no da el marcador ${lol ? "" : "de rondas "}mientras se juega.</p>
+    <p class="mpnota">${r.envivo ? "Rondas del mapa en juego al momento (DRAFT5)." : `El resultado de cada ${lol ? "partida" : "mapa"} aparece al acabar${lol ? "" : " (las rondas en directo solo salen cuando DRAFT5 narra el partido)"}.`}</p>
   </div>`;
 }
 function marcadorPeriodos(p) {
