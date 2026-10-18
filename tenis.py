@@ -12,6 +12,7 @@ ganador, resultado en sets, total de sets y hándicap de sets (al mejor de 3 o d
 from __future__ import annotations
 
 import json
+import math
 import os
 import time
 from dataclasses import dataclass
@@ -188,16 +189,28 @@ def proximos(tour: str, hoy: date, n_dias: int) -> list[Partido]:
 
 
 # ----------------------------------------------------------------- modelo
+# Parámetros calibrados con el último año (calibracion/backtest_tenis.py):
+#   a, e = tamaño del ajuste tras cada partido (a / (partidos + 5) ** e)
+#   w_sup = peso del Elo de la superficie frente al general
+#   t = temperatura: multiplica el logit (por debajo de 1 = el modelo se pasaba de seguro)
+PARAMS = {"ATP": {"a": 150, "e": 0.5, "w_sup": 0.25, "t": 1.0},
+          "WTA": {"a": 250, "e": 0.5, "w_sup": 0.25, "t": 0.8}}
+# Los sets no son independientes: quien gana un set tiene más opciones de ganar el siguiente.
+# Con sets independientes el modelo daba ~49 % de partidos a 3 sets y en realidad son ~37 %.
+RHO_SETS = 0.2
+
+
 class EloTenis:
-    def __init__(self):
+    def __init__(self, tour: str = "ATP"):
+        pr = PARAMS.get(tour, PARAMS["ATP"])
+        self.a, self.e, self.w_sup, self.t = pr["a"], pr["e"], pr["w_sup"], pr["t"]
         self.general: dict[str, float] = {}
         self.sup: dict[tuple[str, str], float] = {}
         self.n: dict[str, int] = {}
         self.n_sup: dict[tuple[str, str], int] = {}
 
-    @staticmethod
-    def _k(n: int) -> float:
-        return 250 / (n + 5) ** 0.4
+    def _k(self, n: int) -> float:
+        return self.a / (n + 5) ** self.e
 
     @staticmethod
     def _esperado(a: float, b: float) -> float:
@@ -229,26 +242,50 @@ class EloTenis:
         return self.n.get(j, 0) >= 8
 
     def p_partido(self, j1: str, j2: str, sup: str) -> float:
-        a = (self.general.get(j1, 1500) + self.sup.get((j1, sup), self.general.get(j1, 1500))) / 2
-        b = (self.general.get(j2, 1500) + self.sup.get((j2, sup), self.general.get(j2, 1500))) / 2
-        return self._esperado(a, b)
+        g1, g2 = self.general.get(j1, 1500), self.general.get(j2, 1500)
+        a = (1 - self.w_sup) * g1 + self.w_sup * self.sup.get((j1, sup), g1)
+        b = (1 - self.w_sup) * g2 + self.w_sup * self.sup.get((j2, sup), g2)
+        p = self._esperado(a, b)
+        z = math.log(p / (1 - p)) * self.t
+        return 1 / (1 + math.exp(-z))
 
 
 # --------------------------------------------------------------- mercados
-def p_set_desde_partido(p: float) -> float:
-    """El Elo predice partidos al mejor de 3: se deduce la probabilidad de ganar un set."""
+def marcadores_sets(s: float, sets_max: int, rho: float = RHO_SETS) -> dict[tuple[int, int], float]:
+    """Probabilidad de cada resultado en sets. s = ganar el primer set; después de ganar un set
+    la probabilidad del siguiente sube (s + rho·(1-s)) y después de perderlo baja (s·(1-rho))."""
+    k = sets_max // 2 + 1
+    out: dict[tuple[int, int], float] = {}
+
+    def rec(a, b, prev, pr):
+        if a == k or b == k:
+            out[(a, b)] = out.get((a, b), 0) + pr
+            return
+        q = s if prev is None else (s + rho * (1 - s) if prev == 1 else s * (1 - rho))
+        rec(a + 1, b, 1, pr * q)
+        rec(a, b + 1, 2, pr * (1 - q))
+    rec(0, 0, None, 1.0)
+    return out
+
+
+def p_partido_desde_set(s: float, sets_max: int = 3, rho: float = RHO_SETS) -> float:
+    k = sets_max // 2 + 1
+    return sum(v for (a, b), v in marcadores_sets(s, sets_max, rho).items() if a == k)
+
+
+def p_set_desde_partido(p: float, sets_max: int = 3, rho: float = RHO_SETS) -> float:
+    """El Elo predice partidos al mejor de 3: se deduce la probabilidad de ganar el primer set."""
     lo, hi = 1e-4, 1 - 1e-4
     for _ in range(60):
         s = (lo + hi) / 2
-        g = s * s * (3 - 2 * s)  # gana 2-0 o 2-1
-        lo, hi = (s, hi) if g < p else (lo, s)
+        lo, hi = (s, hi) if p_partido_desde_set(s, sets_max, rho) < p else (lo, s)
     return (lo + hi) / 2
 
 
 def mercados_tenis(n1: str, n2: str, p_bo3: float, sets_max: int):
     from esports import mercados_serie
     s = p_set_desde_partido(p_bo3)
-    picks, (a, b), pm = mercados_serie(n1, n2, s, sets_max)
+    picks, (a, b), pm = mercados_serie(n1, n2, s, sets_max, dist=marcadores_sets(s, sets_max))
     for pk in picks:  # mismos mercados que esports, pero en sets
         pk.mercado = pk.mercado.replace(" mapas", " sets")
     return picks, (a, b), pm, s
@@ -269,15 +306,8 @@ def analizar(p: Partido, elo: EloTenis, hoy: date) -> Analisis | None:
             w = config.PESO_MERCADO
             # se mezcla en la escala del partido al mejor de 3 (la del Elo)
             if p.sets_max == 5:
-                from esports import marcadores
                 # pasar la implícita (al mejor de 5) a la escala del mejor de 3
-                lo, hi = 1e-4, 1 - 1e-4
-                for _ in range(60):
-                    s = (lo + hi) / 2
-                    g = sum(v for (x, y), v in marcadores(s, 5).items() if x == 3)
-                    lo, hi = (s, hi) if g < imp else (lo, s)
-                s = (lo + hi) / 2
-                imp = s * s * (3 - 2 * s)
+                imp = p_partido_desde_set(p_set_desde_partido(imp, 5), 3)
             prob = (1 - w) * prob + w * imp
             cuotas = {f"Gana {p.n1}": c1, f"Gana {p.n2}": c2}
             casa = ev.casa
@@ -298,8 +328,7 @@ def analizar(p: Partido, elo: EloTenis, hoy: date) -> Analisis | None:
     sup_txt = {"tierra": "tierra", "dura": "dura", "hierba": "hierba"}[sup]
     liga = f"{icono} {p.tour} · {p.torneo} · {sup_txt}"
     partido = PartidoProximo(liga, p.fecha, p.hora, p.n1, p.n2, deporte="te", casa=casa)
-    from esports import marcadores
-    m = marcadores(s, p.sets_max)
+    m = marcadores_sets(s, p.sets_max)
     e1 = sum(x * v for (x, y), v in m.items())
     e2 = sum(y * v for (x, y), v in m.items())
     return Analisis(partido, e1, e2, f"{a}-{b}", pm, picks)
@@ -325,7 +354,7 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             print(f"  {tour}: {len(hist)} partidos de historial, {len(prox)} próximos")
             if len(hist) < 300 or not prox:
                 continue
-            elo = EloTenis().ajustar(hist)
+            elo = EloTenis(tour).ajustar(hist)
             ELO[tour] = elo
             for p in prox:
                 INFO[(p.fecha.isoformat(), p.n1, p.n2)] = {"esc": [p.flag1, p.flag2], "estadio": p.sede or p.torneo}

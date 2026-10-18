@@ -172,7 +172,7 @@ def auditar_otros():
         import tenis
         for tour in tenis.TOURS:
             hist = tenis.historico(tour, HOY)
-            elo = tenis.EloTenis().ajustar(hist)
+            elo = tenis.EloTenis(tour).ajustar(hist)
             filas = []
             for p in tenis.proximos(tour, HOY, 7):
                 if not (elo.conoce(p.j1) and elo.conoce(p.j2)):

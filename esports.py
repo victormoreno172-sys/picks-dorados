@@ -232,8 +232,8 @@ def marcadores(p: float, bo: int) -> dict[tuple[int, int], float]:
     return out
 
 
-def mercados_serie(n1: str, n2: str, p: float, bo: int, unidad: str = "mapas") -> tuple[list[Pick], tuple[int, int], float]:
-    m = marcadores(p, bo)
+def mercados_serie(n1: str, n2: str, p: float, bo: int, unidad: str = "mapas", dist: dict | None = None) -> tuple[list[Pick], tuple[int, int], float]:
+    m = dist if dist is not None else marcadores(p, bo)
     k = bo // 2 + 1
     gana1 = sum(v for (a, b), v in m.items() if a == k)
     picks = [Pick(f"Gana {n1}", gana1), Pick(f"Gana {n2}", 1 - gana1)]

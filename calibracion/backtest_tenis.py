@@ -137,6 +137,61 @@ def mercados_sets(pred):
     return filas
 
 
+def sets_con_rho(pred, t, rho):
+    """Calibración de los mercados de sets con el modelo encadenado (rho) y la temperatura t."""
+    tramos = [(0.5, 0.6), (0.6, 0.7), (0.7, 0.8), (0.8, 0.9), (0.9, 1.01)]
+    filas, ll, nn = [], 0.0, 0
+    acum = {tr: [0, 0, 0, 0, 0, 0, 0] for tr in tramos}
+    for p, g, sm, a, b, *_rest in pred:
+        if sm != 3 or _rest[2] or a is None or b is None or max(a, b) != 2:
+            continue
+        z = math.log(p / (1 - p)) * t
+        p = 1 / (1 + math.exp(-z))
+        s = tenis.p_set_desde_partido(p, 3, rho)
+        m = tenis.marcadores_sets(s, 3, rho)
+        ll -= math.log(max(m.get((a, b), 1e-9), 1e-9))
+        nn += 1
+        fav = p >= 0.5
+        fp = p if fav else 1 - p
+        fa, fb = (a, b) if fav else (b, a)
+        mf = m if fav else {(y, x): v for (x, y), v in m.items()}
+        for tr in tramos:
+            if tr[0] <= fp < tr[1]:
+                c = acum[tr]
+                c[0] += 1
+                c[1] += mf[(2, 0)]; c[2] += fa == 2 and fb == 0
+                c[3] += 1 - mf[(0, 2)]; c[4] += not (fa == 0 and fb == 2)
+                c[5] += mf[(2, 1)] + mf[(1, 2)]; c[6] += a + b == 3
+    for tr, c in acum.items():
+        if c[0]:
+            n = c[0]
+            filas.append({"tramo": f"{int(tr[0]*100)}-{int(min(tr[1],1)*100)}%", "n": n,
+                          "fav 2-0": [round(c[1]/n, 3), round(c[2]/n, 3)], "fav +1.5 sets": [round(c[3]/n, 3), round(c[4]/n, 3)],
+                          "3 sets": [round(c[5]/n, 3), round(c[6]/n, 3)]})
+    return ll / max(1, nn), filas
+
+
+def final():
+    """Comprueba los parámetros que usa la app (tenis.PARAMS y tenis.RHO_SETS) y ajusta rho."""
+    hoy = date.today()
+    out = {}
+    for tour in tenis.TOURS:
+        partidos = [p for p in tenis.historico(tour, hoy) if p.gana1 is not None]
+        corte = partidos[len(partidos) // 3].fecha
+        pr = tenis.PARAMS[tour]
+        pred = recorrer(partidos, pr["a"], pr["e"], pr["w_sup"], desde=corte)
+        t = pr["t"]
+        cal = lambda p: 1 / (1 + math.exp(-math.log(p / (1 - p)) * t))  # noqa: E731
+        predc = [(cal(p),) + tuple(x) for p, *x in pred]
+        rhos = {r: round(sets_con_rho(pred, t, r)[0], 4) for r in [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]}
+        mejor_rho = min(rhos, key=rhos.get)
+        out[tour] = {"params": pr, "temperatura_optima": temperatura(pred), "logloss": round(logloss(predc), 4),
+                     "tabla": tabla(predc), "rho_logloss": rhos, "rho_mejor": mejor_rho,
+                     "sets_app (previsto, real)": sets_con_rho(pred, t, tenis.RHO_SETS)[1],
+                     "sets_mejor_rho": sets_con_rho(pred, t, mejor_rho)[1]}
+    print(json.dumps(out, indent=1, ensure_ascii=False))
+
+
 def main():
     hoy = date.today()
     salida = {}
@@ -172,4 +227,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    final() if "--final" in sys.argv else main()
