@@ -675,7 +675,7 @@ aplicarTema(); aplicarUmbral(); aplicarColores();
 if (AJ.depInicio !== "ultimo" && ["f", "b", "te", "e"].includes(AJ.depInicio)) est.dep = AJ.depInicio;
 if (!["f", "b", "te", "e"].includes(est.dep)) est.dep = "f";
 est.vista = "comps";
-try { est.ligasFav = new Set(JSON.parse(localStorage.getItem("ligasFav") || "[]")); } catch (e) { est.ligasFav = new Set(); }
+try { est.ligasFav = new Set(JSON.parse(localStorage.getItem("ligasFav") || "[]").map(l => String(l).replace(/ · Bo\d+$/i, ""))); } catch (e) { est.ligasFav = new Set(); }
 
 const $ = id => document.getElementById(id);
 const pct = p => Math.round(p * 100) + "%";
@@ -789,7 +789,10 @@ const PAISES = {
   "Greek Basket League": ["🇬🇷", "Grecia"], "LKL": ["🇱🇹", "Lituania"], "BBL": ["🇩🇪", "Alemania"], "ABA Liga": ["🌍", "Adriático"], "Liga ABA": ["🌍", "Adriático"],
 };
 const ORDEN_LIGAS = Object.keys(PAISES);
+// El formato de la serie (Bo1/Bo3/Bo5) no es otra competición: se quita para agrupar
+const ligaBase = l => String(l || "").replace(/ · Bo\d+$/i, "");
 function infoLiga(l) {
+  l = ligaBase(l);
   if (PAISES[l]) return { flag: PAISES[l][0], pais: PAISES[l][1], nombre: l };
   const partes = l.split(" · ");
   if (/^(ATP|WTA)$/.test(partes[0])) return { flag: "🎾", pais: partes[0] + (partes[2] ? " · " + partes[2] : ""), nombre: partes[1] || l };
@@ -942,7 +945,7 @@ function pintarLista() {
   if (est.vista === "clasif") return pintarClasif();
   const vis = partidosVisibles();
   const porLiga = {};
-  vis.forEach(x => (porLiga[x[0].liga] ||= []).push(x));
+  vis.forEach(x => (porLiga[ligaBase(x[0].liga)] ||= []).push(x));
   const ligas = Object.keys(porLiga).sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b));
   let h = "";
   if (est.vista === "comps" && !(est.busca || "").trim()) {
@@ -1276,7 +1279,7 @@ function pintarFicha() {
       <span class="fdep">${ICONO_DEP[est.dep]} ${DEPORTES.find(d => d[0] === est.dep)[1]}</span>
       <span style="display:flex;gap:8px"><button class="ico" data-refrescar="1" aria-label="Actualizar">↻</button>
       <button class="ico" data-fav="${est.sel}" aria-pressed="${fav}" aria-label="Favorito">${fav ? "★" : "☆"}</button></span></div>
-    <button class="fliga" data-liga-ir="${esc(p.liga)}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
+    <button class="fliga" data-liga-ir="${esc(ligaBase(p.liga))}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b></div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
@@ -1664,9 +1667,10 @@ function resultadosGenerales() {
         det: dep === "e" ? ({ "e-cs2": "Counter-Strike 2", "e-val": "Valorant", "e-lol": "League of Legends" }[juego] || "Esports") + (/game changers|female|women|lgc|gc\b/i.test(p.liga) ? " · Femenino" : "")
           : dep === "te" ? (/^WTA/.test(p.liga) ? "WTA · femenino" : "ATP · masculino") : infoLiga(p.liga).nombre });
     });
-    if (casa(`${p.liga} ${inf.pais} ${extra(p.liga)}`) && !comps.has(p.liga)) comps.set(p.liga, { n: p.liga, dep });
+    const lb = ligaBase(p.liga);
+    if (casa(`${lb} ${inf.pais} ${extra(p.liga)}`) && !comps.has(lb)) comps.set(lb, { n: lb, dep });
   }));
-  for (const l of LIGAS.indice || []) if (casa(`${l.n} ${infoLiga(l.n).pais} ${extra(l.n)}`)) comps.set("idx:" + l.id, { n: l.n, dep: l.dep, lid: l.id });
+  for (const l of LIGAS.indice || []) if (casa(`${l.n} ${infoLiga(l.n).pais} ${extra(l.n)}`)) comps.set(ligaBase(l.n), { n: l.n, dep: l.dep, lid: l.id });
   // Equipos y jugadores de todas las ligas, rankings y torneos (aunque no jueguen estos días)
   const JUEGO_DE = { "e-cs2": "counter strike cs2", "e-val": "valorant", "e-lol": "league of legends lol" };
   for (const [n, logo, lid, dep, det] of INDICE_BUSCAR || []) {
@@ -1912,7 +1916,7 @@ document.addEventListener("click", e => {
   if (b.dataset.compeq !== undefined) { est.compEq = b.dataset.compeq; pintarLista(); return; }
   if (b.dataset.abrirdia !== undefined) { est.dia = +b.dataset.abrirdia; const p = DATOS.dias[est.dia].partidos[+b.dataset.abrirp];
     est.dep = p.dep || "f"; est.volverA = b.dataset.desde || "clasif"; est.vista = "partido"; est.sel = +b.dataset.abrirp; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
-  if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = b.dataset.ligaIr; window.scrollTo({ top: 0 }); pintarLista(); return; }
+  if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = ligaBase(b.dataset.ligaIr); window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.ligafav !== undefined) { const l = b.dataset.ligafav; est.ligasFav.has(l) ? est.ligasFav.delete(l) : est.ligasFav.add(l);
     try { localStorage.setItem("ligasFav", JSON.stringify([...est.ligasFav])); } catch (e) {} pintarLista(); return; }
   if (b.dataset.dep) { est.vista = "comps"; }
