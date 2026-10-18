@@ -802,7 +802,7 @@ function partidosVisibles() {
   const dia = DATOS.dias[est.dia];
   const q = quitarAcentos((est.busca || "").trim());
   return dia.partidos.map((p, i) => [p, i])
-    .filter(([p]) => (p.dep || "f") === est.dep)
+    .filter(([p]) => est.vista === "favs" || (p.dep || "f") === est.dep)   // en Favoritos, todos los deportes juntos
     .filter(([p]) => !AJ.ocultas.includes(p.liga))
     .filter(([p]) => !q || quitarAcentos(`${p.local} ${p.visitante} ${p.liga}`).includes(q));
 }
@@ -915,7 +915,8 @@ function filaPartido(p, idx) {
 }
 
 function bloqueLiga(liga, lista) {
-  const inf = infoLiga(liga);
+  const inf = Object.assign({}, infoLiga(liga));
+  if (est.vista === "favs" && lista.length) inf.pais = `${ICONO_DEP[lista[0][0].dep || "f"]} ${inf.pais}`;  // deportes mezclados
   return `<section class="bliga"><button class="cabliga" data-liga-ir="${esc(liga)}"><span class="flag">${inf.flag}</span>
     <span class="nl"><small>${esc(inf.pais)}</small><b>${esc(inf.nombre)}</b></span><span class="flecha">›</span></button>
     ${lista.map(([p, i]) => filaPartido(p, i)).join("")}</section>`;
@@ -970,9 +971,11 @@ function pintarLista() {
       titulo = "Favoritos";
       const dia = DATOS.dias[est.dia];
       // Partidos con ☆ y todos los partidos de las competiciones con ☆
-      for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => est.ligasFav.has(l) || est.favs.has(clavePartido(dia, p)));
+      // Una competición favorita cuenta aunque el partido lleve detalles (p. ej. "VAL · Torneo · Bo5")
+      const esFav = l => est.ligasFav.has(l) || [...est.ligasFav].some(f => l.startsWith(f + " · "));
+      for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => esFav(l) || est.favs.has(clavePartido(dia, p)));
       sel = ligas.filter(l => porLiga[l].length);
-      sel.sort((x, y) => (est.ligasFav.has(y) - est.ligasFav.has(x)) || ordenLiga(x) - ordenLiga(y));
+      sel.sort((x, y) => (esFav(y) - esFav(x)) || ordenLiga(x) - ordenLiga(y));
     }
     if ((est.busca || "").trim()) titulo = "Resultados de la búsqueda";
     let chipsFav = "";
@@ -1876,7 +1879,8 @@ document.addEventListener("click", e => {
   if (b.id === "lupa") { const c = $("cajabusca"); c.hidden = !c.hidden; if (!c.hidden) { $("busca").focus(); } else { est.busca = ""; $("busca").value = ""; } pintarSelector(); pintarLista(); return; }
   if (b.dataset.nav) { if (b.dataset.nav === "buscar" && est.vista !== "buscar") $("vista").innerHTML = ""; est.vista = b.dataset.nav; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.vista) { est.vista = b.dataset.vista; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
-  if (b.dataset.abrir !== undefined) { est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "auto"; window.scrollTo({ top: 0 }); pintarLista(); return; }
+  if (b.dataset.abrir !== undefined) { const pp = DATOS.dias[est.dia].partidos[+b.dataset.abrir]; if (pp) est.dep = pp.dep || "f";
+    est.volverA = est.vista; est.vista = "partido"; est.sel = +b.dataset.abrir; est.tab = "auto"; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
   if (b.dataset.equipoir !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = "eq"; est.jor = null; est.equipo = b.dataset.equipoir; est.compEq = null; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligaglobal !== undefined) { est.dep = b.dataset.ligadep || est.dep; est.vista = "liga"; est.liga = b.dataset.ligaglobal; window.scrollTo({ top: 0 }); pintar(); return; }
