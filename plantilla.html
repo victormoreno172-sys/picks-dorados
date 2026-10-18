@@ -512,6 +512,16 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .colores button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
 .colores input[type=color] { width: 40px; height: 36px; border: 0; background: none; padding: 0; cursor: pointer; }
 .tikd { font-size: 18px; text-align: center; line-height: 1; }
+
+/* ---------- cambios, goles y tarjetas sobre el campo ---------- */
+.pj .pc { position: relative; }
+.pj .mks { position: absolute; top: -9px; left: -12px; display: flex; gap: 1px; }
+.pj .mk { font-size: 11px; line-height: 1; background: #fff; border-radius: 6px; padding: 1px 2px; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.pj .mk.gol { font: 700 9px/1 var(--mono); color: #0b1220; display: flex; align-items: center; }
+.pj .cmb { position: absolute; bottom: -7px; right: -20px; font: 700 9px/1 var(--mono); color: #0b1220; background: #a3e635; border-radius: 6px; padding: 2px 3px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
+.pj .pout { font: 600 9px/1 var(--body); color: rgba(255,255,255,.75); text-shadow: 0 1px 2px rgba(0,0,0,.7); max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jug.sup.entro { color: var(--ink); font-weight: 600; }
+.sube { color: #16a34a; font: 700 11px var(--mono); }
 </style>
 
 <div class="wrap">
@@ -951,8 +961,45 @@ function coloresCamiseta(fi) {
   if (!v || distCol(l, v) < 90) { const alt = norm((c[1] || [])[1]); v = alt && distCol(l, alt) >= 90 ? alt : (tintaSobre(l) === "#fff" ? "#f8fafc" : "#0b1220"); }
   return [l, v];
 }
+// Cambios, goles y tarjetas del resumen en directo, por jugador
+const nomN = n => quitarAcentos(String(n || "")).replace(/[^a-z ]/g, "").trim();
+function eventosJugadores(p) {
+  const fi = p.fi || {}, r = fi.id && RESUMEN[fi.id];
+  const out = { l: { cambios: {}, marcas: {} }, v: { cambios: {}, marcas: {} } };
+  if (!r || !r.ev) return out;
+  for (const e of r.ev) {
+    if (!e || e.sep || !out[e.lado]) continue;
+    const o = out[e.lado];
+    if (e.cambio && e.sal) o.cambios[nomN(e.sal)] = { ent: e.ent, min: e.min, lesion: e.ico === "🚑" };
+    else if (e.ico === "⚽" || e.ico === "🟨" || e.ico === "🟥" || e.ico === "🟨🟥") {
+      const k = nomN(e.t); if (!k) continue;
+      // un gol en propia puerta va al jugador del otro equipo: se marca en quien lo hizo
+      (o.marcas[k] ||= []).push(e.ico === "⚽" && /propia/.test(e.sub || "") ? "⚽pp" : e.ico);
+    }
+  }
+  return out;
+}
 function campoAlineaciones(al, p) {
   const L = al.l && lineas(al.l), V = al.v && lineas(al.v);
+  if (estado(p) && p.fi && p.fi.id) cargarResumen(p.fi);  // para ver los cambios en directo
+  const EVJ = eventosJugadores(p);
+  // Busca el dorsal de un suplente por su nombre
+  const dorsal = (lado, n) => { const a = al[lado]; const j = a && a.sup.find(x => nomN(x[1]) === nomN(n)); return j ? j[0] : ""; };
+  const marcasDe = (lado, n) => {
+    const m = EVJ[lado].marcas[nomN(n)] || [];
+    const goles = m.filter(x => x === "⚽").length, pp = m.filter(x => x === "⚽pp").length;
+    const tarj = m.includes("🟥") || m.includes("🟨🟥") ? "🟥" : m.includes("🟨") ? "🟨" : "";
+    return (goles ? `<span class="mk gol">⚽${goles > 1 ? "×" + goles : ""}</span>` : "") + (pp ? `<span class="mk gol">⚽pp</span>` : "") + (tarj ? `<span class="mk">${tarj}</span>` : "");
+  };
+  // Si un jugador ha sido cambiado, en su sitio sale el que entró (y si este también se cambió, el siguiente)
+  const quien = (lado, j) => {
+    let num = j[0], nombre = j[1], cambio = null, salio = null, vueltas = 0;
+    while (EVJ[lado].cambios[nomN(nombre)] && vueltas++ < 3) {
+      const c = EVJ[lado].cambios[nomN(nombre)];
+      salio = salio || nombre; cambio = c; nombre = c.ent; num = dorsal(lado, c.ent) || "↻";
+    }
+    return { num, nombre, cambio, salio };
+  };
   if (!L && !V) return `<div class="alin">${["l", "v"].map(k => al[k] ? `<div class="alcol"><h4>${esc(k === "l" ? p.local : p.visitante)}</h4>${al[k].tit.map(j => `<div class="jug"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${esc(j[2])}</span></div>`).join("")}</div>` : "").join("")}</div>`;
   const cols = coloresCamiseta(p.fi);
   // Local arriba (portería arriba, ataca hacia abajo); visitante abajo. y en % del alto del campo
@@ -965,8 +1012,10 @@ function campoAlineaciones(al, p) {
       return fila.map((x, k) => {
         let xx = (k + 1) / (fila.length + 1) * 100;
         if (arriba) xx = 100 - xx;  // el local mira hacia abajo: su izquierda queda a la derecha
-        const fondo = cls === "loc" ? cols[0] : cols[1];
-        return `<div class="pj ${cls}" style="left:${xx.toFixed(1)}%;top:${y.toFixed(1)}%"><span class="pc" style="background:${fondo};color:${tintaSobre(fondo)};border-color:${distCol(fondo, "#ffffff") < 60 ? "#94a3b8" : "#fff"}">${esc(x.j[0] || "")}</span><span class="pn">${esc(apellido(x.j[1]))}</span></div>`;
+        const fondo = cls === "loc" ? cols[0] : cols[1], lado = cls === "loc" ? "l" : "v";
+        const q = quien(lado, x.j);
+        const marcas = marcasDe(lado, x.j[1]) + (q.salio ? marcasDe(lado, q.nombre) : "");
+        return `<div class="pj ${cls}${q.cambio ? " cambiado" : ""}" style="left:${xx.toFixed(1)}%;top:${y.toFixed(1)}%"><span class="pc" style="background:${fondo};color:${tintaSobre(fondo)};border-color:${distCol(fondo, "#ffffff") < 60 ? "#94a3b8" : "#fff"}">${esc(q.num || "")}${marcas ? `<span class="mks">${marcas}</span>` : ""}${q.cambio ? `<span class="cmb" title="Sale ${esc(q.salio)}">${q.cambio.lesion ? "🚑" : "🔄"}${esc(q.cambio.min)}</span>` : ""}</span><span class="pn">${esc(apellido(q.nombre))}</span>${q.cambio ? `<span class="pout">↓ ${esc(apellido(q.salio))}</span>` : ""}</div>`;
       }).join("");
     }).join("");
   };
@@ -978,8 +1027,11 @@ function campoAlineaciones(al, p) {
   </div>`;
 }
 function suplentes(al, p) {
+  const EVJ = eventosJugadores(p);
   const col = (k, nombre) => { const a = al[k]; if (!a || !a.sup.length) return "";
-    return `<div class="alcol"><h4>${esc(nombre)}</h4>` + a.sup.map(j => `<div class="jug sup"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${esc(/^SUB/i.test(j[2] || "") ? "" : j[2] || "")}</span></div>`).join("") + `</div>`; };
+    const entro = n => Object.values(EVJ[k].cambios).find(c => nomN(c.ent) === nomN(n));
+    return `<div class="alcol"><h4>${esc(nombre)}</h4>` + a.sup.map(j => { const e = entro(j[1]);
+      return `<div class="jug sup${e ? " entro" : ""}"><span class="dorsal">${esc(j[0])}</span><span class="jn">${esc(j[1])}</span><span class="pos">${e ? `<b class="sube">↑ ${esc(e.min)}</b>` : esc(/^SUB/i.test(j[2] || "") ? "" : j[2] || "")}</span></div>`; }).join("") + `</div>`; };
   const h = col("l", p.local) + col("v", p.visitante);
   return h ? `<h2 class="sec">Suplentes</h2><div class="alin">${h}</div>` : "";
 }
@@ -994,7 +1046,7 @@ function cargarResumen(fi) {
   fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${fi.slug}/summary?event=${fi.id}`, { cache: "no-store" })
     .then(x => x.json()).then(j => { RESUMEN[k] = { t: Date.now(), ev: eventosResumen(j) }; marcadorDeResumen(k, j); })
     .catch(() => { RESUMEN[k] = { t: Date.now(), error: true, ev: (r && r.ev) || null }; })
-    .finally(() => { if (est.vista === "partido" && est.tab === "resumen") pintarLista(); });
+    .finally(() => { if (est.vista === "partido" && (est.tab === "resumen" || est.tab === "alin")) pintarLista(); });
 }
 // El resumen también trae el marcador y el minuto: se usa por si el de la lista no ha llegado
 function marcadorDeResumen(id, j) {
@@ -1028,7 +1080,7 @@ function eventosResumen(j) {
       const m = /\.\s*(.+?) replaces (.+?)(?: because of an injury)?\.?$/i.exec(txt);
       ico = /injury/i.test(txt) ? "🚑" : "🔄";
       t = m ? m[1] : nom[0] || ""; sub = (/injury/i.test(txt) ? "sale lesionado " : "sale ") + (m ? m[2] : nom[1] || "");
-      out.push({ min, lado, ico, t, sub, cambio: true }); continue;
+      out.push({ min, lado, ico, t, sub, cambio: true, ent: t, sal: m ? m[2] : nom[1] || "" }); continue;
     }
     else if (/half.?time/.test(tipo)) { out.push({ sep: `Descanso · ${gl}-${gv}` }); continue; }
     else if (/(full.?time|end regular|match ends|end of)/.test(tipo)) { out.push({ sep: `Final · ${gl}-${gv}` }); continue; }
@@ -1777,7 +1829,7 @@ async function enDirecto() {
 enDirecto();
 setInterval(enDirecto, 60000);
 cargarMisApuestas();
-setInterval(() => { if (!document.hidden && est.vista === "partido" && est.tab === "resumen") pintarLista(); }, 60000);
+setInterval(() => { if (!document.hidden && est.vista === "partido" && (est.tab === "resumen" || est.tab === "alin")) pintarLista(); }, 60000);
 
 // Cada minuto: si algún partido ha empezado, se quita de la lista y del Top
 setInterval(() => {
