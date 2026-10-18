@@ -1,0 +1,23 @@
+name: Directo
+# Cada hora arranca un proceso que durante ~58 minutos actualiza los marcadores en directo cada minuto
+on:
+  schedule:
+    - cron: "2 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: directo
+  cancel-in-progress: true
+jobs:
+  directo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 62
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests
+      - run: |
+          git config user.name "bot"; git config user.email "bot@local"
+          python directo.py
