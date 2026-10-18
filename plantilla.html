@@ -1394,19 +1394,55 @@ function misApuestasActivasTodas() {
   const desde = fechaMenos(AHORA.fecha, 2);
   return (MIS.datos.apuestas || []).filter(a => a.fecha >= desde && OVb[claveApBot(a)] !== "x");
 }
+// ---- Cálculo de las apuestas del bot con lo que marcaste en ESTE móvil (igual en la app del bot y en Partidos)
+// 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
+// anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
+function calcularApuestasBot(D, ahora) {
+  const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
+  const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
+  const OV = leer("ajustesBot"), CR = leer("cuotasReales"), IM = leer("importesBot");
+  const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
+  const ganBanca = a => a.previa ? (a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0) : gan(a);
+  const empezada = a => a.piernas.some(p => (p.fecha + " " + (p.hora || "00:00")) <= ahora);
+  const todas = D.apuestas.map(x => Object.assign({}, x, { piernas: x.piernas.map(p => Object.assign({}, p)) }));
+  todas.forEach(a => {
+    a.key = claveAp(a);
+    if (CR[a.key]) {
+      a.cuota_bot = a.cuota; a.cuota = CR[a.key];
+      if (a.ok === true && a.piernas.every(p => p.ok !== null)) a.cuota_final = a.cuota;
+    }
+    const o = OV[a.key];
+    if (o === "x") a.excluida = true;
+    else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
+    else if (o === "p") { a.ok = false; a.manual = true; }
+  });
+  const ap = todas.filter(a => !a.excluida);
+  const cerradas = ap.filter(a => a.ok === true || a.ok === false).reduce((s, a) => s + ganBanca(a), 0);
+  const dias = [...new Set(ap.map(a => a.fecha))].sort();
+  let cambios = false;
+  for (const d of dias) {
+    const del = ap.filter(a => a.fecha === d);
+    const otras = ap.filter(a => a.fecha !== d && !("ok" in a)).reduce((s, a) => s + a.importe, 0);
+    let disp = D.inicial + cerradas - otras;
+    for (const a of del) {
+      if (IM[a.key] && (empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
+      else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
+      else if (Object.keys(OV).length && d >= ahora.slice(0, 10)) a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100);
+      if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
+      disp -= a.importe;
+    }
+  }
+  if (cambios) try { localStorage.setItem("importesBot", JSON.stringify(IM)); } catch (e) {}
+  return { todas, ap, OV, CR };
+}
+
 function misApuestasActivas() {
   if (!MIS.datos) return [];
-  let OVb = {}, CRb = {};
-  try { OVb = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); CRb = JSON.parse(localStorage.getItem("cuotasReales") || "{}"); } catch (e) {}
+  const r = calcularApuestasBot(MIS.datos, AHORA.fecha + " " + AHORA.hora);
   const ayer = fechaMenos(AHORA.fecha, 1);
-  return (MIS.datos.apuestas || []).map(a => {
-    const k = claveApBot(a), o = OVb[k];
-    const b = Object.assign({}, a, { key: k, cuotaReal: CRb[k] || null });
-    if (o === "g") b.ok = true; else if (o === "p") b.ok = false;
-    b.quitada = o === "x";
-    return b;
-  }).filter(a => !a.quitada && (a.fecha >= AHORA.fecha ||
-    (a.fecha === ayer && !("ok" in a) && a.piernas.some(p => (p.hora || "") >= "21:30" || (p.hora || "99") < "06:00"))));
+  return r.ap.map(a => Object.assign(a, { cuotaReal: a.cuota_bot ? a.cuota : null }))
+    .filter(a => a.fecha >= AHORA.fecha ||
+      (a.fecha === ayer && !("ok" in a) && a.piernas.some(p => (p.hora || "") >= "21:30" || (p.hora || "99") < "06:00")));
 }
 // Busca el partido de una selección en los datos de la app -> [día, índice]
 function partidoDePierna(pi) {

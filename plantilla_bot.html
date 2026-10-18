@@ -145,38 +145,54 @@ const cerrada = a => a.ok === true || a.ok === false;
 const ganBanca = a => a.previa ? (a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0) : gan(a);
 const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.piernas.every(p => (p.dep || "f") === "f") ? "⚽ Fútbol" : "Mixtas";
 
-// Ajustes a mano (en este móvil): apuesta no hecha, o acertada / fallada
-const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
-let OV = {};
-try { OV = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); } catch (e) {}
-// Cuota real a la que metiste cada apuesta en Winamax (para el dinero exacto y para calibrar)
-let CR = {};
-try { CR = JSON.parse(localStorage.getItem("cuotasReales") || "{}"); } catch (e) {}
-D.apuestas.forEach(a => {
-  a.key = claveAp(a);
-  if (CR[a.key]) {
-    a.cuota_bot = a.cuota; a.cuota = CR[a.key];
-    if (a.ok === true && a.piernas.every(p => p.ok !== null)) a.cuota_final = a.cuota;
-  }
-  const o = OV[a.key];
-  if (o === "x") a.excluida = true;
-  else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
-  else if (o === "p") { a.ok = false; a.manual = true; }
-});
-const ap = D.apuestas.filter(a => !a.excluida);
-// Si has quitado o corregido alguna, los importes de los días aún sin jugar se recalculan
-// (cada apuesta el 5 % de lo que queda tras las anteriores, en el mismo orden)
-if (Object.keys(OV).length) {
-  const cerradas = ap.filter(cerrada).reduce((s, a) => s + ganBanca(a), 0);
+// ---- Cálculo de las apuestas del bot con lo que marcaste en ESTE móvil (igual en la app del bot y en Partidos)
+// 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
+// anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
+function calcularApuestasBot(D, ahora) {
+  const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
+  const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
+  const OV = leer("ajustesBot"), CR = leer("cuotasReales"), IM = leer("importesBot");
+  const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
+  const ganBanca = a => a.previa ? (a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0) : gan(a);
+  const empezada = a => a.piernas.some(p => (p.fecha + " " + (p.hora || "00:00")) <= ahora);
+  const todas = D.apuestas.map(x => Object.assign({}, x, { piernas: x.piernas.map(p => Object.assign({}, p)) }));
+  todas.forEach(a => {
+    a.key = claveAp(a);
+    if (CR[a.key]) {
+      a.cuota_bot = a.cuota; a.cuota = CR[a.key];
+      if (a.ok === true && a.piernas.every(p => p.ok !== null)) a.cuota_final = a.cuota;
+    }
+    const o = OV[a.key];
+    if (o === "x") a.excluida = true;
+    else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
+    else if (o === "p") { a.ok = false; a.manual = true; }
+  });
+  const ap = todas.filter(a => !a.excluida);
+  const cerradas = ap.filter(a => a.ok === true || a.ok === false).reduce((s, a) => s + ganBanca(a), 0);
   const dias = [...new Set(ap.map(a => a.fecha))].sort();
+  let cambios = false;
   for (const d of dias) {
     const del = ap.filter(a => a.fecha === d);
-    if (del.some(a => "ok" in a)) continue;   // día con algo ya resuelto: se deja como estaba
     const otras = ap.filter(a => a.fecha !== d && !("ok" in a)).reduce((s, a) => s + a.importe, 0);
     let disp = D.inicial + cerradas - otras;
-    for (const a of del) { a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100); disp -= a.importe; }
+    for (const a of del) {
+      if (IM[a.key] && (empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
+      else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
+      else if (Object.keys(OV).length && d >= ahora.slice(0, 10)) a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100);
+      if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
+      disp -= a.importe;
+    }
   }
+  if (cambios) try { localStorage.setItem("importesBot", JSON.stringify(IM)); } catch (e) {}
+  return { todas, ap, OV, CR };
 }
+
+const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
+const _ahora = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
+const _calc = calcularApuestasBot(D, _ahora);
+D.apuestas = _calc.todas;
+let OV = _calc.OV, CR = _calc.CR;
+const ap = D.apuestas.filter(a => !a.excluida);
 const cer = ap.filter(cerrada);
 const saldo = D.inicial + ap.reduce((s, a) => s + ganBanca(a), 0);
 const enJuego = ap.filter(a => !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
