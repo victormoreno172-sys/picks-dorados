@@ -279,15 +279,18 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .fliga { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--muted); font: 600 12px var(--body); letter-spacing: .06em; text-align: left; cursor: pointer; box-shadow: var(--sombra); }
 .fliga b { color: var(--ink); }
 .fliga .flecha { margin-left: auto; font-size: 20px; }
-.fequipos { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 16px; padding: 18px 10px; border-radius: 20px;
+.fequipos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 132px) minmax(0, 1fr); align-items: center; gap: 8px; margin-top: 16px; padding: 18px 10px; border-radius: 20px;
   background: radial-gradient(120% 140% at 50% 0%, rgba(255, 183, 3, .16), transparent 60%), var(--surface); border: 1px solid var(--line); box-shadow: var(--sombra); }
 .feq { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; min-width: 0; }
-.feq b { font: 700 17px/1.15 var(--display); overflow-wrap: anywhere; }
-.escudo { width: 76px; height: 76px; object-fit: contain; border-radius: 18px; background: #fff; padding: 8px; box-shadow: 0 8px 20px -10px rgba(11, 18, 32, .45); border: 1px solid var(--line); }
+.feq b { font: 700 16px/1.15 var(--display); overflow-wrap: normal; word-break: normal; hyphens: auto; max-width: 100%; }
+.feq b.largo { font-size: 14px; }
+.feq b.muylargo { font-size: 12.5px; }
+.escudo { width: clamp(56px, 18vw, 76px); height: clamp(56px, 18vw, 76px); object-fit: contain; border-radius: 18px; background: #fff; padding: 8px; box-shadow: 0 8px 20px -10px rgba(11, 18, 32, .45); border: 1px solid var(--line); }
 .escudo.ini { display: grid; place-items: center; font: 700 26px var(--display); color: #fff; background: linear-gradient(135deg, #0b1220, #334155); border: 0; }
-.fcentro { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
-.fcentro b { font: 700 36px/1 var(--display); letter-spacing: -.01em; }
-.fcentro small { font: 500 11px var(--mono); color: var(--muted); }
+.fcentro { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 0; }
+.fcentro b { font: 700 clamp(24px, 8vw, 34px)/1 var(--display); letter-spacing: -.01em; white-space: nowrap; }
+.fcentro b.est { font-size: clamp(22px, 7vw, 30px); color: var(--gold); }
+.fcentro small { font: 500 10.5px/1.3 var(--mono); color: var(--muted); white-space: normal; overflow-wrap: anywhere; max-width: 132px; }
 .festadio { margin-top: 10px; text-align: center; font-size: 13px; color: var(--muted); }
 .ftabs { display: flex; gap: 6px; overflow-x: auto; margin: 14px -16px 0; padding: 0 16px; border-bottom: 1px solid var(--line); scrollbar-width: none; }
 .ftabs button { flex: none; border: 0; background: none; color: var(--muted); font: 700 13px var(--display); letter-spacing: .08em; text-transform: uppercase; padding: 12px 8px; position: relative; cursor: pointer; }
@@ -1266,14 +1269,14 @@ function pintarFicha() {
       <button class="ico" data-fav="${est.sel}" aria-pressed="${fav}" aria-label="Favorito">${fav ? "★" : "☆"}</button></span></div>
     <button class="fliga" data-liga-ir="${esc(p.liga)}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
     <div class="fequipos">
-      <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b>${esc(p.local)}</b></div>
+      <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b></div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
         if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + es.det : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
         if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
         const e2 = p.dep === "te" ? estimadasTenis(dia)[est.sel] : null;
-        if (e2) return `<b>≈${esc(e2.h)}</b><small>hora estimada · va detrás de ${esc(e2.tras || "otro partido")}</small>`;
+        if (e2) return `<b class="est">≈${esc(e2.h)}</b><small>hora estimada<br>tras ${esc(e2.tras || "otro partido")}</small>`;
         return `<b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small>`; })()}</div>
-      <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b>${esc(p.visitante)}</b></div>
+      <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b class="${tam(p.visitante)}">${esc(p.visitante)}</b></div>
     </div>
     ${fi.estadio ? `<div class="festadio">🏟️ ${esc(fi.estadio)}</div>` : ""}
     <nav class="ftabs">${tabs.map(([k, n]) => `<button data-tab="${k}" aria-pressed="${est.tab === k}">${n}</button>`).join("")}</nav>
