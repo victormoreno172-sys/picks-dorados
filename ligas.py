@@ -740,6 +740,26 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
                        "j": len(d["jornadas"])})
     # Índice para el buscador general: todos los equipos y jugadores de todas las competiciones
     buscar: dict[str, list] = {}
+    JUEGO = {"e-cs2": "Counter-Strike 2", "e-val": "Valorant", "e-lol": "League of Legends"}
+    FEM = re.compile(r"game changers|female|women|femenin|\blgc\b|girls|ladies|equal esports|\bgc\b|frost", re.I)
+    torneos_de: dict[str, set] = {}   # torneos de cada equipo de esports (para saber si es femenino)
+    for lid, d in archivos:
+        if d["dep"] != "e":
+            continue
+        for j in d["jornadas"]:
+            for p in j["p"]:
+                for n in (p["l"], p["v"]):
+                    torneos_de.setdefault(f"{lid[:5]}|{n}", set()).add(d["nombre"])
+        for n, ps in (d.get("otras") or {}).items():
+            torneos_de.setdefault(f"{lid[:5]}|{n}", set()).update(p.get("c", "") for p in ps)
+
+    def detalle(lid: str, d: dict, n: str) -> str:
+        if d["dep"] == "e":
+            fem = any(FEM.search(t or "") for t in torneos_de.get(f"{lid[:5]}|{n}", ()))
+            return JUEGO.get(lid[:5], "Esports") + (" · Femenino" if fem else "")
+        if d["dep"] == "te":
+            return "ATP · masculino" if lid.startswith("t-atp") else "WTA · femenino" if lid.startswith("t-wta") else "Tenis"
+        return d["nombre"]
     for lid, d in archivos:
         nombres = {n: l for n, l in d.get("equipos", [])}
         for n in (d.get("otras") or {}):
@@ -747,13 +767,13 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
         for n, logo in nombres.items():
             if not n or n == "Por decidir":
                 continue
-            k = f'{d["dep"]}|{n}'
             # Preferimos la liga/ranking (donde está su ficha completa) antes que copas y torneos sueltos
             peso = 0 if d["tipo"] in ("futbol", "nba", "basket", "ranking") else 1
+            k = f'{d["dep"]}|{lid[:5] if d["dep"] == "e" else ""}|{n}'  # mismo nombre en dos juegos = dos equipos
             if k not in buscar or peso < buscar[k][4]:
-                buscar[k] = [n, logo or (buscar.get(k) or ["", ""])[1], lid, d["dep"], peso]
+                buscar[k] = [n, logo or (buscar.get(k) or ["", ""])[1], lid, d["dep"], peso, detalle(lid, d, n)]
     with open(os.path.join(carpeta, "buscar.json"), "w", encoding="utf-8") as f:
-        json.dump([v[:4] for v in buscar.values()], f, ensure_ascii=False, separators=(",", ":"))
+        json.dump([v[:4] + [v[5]] for v in buscar.values()], f, ensure_ascii=False, separators=(",", ":"))
     with open(os.path.join(carpeta, "indice.json"), "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False)
     print(f"  ligas: {len(indice)} competiciones con clasificación y calendario")

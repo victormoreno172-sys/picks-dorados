@@ -1658,19 +1658,25 @@ function resultadosGenerales() {
     const texto = `${p.local} ${p.visitante} ${p.liga} ${inf.pais} ${extra(p.liga)} ${(fi.n || []).join(" ")}`;
     if (casa(texto)) parts.push([d, di, p, i]);
     [[p.local, (fi.esc || [])[0], (fi.n || [])[0]], [p.visitante, (fi.esc || [])[1], (fi.n || [])[1]]].forEach(([n, logo, nEspn]) => {
-      if (casa(`${n} ${nEspn || ""} ${extra(p.liga)}`) && !equipos.has(dep + n)) equipos.set(dep + n, { n, logo, dep, liga: p.liga, nEspn });
+      const pref = (p.liga || "").split(" · ")[0].toLowerCase();
+      const juego = dep === "e" ? "e-" + pref : "";
+      if (casa(`${n} ${nEspn || ""} ${extra(p.liga)}`) && !equipos.has(dep + n)) equipos.set(dep + n, { n, logo, dep, liga: p.liga, nEspn, juego,
+        det: dep === "e" ? ({ "e-cs2": "Counter-Strike 2", "e-val": "Valorant", "e-lol": "League of Legends" }[juego] || "Esports") + (/game changers|female|women|lgc|gc\b/i.test(p.liga) ? " · Femenino" : "")
+          : dep === "te" ? (/^WTA/.test(p.liga) ? "WTA · femenino" : "ATP · masculino") : infoLiga(p.liga).nombre });
     });
     if (casa(`${p.liga} ${inf.pais} ${extra(p.liga)}`) && !comps.has(p.liga)) comps.set(p.liga, { n: p.liga, dep });
   }));
   for (const l of LIGAS.indice || []) if (casa(`${l.n} ${infoLiga(l.n).pais} ${extra(l.n)}`)) comps.set("idx:" + l.id, { n: l.n, dep: l.dep, lid: l.id });
   // Equipos y jugadores de todas las ligas, rankings y torneos (aunque no jueguen estos días)
   const JUEGO_DE = { "e-cs2": "counter strike cs2", "e-val": "valorant", "e-lol": "league of legends lol" };
-  for (const [n, logo, lid, dep] of INDICE_BUSCAR || []) {
-    if (!casa(`${n} ${JUEGO_DE[lid.slice(0, 5)] || ""}`)) continue;
-    const k = dep + n;
-    if (equipos.has(k)) { const e = equipos.get(k); e.lid = e.lid || lid; e.logo = e.logo || logo; continue; }
+  for (const [n, logo, lid, dep, det] of INDICE_BUSCAR || []) {
+    if (!casa(`${n} ${JUEGO_DE[lid.slice(0, 5)] || ""} ${det || ""}`)) continue;
+    const k = dep + (dep === "e" ? lid.slice(0, 5) : "") + n;
+    const k0 = dep + n;  // el mismo equipo visto en los partidos de la app
+    if (equipos.has(k0) && (dep !== "e" || equipos.get(k0).juego === lid.slice(0, 5))) { const e = equipos.get(k0); e.lid = e.lid || lid; e.logo = e.logo || logo; e.det = det; continue; }
+    if (equipos.has(k)) continue;
     const ind = (LIGAS.indice || []).find(l => l.id === lid);
-    equipos.set(k, { n, logo, dep, liga: ind ? ind.n : "", lid });
+    equipos.set(k, { n, logo, dep, liga: ind ? ind.n : "", lid, det });
   }
   let h = "";
   if (comps.size) h += `<h2 class="sec">Competiciones · ${comps.size}</h2><div class="comps">` + [...comps.values()].slice(0, 15).map(c => {
@@ -1683,7 +1689,7 @@ function resultadosGenerales() {
     let li = e.lid ? { id: e.lid } : idDeLiga(e.liga);
     if (e.dep === "e") li = (LIGAS.indice || []).find(l => l.id === `e-${pref}-ranking`) || li;
     if (e.dep === "te") li = (LIGAS.indice || []).find(l => l.id === `t-${pref}-ranking`) || li;
-    return `<button ${li ? `data-lid="${esc(li.id)}" data-equipoir="${esc(e.nEspn || e.n)}"` : `data-buscarpartidos="${esc(e.n)}"`}>${miniEsc(e.logo, e.n)}<span>${esc(e.n)}<small style="display:block;color:var(--muted);font-weight:500;font-size:10px">${esc(NOMBRE_DEP_B[e.dep] || "")}</small></span></button>`; }).join("") + `</div>`;
+    return `<button ${li ? `data-lid="${esc(li.id)}" data-equipoir="${esc(e.nEspn || e.n)}"` : `data-buscarpartidos="${esc(e.n)}"`}>${miniEsc(e.logo, e.n)}<span>${esc(e.n)}<small style="display:block;color:var(--muted);font-weight:500;font-size:10px">${esc((NOMBRE_DEP_B[e.dep] || "").split(" ")[0])} ${esc(e.det || (NOMBRE_DEP_B[e.dep] || "").split(" ").slice(1).join(" "))}</small></span></button>`; }).join("") + `</div>`;
   if (parts.length) {
     h += `<h2 class="sec">Partidos · ${parts.length}</h2>`;
     const porDia = {};
