@@ -1865,9 +1865,11 @@ async function enDirecto() {
       if (p.fi && p.fi.id && p.fi.slug && !/^b-/.test(p.fi.slug) && empezado(dia, p) && !(p.res && p.res.st === "post")) cand.push(p);
   const ligas = new Set(cand.map(p => p.fi.slug));
   let cambio = false;
-  for (const slug of ligas) {
+  // Todo a la vez (fútbol, NBA, tenis, esports, basket): así no se espera una cosa detrás de otra
+  const otros = directoOtros(fechas).catch(() => false);
+  await Promise.all([...ligas].flatMap(slug => fechas.map(async f => {
     const dep = slug === "nba" ? "basketball" : "soccer";
-    for (const f of fechas) {
+    {
       try {
         const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${dep}/${slug}/scoreboard?dates=${f.replace(/-/g, "")}`, { cache: "no-store" });
         const j = await r.json();
@@ -1880,9 +1882,9 @@ async function enDirecto() {
         }
       } catch (e) {}
     }
-  }
+  })));
   // Tenis, esports y basket europeo: otras fuentes que el móvil puede leer directamente
-  try { if (await directoOtros(fechas)) cambio = true; } catch (e) {}
+  if (await otros) cambio = true;
   if (cambio && document.activeElement !== $("busca")) pintarLista();
 }
 
@@ -1926,8 +1928,9 @@ async function directoOtros(fechas) {
       cand[dep].push(p);
     }
   let cambio = false;
+  const tareas = [];
   // 🎾 Tenis: ESPN (ATP y WTA)
-  if (cand.te.length) for (const tour of ["atp", "wta"]) {
+  if (cand.te.length) for (const tour of ["atp", "wta"]) tareas.push((async () => {
     try {
       const j = await json(`https://site.api.espn.com/apis/site/v2/sports/tennis/${tour}/scoreboard`);
       for (const ev of j.events || []) for (const g of ev.groupings || []) for (const c of g.competitions || []) {
@@ -1942,9 +1945,9 @@ async function directoOtros(fechas) {
         cambio = ponerRes(x[0], { st, m: `${s1}-${s2}`, det: st === "post" ? "Final" : (g1.length ? `${g1[g1.length - 1]}-${g2[g2.length - 1]}` : "Vivo"), juegos }) || cambio;
       }
     } catch (e) {}
-  }
+  })());
   // 🎮 Esports: bo3.gg (no deja leerlo directo desde una web: se pasa por un intermediario)
-  if (cand.e.length) {
+  if (cand.e.length) tareas.push((async () => {
     const api = "https://api.bo3.gg/api/v1/matches?filter[matches.status][in]=current,finished&page[limit]=60&sort=-start_date&with=teams";
     for (const url of [`https://api.allorigins.win/raw?url=${encodeURIComponent(api)}`, `https://corsproxy.io/?url=${encodeURIComponent(api)}`]) {
       try {
@@ -1958,9 +1961,10 @@ async function directoOtros(fechas) {
         break;
       } catch (e) {}
     }
-  }
+  })());
   // 🏀 Basket europeo y 🎮 esports: el "servidor de directo" (GitHub, cada minuto) deja los marcadores en un archivo
-  if (cand.b.length || cand.e.length) {
+  if (cand.b.length || cand.e.length) tareas.unshift((async () => {
+    let ya = false;
     try {
       let j = await json(`https://raw.githubusercontent.com/victormoreno172-sys/picks-dorados/directo/directo.json?t=${Date.now()}`).catch(() => null);
       // raw.githubusercontent puede tardar hasta 5 min en refrescar: si viene viejo, se pide a la API de GitHub
@@ -1977,10 +1981,12 @@ async function directoOtros(fechas) {
       for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
         for (const p of dia.partidos) {
           const r = res[`${dia.fecha}|${p.local}|${p.visitante}`];
-          if (r && !(p.res && p.res.st === "post" && r.st === "in")) cambio = ponerRes(p, r) || cambio;
+          if (r && !(p.res && p.res.st === "post" && r.st === "in") && ponerRes(p, r)) { cambio = true; ya = true; }
         }
+      if (ya && document.activeElement !== $("busca")) pintarLista();  // se enseña ya, sin esperar al resto
     } catch (e) {}
-  }
+  })());
+  await Promise.all(tareas);
   return cambio;
 }
 enDirecto();
