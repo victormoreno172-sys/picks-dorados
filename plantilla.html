@@ -250,7 +250,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .cabliga .flecha { margin-left: auto; color: var(--muted); font-size: 22px; }
 .fp { position: relative; border-top: 1px solid var(--line); }
 .bliga .fp:nth-child(2) { border-top: 0; }
-.fpcab { width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) 30px 84px; align-items: center; gap: 8px; padding: 10px 44px 10px 12px; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.fpcab { width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) 30px 26px; align-items: center; gap: 8px; padding: 10px 44px 10px 12px; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
 .fp.abierto .fpcab { background: var(--bar); }
 .hora { font: 700 13px var(--mono); color: var(--muted); }
 .eqs { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -511,6 +511,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .colores button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
 .colores button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
 .colores input[type=color] { width: 40px; height: 36px; border: 0; background: none; padding: 0; cursor: pointer; }
+.tikd { font-size: 18px; text-align: center; line-height: 1; }
 </style>
 
 <div class="wrap">
@@ -591,7 +592,7 @@ try { const g = JSON.parse(localStorage.getItem("rojo") || "null"); if (g) { est
 const esRojo = k => false;  // el rojo se quitó de la app
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
 // ---------------------------------------------------------------- ajustes (guardados en el móvil)
-let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorOro: null, colorApuesta: "#c026ff" };
+let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorOro: null, colorApuesta: "#c026ff", verEsperados: false };
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 function aplicarTema() {
@@ -807,9 +808,9 @@ function filaPartido(p, idx) {
   return `<article class="fp ${abierto ? "abierto" : ""} ${es ? "empezado " + es.st : ""}" id="p-${id}">
     <button class="fpcab" data-abrir="${idx}">
       <span class="hora">${hora}</span>
-      <span class="eqs"><b>${partidoApostado(p) ? '<i class="tik">🎟️</i>' : ""}${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
-      ${mar ? `<span class="esp marc"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>`}
-      ${mp ? `<span class="pk ${mp.d ? "d" : ""}"><b>${ok === true ? "✅ " : ok === false ? "❌ " : ""}${pct(mp.p)}</b><small>${esc(corto(mp.m))}</small></span>` : "<span></span>"}
+      <span class="eqs"><b>${esc(p.local)}</b><b>${esc(p.visitante)}</b></span>
+      ${mar ? `<span class="esp marc"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : AJ.verEsperados ? `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>` : "<span></span>"}
+      <span class="tikd">${partidoApostado(p) ? "🎟️" : ""}</span>
     </button>
     <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
     ${abierto ? detalle(p) : ""}
@@ -1281,6 +1282,8 @@ function pintarPantallaAjustes() {
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
   $("vista").innerHTML = `<div class="lbar"><h2><span>⚙️</span><span class="t">Ajustes</span></h2></div><div class="aj" style="margin-top:12px">
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}</section>
+    <section class="ajb"><h3>Lista de partidos</h3>${seg("verEsperados", [["false", "Sin goles esperados"], ["true", "Con goles esperados"]])}
+      <p>Los goles (o puntos) esperados de cada equipo a la derecha del partido. El marcador en directo sale siempre.</p></section>
     <section class="ajb"><h3>Al abrir la app</h3>${seg("depInicio", [["ultimo", "El último"], ["f", "⚽"], ["b", "🏀"], ["te", "🎾"], ["e", "🎮"]])}
       <p>Qué deporte se enseña al abrir: el último que miraste o siempre el mismo.</p></section>
     <section class="ajb"><h3>Picks dorados</h3><div class="ajrange"><input type="range" id="ajumbral" min="55" max="90" step="1" value="${u}"><b id="ajumbralv">${u}%</b></div>
@@ -1576,7 +1579,7 @@ document.addEventListener("click", e => {
   if (b.dataset.tab) { est.tab = b.dataset.tab; pintarLista(); return; }
   if (b.dataset.misrefrescar) { cargarMisApuestas(true); enDirecto(); return; }
   if (b.dataset.color) { AJ[b.dataset.color] = b.dataset.v; guardarAjustes(); aplicarColores(); pintarLista(); return; }
-  if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); pintarLista(); return; }
+  if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); pintarLista(); return; }
   if (b.dataset.ajborrar === "favs") { if (!confirm("¿Borrar todos tus partidos y competiciones favoritos?")) return;
     est.favs = new Set(); est.ligasFav = new Set(); try { localStorage.removeItem("favs"); localStorage.removeItem("ligasFav"); } catch (e) {} pintarLista(); return; }
   if (b.dataset.endirecto) { const i = DATOS.dias.findIndex(d => d.fecha === AHORA.fecha); if (i >= 0) est.dia = i;
