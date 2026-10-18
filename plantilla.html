@@ -1962,7 +1962,17 @@ async function directoOtros(fechas) {
   // 🏀 Basket europeo y 🎮 esports: el "servidor de directo" (GitHub, cada minuto) deja los marcadores en un archivo
   if (cand.b.length || cand.e.length) {
     try {
-      const j = await json(`https://raw.githubusercontent.com/victormoreno172-sys/picks-dorados/directo/directo.json?t=${Date.now()}`);
+      let j = await json(`https://raw.githubusercontent.com/victormoreno172-sys/picks-dorados/directo/directo.json?t=${Date.now()}`).catch(() => null);
+      // raw.githubusercontent puede tardar hasta 5 min en refrescar: si viene viejo, se pide a la API de GitHub
+      const min = t => { const [h, m] = (t || "0:0").split(":").map(Number); return h * 60 + m; };
+      if (!j || Math.abs(min(AHORA.hora) - min(j.ts)) > 2) {
+        try {
+          const r = await fetch(`https://api.github.com/repos/victormoreno172-sys/picks-dorados/contents/directo.json?ref=directo&t=${Date.now()}`,
+            { headers: { Accept: "application/vnd.github.raw+json" }, cache: "no-store" });
+          if (r.ok) j = await r.json();
+        } catch (e) {}
+      }
+      if (!j) throw new Error("sin directo");
       const res = j.res || {};
       for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
         for (const p of dia.partidos) {
