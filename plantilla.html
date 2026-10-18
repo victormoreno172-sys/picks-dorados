@@ -791,6 +791,8 @@ const PAISES = {
 const ORDEN_LIGAS = Object.keys(PAISES);
 // El formato de la serie (Bo1/Bo3/Bo5) no es otra competición: se quita para agrupar
 const ligaBase = l => String(l || "").replace(/ · Bo\d+$/i, "");
+// Clave de competición: misma competición aunque cambie la superficie (tenis) o la fase (pretemporada)
+const claveComp = l => ligaBase(l).replace(/ · (dura|tierra|hierba|indoor|Pretemporada)$/i, "");
 function infoLiga(l) {
   l = ligaBase(l);
   if (PAISES[l]) return { flag: PAISES[l][0], pais: PAISES[l][1], nombre: l };
@@ -1317,7 +1319,7 @@ function cargarLiga(id) {
     .catch(() => { LIGAS.datos[id] = { error: true }; })
     .finally(() => { LIGAS.cargando[id] = false; if (est.vista === "clasif" && est.lid === id) pintarLista(); });
 }
-const idDeLiga = nombre => (LIGAS.indice || []).find(l => l.n === nombre.replace(" · Pretemporada", ""));
+const idDeLiga = nombre => (LIGAS.indice || []).find(l => claveComp(l.n) === claveComp(nombre));
 
 function pintarIndiceLigas() {
   cargarIndice();
@@ -1667,10 +1669,10 @@ function resultadosGenerales() {
         det: dep === "e" ? ({ "e-cs2": "Counter-Strike 2", "e-val": "Valorant", "e-lol": "League of Legends" }[juego] || "Esports") + (/game changers|female|women|lgc|gc\b/i.test(p.liga) ? " · Femenino" : "")
           : dep === "te" ? (/^WTA/.test(p.liga) ? "WTA · femenino" : "ATP · masculino") : infoLiga(p.liga).nombre });
     });
-    const lb = ligaBase(p.liga);
-    if (casa(`${lb} ${inf.pais} ${extra(p.liga)}`) && !comps.has(lb)) comps.set(lb, { n: lb, dep });
+    const lb = ligaBase(p.liga), cl = claveComp(p.liga);
+    if (casa(`${lb} ${inf.pais} ${extra(p.liga)}`) && !comps.has(cl)) comps.set(cl, { n: lb, dep });
   }));
-  for (const l of LIGAS.indice || []) if (casa(`${l.n} ${infoLiga(l.n).pais} ${extra(l.n)}`)) comps.set(ligaBase(l.n), { n: l.n, dep: l.dep, lid: l.id });
+  for (const l of LIGAS.indice || []) if (casa(`${l.n} ${infoLiga(l.n).pais} ${extra(l.n)}`)) comps.set(claveComp(l.n), { n: l.n, dep: l.dep, lid: l.id });
   // Equipos y jugadores de todas las ligas, rankings y torneos (aunque no jueguen estos días)
   const JUEGO_DE = { "e-cs2": "counter strike cs2", "e-val": "valorant", "e-lol": "league of legends lol" };
   for (const [n, logo, lid, dep, det] of INDICE_BUSCAR || []) {
