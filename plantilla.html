@@ -1416,8 +1416,8 @@ function pintarPantallaAjustes() {
     <section class="ajb"><h3>Competiciones que ves</h3><p style="margin:0 0 6px">Quita las que no te interesen y no saldrán en Partidos.</p>${listaLigas}</section>
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       <p>Todo esto se guarda solo en este móvil.</p></section>
-    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "r365", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
-      const nombre = { servidor: "Servidor de directo (basket y esports)", r365: "365Scores (reloj del basket)", tenis: "ESPN (tenis)" }[k];
+    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "r365", "r365t", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
+      const nombre = { servidor: "Servidor de directo (basket y esports)", r365: "365Scores (reloj del basket)", r365t: "365Scores (tenis)", tenis: "ESPN (tenis)" }[k];
       return `<div class="ajinfo"><span>${nombre}</span><b>${!e ? "—" : e.ok ? "✅ " + esc(e.t) + (e.act ? " (act. " + esc(e.act) + ")" : "") : "❌ " + esc(e.err || "")}</b></div>`; }).join("")}
       <p>Solo se consulta lo que se está jugando. "—" = ahora no hacía falta.</p></section>
     <section class="ajb"><h3>Sobre la app</h3>
@@ -1994,6 +1994,7 @@ async function directoOtros(fechas) {
   if (cand.te.length) for (const tour of ["atp", "wta"]) tareas.push((async () => {
     try {
       const j = await json(`https://site.api.espn.com/apis/site/v2/sports/tennis/${tour}/scoreboard`);
+      ESTADO_DIRECTO.tenis = { ok: true, t: AHORA.hora };
       for (const ev of j.events || []) for (const g of ev.groupings || []) for (const c of g.competitions || []) {
         const st = ((c.status || {}).type || {}).state; if (!["in", "post"].includes(st)) continue;
         const [a, b] = c.competitors || []; if (!a || !b) continue;
@@ -2008,6 +2009,28 @@ async function directoOtros(fechas) {
         ESTADO_DIRECTO.tenis = { ok: true, t: AHORA.hora };
       }
     } catch (e) {}
+  })());
+  // 🎾 Tenis también con 365Scores (juegos de cada set), por si ESPN no trae el partido
+  if (cand.te.length) tareas.push((async () => {
+    try {
+      const j = await json("https://webws.365scores.com/web/games/allscores/?appTypeId=5&langId=29&timezoneName=Europe/Madrid&userCountryId=2&sports=3&onlyLiveGames=true", 9000);
+      ESTADO_DIRECTO.r365t = { ok: true, t: AHORA.hora, n: (j.games || []).length };
+      let ya = false;
+      for (const g of j.games || []) {
+        const h = g.homeCompetitor || {}, a = g.awayCompetitor || {};
+        const x = buscarEn(cand.te, h.name, a.name); if (!x) continue;
+        const sets = (g.stages || []).filter(st => /^S\d/.test(st.shortName || "") && st.homeCompetitorScore >= 0);
+        let g1 = sets.map(st => Math.round(st.homeCompetitorScore)), g2 = sets.map(st => Math.round(st.awayCompetitorScore));
+        const fin = g.statusGroup === 4;
+        let s1 = 0, s2 = 0;
+        sets.forEach((st, i) => { if (st.isEnded || fin) { if (g1[i] > g2[i]) s1++; else if (g2[i] > g1[i]) s2++; } });
+        if (x[1]) { [g1, g2] = [g2, g1]; [s1, s2] = [s2, s1]; }
+        const r = { st: fin ? "post" : "in", m: `${s1}-${s2}`, det: fin ? "Final" : (sets.length ? `Set ${sets.length}` : "Vivo"),
+          juegos: g1.map((v, i) => `${v}-${g2[i]}`).join(" "), parc: { cab: g1.map((_, i) => `S${i + 1}`), l: g1, v: g2 }, sets: [s1, s2] };
+        if (ponerRes(x[0], r)) { cambio = true; ya = true; }
+      }
+      if (ya && document.activeElement !== $("busca")) pintarLista();
+    } catch (e) { ESTADO_DIRECTO.r365t = { ok: false, t: AHORA.hora, err: String(e.message || e).slice(0, 60) }; }
   })());
   // 🏀 Reloj del basket: 365Scores (deja leerlo desde el móvil y da cuarto + minutos y segundos)
   if (cand.b.length) tareas.unshift((async () => {
