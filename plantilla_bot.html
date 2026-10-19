@@ -130,6 +130,20 @@ details.plegable > summary > span:first-child { flex: 1; min-width: 0; }
 .sem2.sem-rojo { background: rgba(255,90,110,.1); color: #ff7a8a; }
 .sem2.sem-azul { background: rgba(80,160,255,.12); color: #7ab8ff; }
 .acc button { padding: 4px 9px; font-size: 11.5px; }
+.ap { padding: 8px 10px !important; margin-bottom: 7px !important; }
+.leg2 { margin-top: 6px; padding: 6px 9px; }
+.leg2 .l1 { font-size: 13px; } .leg2 .l2 { margin-top: 2px; } .leg2 .mk { font-size: 12.5px; }
+.ap .din { margin-top: 6px; font-size: 11.5px; flex-wrap: nowrap; }
+.ap .din b { font-size: 12.5px; }
+.sem2 { margin-top: 5px; padding: 2px 8px; font-size: 11px; }
+.acc { margin-top: 6px !important; gap: 5px !important; flex-wrap: nowrap !important; }
+.acc button { padding: 3px 9px !important; font-size: 11.5px !important; white-space: nowrap; }
+details.pleg > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+details.pleg > summary::-webkit-details-marker { display: none; }
+details.pleg > summary h2 { margin: 0; } details.pleg > summary h2 small { margin-left: 8px; }
+details.pleg > summary::after { content: "▾"; color: var(--muted); font-size: 14px; }
+details.pleg[open] > summary::after { content: "▴"; }
+details.pleg[open] > summary { margin-bottom: 10px; }
 </style>
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
@@ -148,10 +162,10 @@ details.plegable > summary > span:first-child { flex: 1; min-width: 0; }
     <div class="kpis" id="dinero"></div>
     <div class="kpis" id="kpis"></div>
   </section>
-  <section class="caja"><h2>Evolución <small id="rango"></small></h2><div id="grafica"></div></section>
-  <section class="caja"><h2>Por tipo</h2><div id="tipos"></div></section>
-  <section class="caja"><h2>Por deporte y cuota</h2><div id="otros"></div></section>
-  <section class="caja"><h2>🧠 Aprendizaje automático</h2><div id="aprende"></div></section>
+  <details class="caja pleg" data-pleg="evol"><summary><h2>📈 Evolución <small id="rango"></small></h2></summary><div id="grafica"></div></details>
+  <details class="caja pleg" data-pleg="tipos"><summary><h2>🎟️ Por tipo</h2></summary><div id="tipos"></div></details>
+  <details class="caja pleg" data-pleg="otros"><summary><h2>⚽ Por deporte y cuota</h2></summary><div id="otros"></div></details>
+  <details class="caja pleg" data-pleg="aprende"><summary><h2>🧠 Aprendizaje automático</h2></summary><div id="aprende"></div></details>
   <section class="caja"><h2>Apuestas <small id="nap"></small></h2><div id="lista"></div>
     <p class="nota">El saldo usa la cuota real si la has puesto con 💶; si no, la que dijo el bot (en las de "pide ≥ X", esa cuota mínima). Juega con responsabilidad. +18.</p>
     <button class="ajsaldo" id="copiarCuotas" style="margin-top:8px">📋 Copiar cuotas reales para calibrar</button></section>
@@ -332,6 +346,12 @@ $("otros").innerHTML = tabla(ordenDep.map(d => [NOMBRE_DEP[d], trozos.filter(t =
     '<p class="nota">El bot corrige solo sus probabilidades con lo que de verdad se acierta en cada deporte y mercado. "Ajuste": cuánto cambia un pick del 75 %. Con pocos datos ajusta poco y va a más según se juntan resultados (con 100 picks, la mitad de la diferencia). Si un mercado falla mucho, deja de pasar el filtro y el bot deja de cogerlo.</p>';
 })();
 
+// Secciones plegables: se recuerda cuáles tienes abiertas
+document.querySelectorAll("details.pleg").forEach(d => {
+  try { d.open = localStorage.getItem("pleg_" + d.dataset.pleg) === "1"; } catch (e) {}
+  d.addEventListener("toggle", () => { try { localStorage.setItem("pleg_" + d.dataset.pleg, d.open ? "1" : "0"); } catch (e) {} });
+});
+
 // Lista por días (lo más reciente arriba)
 const porDia = {};
 D.apuestas.forEach((a, i) => (porDia[a.fecha] ||= []).push(a));
@@ -353,10 +373,10 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       const est = a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
       const o = OV[a.key];
       const sem = semaforo(a);
-      const cr = a.excluida ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}" class="${sem ? "sem-" + sem.c : ""}">${a.cuota_bot ? "💶 Winamax " + a.cuota.toFixed(2).replace(".", ",") + " · cambiar" : "💶 Cuota real"}</button>`;
+      const cr = a.excluida ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}" class="${sem ? "sem-" + sem.c : ""}">${a.cuota_bot ? "💶 " + a.cuota.toFixed(2).replace(".", ",") : "💶 Cuota"}</button>`;
       const acc = `<div class="acc">` + cr + (o
         ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span><button data-k="${esc(a.key)}" data-ov="">↺ Deshacer</button>`
-        : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No la hice</button><button data-k="${esc(a.key)}" data-ov="g">✅ Acertada</button><button data-k="${esc(a.key)}" data-ov="p">❌ Fallada</button>`) + `</div>`;
+        : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No hecha</button><button data-k="${esc(a.key)}" data-ov="g" aria-label="Acertada">✅</button><button data-k="${esc(a.key)}" data-ov="p" aria-label="Fallada">❌</button>`) + `</div>`;
       const f2 = x => (+x).toFixed(2).replace(".", ",");
       const piernasH = a.piernas.map(p => `<div class="leg2">
           <div class="l1"><span class="lh">${esc(p.hora || "")}</span><b>${esc(p.local)} – ${esc(p.visitante)}</b>${p.res ? `<span class="lres">${p.res[0]}-${p.res[1]}</span>` : ""}<span class="lic">${icono(p)}</span></div>
@@ -365,7 +385,7 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       return `<div class="ap ${cls}">
         <div class="top"><span class="tipo">${i + 1}. ${esc(a.tipo)}</span><span class="badge ${cls}">${est}${a.manual ? " ✎" : a.auto ? " ⚡" : ""}</span></div>
         ${piernasH}
-        <div class="din"><span>Apuestas <b>${eur(a.importe)}</b></span><span>Cuota <b>${f2(a.cuota)}</b>${a.cuota_bot ? `<small> (bot ${f2(a.cuota_bot)})</small>` : ""}</span><span>Cobras <b>${eur(cobro)}</b></span></div>
+        <div class="din"><span><b>${eur(a.importe)}</b> a <b>${f2(a.cuota)}</b>${a.cuota_bot ? `<small> (bot ${f2(a.cuota_bot)})</small>` : ""}</span><span>cobras <b>${eur(cobro)}</b></span></div>
         ${sem && !a.excluida ? `<div class="sem2 sem-${sem.c}">${sem.t}</div>` : ""}` + acc + "</div>";
     }).join("") + (pasado ? "</details>" : "</div>");
 }).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
