@@ -126,6 +126,7 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
   <section class="caja"><h2>Evolución <small id="rango"></small></h2><div id="grafica"></div></section>
   <section class="caja"><h2>Por tipo</h2><div id="tipos"></div></section>
   <section class="caja"><h2>Por deporte y cuota</h2><div id="otros"></div></section>
+  <section class="caja"><h2>🧠 Aprendizaje automático</h2><div id="aprende"></div></section>
   <section class="caja"><h2>Apuestas <small id="nap"></small></h2><div id="lista"></div>
     <p class="nota">El saldo usa la cuota real si la has puesto con 💶; si no, la que dijo el bot (en las de "pide ≥ X", esa cuota mínima). Juega con responsabilidad. +18.</p>
     <button class="ajsaldo" id="copiarCuotas" style="margin-top:8px">📋 Copiar cuotas reales para calibrar</button></section>
@@ -291,6 +292,20 @@ const trozos = ap.flatMap(a => { const n = a.piernas.length, cuenta = {};
 const ordenDep = ["f", "b", "te", "e"].filter(d => trozos.some(t => t._dep === d));
 $("otros").innerHTML = tabla(ordenDep.map(d => [NOMBRE_DEP[d], trozos.filter(t => t._dep === d)])) +
   '<div style="height:10px"></div>' + tabla(tramos.map(([n, f]) => [n, ap.filter(f)]));
+
+// Aprendizaje: por deporte y mercado, lo que el modelo decía frente a lo que se acertó de verdad,
+// y cómo corrige el bot sus probabilidades antes de elegir (calibracion_auto.py)
+(() => {
+  const C = D.calibracion || [], ICO = { f: "⚽", b: "🏀", te: "🎾", e: "🎮" };
+  const p100 = x => Math.round(x * 100) + "%";
+  if (!C.length) { $("aprende").innerHTML = '<p class="nota">Aún no hay resultados suficientes.</p>'; return; }
+  $("aprende").innerHTML = `<table><tr><th>Mercado</th><th class="n">Picks</th><th class="n">Decía</th><th class="n">Real</th><th class="n">Ajuste</th></tr>` +
+    C.filter(f => f.n >= 5).map(f => { const d = Math.round((f.efecto - 0.75) * 1000) / 10;
+      return `<tr><td>${ICO[f.dep] || ""} ${f.mercado}</td><td class="n">${f.n}</td><td class="n">${p100(f.prevista)}</td>
+        <td class="n" style="color:${f.real >= f.prevista ? "var(--ok,#22c55e)" : "var(--bad,#ef4444)"}">${p100(f.real)}</td>
+        <td class="n">${f.peso ? (d > 0 ? "+" : "") + d.toFixed(1) + " pt" : "—"}</td></tr>`; }).join("") + "</table>" +
+    '<p class="nota">El bot corrige solo sus probabilidades con lo que de verdad se acierta en cada deporte y mercado. "Ajuste": cuánto cambia un pick del 75 %. Con pocos datos ajusta poco y va a más según se juntan resultados (con 100 picks, la mitad de la diferencia). Si un mercado falla mucho, deja de pasar el filtro y el bot deja de cogerlo.</p>';
+})();
 
 // Lista por días (lo más reciente arriba)
 const porDia = {};

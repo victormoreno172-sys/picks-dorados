@@ -103,7 +103,16 @@ def _pierna(a, k) -> dict:
             "cuota": float(k.cuota or 0), "estimada": bool(k.estimada)}
 
 
-def elegir(lista, banca: float, ahora: datetime) -> list[dict]:
+def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None) -> list[dict]:
+    # Calibración automática: las probabilidades se corrigen con lo que de verdad se ha acertado
+    # en cada deporte y tipo de mercado (calibracion_auto.py) antes de elegir.
+    if cal:
+        import calibracion_auto
+        for a in lista:
+            for k in a.picks:
+                if not hasattr(k, "prob_modelo"):
+                    k.prob_modelo = k.prob
+                    k.prob = calibracion_auto.ajustar(k.prob, _deporte(a), k.mercado, cal)
     partidos = []
     for a in lista:
         p = a.partido
@@ -268,6 +277,17 @@ def actualizar(por_dia: dict):
     ahora = datetime.now(TZ)
     b = cargar()
     corregir(b)
+    cal = {}
+    try:
+        import calibracion_auto
+        cal = calibracion_auto.tabla(banca=b)
+        b["calibracion"] = calibracion_auto.informe(cal)
+        for f in b["calibracion"]:
+            if f["delta"]:
+                print(f"  calibración {f['dep_n']} · {f['mercado']}: {f['n']} picks, previsto {f['prevista']:.0%}, "
+                      f"real {f['real']:.0%} -> un 75 % pasa a {f['efecto']:.1%}")
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso calibración automática: {e}")
     # A partir de las 22:00 se mandan las del día siguiente; si GitHub se retrasa y ya es de
     # madrugada (o es la primera vez que se arranca el bot), las del mismo día.
     if ahora.hour >= 22:
@@ -278,7 +298,7 @@ def actualizar(por_dia: dict):
         dia = None
     if dia and (b.get("ultimo_envio") or "") < dia.isoformat():
         pendiente = sum(a["importe"] for a in b["apuestas"] if "ok" not in a and not a.get("previa"))  # dinero aún en juego
-        elegidas = elegir(por_dia.get(dia, []), saldo(b) - pendiente, ahora)
+        elegidas = elegir(por_dia.get(dia, []), saldo(b) - pendiente, ahora, cal)
         texto = mensaje(elegidas, b, dia)
         print(texto)
         enviado = False

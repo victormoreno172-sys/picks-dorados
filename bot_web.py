@@ -27,7 +27,7 @@ def html(datos: dict) -> str:
 def escribir(b: dict, carpeta: str = CARPETA):
     os.makedirs(carpeta, exist_ok=True)
     datos = {"generado": datetime.now(ZoneInfo(config.ZONA_HORARIA)).strftime("%d/%m %H:%M"),
-             "inicial": b["inicial"], "apuestas": b["apuestas"]}
+             "inicial": b["inicial"], "apuestas": b["apuestas"], "calibracion": b.get("calibracion") or []}
     with open(os.path.join(carpeta, "index.html"), "w", encoding="utf-8") as f:
         f.write(html(datos))
     with open(os.path.join(carpeta, "datos.json"), "w", encoding="utf-8") as f:  # para "Mis apuestas" en Partidos
