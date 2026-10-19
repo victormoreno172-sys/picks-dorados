@@ -2309,7 +2309,7 @@ function calcularApuestasBot(D, ahora) {
     for (const a of del) {
       if (IM[a.key] && (empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
       else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
-      else if (Object.keys(OV).length && d >= ahora.slice(0, 10)) a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100);
+      else if (d >= ahora.slice(0, 10)) a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100);
       if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
       disp -= a.importe;
     }

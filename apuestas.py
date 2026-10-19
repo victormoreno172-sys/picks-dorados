@@ -289,9 +289,9 @@ def actualizar(por_dia: dict):
                       f"real {f['real']:.0%} -> un 75 % pasa a {f['efecto']:.1%}")
     except Exception as e:  # noqa: BLE001
         print(f"  aviso calibración automática: {e}")
-    # A partir de las 22:00 se mandan las del día siguiente; si GitHub se retrasa y ya es de
-    # madrugada (o es la primera vez que se arranca el bot), las del mismo día.
-    if ahora.hour >= 22:
+    # A partir de las 23:25 (el aviso sale a las 23:35) se mandan las del día siguiente, con los partidos
+    # de hoy casi todos acabados; si GitHub se retrasa y ya es de madrugada (o es la primera vez), las del mismo día.
+    if ahora.hour * 60 + ahora.minute >= 23 * 60 + 25:
         dia = ahora.date() + timedelta(days=1)
     elif ahora.hour < 12 or not b.get("ultimo_envio"):
         dia = ahora.date()
