@@ -1,35 +1,46 @@
 import json, re, requests
-UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36", "Accept": "application/json"}
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 out = {}
-def g(url, **k):
+def g(u, h=None):
     try:
-        r = requests.get(url, headers=k.pop("h", UA), timeout=25, **k)
-        return r.status_code, r.text
+        r = requests.get(u, headers={"User-Agent": UA, **(h or {})}, timeout=25); return r.status_code, r.text
+    except Exception as e: return 0, str(e)
+# Flashscore esports (sport 36)
+FS = {"x-fsign": "SW9D1eZo", "Origin": "https://www.flashscore.es", "Referer": "https://www.flashscore.es/"}
+for f in ("f_36_0_2_es_1",):
+    s, t = g("https://local-global.flashscore.ninja/2/x/feed/" + f, FS)
+    out["fs_status"] = s
+    evs = t.split("~AA÷")
+    out["fs_n"] = len(evs)
+    keep = [e for e in evs if re.search(r"BIG|PRIVATE|ACES|BAKS|Bushido|Sinners|PARIVISION|fnatic", e, re.I)]
+    out["fs_ev"] = [e[:1500] for e in keep[:4]]
+    ids = [e.split("¬")[0] for e in keep[:2]]
+    for i in ids:
+        for d in ("df_sui_1_", "df_mh_1_", "df_st_1_", "dc_1_", "df_li_1_", "df_lc_1_"):
+            s2, t2 = g("https://local-global.flashscore.ninja/2/x/feed/" + d + i, FS)
+            out[d + i] = [s2, t2[:1500]]
+# 365scores esports
+for sp in range(9, 20):
+    s, t = g(f"https://webws.365scores.com/web/games/current/?appTypeId=5&langId=29&timezoneName=Europe/Madrid&userCountryId=2&sports={sp}")
+    try:
+        j = json.loads(t); gs = j.get("games") or []
+        out[f"365_{sp}"] = [s, len(gs), [(x.get("homeCompetitor", {}).get("name"), x.get("awayCompetitor", {}).get("name"), x.get("statusText")) for x in gs[:5]]]
+        hit = [x for x in gs if re.search(r"BIG|PRIVATE|ACES|BAKS", json.dumps(x))]
+        if hit:
+            out[f"365_{sp}_hit"] = json.dumps(hit[0])[:2500]
+            s2, t2 = g(f"https://webws.365scores.com/web/game/?appTypeId=5&langId=29&timezoneName=Europe/Madrid&userCountryId=2&gameId={hit[0]['id']}")
+            out[f"365_{sp}_game"] = t2[:5000]
     except Exception as e:
-        return 0, str(e)
-st, t = g("https://api.bo3.gg/api/v1/matches", params={"filter[matches.status][in]": "current", "page[limit]": 20, "with": "teams"})
-ms = json.loads(t).get("results") or []
-out["current"] = []
-for m in ms[:6]:
-    out["current"].append({"id": m["id"], "slug": m.get("slug"), "disc": m.get("discipline_id"), "keys": sorted(m.keys()),
-                           "live": {k: m.get(k) for k in m if "live" in k or "score" in k or "round" in k}})
-if ms:
-    m = ms[0]
-    st, t = g("https://api.bo3.gg/api/v1/games", params={"filter[games.match_id][eq]": m["id"]})
-    out["games_full"] = json.loads(t).get("results")
-    for gm in out["games_full"] or []:
-        if gm.get("status") == "current":
-            for path in (f"games/{gm['id']}", f"games/{gm['id']}?with=rounds", f"games/{gm['id']}/rounds", f"rounds?filter[rounds.game_id][eq]={gm['id']}",
-                         f"games/{gm['id']}/live", f"matches/{m['slug']}/live", f"games/{gm['id']}/game_rounds"):
-                s2, t2 = g("https://api.bo3.gg/api/v1/" + path)
-                out["try_" + path] = [s2, t2[:1500]]
-    s2, t2 = g(f"https://bo3.gg/matches/{m['slug']}", h={"User-Agent": UA["User-Agent"], "Accept": "text/html"})
-    out["html_status"] = s2
-    out["html_ws"] = list(set(re.findall(r'wss?://[^"\'\s]+', t2)))[:10]
-    out["html_api"] = list(set(re.findall(r'https://[a-z0-9.-]*bo3\.gg/[^"\'\s]{0,60}', t2)))[:30]
-for u in ("https://www.vlr.gg/matches", "https://esports-api.lolesports.com/persisted/gw/getLive?hl=es-ES", "https://feed.lolesports.com/livestats/v1/window/1"):
-    h = {"User-Agent": UA["User-Agent"]}
-    if "lolesports" in u: h["x-api-key"] = "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"
-    s2, t2 = g(u, h=h)
-    out[u] = [s2, t2[:800]]
+        out[f"365_{sp}"] = [s, str(e)[:100]]
+# dust2.us
+s, t = g("https://www.dust2.us/matches", {"Accept": "text/html"})
+out["d2"] = [s, list(set(re.findall(r'/matches/\d+/[a-z0-9-]+', t)))[:30]]
+for l in out["d2"][1]:
+    if "big" in l or "aces" in l:
+        s2, t2 = g("https://www.dust2.us" + l, {"Accept": "text/html"})
+        out["d2_" + l] = [s2, re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "|", t2))[:3000], list(set(re.findall(r'scorebot[^"\']{0,80}', t2)))[:5]]
+        break
+# vlr live
+s, t = g("https://www.vlr.gg/matches", {"Accept": "text/html"})
+out["vlr_live"] = [m.group(0)[:300] for m in re.finditer(r'href="/\d+/[^"]+"[^>]*>(?:(?!</a>).){0,3000}?LIVE', t, re.S)][:3]
 json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False, default=str)
