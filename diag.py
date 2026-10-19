@@ -1,8 +1,4 @@
 import json, re, rankings
-out = {}
-for u in ("https://www.dust2.us/ranking", "https://www.dust2.us/ranking/2026-10-05"):
-    t = rankings._get(u)
-    i = t.find("ranking-")
-    out[u] = [len(t), sorted(set(re.findall(r'class="([^"]*rank[^"]*)"', t)))[:30], t[t.find('<div class="col'):][:200]]
-    j = t.find("Spirit"); out[u + "_sp"] = t[max(0, j-1500):j+300]
+out = {"cs2": sorted(rankings.cs2().items(), key=lambda x: x[1]), "val": list(rankings.valorant().items())[:12]}
+t = rankings._get("https://www.dust2.us/ranking"); i = t.find('class="ranking-team"'); out["raw"] = t[i:i+2500]
 json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False)
