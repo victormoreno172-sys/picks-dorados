@@ -175,6 +175,30 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
             sin_cuota.append({"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"],
                               "prob": round(k.prob, 3), "importe": redondo(banca * PORCENTAJE)})
     sin_cuota.sort(key=lambda ap: -ap["prob"])
+
+    # Combinadas (doble y triple) también con patas de "pide ≥" (tenis y basket), si no han salido con
+    # cuotas de la casa: cada pata ya lleva su 3 % de margen y la combinada pide el producto de las mínimas.
+    hechas_tipos = {x["tipo"] for x in apuestas}
+    if not {"Combinada doble", "Combinada triple"} <= hechas_tipos:
+        pool = []  # (ya en sencillas, -prob, pierna)
+        for _, _, a, k in seguros:
+            pool.append((id(a) in usados, -k.prob, _pierna(a, k), id(a)))
+        for sc in sin_cuota:
+            pi = sc["piernas"][0]
+            if pi["prob"] >= PROB_COMBI:
+                pool.append((True, -pi["prob"], dict(pi), ("sc", pi["local"], pi["visitante"])))
+        vistos, limpio = set(), []
+        for x in sorted(pool, key=lambda x: (x[0], x[1])):
+            if x[3] not in vistos:
+                vistos.add(x[3])
+                limpio.append(x)
+        for n, nombre in ((2, "Combinada doble"), (3, "Combinada triple")):
+            if nombre in hechas_tipos or len(limpio) < n:
+                continue
+            piernas = limpio[:n] if n == 2 else (limpio[2:5] if len(limpio) >= 5 else limpio[:3])
+            pis = [x[2] for x in piernas]
+            apuestas.append({"tipo": nombre, "piernas": pis, "cuota": round(prod(pi["cuota"] for pi in pis), 2),
+                             "prob": round(prod(pi["prob"] for pi in pis), 3), "importe": redondo(banca * PORCENTAJE)})
     # Si hay pocas con cuota real (días flojos de fútbol), más hueco para las de "pide ≥" (tenis y basket)
     hueco = max(2, min(5, MAX_SENCILLAS + 2 - len([x for x in apuestas if x["tipo"] == "Sencilla"])))
     apuestas = [x for x in apuestas if x["tipo"] == "Sencilla"] + sin_cuota[:hueco] + \
