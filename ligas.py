@@ -369,9 +369,17 @@ def _basket_europa(datos_app: dict, hoy: date) -> list[tuple[str, dict]]:
         if len(partidos) < 4:
             continue
         partidos.sort(key=lambda p: (p["f"], p["h"]))
+        # Playoffs: en la fase regular cada pareja se ve como mucho dos veces (ida y vuelta);
+        # a partir del tercer cruce entre los mismos equipos es eliminatoria (serie, play-in o Final Four)
+        veces: dict[frozenset, int] = {}
+        for p in partidos:
+            k = frozenset((p["l"], p["v"]))
+            veces[k] = veces.get(k, 0) + 1
+            if veces[k] >= 3:
+                p["ko"] = 1
         st: dict[str, list] = {}
         for p in partidos:
-            if p["st"] != "post" or "-" not in p["m"]:
+            if p["st"] != "post" or "-" not in p["m"] or p.get("ko"):  # la clasificación, solo con la fase regular
                 continue
             a, b = map(int, p["m"].split("-"))
             for eq, x, y in ((p["l"], a, b), (p["v"], b, a)):

@@ -1993,7 +1993,7 @@ function pintarClasif() {
   const tabs = [["tabla", L.tipo === "ranking" ? "Ranking" : "Clasificación"], ["jor", L.dep === "e" && (L.jornadas[0] || {}).t && /^Fase \d/.test(L.jornadas[0].t) ? "Fases" : L.tipo === "nba" || L.dep === "e" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", tenis ? "Jugadores" : "Equipos"]];
   if (L.tipo === "copa") { tabs.splice(0, 1); if (est.ltab === "tabla") est.ltab = "jor"; }
   const CQ = cuadroComp(L);
-  if (CQ) { tabs.unshift(["cuadro", L.tipo === "nba" ? "Playoffs" : "Cuadro"]); if (L.tipo === "copa" && est.ltab === "jor" && !est.ltabElegida) est.ltab = "cuadro"; }
+  if (CQ) { tabs.unshift(["cuadro", L.dep === "b" ? "Playoffs" : "Cuadro"]); if (L.tipo === "copa" && est.ltab === "jor" && !est.ltabElegida) est.ltab = "cuadro"; }
   else if (est.ltab === "cuadro") est.ltab = tabs[0][0];
   if (!L.jornadas.length) { const i = tabs.findIndex(t => t[0] === "jor"); if (i >= 0) tabs.splice(i, 1); if (est.ltab === "jor") est.ltab = tabs[0][0]; }
   if (L.dep === "e" && L.tipo !== "ranking") h += tarjetaInfoTorneo(nombre, L);
