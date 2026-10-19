@@ -223,9 +223,10 @@ def _con_sorteo(lid: str, cal: list, copa: bool) -> list:
     except Exception as e:  # noqa: BLE001
         print(f"  aviso sorteo {lid}: {e}")
         return cal
+    con_ko = any(p.get("ko") for p in cal)  # copas con fase de grupos (Libertadores…): ESPN marca las eliminatorias
     for p in extra:
         p.pop("fuente", None)
-        if copa or not re.search(r"(?i)liga|league|fase|grupo|jornada|matchday", p.get("r") or ""):
+        if (copa and con_ko) or (not copa and not re.search(r"(?i)liga|league|fase|grupo|jornada|matchday", p.get("r") or "")):
             p["ko"] = 1
     if extra:
         print(f"  {lid}: {len(extra)} cruces sorteados añadidos (365Scores)")

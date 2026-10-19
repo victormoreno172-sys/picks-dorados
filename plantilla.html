@@ -1903,6 +1903,9 @@ function cuadroComp(L) {
         const ds = [t.a, t.b].filter(n => !pd(n)).map(n => { const x = prev(n, t); return x ? x.d : 0; });
         t.d = 1 + Math.max(0, ...ds);
       }
+      // Los de una misma tanda del calendario son de la misma ronda (equipos que entran tarde)
+      const maxJ = {}; ties.forEach(t => { if (t.d) maxJ[t.j] = Math.max(maxJ[t.j] || 0, t.d); });
+      ties.forEach(t => { if (t.d) t.d = maxJ[t.j]; });
       const K = Math.max(1, ...ties.filter(t => t.d).map(t => t.d));
       ties.forEach(t => { if (!t.d) t.d = K + (ties.some(x => x.d === K && x.ult >= t.f) ? 0 : 1); });
       const T = Math.max(...ties.map(t => t.d)), por = [];
@@ -1911,7 +1914,8 @@ function cuadroComp(L) {
       const top = por[por.length - 1].length, potencias = [1, 2, 4].includes(top) && por.every((ts, k) => ts.length === top * 2 ** (por.length - 1 - k));
       rondas = por.map((ts, k) => {
         const lv = Math.log2(ts.length);
-        return { n: potencias && lv < NOM.length ? NOM[lv] : `Ronda ${k + 1}`, t: ts };
+        const rns = [...new Set(ts.map(t => t.rn).filter(Boolean))];
+        return { n: rns.length === 1 && ts.every(t => t.rn) ? rns[0] : potencias && lv < NOM.length ? NOM[lv] : k === 0 && por.length > 1 && ts.every(t => !t.rn) && por[1].every(t => t.rn) ? "Ronda previa" : `Ronda ${k + 1}`, t: ts };
       });
     }
   }
