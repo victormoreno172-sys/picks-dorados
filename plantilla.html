@@ -2744,12 +2744,26 @@ function aplicarHltv(p) {
   const h = p._hltv;
   if (!h || Date.now() - h.t > 180000 || !p.res || p.res.st !== "in") return false;
   if (p.res.envivo && p.res.envivo.fuente !== "HLTV") return false;  // Sofascore u otra fuente ya lo da
-  const tot = (p.res.m || "0-0").split("-").map(x => +x || 0), n = tot[0] + tot[1] + 1;
+  const tot = (p.res.m || "0-0").split("-").map(x => +x || 0);
   const nm = (h.mapa || "").replace(/^de_/, ""), M = nm ? nm[0].toUpperCase() + nm.slice(1) : "";
   const mapas = (p.res.mapas || []).map(z => z.slice());
-  if (M && mapas[n - 1] && !mapas[n - 1][0]) mapas[n - 1][0] = M;
-  return ponerRes(p, Object.assign({}, p.res, { mapas, envivo: { n, mapa: M, a: h.a, b: h.b, fuente: "HLTV" },
-    det: `Mapa ${n}${M ? " · " + M : ""} ${h.a}-${h.b}` }));
+  // ¿De qué mapa es este marcador? Por el nombre (el scorebot sigue en el mapa que acaba de terminar)
+  let i = M ? mapas.findIndex(z => (z[0] || "").toLowerCase() === M.toLowerCase()) : -1;
+  if (i < 0) i = tot[0] + tot[1];
+  const hi = Math.max(h.a, h.b), acabado = hi >= 13 && Math.abs(h.a - h.b) >= 2 && (hi === 13 || (hi - 13) % 3 === 0);
+  const z = mapas[i];
+  if ((z && z[1] != null && z[1] !== "✓" && z[2] !== "✓") || (z && acabado)) {
+    // Mapa ya terminado: solo se completa su resultado (si la fuente no lo traía) y no hay nada "en juego"
+    if (z[1] === "✓" || z[2] === "✓" || z[1] == null) mapas[i] = [z[0] || M, h.a, h.b];
+    const sig = tot[0] + tot[1] + 1, zs = mapas[sig - 1];
+    const r = Object.assign({}, p.res, { mapas, det: `Mapa ${sig}${zs && zs[0] ? " · " + zs[0] : ""}` });
+    delete r.envivo;
+    return ponerRes(p, r);
+  }
+  if (!mapas[i]) return false;
+  if (M && !mapas[i][0]) mapas[i][0] = M;
+  return ponerRes(p, Object.assign({}, p.res, { mapas, envivo: { n: i + 1, mapa: M, a: h.a, b: h.b, fuente: "HLTV" },
+    det: `Mapa ${i + 1}${M ? " · " + M : ""} ${h.a}-${h.b}` }));
 }
 // Peticiones desde el móvil: en la app se usan las del sistema (sin las limitaciones del navegador)
 async function pedirJSON(url, ms = 12000) {
