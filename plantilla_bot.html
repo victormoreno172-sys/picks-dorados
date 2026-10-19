@@ -112,6 +112,24 @@ details.plegable > summary::after { content: "▾"; color: var(--muted); margin-
 details.plegable[open] > summary::after { content: "▴"; }
 details.plegable > summary small { display: block; color: var(--muted); font-family: inherit; font-size: 11px; margin-top: 3px; }
 details.plegable > summary > span:first-child { flex: 1; min-width: 0; }
+.ap .top .tipo { font-weight: 700; font-size: 14px; }
+.ap .top { align-items: center; }
+.leg2 { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.035); }
+.leg2 .l1 { display: flex; align-items: center; gap: 8px; font-size: 13.5px; min-width: 0; }
+.leg2 .l1 b { flex: 1; min-width: 0; color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leg2 .lh { font: 600 12px var(--mono); color: var(--muted); }
+.leg2 .lres { font: 700 12.5px var(--mono); color: var(--ink); }
+.leg2 .l2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+.leg2 .mk { font-size: 13px; font-weight: 600; color: var(--gold, #f2bf3e); overflow-wrap: anywhere; }
+.leg2 .ct { font: 700 12.5px var(--mono); color: var(--ink); background: rgba(255,255,255,.07); padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+.ap .din { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; margin-top: 9px; font-size: 12px; color: var(--muted); }
+.ap .din b { font: 700 13px var(--mono); color: var(--ink); }
+.ap .din small { font-size: 10.5px; }
+.sem2 { display: inline-block; margin-top: 7px; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+.sem2.sem-verde { background: rgba(57,245,160,.1); color: #39f5a0; }
+.sem2.sem-rojo { background: rgba(255,90,110,.1); color: #ff7a8a; }
+.sem2.sem-azul { background: rgba(80,160,255,.12); color: #7ab8ff; }
+.acc button { padding: 4px 9px; font-size: 11.5px; }
 </style>
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
@@ -339,9 +357,16 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       const acc = `<div class="acc">` + cr + (o
         ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span><button data-k="${esc(a.key)}" data-ov="">↺ Deshacer</button>`
         : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No la hice</button><button data-k="${esc(a.key)}" data-ov="g">✅ Acertada</button><button data-k="${esc(a.key)}" data-ov="p">❌ Fallada</button>`) + `</div>`;
-      return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}${a.cuota_bot ? ` <small style="color:var(--muted);font-weight:400">(bot ${a.cuota_bot.toFixed(2).replace(".", ",")})</small>` : ""}</span>
-        <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}${a.manual ? " ✎" : a.auto ? " ⚡" : ""}</span></span></div>` +
-        (sem && !a.excluida ? `<div class="semaforo sem-${sem.c}">${sem.t}</div>` : "") + a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + acc + "</div>";
+      const f2 = x => (+x).toFixed(2).replace(".", ",");
+      const piernasH = a.piernas.map(p => `<div class="leg2">
+          <div class="l1"><span class="lh">${esc(p.hora || "")}</span><b>${esc(p.local)} – ${esc(p.visitante)}</b>${p.res ? `<span class="lres">${p.res[0]}-${p.res[1]}</span>` : ""}<span class="lic">${icono(p)}</span></div>
+          <div class="l2"><span class="mk">${esc(p.mercado)}</span><span class="ct">${p.minima ? "pide ≥ " : p.estimada ? "≈ " : ""}${f2(p.cuota)}</span></div></div>`).join("");
+      const cobro = a.importe * a.cuota;
+      return `<div class="ap ${cls}">
+        <div class="top"><span class="tipo">${i + 1}. ${esc(a.tipo)}</span><span class="badge ${cls}">${est}${a.manual ? " ✎" : a.auto ? " ⚡" : ""}</span></div>
+        ${piernasH}
+        <div class="din"><span>Apuestas <b>${eur(a.importe)}</b></span><span>Cuota <b>${f2(a.cuota)}</b>${a.cuota_bot ? `<small> (bot ${f2(a.cuota_bot)})</small>` : ""}</span><span>Cobras <b>${eur(cobro)}</b></span></div>
+        ${sem && !a.excluida ? `<div class="sem2 sem-${sem.c}">${sem.t}</div>` : ""}` + acc + "</div>";
     }).join("") + (pasado ? "</details>" : "</div>");
 }).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
 
@@ -365,9 +390,9 @@ function semaforo(a) {
   const pide = a.piernas.some(p => p.minima);
   const f = x => x.toFixed(2).replace(".", ",");
   const vtxt = v === null ? "" : ` · ventaja ${v >= 0 ? "+" : ""}${Math.round(v * 100)} %`;
-  if (real >= bot * 1.2 || (v !== null && v > 0.25)) return { c: "azul", t: `🔵 Demasiado buena: comprueba que sea el mismo mercado y la misma línea (el bot esperaba ${f(bot)})` };
-  if (real + 1e-9 >= bot) return { c: "verde", t: `🟢 Compensa: ${f(real)} ${pide ? "≥ " + f(bot) + " que pedía" : "frente a " + f(bot) + " que esperaba"}${vtxt}` };
-  return { c: "rojo", t: `🔴 No compensa: ${f(real)} ${pide ? "es menos que el " + f(bot) + " que pedía" : "es menos que el " + f(bot) + " que esperaba"}${vtxt}${pide ? ". Mejor no hacerla" : ""}` };
+  if (real >= bot * 1.2 || (v !== null && v > 0.25)) return { c: "azul", t: `🔵 Cuota muy alta: revisa que sea el mismo mercado` };
+  if (real + 1e-9 >= bot) return { c: "verde", t: `🟢 Buena cuota: ${f(real)} ≥ ${f(bot)}${pide ? " que pedía" : ""}` };
+  return { c: "rojo", t: `🔴 Cuota baja: ${f(real)} < ${f(bot)}${pide ? " · mejor no hacerla" : ""}` };
 }
 // Copiar las cuotas reales para mandárselas a Claude y calibrar las estimadas
 document.addEventListener("click", e => {
