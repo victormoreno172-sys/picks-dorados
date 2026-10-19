@@ -1409,7 +1409,7 @@ function mapasEsports(p) {
       <span class="meq v"><b>${esc(p.visitante)}</b>${miniEsc((fi.esc || [])[1], p.visitante)}</span></div>
     <div class="mlista">${filas}</div>
     <p class="mpnota">${r.envivo ? (lol ? `Asesinatos, oro, torres y dragones de la partida en juego al momento (${esc(r.envivo.fuente || "LoL Esports")}).` : `Rondas del mapa en juego al momento (${esc(r.envivo.fuente || "DRAFT5")}).`)
-      : vivo ? (r.hltv ? "Conectando con HLTV para ver las rondas del mapa en juego…" : `Ahora mismo ninguna fuente da ${lol ? "los datos de la partida" : "las rondas"} de este partido; el resultado de cada ${lol ? "partida" : "mapa"} sale al acabar.`)
+      : vivo ? (r.hltv && ES_APP ? "Buscando las rondas del mapa en juego (Sofascore y HLTV)…" : `Ahora mismo ninguna fuente da ${lol ? "los datos de la partida" : "las rondas"} de este partido; el resultado de cada ${lol ? "partida" : "mapa"} sale al acabar.`)
       : `El resultado de cada ${lol ? "partida" : "mapa"} aparece al acabar.`}</p>
   </div>`;
 }
@@ -2002,8 +2002,8 @@ function pintarPantallaAjustes() {
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       ${ES_APP ? `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar mis datos de la web</button>` : `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar datos</button>`}
       <p>Todo esto se guarda solo en este móvil.</p></section>
-    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "hltv", "r365", "r365t", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
-      const nombre = { servidor: "Servidor de directo (basket y esports)", hltv: "HLTV (rondas de CS2)", r365: "365Scores (reloj del basket)", r365t: "365Scores (tenis)", tenis: "ESPN (tenis)" }[k];
+    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "sofa", "hltv", "r365", "r365t", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
+      const nombre = { servidor: "Servidor de directo (basket y esports)", sofa: "Sofascore (esports)", hltv: "HLTV (rondas de CS2)", r365: "365Scores (reloj del basket)", r365t: "365Scores (tenis)", tenis: "ESPN (tenis)" }[k];
       return `<div class="ajinfo"><span>${nombre}</span><b>${!e ? "—" : e.ok ? "✅ " + esc(e.t) + (e.act ? " (act. " + esc(e.act) + ")" : "") + (e.err ? " · " + esc(e.err) : "") : "❌ " + esc(e.err || "")}</b></div>`; }).join("")}
       <p>Solo se consulta lo que se está jugando. "—" = ahora no hacía falta.</p></section>
     <section class="ajb"><h3>Sobre la app</h3>
@@ -2743,13 +2743,66 @@ function cargarSocketIO() {
 function aplicarHltv(p) {
   const h = p._hltv;
   if (!h || Date.now() - h.t > 180000 || !p.res || p.res.st !== "in") return false;
-  if (p.res.envivo && p.res.envivo.fuente !== "HLTV") return false;
+  if (p.res.envivo && p.res.envivo.fuente !== "HLTV") return false;  // Sofascore u otra fuente ya lo da
   const tot = (p.res.m || "0-0").split("-").map(x => +x || 0), n = tot[0] + tot[1] + 1;
   const nm = (h.mapa || "").replace(/^de_/, ""), M = nm ? nm[0].toUpperCase() + nm.slice(1) : "";
   const mapas = (p.res.mapas || []).map(z => z.slice());
   if (M && mapas[n - 1] && !mapas[n - 1][0]) mapas[n - 1][0] = M;
   return ponerRes(p, Object.assign({}, p.res, { mapas, envivo: { n, mapa: M, a: h.a, b: h.b, fuente: "HLTV" },
     det: `Mapa ${n}${M ? " · " + M : ""} ${h.a}-${h.b}` }));
+}
+// Peticiones desde el móvil: en la app se usan las del sistema (sin las limitaciones del navegador)
+async function pedirJSON(url, ms = 12000) {
+  const H = ES_APP ? capPlugin("CapacitorHttp") : null;
+  if (H && H.request) {
+    const r = await Promise.race([H.request({ url, method: "GET", headers: { Accept: "application/json" }, responseType: "json" }),
+      new Promise((_, ko) => setTimeout(() => ko(new Error("tiempo")), ms))]);
+    if (r.status !== 200) throw new Error("HTTP " + r.status);
+    return typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+  }
+  return json(url, ms);
+}
+// 🎮 Esports: Sofascore da mapa a mapa y las rondas (o el marcador de la partida) del mapa en juego
+const SOFA = { t: 0, ev: [] };
+async function sofascoreEsports(cand) {
+  if (!cand.length) return false;
+  let cambio = false;
+  try {
+    if (Date.now() - SOFA.t > 25000) {
+      const j = await pedirJSON("https://api.sofascore.com/api/v1/sport/esports/events/live", 10000);
+      SOFA.ev = j.events || []; SOFA.t = Date.now();
+    }
+    ESTADO_DIRECTO.sofa = { ok: true, t: AHORA.hora, err: SOFA.ev.length + " en juego" };
+    for (const ev of SOFA.ev) {
+      const x = buscarEn(cand, (ev.homeTeam || {}).name, (ev.awayTeam || {}).name); if (!x) continue;
+      const p = x[0];
+      if (p.res && p.res.envivo && !["Sofascore", "HLTV"].includes(p.res.envivo.fuente)) continue;  // ya hay otra fuente buena
+      const g = await pedirJSON(`https://api.sofascore.com/api/v1/event/${ev.id}/esports-games`, 10000).catch(() => null);
+      const juegos = ((g && g.games) || []).slice().sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
+      if (!juegos.length) continue;
+      const pt = o => o ? +(o.display ?? o.current ?? 0) : 0;
+      let sa = 0, sb = 0, envivo = null;
+      const mapas = juegos.map((jg, i) => {
+        let a = pt(jg.homeScore), b = pt(jg.awayScore); if (x[1]) [a, b] = [b, a];
+        const nm = (jg.map && (jg.map.name || jg.map.slug)) || "";
+        const tipo = (jg.status || {}).type || "";
+        if (tipo === "finished") {
+          let w = jg.winnerCode; if (x[1] && w) w = 3 - w;
+          if (w === 1 || (!w && a > b)) sa++; else sb++;
+          return [nm, a, b];
+        }
+        if (tipo === "inprogress" && !envivo) envivo = { n: i + 1, mapa: nm, a, b, fuente: "Sofascore" };
+        return [nm, null, null];
+      });
+      const base = p.res || { st: "in" };
+      const viejos = base.mapas || [];
+      const r = Object.assign({}, base, { st: "in", m: `${sa}-${sb}`, mapas: mapas.concat(viejos.slice(mapas.length)), fuente: "Sofascore" });
+      if (envivo) { r.envivo = envivo; r.det = `${/LOL/.test(p.liga) ? "Partida" : "Mapa"} ${envivo.n}${envivo.mapa ? " · " + envivo.mapa : ""} ${envivo.a}-${envivo.b}`; }
+      p._sofa = { r, t: Date.now() };
+      if (ponerRes(p, r)) cambio = true;
+    }
+  } catch (e) { ESTADO_DIRECTO.sofa = { ok: false, t: AHORA.hora, err: String(e.message || e).slice(0, 60) }; }
+  return cambio;
 }
 function cerrarHltv(id) { try { HLTV[id].sock.close(); } catch (e) {} delete HLTV[id]; }
 async function hltvVivo(lista) {
@@ -2878,6 +2931,7 @@ async function directoOtros(fechas) {
           if (p._reloj && Date.now() - p._reloj.t < 120000 && r.st === "in")  // reloj y marcador de 365Scores, cuartos del servidor
             rr = Object.assign({}, r, { m: p._reloj.m, det: `${p._reloj.per} ${p._reloj.rel}`.trim(), periodo: p._reloj.per, reloj: p._reloj.rel });
           if (ponerRes(p, rr)) { cambio = true; ya = true; }
+          if (p._sofa && Date.now() - p._sofa.t < 90000 && !(r.envivo && r.envivo.fuente !== "HLTV") && ponerRes(p, p._sofa.r)) { cambio = true; ya = true; }
           if (aplicarHltv(p)) { cambio = true; ya = true; }
         }
       if (ya && document.activeElement !== $("busca")) pintarLista();  // se enseña ya, sin esperar al resto
@@ -2885,6 +2939,7 @@ async function directoOtros(fechas) {
       for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
         for (const p of dia.partidos) if (p.res && p.res.st === "in" && p.res.hltv && !(p.res.envivo && p.res.envivo.fuente !== "HLTV")) cs.push(p);
       hltvVivo(cs);
+      if (await sofascoreEsports(cand.e)) { cambio = true; if (document.activeElement !== $("busca")) pintarLista(); }
     } catch (e) {}
   })());
   await Promise.all(tareas);
