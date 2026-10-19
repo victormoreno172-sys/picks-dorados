@@ -31,7 +31,9 @@ PROB_MIN, CUOTA_MIN = 0.70, 1.20
 PROB_COMBI, CUOTA_PIERNA = 0.78, 1.12
 MAX_SENCILLAS = 6
 PORCENTAJE = config.PORCENTAJE_APUESTA  # cada apuesta, este % de la banca del momento
-PEOR_VALOR = -0.08   # no se apuesta nada que la casa pague muy por debajo de lo que vale
+# Solo se apuesta si, con la probabilidad del bot, a la larga se gana: al menos un 2 % de ventaja
+# (probabilidad × cuota ≥ 1,02). Antes se dejaba pasar hasta un -8 %, y eso son apuestas que pierden dinero.
+PEOR_VALOR = 0.02
 
 
 def cargar() -> dict:
