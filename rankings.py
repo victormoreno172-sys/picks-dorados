@@ -70,6 +70,21 @@ def lol() -> dict:
     return out
 
 
+def tenis_ids(tour: str) -> dict:
+    """{id de ESPN del jugador: puesto} (el modelo de tenis trabaja con los id de ESPN)."""
+    try:
+        j = json.loads(_get(f"https://site.api.espn.com/apis/site/v2/sports/tennis/{tour}/rankings") or "{}")
+    except ValueError:
+        return {}
+    out = {}
+    for rk in j.get("rankings") or []:
+        for r in rk.get("ranks") or []:
+            i = str((r.get("athlete") or {}).get("id") or "")
+            if i and r.get("current"):
+                out.setdefault(i, int(r["current"]))
+    return out
+
+
 def tenis(tour: str) -> dict:
     try:
         j = json.loads(_get(f"https://site.api.espn.com/apis/site/v2/sports/tennis/{tour}/rankings") or "{}")

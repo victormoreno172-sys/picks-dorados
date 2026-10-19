@@ -6,23 +6,25 @@ M = [("WTA","Paula Badosa","Antonia Ruzic",.720),("WTA","Diana Shnaider","Yulia 
      ("ATP","Karen Khachanov","Rei Sakamoto",.679)]
 out = {}
 hoy = date.today()
-E = {}
+E, ID = {}, {}
 for tour in ("ATP", "WTA"):
     hist = tenis.historico(tour, hoy)
+    for h in hist + tenis.proximos(tour, hoy, 3):
+        ID[h.n1] = h.j1; ID[h.n2] = h.j2
     E[tour] = tenis.EloTenis(tour).ajustar(hist)
-    out["rk_"+tour] = len(rankings.tenis(tour.lower()))
 res = []
-for npri in (None, 10, 25, 50):
+for npri in (None, 10, 25, 50, 100):
     errs = []
     for tour, a, b, mk in M:
         e = E[tour]
         if npri is None:
             e.prior = {}
         else:
-            e.poner_ranking(rankings.tenis(tour.lower())); e.N_PRIOR = npri
-        p = e.p_partido(a, b, "dura")
-        errs.append((a, round(p, 3), mk, e.n.get(a, 0), e.n.get(b, 0), a in e.prior, b in e.prior))
+            e.poner_ranking(rankings.tenis_ids(tour.lower())); e.N_PRIOR = npri
+        ia, ib = ID.get(a, a), ID.get(b, b)
+        p = e.p_partido(ia, ib, "dura")
+        errs.append((a, round(p, 3), mk, e.n.get(ia, 0), e.n.get(ib, 0), ia in e.prior, ib in e.prior))
     mae = sum(abs(x[1] - x[2]) for x in errs) / len(errs)
-    res.append({"N_PRIOR": npri, "mae": round(mae, 3), "detalle": errs})
+    res.append({"N_PRIOR": npri, "mae": round(mae, 3), "recta": getattr(E["ATP"], "_recta", None), "detalle": errs})
 out["res"] = res
 json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False)
