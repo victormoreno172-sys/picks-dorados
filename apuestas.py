@@ -307,6 +307,13 @@ def actualizar(por_dia: dict):
             if chat:
                 import bot
                 enviado = bool(bot.llamar("sendMessage", chat_id=chat, text=texto, parse_mode="HTML").get("ok"))
+        try:  # notificación en la app Android (Firebase)
+            import avisos
+            if avisos.disponible() and elegidas:
+                avisos.enviar(["bot"], f"🟡 Apuestas del {dia:%d/%m}", f"{len(elegidas)} apuestas listas. Toca para verlas.",
+                              {"vista": "misap"}, "bot")
+        except Exception as e:  # noqa: BLE001
+            print(f"  aviso notificación del bot: {e}")
         if config.NTFY_TOPIC:  # notificación al móvil con la app ntfy
             enviado = avisar_ntfy(f"🟡 Apuestas del {dia:%d/%m}", texto) or enviado
         # Se apuntan siempre: si Telegram no está configurado, se ven en la app del bot

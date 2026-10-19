@@ -662,6 +662,9 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .vdsec { background: var(--bg); color: var(--ink); }
 .vdmsg { font-size: 12.5px; color: var(--muted); margin: 10px 2px; }
 .vdtxt { width: 100%; height: 110px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: 11px/1.3 var(--mono); padding: 8px; resize: none; word-break: break-all; }
+.ajfila { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0; font-size: 13px; }
+.ajfila .seg { flex: 0 0 auto; margin: 0; }
+.ajfila .seg button { padding: 6px 12px; }
 </style>
 
 <div class="wrap">
@@ -745,7 +748,8 @@ try { const g = JSON.parse(localStorage.getItem("rojo") || "null"); if (g) { est
 const esRojo = k => false;  // el rojo se quitó de la app
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
 // ---------------------------------------------------------------- ajustes (guardados en el móvil)
-let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorOro: null, colorApuesta: "#c026ff", verEsperados: false };
+let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorOro: null, colorApuesta: "#c026ff", verEsperados: false,
+  pushI: true, pushG: true, pushF: true, pushAp: true, pushBot: true };
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 function aplicarTema() {
@@ -1873,6 +1877,67 @@ function ventanaDatos(modo) {
     }
   });
 }
+// ---------------------------------------------------------------- notificaciones (solo en la app)
+// La app se apunta a "temas" de Firebase: uno por cada partido, competición o juego con ☆ y por cada
+// apuesta del bot. El servidor de directo manda el aviso al tema cuando pasa algo. El nombre del tema
+// es un resumen (hash) del nombre: el servidor calcula el mismo (directo.py · tema()).
+const PUSH = { estado: "", listo: false, t: null };
+function hashTema(txt) {
+  const s = String(txt).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  let h = 5381; for (const ch of s) h = (h * 33 + ch.codePointAt(0)) >>> 0;
+  return h.toString(36);
+}
+function temasDeseados() {
+  const t = new Set(), hoy = fechaMenos(AHORA.fecha, 1), tipos = [["i", AJ.pushI], ["g", AJ.pushG], ["f", AJ.pushF]].filter(x => x[1]).map(x => x[0]);
+  const ents = [];
+  for (const k of est.favs) { const [f, l, v] = k.split("|"); if (f >= hoy && l && v) ents.push("p:" + l + "|" + v); }
+  for (const l of est.ligasFav) ents.push("l:" + l);
+  for (const j of est.juegosFav) ents.push("j:" + j);
+  for (const e of ents) for (const tp of tipos) t.add(tp + "_" + hashTema(e));
+  if (AJ.pushAp && MIS.datos) {
+    let OVb = {}; try { OVb = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); } catch (e) {}
+    for (const a of MIS.datos.apuestas || []) if (a.fecha >= hoy && !("ok" in a) && OVb[claveApBot(a)] !== "x") t.add("ab_" + hashTema("a:" + claveApBot(a)));
+  }
+  if (AJ.pushBot) t.add("bot");
+  return t;
+}
+async function syncPush() {
+  if (!ES_APP) return;
+  clearTimeout(PUSH.t);
+  PUSH.t = setTimeout(async () => {
+    const FM = window.Capacitor.Plugins.FirebaseMessaging;
+    if (!FM) { PUSH.estado = "Esta versión de la app no tiene notificaciones: descarga la nueva."; return; }
+    try {
+      let perm = await FM.checkPermissions();
+      if (perm.receive !== "granted") perm = await FM.requestPermissions();
+      if (perm.receive !== "granted") { PUSH.estado = "🔕 Sin permiso: actívalas en Ajustes del móvil → Apps → Picks Dorados → Notificaciones."; return; }
+      await FM.getToken();
+      let antes = []; try { antes = JSON.parse(localStorage.getItem("temasPush") || "[]"); } catch (e) {}
+      const quiero = temasDeseados(), viejo = new Set(antes);
+      for (const tm of quiero) if (!viejo.has(tm)) await FM.subscribeToTopic({ topic: tm });
+      for (const tm of viejo) if (!quiero.has(tm)) await FM.unsubscribeFromTopic({ topic: tm });
+      localStorage.setItem("temasPush", JSON.stringify([...quiero]));
+      PUSH.listo = true;
+      PUSH.estado = `🔔 Activadas · siguiendo ${quiero.size} avisos (partidos, competiciones, juegos y apuestas).`;
+    } catch (e) { PUSH.estado = "No se pudieron activar: " + String(e.message || e).slice(0, 80); }
+    if (est.vista === "ajustes") pintarLista();
+  }, 800);
+}
+// Al tocar una notificación: abrir ese partido
+if (ES_APP && window.Capacitor.Plugins.FirebaseMessaging) {
+  try {
+    window.Capacitor.Plugins.FirebaseMessaging.addListener("notificationActionPerformed", ev => {
+      const d = ((ev && ev.notification) || {}).data || {};
+      if (d.vista === "misap") { est.vista = "misap"; pintar(); return; }
+      if (!d.p) return;
+      const [f, l, v] = d.p.split("|");
+      DATOS.dias.forEach((dia, di) => dia.partidos.forEach((p, i) => {
+        if (dia.fecha === f && p.local === l && p.visitante === v) { est.dia = di; est.sel = i; est.dep = p.dep || "f"; est.vista = "partido"; est.tab = "resumen"; pintar(); }
+      }));
+    });
+  } catch (e) {}
+}
+function probarPush() { syncPush(); alert("Si todo está bien, te llegarán los avisos de tus partidos ☆ y apuestas aunque cierres la app."); }
 function pintarPantallaAjustes() {
   const seg = (clave, opciones) => `<div class="seg">${opciones.map(([v, t]) => `<button data-aj="${clave}" data-v="${v}" aria-pressed="${String(AJ[clave]) === String(v)}">${t}</button>`).join("")}</div>`;
   const u = Math.round((AJ.umbral || DATOS.umbral0) * 100);
@@ -1900,6 +1965,14 @@ function pintarPantallaAjustes() {
       <a class="ajbtn" style="display:block;text-align:center;text-decoration:none;background:var(--gold);color:#1a1200;border-color:var(--gold)" href="${URL_APK}">⬇️ Descargar la app</a>
       <button class="ajbtn" data-ajdatos="copiar">📋 Copiar mis datos para la app</button>
       <p>Al instalar la app empieza vacía: copia aquí tus datos (favoritos, cuotas reales, apuestas marcadas…) y pégalos en la app, en Ajustes → Mis datos.</p></section>` : ""}
+    ${ES_APP ? `<section class="ajb"><h3>🔔 Notificaciones</h3>
+      <p style="margin:0 0 8px">De tus partidos ☆, competiciones ☆ y juegos ☆, aunque la app esté cerrada.</p>
+      <div class="ajfila"><span>Empieza el partido</span>${seg("pushI", [["true", "Sí"], ["false", "No"]])}</div>
+      <div class="ajfila"><span>Goles, sets y mapas</span>${seg("pushG", [["true", "Sí"], ["false", "No"]])}</div>
+      <div class="ajfila"><span>Resultado final</span>${seg("pushF", [["true", "Sí"], ["false", "No"]])}</div>
+      <div class="ajfila"><span>Mis apuestas (empieza, se cae, ganada…)</span>${seg("pushAp", [["true", "Sí"], ["false", "No"]])}</div>
+      <div class="ajfila"><span>Apuestas del día del bot</span>${seg("pushBot", [["true", "Sí"], ["false", "No"]])}</div>
+      <p style="margin:8px 0 0">${esc(PUSH.estado || "Preparando…")}</p></section>` : ""}
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       ${ES_APP ? `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar mis datos de la web</button>` : `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar datos</button>`}
       <p>Todo esto se guarda solo en este móvil.</p></section>
@@ -1925,7 +1998,7 @@ function cargarMisApuestas(forzar) {
   MIS.cargando = true;
   fetch("bot/datos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json())
     .then(d => { MIS.datos = d; MIS.t = Date.now(); }).catch(() => { MIS.datos = MIS.datos || { apuestas: [], error: true }; })
-    .finally(() => { MIS.cargando = false; contarMisApuestas(); if (est.vista === "misap") pintarLista(); });
+    .finally(() => { MIS.cargando = false; contarMisApuestas(); syncPush(); if (est.vista === "misap") pintarLista(); });
 }
 function misApuestasActivasTodas() {
   // Para pintar mercados: todas las que no has quitado de los últimos días
@@ -2370,7 +2443,8 @@ document.addEventListener("click", e => {
   if (b.dataset.buscarpartidos !== undefined) { est.buscaG = b.dataset.buscarpartidos; const i = $("buscaG"); if (i) i.value = est.buscaG; resultadosGenerales(); return; }
   if (b.dataset.misrefrescar) { cargarMisApuestas(true); enDirecto(); return; }
   if (b.dataset.color) { AJ[b.dataset.color] = b.dataset.v; guardarAjustes(); aplicarColores(); pintarLista(); return; }
-  if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); pintarLista(); return; }
+  if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); if (/^push/.test(b.dataset.aj)) syncPush(); pintarLista(); return; }
+  if (b.dataset.pushprueba) { probarPush(); return; }
   if (b.dataset.ajdatos === "copiar") { ventanaDatos("copiar"); return; }
   if (b.dataset.ajdatos === "pegar") { ventanaDatos("pegar"); return; }
   if (b.dataset.ajborrar === "favs") { if (!confirm("¿Borrar todos tus partidos y competiciones favoritos?")) return;
@@ -2385,7 +2459,7 @@ document.addEventListener("click", e => {
   if (b.dataset.tinfo !== undefined) { est.tinfo = est.tinfo === b.dataset.tinfo ? null : b.dataset.tinfo; pintarLista(); return; }
   if (b.dataset.misdia) { est.misDias = est.misDias || new Set(); const d = b.dataset.misdia; est.misDias.has(d) ? est.misDias.delete(d) : est.misDias.add(d); pintarLista(); return; }
   if (b.dataset.juegofav) { const k = b.dataset.juegofav; est.juegosFav.has(k) ? est.juegosFav.delete(k) : est.juegosFav.add(k);
-    try { localStorage.setItem("juegosFav", JSON.stringify([...est.juegosFav])); } catch (e) {} pintarLista(); return; }
+    try { localStorage.setItem("juegosFav", JSON.stringify([...est.juegosFav])); } catch (e) {} pintarLista(); syncPush(); return; }
   if (b.dataset.juego) { est.vista = "juego"; est.juego = b.dataset.juego; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligasdep) { est.ligasDep = b.dataset.ligasdep; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
@@ -2398,7 +2472,7 @@ document.addEventListener("click", e => {
     est.dep = p.dep || "f"; est.volverA = b.dataset.desde || "clasif"; est.vista = "partido"; est.sel = +b.dataset.abrirp; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = ligaBase(b.dataset.ligaIr); window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.ligafav !== undefined) { const l = b.dataset.ligafav; est.ligasFav.has(l) ? est.ligasFav.delete(l) : est.ligasFav.add(l);
-    try { localStorage.setItem("ligasFav", JSON.stringify([...est.ligasFav])); } catch (e) {} pintarLista(); return; }
+    try { localStorage.setItem("ligasFav", JSON.stringify([...est.ligasFav])); } catch (e) {} pintarLista(); syncPush(); return; }
   if (b.dataset.dep) { est.vista = "comps"; }
   if (b.dataset.i !== undefined && est.vista === "partido") est.vista = "comps";
   if (b.dataset.per) { est.periodo = b.dataset.per; pintarAciertos(); }
@@ -2415,7 +2489,7 @@ document.addEventListener("click", e => {
     const p = DATOS.dias[est.dia].partidos[+b.dataset.fav], k = clavePartido(DATOS.dias[est.dia], p);
     est.favs.has(k) ? est.favs.delete(k) : est.favs.add(k);
     try { localStorage.setItem("favs", JSON.stringify([...est.favs].slice(-200))); } catch (e) {}
-    pintarLista();
+    pintarLista(); syncPush();
   }
   else if (b.dataset.ir !== undefined) {
     if (b.dataset.irdep) { est.dep = b.dataset.irdep; est.liga = null; est.busca = ""; $("busca").value = ""; pintar(); }

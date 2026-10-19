@@ -4,7 +4,9 @@
   "webDir": "www",
   "server": {
     "url": "https://victormoreno172-sys.github.io/picks-dorados/",
-    "allowNavigation": ["victormoreno172-sys.github.io"],
+    "allowNavigation": [
+      "victormoreno172-sys.github.io"
+    ],
     "errorPath": "sin-conexion.html"
   },
   "android": {
@@ -23,6 +25,13 @@
       "overlaysWebView": false,
       "style": "LIGHT",
       "backgroundColor": "#f5f7fb"
+    },
+    "FirebaseMessaging": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
     }
   }
 }

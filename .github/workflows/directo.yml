@@ -18,8 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install requests
-      - run: |
+      - run: pip install requests google-auth python-dotenv
+      - env:
+          FIREBASE_CUENTA: ${{ secrets.FIREBASE_CUENTA }}
+        run: |
           git config user.name "bot"; git config user.email "bot@local"
           python directo.py
       # El cron de GitHub a veces no salta: cada vuelta lanza la siguiente para que el directo no se pare nunca

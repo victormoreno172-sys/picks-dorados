@@ -248,6 +248,171 @@ def esports(cand: list) -> dict:
     return res
 
 
+# ---------------------------------------------------------------- notificaciones (app Android)
+BOT = "https://victormoreno172-sys.github.io/picks-dorados/bot/datos.json"
+
+
+def candidatos_todos(datos: dict, ahora: datetime) -> list[dict]:
+    """Todos los partidos que se juegan ahora (cualquier deporte), con lo necesario para los avisos."""
+    out = []
+    for dia in datos.get("dias", []):
+        for p in dia["partidos"]:
+            dep = p.get("dep", "f")
+            try:
+                ini = datetime.fromisoformat(f"{dia['fecha']}T{p.get('hora') or '00:00'}").replace(tzinfo=TZ)
+            except ValueError:
+                continue
+            if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=8 if dep == "e" else 5):
+                fi = p.get("fi") or {}
+                out.append({"clave": f"{dia['fecha']}|{p['local']}|{p['visitante']}", "fecha": dia["fecha"],
+                            "local": p["local"], "visitante": p["visitante"], "liga": p.get("liga") or "", "dep": dep,
+                            "slug": fi.get("slug") or "", "id": str(fi.get("id") or "")})
+    return out
+
+
+def espn(cands: list, ahora: datetime) -> dict:
+    """Fútbol y NBA en ESPN (por el id del partido que ya tiene la app)."""
+    por_slug: dict[str, dict] = {}
+    for c in cands:
+        if c["slug"] and c["id"] and (c["dep"] == "f" or c["slug"] == "nba"):
+            por_slug.setdefault(c["slug"], {})[c["id"]] = c
+    out = {}
+    for slug, ids in por_slug.items():
+        dep = "basketball" if slug == "nba" else "soccer"
+        for f in {ahora.date(), (ahora - timedelta(hours=8)).date()}:
+            try:
+                j = requests.get(f"https://site.api.espn.com/apis/site/v2/sports/{dep}/{slug}/scoreboard",
+                                 params={"dates": f"{f:%Y%m%d}"}, headers=UA, timeout=20).json()
+            except (requests.RequestException, ValueError):
+                continue
+            for e in j.get("events") or []:
+                c = ids.get(str(e.get("id")))
+                if not c:
+                    continue
+                try:
+                    comp = e["competitions"][0]
+                    st = comp["status"]["type"].get("state")
+                    eq = {x["homeAway"]: x for x in comp["competitors"]}
+                    m = f"{int(eq['home'].get('score') or 0)}-{int(eq['away'].get('score') or 0)}" if st != "pre" else ""
+                    out[c["clave"]] = {"st": st, "m": m, "det": comp["status"].get("displayClock") or ""}
+                except (KeyError, IndexError, ValueError, TypeError):
+                    continue
+    return out
+
+
+def tenis(cands: list) -> dict:
+    """Tenis en ESPN: sets ganados por cada uno."""
+    te = [c for c in cands if c["dep"] == "te"]
+    if not te:
+        return {}
+    out = {}
+    for tour in ("atp", "wta"):
+        try:
+            j = requests.get(f"https://site.api.espn.com/apis/site/v2/sports/tennis/{tour}/scoreboard", headers=UA, timeout=20).json()
+        except (requests.RequestException, ValueError):
+            continue
+        for ev in j.get("events") or []:
+            for g in ev.get("groupings") or []:
+                for c in g.get("competitions") or []:
+                    try:
+                        a, b = c["competitors"]
+                        n1, n2 = a["athlete"]["displayName"], b["athlete"]["displayName"]
+                        x = buscar(te, n1, n2)
+                        if not x:
+                            continue
+                        st = c["status"]["type"].get("state")
+                        la, lb = a.get("linescores") or [], b.get("linescores") or []
+                        sa = sum(1 for u, v in zip(la, lb) if (u.get("value") or 0) > (v.get("value") or 0))
+                        sb = sum(1 for u, v in zip(la, lb) if (v.get("value") or 0) > (u.get("value") or 0))
+                        if st == "in" and la:  # el set en juego aún no cuenta
+                            u, v = la[-1].get("value") or 0, lb[-1].get("value") or 0
+                            if not (max(u, v) >= 6 and abs(u - v) >= 2) and not (max(u, v) == 7):
+                                if u > v:
+                                    sa -= 1
+                                elif v > u:
+                                    sb -= 1
+                        if x[1]:
+                            sa, sb = sb, sa
+                        out[x[0]["clave"]] = {"st": st, "m": f"{max(sa, 0)}-{max(sb, 0)}" if st != "pre" else ""}
+                    except (KeyError, ValueError, TypeError):
+                        continue
+    return out
+
+
+def avisar_partidos(estados: dict, prev: dict, info: dict):
+    import avisos
+    for k, e in estados.items():
+        c = info.get(k)
+        if not c or not e:
+            continue
+        a = prev.get(k) or {}
+        l, v, dep = c["local"], c["visitante"], c["dep"]
+        datos = {"p": k}
+        temas = lambda t: avisos.temas_partido(t, c["fecha"], l, v, c["liga"], dep)  # noqa: E731
+        liga = avisos.liga_base(c["liga"])
+        if e.get("st") == "in" and a.get("st") not in ("in", "post"):
+            avisos.enviar(temas("i"), f"▶️ Empieza: {l} – {v}", liga, datos, k)
+        if e.get("st") in ("in", "post") and a.get("st") == "in" and e.get("m") and a.get("m") and e["m"] != a["m"] and dep != "b":
+            try:
+                x1, y1 = (int(z) for z in a["m"].split("-"))
+                x2, y2 = (int(z) for z in e["m"].split("-"))
+            except ValueError:
+                x1 = y1 = x2 = y2 = 0
+            quien = l if x2 > x1 else v if y2 > y1 else ""
+            if quien:
+                ico, que = {"te": ("🎾", "Set para"), "e": ("🎮", "Mapa para")}.get(dep, ("⚽", "¡Gol de"))
+                tit = f"{ico} {que} {quien}{'!' if dep == 'f' else ''}"
+                det = f" ({e['det']})" if e.get("det") and dep == "f" else ""
+                avisos.enviar(temas("g"), tit, f"{l} {e['m']} {v}{det} · {liga}", datos, k)
+        if e.get("st") == "post" and a.get("st") != "post" and a:
+            avisos.enviar(temas("f"), f"🏁 Final: {l} {e.get('m', '')} {v}", liga, datos, k)
+
+
+def avisar_apuestas(bot: dict, estados: dict, avisados: dict):
+    import avisos
+    import historial
+    for ap in bot.get("apuestas") or []:
+        if "ok" in ap:
+            continue
+        k = avisos.clave_apuesta(ap)
+        s = avisados.setdefault(k, {})
+        if s.get("fin"):
+            continue
+        piernas = []
+        for pi in ap.get("piernas") or []:
+            e = None
+            try:
+                f = datetime.fromisoformat(pi["fecha"]).date()
+                for d in (f, f - timedelta(days=1), f + timedelta(days=1)):
+                    e = estados.get(f"{d.isoformat()}|{pi['local']}|{pi['visitante']}") or e
+            except (KeyError, ValueError):
+                pass
+            piernas.append((pi, e))
+        tema = [avisos.tema_apuesta(k)]
+        texto = lambda pi: f"{pi['local']} – {pi['visitante']} · {pi['mercado']}"  # noqa: E731
+        datos = {"vista": "misap"}
+        if not s.get("ini") and any(e and e.get("st") in ("in", "post") for _, e in piernas):
+            pi = next(pi for pi, e in piernas if e and e.get("st") in ("in", "post"))
+            avisos.enviar(tema, f"🎟️ Empieza tu {ap.get('tipo', 'apuesta').lower()}", texto(pi), datos, "ap" + k[:40])
+            s["ini"] = 1
+        res = []
+        for pi, e in piernas:
+            r = None
+            if e and e.get("st") == "post" and re.match(r"^\d+-\d+$", e.get("m") or ""):
+                gl, gv = (int(z) for z in e["m"].split("-"))
+                r = historial.acierta(pi["mercado"], gl, gv, pi["local"], pi["visitante"])
+            res.append(r)
+        cuota = f"{float(ap.get('cuota') or 0):.2f}".replace(".", ",")
+        if any(r is False for r in res):
+            pi = piernas[res.index(False)][0]
+            avisos.enviar(tema, f"❌ Se ha caído tu {ap.get('tipo', 'apuesta').lower()}", texto(pi), datos, "ap" + k[:40])
+            s["fin"] = 1
+        elif res and all(r is True for r in res):
+            avisos.enviar(tema, f"✅ ¡Ganada! {ap.get('tipo', 'Apuesta')} a {cuota}",
+                          " + ".join(f"{pi['local']} – {pi['visitante']}" for pi, _ in piernas), datos, "ap" + k[:40])
+            s["fin"] = 1
+
+
 def publicar(contenido: dict):
     with open("directo.json", "w", encoding="utf-8") as f:
         json.dump(contenido, f, ensure_ascii=False)
@@ -270,9 +435,16 @@ def main():
         if previo.returncode != 0:
             subprocess.run(["git", "fetch", "-q", "--depth", "1", "origin", "directo"], check=False)
             previo = subprocess.run(["git", "show", "FETCH_HEAD:directo.json"], capture_output=True, text=True)
-        finales = {k: v for k, v in (json.loads(previo.stdout or "{}").get("res") or {}).items() if v.get("st") == "post"}
+        anterior = json.loads(previo.stdout or "{}")
+        finales = {k: v for k, v in (anterior.get("res") or {}).items() if v.get("st") == "post"}
     except (ValueError, OSError):
-        finales = {}
+        anterior, finales = {}, {}
+    # Para no repetir avisos al empezar otra vuelta: estado de cada partido y apuestas ya avisadas
+    previos = {**(anterior.get("res") or {}), **(anterior.get("push") or {})}
+    avisados: dict = anterior.get("avisados") or {}
+    bot, t_bot = {}, 0
+    import avisos
+    con_avisos = avisos.disponible()
     while time.time() - inicio < DURACION:
         ahora = datetime.now(TZ)
         if time.time() - t_datos > 600:
@@ -291,12 +463,35 @@ def main():
         finales = {k: v for k, v in finales.items() if k[:10] >= limite}
         finales.update({k: v for k, v in res.items() if v.get("st") == "post"})
         res = {**finales, **res}
-        contenido = {"ts": ahora.strftime("%H:%M:%S"), "res": res}
-        if res != ultimo or (res and time.time() - t_pub > 150):  # y cada 2,5 min para que se vea que está vivo
+        push, todos = {}, []
+        if con_avisos:
+            try:
+                todos = candidatos_todos(datos, ahora)
+                info = {c["clave"]: c for c in todos}
+                push = {**espn(todos, ahora), **tenis(todos)}
+                estados = {**res, **push}
+                avisar_partidos(estados, previos, info)
+                if time.time() - t_bot > 600:
+                    try:
+                        bot = requests.get(BOT, params={"t": int(time.time())}, timeout=30).json()
+                        t_bot = time.time()
+                    except (requests.RequestException, ValueError):
+                        pass
+                avisar_apuestas(bot, {**previos, **estados}, avisados)
+                previos = {**previos, **{k: {"st": v.get("st"), "m": v.get("m")} for k, v in estados.items()}}
+                limite2 = (ahora - timedelta(days=2)).date().isoformat()
+                previos = {k: v for k, v in previos.items() if k[:10] >= limite2}
+                avisados = {k: v for k, v in avisados.items() if k[:10] >= limite2}
+            except Exception as e:  # noqa: BLE001
+                print(f"  aviso notificaciones: {e}")
+        contenido = {"ts": ahora.strftime("%H:%M:%S"), "res": res, "push": push, "avisados": avisados}
+        firma = json.dumps([res, push, avisados], sort_keys=True, ensure_ascii=False)
+        if firma != ultimo or (res and time.time() - t_pub > 150):  # y cada 2,5 min para que se vea que está vivo
             publicar(contenido)
-            ultimo, t_pub = res, time.time()
+            ultimo, t_pub = firma, time.time()
             print(f"{contenido['ts']} {len(res)} marcadores ({len(cand['b'])} basket, {len(cand['e'])} esports en juego)")
-        time.sleep(60 if (cand["b"] or cand["e"]) else 300)
+        hay = cand["b"] or cand["e"] or (con_avisos and todos)
+        time.sleep(60 if hay else 300)
 
 
 if __name__ == "__main__":

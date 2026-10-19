@@ -27,13 +27,22 @@ jobs:
         run: pip install pillow && cd app && python iconos.py
 
       - name: Proyecto Android
+        env:
+          FIREBASE_APP: ${{ secrets.FIREBASE_APP }}
         run: |
           cd app
           npm install --no-audit --no-fund
           npx cap add android
           npx capacitor-assets generate --android --iconBackgroundColor '#07110c' --iconBackgroundColorDark '#07110c' --splashBackgroundColor '#07110c' --splashBackgroundColorDark '#07110c'
+          # Firebase (notificaciones): la configuración de la app va en un secreto
+          printf '%s' "$FIREBASE_APP" > android/app/google-services.json
+          python -c "import json; j=json.load(open('android/app/google-services.json')); print('firebase:', j['project_info']['project_id'])"
+          # Permiso de notificaciones (Android 13+)
+          grep -q POST_NOTIFICATIONS android/app/src/main/AndroidManifest.xml || \
+            sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />#' android/app/src/main/AndroidManifest.xml
+          grep -n "permission" android/app/src/main/AndroidManifest.xml
           npx cap sync android
-          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"0.1.${{ github.run_number }}\"/" android/app/build.gradle
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"0.2.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
 
       - name: Compilar
@@ -71,4 +80,4 @@ jobs:
         run: |
           gh release view app >/dev/null 2>&1 || gh release create app --title "App Android" --notes "Picks Dorados para Android. Descarga PicksDorados.apk e instálala." --prerelease
           gh release upload app PicksDorados.apk --clobber
-          gh release edit app --notes "Picks Dorados para Android · versión 0.1.${{ github.run_number }}. Descarga PicksDorados.apk e instálala (encima de la anterior, sin perder nada)."
+          gh release edit app --notes "Picks Dorados para Android · versión 0.2.${{ github.run_number }}. Descarga PicksDorados.apk e instálala (encima de la anterior, sin perder nada)."

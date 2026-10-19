@@ -61,6 +61,7 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
           THESPORTSDB_KEY: ${{ secrets.THESPORTSDB_KEY }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          FIREBASE_CUENTA: ${{ secrets.FIREBASE_CUENTA }}
           BANCA: ${{ vars.BANCA }}
         run: |
           set -o pipefail
