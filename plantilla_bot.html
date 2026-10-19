@@ -197,6 +197,9 @@ const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.pie
 // 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
 // anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
 const HECHAS_DESDE = "2026-10-20";
+// Desde ese día cuenta tu dinero de verdad: lo que tenías en Winamax y solo las apuestas que marcas como hechas
+const INICIO_REAL = 73.86;
+const ajusteReal = () => { try { const j = JSON.parse(localStorage.getItem("ajusteSaldoBot") || "null"); return j && j.r ? (j.v || 0) : 0; } catch (e) { return 0; } };
 function calcularApuestasBot(D, ahora) {
   const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
   const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
@@ -226,9 +229,11 @@ function calcularApuestasBot(D, ahora) {
   const cand = todas.filter(a => !a.excluida || a.sinHacer);   // las propuestas también llevan su importe sugerido
   const dias = [...new Set(cand.map(a => a.fecha))].sort();
   let cambios = false, banca = D.inicial;   // banca al empezar cada día (lo que de verdad tenías)
+  let real = false;
   for (const d of dias) {
+    if (d >= HECHAS_DESDE && !real) { banca = INICIO_REAL + ajusteReal(); real = true; }   // las de antes eran del bot, no tuyas
     const del = cand.filter(a => a.fecha === d);
-    const otras = ap.filter(a => a.fecha !== d && !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
+    const otras = ap.filter(a => a.fecha !== d && (!real || a.fecha >= HECHAS_DESDE) && !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
     let disp = banca - otras;
     const recalc = [];
     for (const a of del) {
@@ -260,11 +265,16 @@ const saldo = D.inicial + ap.reduce((s, a) => s + ganBanca(a), 0);
 const enJuego = ap.filter(a => !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
 $("upd").innerHTML = "act. " + esc(D.generado) + '<br><a href="../">← Partidos</a>';
 // Ajuste a mano (solo en este móvil): para que el número grande sea justo lo que pone Winamax
+// Solo cuentan las que tú has hecho desde el 20/10: los resultados del bot de antes no tocan tu dinero
 let AJ = null;
 try { AJ = JSON.parse(localStorage.getItem("ajusteSaldoBot") || "null"); } catch (e) {}
+if (AJ && !AJ.r) AJ = null;   // el ajuste antiguo iba sobre la cuenta del bot y por eso se movía solo
 const aj = AJ ? AJ.v : 0;
-const siTodas = saldo + aj - enJuego + ap.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe * a.cuota, 0);
-$("saldo").textContent = eur(saldo + aj - enJuego);
+const tuyas = ap.filter(a => a.fecha >= HECHAS_DESDE && !a.previa);
+const tuJuego = tuyas.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe, 0);
+const tuSaldo = INICIO_REAL + tuyas.reduce((s, a) => s + ganBanca(a), 0);   // sin ajuste, con lo apostado aún dentro
+const siTodas = tuSaldo + aj - tuJuego + tuyas.filter(a => !("ok" in a)).reduce((s, a) => s + a.importe * a.cuota, 0);
+$("saldo").textContent = eur(tuSaldo + aj - tuJuego);
 if (AJ) $("ajsaldo").innerHTML = `✏️ Ajustado a mano ${sig(aj)} (${esc(AJ.cuando)}) · cambiar`;
 $("ajsaldo").onclick = () => {
   const t = prompt("¿Cuánto dinero tienes ahora mismo en Winamax? (por ejemplo 67,93)\nDéjalo vacío para quitar el ajuste.", "");
@@ -275,16 +285,17 @@ $("ajsaldo").onclick = () => {
       const real = parseFloat(t.replace(/[^\d,.-]/g, "").replace(",", "."));
       if (isNaN(real)) return alert("No he entendido el número.");
       const f = new Date(), cuando = `${f.getDate()}/${f.getMonth() + 1} ${String(f.getHours()).padStart(2, "0")}:${String(f.getMinutes()).padStart(2, "0")}`;
-      localStorage.setItem("ajusteSaldoBot", JSON.stringify({ v: Math.round((real - (saldo - enJuego)) * 100) / 100, cuando }));
+      localStorage.setItem("ajusteSaldoBot", JSON.stringify({ r: 1, v: Math.round((real - (tuSaldo - tuJuego)) * 100) / 100, cuando }));
     }
   } catch (e) {}
   location.reload();
 };
-$("variacion").innerHTML = `<span class="${saldo >= D.inicial ? "pos" : "neg"}">${sig(saldo - D.inicial)} (${pct(saldo / D.inicial - 1)})</span> <span style="color:var(--muted)">desde ${eur(D.inicial)}</span>`;
+const tuTotal = tuSaldo + aj;
+$("variacion").innerHTML = `<span class="${tuTotal >= INICIO_REAL ? "pos" : "neg"}">${sig(tuTotal - INICIO_REAL)} (${pct(tuTotal / INICIO_REAL - 1)})</span> <span style="color:var(--muted)">desde ${eur(INICIO_REAL)} el 20/10</span>`;
 $("dinero").innerHTML = [
-  [eur(enJuego), "en juego ahora"],
+  [eur(tuJuego), "en juego ahora"],
   [eur(siTodas), "si aciertas todas"],
-  [eur(saldo + aj), "saldo + en juego"],
+  [eur(tuTotal), "saldo + en juego"],
 ].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join("");
 
 function resumen(lista) {

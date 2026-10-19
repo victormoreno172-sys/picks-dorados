@@ -2295,6 +2295,9 @@ function misApuestasActivasTodas() {
 // 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
 // anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
 const HECHAS_DESDE = "2026-10-20";
+// Desde ese día cuenta tu dinero de verdad: lo que tenías en Winamax y solo las apuestas que marcas como hechas
+const INICIO_REAL = 73.86;
+const ajusteReal = () => { try { const j = JSON.parse(localStorage.getItem("ajusteSaldoBot") || "null"); return j && j.r ? (j.v || 0) : 0; } catch (e) { return 0; } };
 function calcularApuestasBot(D, ahora) {
   const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
   const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
@@ -2324,9 +2327,11 @@ function calcularApuestasBot(D, ahora) {
   const cand = todas.filter(a => !a.excluida || a.sinHacer);   // las propuestas también llevan su importe sugerido
   const dias = [...new Set(cand.map(a => a.fecha))].sort();
   let cambios = false, banca = D.inicial;   // banca al empezar cada día (lo que de verdad tenías)
+  let real = false;
   for (const d of dias) {
+    if (d >= HECHAS_DESDE && !real) { banca = INICIO_REAL + ajusteReal(); real = true; }   // las de antes eran del bot, no tuyas
     const del = cand.filter(a => a.fecha === d);
-    const otras = ap.filter(a => a.fecha !== d && !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
+    const otras = ap.filter(a => a.fecha !== d && (!real || a.fecha >= HECHAS_DESDE) && !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
     let disp = banca - otras;
     const recalc = [];
     for (const a of del) {
