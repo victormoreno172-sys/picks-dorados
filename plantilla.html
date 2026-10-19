@@ -2306,13 +2306,18 @@ function calcularApuestasBot(D, ahora) {
     const del = ap.filter(a => a.fecha === d);
     const otras = ap.filter(a => a.fecha !== d && !("ok" in a)).reduce((s, a) => s + a.importe, 0);
     let disp = D.inicial + cerradas - otras;
+    const banca = D.inicial + cerradas, recalc = [];
     for (const a of del) {
       if (IM[a.key] && (empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
       else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
-      else if (d >= ahora.slice(0, 10)) a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100);
-      if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
+      else if (d >= ahora.slice(0, 10)) { a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100); recalc.push(a); }
       disp -= a.importe;
     }
+    // Entre todas las de un día, como mucho el 30 % de la banca (se reducen por igual las que aún no has hecho)
+    const totalDia = del.reduce((s, a) => s + a.importe, 0), fijo = totalDia - recalc.reduce((s, a) => s + a.importe, 0);
+    const libre = Math.max(0, 0.30 * banca - fijo), enRecalc = totalDia - fijo;
+    if (recalc.length && enRecalc > libre) recalc.forEach(a => { a.importe = Math.max(0.1, Math.round(a.importe * libre / enRecalc * 100) / 100); });
+    for (const a of del) if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
   }
   if (cambios) try { localStorage.setItem("importesBot", JSON.stringify(IM)); } catch (e) {}
   return { todas, ap, OV, CR };

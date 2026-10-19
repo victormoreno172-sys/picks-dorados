@@ -103,7 +103,7 @@ def _pierna(a, k) -> dict:
             "cuota": float(k.cuota or 0), "estimada": bool(k.estimada)}
 
 
-def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None) -> list[dict]:
+def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_total: float | None = None) -> list[dict]:
     # Calibración automática: las probabilidades se corrigen con lo que de verdad se ha acertado
     # en cada deporte y tipo de mercado (calibracion_auto.py) antes de elegir.
     if cal:
@@ -186,7 +186,7 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None) -> lis
         ap["fecha"] = min(ap["piernas"], key=lambda pi: (pi["fecha"], pi.get("hora") or "99"))["fecha"]
     sencillas = sorted([ap for ap in elegidas if ap["tipo"] == "Sencilla"], key=lambda ap: ap["piernas"][0]["hora"] or "99")
     elegidas = sencillas + [ap for ap in elegidas if ap["tipo"] != "Sencilla"]
-    importes_en_cadena(elegidas, banca)
+    importes_en_cadena(elegidas, banca, banca_total)
     return elegidas
 
 
@@ -207,12 +207,23 @@ def porcentaje(ap: dict) -> float:
     return round(min(PCT_MAX, PORCENTAJE + kelly / 4), 4)
 
 
-def importes_en_cadena(apuestas: list[dict], disponible: float):
-    """Cada apuesta es su % del dinero que queda después de hacer las anteriores (en este orden)."""
+TOPE_DIA = 0.30  # entre todas las apuestas de un día, como mucho el 30 % de la banca
+
+
+def importes_en_cadena(apuestas: list[dict], disponible: float, banca: float | None = None):
+    """Cada apuesta es su % del dinero que queda después de hacer las anteriores (en este orden),
+    y entre todas no pasan del TOPE_DIA de la banca (si se pasan, se reducen todas por igual)."""
+    base = disponible if banca is None else banca
     for ap in apuestas:
         ap["pct"] = porcentaje(ap)
         ap["importe"] = max(0.1, round(disponible * ap["pct"] + 1e-9, 2))
         disponible -= ap["importe"]
+    total = sum(ap["importe"] for ap in apuestas)
+    tope = TOPE_DIA * base
+    if total > tope > 0:
+        f = tope / total
+        for ap in apuestas:
+            ap["importe"] = max(0.1, round(ap["importe"] * f, 2))
 
 
 def _linea_pierna(pi: dict) -> str:
@@ -299,7 +310,7 @@ def actualizar(por_dia: dict):
         dia = None
     if dia and (b.get("ultimo_envio") or "") < dia.isoformat():
         pendiente = sum(a["importe"] for a in b["apuestas"] if "ok" not in a and not a.get("previa"))  # dinero aún en juego
-        elegidas = elegir(por_dia.get(dia, []), saldo(b) - pendiente, ahora, cal)
+        elegidas = elegir(por_dia.get(dia, []), saldo(b) - pendiente, ahora, cal, banca_total=saldo(b))
         texto = mensaje(elegidas, b, dia)
         print(texto)
         enviado = False
