@@ -424,9 +424,9 @@ function semaforo(a) {
   if (real >= bot * 1.2 || (v !== null && v > 0.25)) return { c: "azul", t: `🔵 Cuota muy alta: revisa que sea el mismo mercado` };
   if (real + 1e-9 >= bot) return { c: "verde", t: `🟢 Buena cuota: ${f(real)} ≥ ${f(bot)}${pide ? " que pedía" : ""}` };
   // Margen según la cuota: se acepta hasta un 6 % menos de lo que se gana (1,39 -> 1,37; 2,00 -> 1,94),
-  // siempre que con la probabilidad del bot la apuesta siga sin perder dinero a la larga
+  // siempre que con la probabilidad del bot la apuesta siga teniendo ventaja (lo que de verdad importa)
   const minimo = 1 + (bot - 1) * 0.94;
-  if (real + 1e-9 >= minimo && (v === null || v >= -0.01))
+  if (real + 1e-9 >= minimo && (v === null || v >= 0.02))  // y que aún le quede al menos un 2 % de ventaja
     return { c: "amarillo", t: `🟡 Vale por poco: ${f(real)} (mínimo ${f(minimo)})${v !== null ? vtxt : ""}` };
   return { c: "rojo", t: `🔴 Cuota baja: ${f(real)} < ${f(minimo)}${pide ? " · mejor no hacerla" : " · no compensa"}` };
 }
