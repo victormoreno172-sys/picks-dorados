@@ -169,7 +169,7 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
             continue
         # Margen que se pide sobre la cuota justa: 3 %; en la WTA, 5 % (en el backtest sus +1,5 sets
         # del 75-85 % aciertan ~1,5 puntos menos de lo previsto; en la ATP, algo más)
-        margen = 1.05 if (p.liga or "").startswith("WTA") else 1.03
+        margen = 1.05 if "WTA" in (p.liga or "") else 1.03
         ks = [k for k in a.picks if PROB_MIN <= k.prob and round(margen / k.prob, 2) >= CUOTA_MIN]
         if ks:
             k = max(ks, key=lambda k: k.prob)
