@@ -102,9 +102,11 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
 .semaforo.sem-verde { background: rgba(57, 245, 160, .1); color: #39f5a0; border: 1px solid rgba(57, 245, 160, .3); }
 .semaforo.sem-rojo { background: rgba(255, 90, 110, .1); color: #ff7a8a; border: 1px solid rgba(255, 90, 110, .3); }
 .semaforo.sem-azul { background: rgba(80, 160, 255, .12); color: #7ab8ff; border: 1px solid rgba(80, 160, 255, .35); }
+.semaforo.sem-amarillo { background: rgba(255, 200, 60, .1); color: #ffd25e; border: 1px solid rgba(255, 200, 60, .35); }
 .acc button.sem-verde { border-color: rgba(57, 245, 160, .5) !important; color: #39f5a0 !important; }
 .acc button.sem-rojo { border-color: rgba(255, 90, 110, .5) !important; color: #ff7a8a !important; }
 .acc button.sem-azul { border-color: rgba(80, 160, 255, .55) !important; color: #7ab8ff !important; }
+.acc button.sem-amarillo { border-color: rgba(255, 200, 60, .55) !important; color: #ffd25e !important; }
 details.plegable { border: 1px solid var(--line); border-radius: 12px; padding: 0 10px; margin: 8px 0; }
 details.plegable > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 11px 0; cursor: pointer; font-family: var(--mono); }
 details.plegable > summary::-webkit-details-marker { display: none; }
@@ -129,6 +131,7 @@ details.plegable > summary > span:first-child { flex: 1; min-width: 0; }
 .sem2.sem-verde { background: rgba(57,245,160,.1); color: #39f5a0; }
 .sem2.sem-rojo { background: rgba(255,90,110,.1); color: #ff7a8a; }
 .sem2.sem-azul { background: rgba(80,160,255,.12); color: #7ab8ff; }
+.sem2.sem-amarillo { background: rgba(255,200,60,.1); color: #ffd25e; }
 .acc button { padding: 4px 9px; font-size: 11.5px; }
 .ap { padding: 8px 10px !important; margin-bottom: 7px !important; }
 .leg2 { margin-top: 6px; padding: 6px 9px; }
@@ -420,7 +423,12 @@ function semaforo(a) {
   const vtxt = v === null ? "" : ` · ventaja ${v >= 0 ? "+" : ""}${Math.round(v * 100)} %`;
   if (real >= bot * 1.2 || (v !== null && v > 0.25)) return { c: "azul", t: `🔵 Cuota muy alta: revisa que sea el mismo mercado` };
   if (real + 1e-9 >= bot) return { c: "verde", t: `🟢 Buena cuota: ${f(real)} ≥ ${f(bot)}${pide ? " que pedía" : ""}` };
-  return { c: "rojo", t: `🔴 Cuota baja: ${f(real)} < ${f(bot)}${pide ? " · mejor no hacerla" : ""}` };
+  // Margen según la cuota: se acepta hasta un 6 % menos de lo que se gana (1,39 -> 1,37; 2,00 -> 1,94),
+  // siempre que con la probabilidad del bot la apuesta siga sin perder dinero a la larga
+  const minimo = 1 + (bot - 1) * 0.94;
+  if (real + 1e-9 >= minimo && (v === null || v >= -0.01))
+    return { c: "amarillo", t: `🟡 Vale por poco: ${f(real)} (mínimo ${f(minimo)})${v !== null ? vtxt : ""}` };
+  return { c: "rojo", t: `🔴 Cuota baja: ${f(real)} < ${f(minimo)}${pide ? " · mejor no hacerla" : " · no compensa"}` };
 }
 // Copiar las cuotas reales para mandárselas a Claude y calibrar las estimadas
 document.addEventListener("click", e => {
