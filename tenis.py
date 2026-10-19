@@ -239,12 +239,40 @@ class EloTenis:
         return self
 
     def conoce(self, j: str) -> bool:
-        return self.n.get(j, 0) >= 8
+        return self.n.get(j, 0) >= 8 or j in self.prior
+
+    # Ranking oficial como punto de partida: con pocos partidos del circuito principal (los que juegan
+    # sobre todo Challenger/ITF) el Elo se queda cerca de la media y se equivoca mucho. Se mezcla el Elo
+    # con lo que "vale" su puesto en el ranking (recta Elo ~ log(ranking) de los que tienen muchos partidos).
+    prior: dict = {}
+    N_PRIOR = 25
+
+    def poner_ranking(self, ranks: dict[str, int]):
+        xs = [(math.log(r), self.general[j]) for j, r in ranks.items() if self.n.get(j, 0) >= 30 and j in self.general]
+        if len(xs) < 20:
+            self.prior = {}
+            return self
+        mx, my = sum(x for x, _ in xs) / len(xs), sum(y for _, y in xs) / len(xs)
+        b = sum((x - mx) * (y - my) for x, y in xs) / sum((x - mx) ** 2 for x, _ in xs)
+        a = my - b * mx
+        self.prior = {j: a + b * math.log(r) for j, r in ranks.items()}
+        self._recta = (round(a), round(b, 1))
+        print(f"  tenis: ranking oficial como base ({len(ranks)} jugadores; Elo = {a:.0f} {b:+.1f}·ln(puesto))")
+        return self
+
+    def _rating(self, j: str) -> float:
+        g = self.general.get(j, 1500)
+        if j in self.prior:
+            n = self.n.get(j, 0)
+            w = n / (n + self.N_PRIOR)
+            return w * g + (1 - w) * self.prior[j]
+        return g
 
     def p_partido(self, j1: str, j2: str, sup: str) -> float:
-        g1, g2 = self.general.get(j1, 1500), self.general.get(j2, 1500)
-        a = (1 - self.w_sup) * g1 + self.w_sup * self.sup.get((j1, sup), g1)
-        b = (1 - self.w_sup) * g2 + self.w_sup * self.sup.get((j2, sup), g2)
+        g1, g2 = self._rating(j1), self._rating(j2)
+        d1, d2 = g1 - self.general.get(j1, 1500), g2 - self.general.get(j2, 1500)  # el ajuste vale también por superficie
+        a = (1 - self.w_sup) * g1 + self.w_sup * (self.sup.get((j1, sup), g1 - d1) + d1)
+        b = (1 - self.w_sup) * g2 + self.w_sup * (self.sup.get((j2, sup), g2 - d2) + d2)
         p = self._esperado(a, b)
         z = math.log(p / (1 - p)) * self.t
         return 1 / (1 + math.exp(-z))
@@ -356,6 +384,11 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             if len(hist) < 300 or not prox:
                 continue
             elo = EloTenis(tour).ajustar(hist)
+            try:
+                import rankings
+                elo.poner_ranking(rankings.tenis(tour.lower()))
+            except Exception as e:  # noqa: BLE001
+                print(f"  aviso ranking {tour}: {e}")
             ELO[tour] = elo
             for p in prox:
                 INFO[(p.fecha.isoformat(), p.n1, p.n2)] = {"esc": [p.flag1, p.flag2], "estadio": p.sede or p.torneo}

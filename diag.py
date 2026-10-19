@@ -1,0 +1,28 @@
+import json, tenis, rankings
+from datetime import date
+M = [("WTA","Paula Badosa","Antonia Ruzic",.720),("WTA","Diana Shnaider","Yulia Putintseva",.734),("WTA","Belinda Bencic","Jelena Ostapenko",.570),
+     ("WTA","Jasmine Paolini","Anhelina Kalinina",.654),("WTA","Ekaterina Alexandrova","Guo Hanyu",.771),("WTA","Sara Bejlek","Alycia Parks",.818),
+     ("ATP","Stefanos Tsitsipas","Aleksandar Kovacevic",.776),("ATP","Roman Safiullin","Sho Shimabukuro",.834),("WTA","Moyuka Uchijima","Ena Shibahara",.592),
+     ("ATP","Karen Khachanov","Rei Sakamoto",.679)]
+out = {}
+hoy = date.today()
+E = {}
+for tour in ("ATP", "WTA"):
+    hist = tenis.historico(tour, hoy)
+    E[tour] = tenis.EloTenis(tour).ajustar(hist)
+    out["rk_"+tour] = len(rankings.tenis(tour.lower()))
+res = []
+for npri in (None, 10, 25, 50):
+    errs = []
+    for tour, a, b, mk in M:
+        e = E[tour]
+        if npri is None:
+            e.prior = {}
+        else:
+            e.poner_ranking(rankings.tenis(tour.lower())); e.N_PRIOR = npri
+        p = e.p_partido(a, b, "dura")
+        errs.append((a, round(p, 3), mk, e.n.get(a, 0), e.n.get(b, 0), a in e.prior, b in e.prior))
+    mae = sum(abs(x[1] - x[2]) for x in errs) / len(errs)
+    res.append({"N_PRIOR": npri, "mae": round(mae, 3), "detalle": errs})
+out["res"] = res
+json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False)
