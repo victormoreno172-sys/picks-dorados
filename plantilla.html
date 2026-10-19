@@ -715,7 +715,24 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 <script>
 const DATOS = __DATOS__;
 // ¿Estamos dentro de la app Android?
-const ES_APP = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const ES_APP = !!(window.Capacitor && ((window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+  (window.Capacitor.getPlatform && window.Capacitor.getPlatform() === "android") || window.androidBridge));
+// Acceso a los plugins nativos de la app. La web se carga desde internet, así que la parte JS de
+// Capacitor (registerPlugin) se trae aparte si no está.
+const CAP = { listo: !!(window.Capacitor && window.Capacitor.registerPlugin), cache: {} };
+function capPlugin(nombre) {
+  const C = window.Capacitor; if (!C) return null;
+  if (C.Plugins && C.Plugins[nombre] && typeof C.Plugins[nombre].addListener === "function") return C.Plugins[nombre];
+  if (C.registerPlugin) return CAP.cache[nombre] ||= C.registerPlugin(nombre);
+  return (C.Plugins && C.Plugins[nombre]) || null;
+}
+function cargarCapacitor(despues) {
+  if (!ES_APP || (window.Capacitor && window.Capacitor.registerPlugin)) { despues && despues(); return; }
+  const sc = document.createElement("script");
+  sc.src = "https://cdn.jsdelivr.net/npm/@capacitor/core@7/dist/capacitor.js";
+  sc.onload = sc.onerror = () => { CAP.listo = !!(window.Capacitor && window.Capacitor.registerPlugin); despues && despues(); };
+  document.head.appendChild(sc);
+}
 const URL_APK = "https://github.com/victormoreno172-sys/picks-dorados/releases/download/app/PicksDorados.apk";
 const GRUPOS = {
   f: [["Resultado", m => /Gana|Empate|o empate|No hay empate/.test(m)],
@@ -757,7 +774,7 @@ function aplicarTema() {
   document.documentElement.dataset.tema = oscuro ? "oscuro" : "claro";
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = oscuro ? "#080d18" : "#f5f7fb";
   // En la app, la barra de arriba del móvil con el mismo color que la app
-  try { const SB = ES_APP && window.Capacitor.Plugins.StatusBar;
+  try { const SB = ES_APP && capPlugin("StatusBar");
     if (SB) { SB.setBackgroundColor({ color: oscuro ? "#080d18" : "#f5f7fb" }); SB.setStyle({ style: oscuro ? "DARK" : "LIGHT" }); } } catch (e) {}
 }
 function aplicarUmbral() {
@@ -1905,7 +1922,7 @@ async function syncPush() {
   if (!ES_APP) return;
   clearTimeout(PUSH.t);
   PUSH.t = setTimeout(async () => {
-    const FM = window.Capacitor.Plugins.FirebaseMessaging;
+    const FM = capPlugin("FirebaseMessaging");
     if (!FM) { PUSH.estado = "Esta versión de la app no tiene notificaciones: descarga la nueva."; return; }
     try {
       let perm = await FM.checkPermissions();
@@ -1924,9 +1941,12 @@ async function syncPush() {
   }, 800);
 }
 // Al tocar una notificación: abrir ese partido
-if (ES_APP && window.Capacitor.Plugins.FirebaseMessaging) {
+function escucharPush() {
+  const FM = ES_APP && capPlugin("FirebaseMessaging");
+  if (!FM || escucharPush.hecho) return;
+  escucharPush.hecho = true;
   try {
-    window.Capacitor.Plugins.FirebaseMessaging.addListener("notificationActionPerformed", ev => {
+    FM.addListener("notificationActionPerformed", ev => {
       const d = ((ev && ev.notification) || {}).data || {};
       if (d.vista === "misap") { est.vista = "misap"; pintar(); return; }
       if (!d.p) return;
@@ -1937,6 +1957,7 @@ if (ES_APP && window.Capacitor.Plugins.FirebaseMessaging) {
     });
   } catch (e) {}
 }
+if (ES_APP) cargarCapacitor(() => { escucharPush(); aplicarTema(); syncPush(); });
 function probarPush() { syncPush(); alert("Si todo está bien, te llegarán los avisos de tus partidos ☆ y apuestas aunque cierres la app."); }
 function pintarPantallaAjustes() {
   const seg = (clave, opciones) => `<div class="seg">${opciones.map(([v, t]) => `<button data-aj="${clave}" data-v="${v}" aria-pressed="${String(AJ[clave]) === String(v)}">${t}</button>`).join("")}</div>`;
@@ -1982,6 +2003,7 @@ function pintarPantallaAjustes() {
       <p>Solo se consulta lo que se está jugando. "—" = ahora no hacía falta.</p></section>
     <section class="ajb"><h3>Sobre la app</h3>
       <div class="ajinfo"><span>Datos actualizados</span><b>${esc(DATOS.generado || "")}</b></div>
+      <div class="ajinfo"><span>Entorno</span><b>${ES_APP ? "App" : "Web"}${window.Capacitor ? ` · cap ${CAP.listo ? "✓" : "–"} · push ${capPlugin("FirebaseMessaging") ? "✓" : "–"}` : ""}</b></div>
       <div class="ajinfo"><span>Partidos cargados</span><b>${DATOS.dias.reduce((s, d) => s + d.partidos.length, 0)}</b></div>
       <div class="ajinfo"><span>Versión</span><b>0.9 (beta)</b></div>
       <button class="ajbtn" data-refrescar="1">↻ Buscar datos nuevos</button>
