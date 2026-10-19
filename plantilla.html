@@ -2355,7 +2355,7 @@ function pintarAciertos() {
 
 // Nombre corto de quien pone la cuota
 const casaCorta = p => !p || !p.casa ? "Casa" : p.casa.startsWith("Winamax") ? "Winamax"
-  : /media/.test(p.casa) ? "Media" : /ESPN/.test(p.casa) ? "Casa" : p.casa.split(" ")[0];
+  : /media/.test(p.casa) ? "Media" : /ESPN|pocos datos/.test(p.casa) ? "Casa" : p.casa.split(" ")[0];
 // ¿La cuota real de la casa paga al menos lo que vale según la app? verde = sí, rojo = no
 const veredicto = k => (k.c && !k.e) ? (k.c >= 1 / k.p - 0.005 ? "bien" : "mal") : "";
 // Cuota bajo el porcentaje: la de la casa (real o ≈) y la que calcula la app

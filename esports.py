@@ -217,7 +217,8 @@ class ModeloMapas:
 
     def p_mapa(self, eq1: str, eq2: str) -> float:
         # Se suaviza un poco: entre equipos parecidos hay mucha varianza por mapa
-        z = 0.9 * (self.fuerza[eq1] - self.fuerza[eq2])
+        # Equipo nuevo (sin historial): se le trata como uno de nivel medio
+        z = 0.9 * (self.fuerza.get(eq1, 0.0) - self.fuerza.get(eq2, 0.0))
         return float(1 / (1 + np.exp(-z)))
 
 
@@ -277,9 +278,12 @@ def _p_mapa_para(gana: float, bo: int) -> float:
 
 
 def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
-    if not (modelo.conoce(s.eq1) and modelo.conoce(s.eq2)):
-        return None
+    # Equipos con pocos partidos (p. ej. recién formados): el partido sale igual, pero el pronóstico
+    # se apoya en la cuota de la casa si la hay y, si no, se queda cerca del 50 %.
+    conocidos = modelo.conoce(s.eq1) and modelo.conoce(s.eq2)
     p = modelo.p_mapa(s.eq1, s.eq2)
+    if not conocidos:
+        p = 0.5 + (p - 0.5) * 0.4
     cg = _cuotas_ganador(s)
     implicita = None
     if cg:  # mezcla con el mercado, como en fútbol
@@ -287,7 +291,7 @@ def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
         implicita = (1 / c1) / (1 / c1 + 1 / c2)
         k = s.bo // 2 + 1
         modelo_serie = sum(v for (x, y), v in marcadores(p, s.bo).items() if x == k)
-        w = config.PESO_MERCADO_ESPORTS
+        w = config.PESO_MERCADO_ESPORTS if conocidos else 0.9
         p = _p_mapa_para((1 - w) * modelo_serie + w * implicita, s.bo)
     unidad = UNIDAD.get(s.juego, "mapas")
     picks, (a, b), pm = mercados_serie(s.n1, s.n2, p, s.bo, unidad)
@@ -303,7 +307,8 @@ def analizar_serie(s: Serie, modelo: ModeloMapas) -> Analisis | None:
         estimar_cuotas(picks, {k.mercado: k.prob for k in mkt}, 1 / cg[0] + 1 / cg[1] - 1)
     icono = JUEGOS[s.juego][2]
     liga = f"{icono} {s.juego} · {s.torneo or 'Torneo'}{' · Bo' + str(s.bo) if s.bo > 1 else ' · Bo1'}"
-    partido = PartidoProximo(liga, s.fecha, s.hora, s.n1, s.n2, deporte="e", casa=cg[2] if cg else "")
+    partido = PartidoProximo(liga, s.fecha, s.hora, s.n1, s.n2, deporte="e",
+                             casa=cg[2] if cg else ("" if conocidos else "pocos datos"))
     # "goles" esperados = mapas esperados de cada uno
     m = marcadores(p, s.bo)
     e1 = sum(x * v for (x, y), v in m.items())
@@ -336,8 +341,8 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
                 a = analizar_serie(s, modelo)
                 if a:
                     salida.setdefault(s.fecha, []).append(a)
-                else:
-                    print(f"    sin datos suficientes: {s.n1} - {s.n2}")
+                if not (modelo.conoce(s.eq1) and modelo.conoce(s.eq2)):
+                    print(f"    pocos datos (pronóstico prudente): {s.n1} - {s.n2}")
         except Exception as e:
             import traceback
             print(f"  aviso esports {juego}: {e}")
