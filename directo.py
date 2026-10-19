@@ -204,8 +204,10 @@ def _d2_lista() -> list:
                     continue
                 eq = re.findall(r'<span class="text-ellipsis">([^<]+)</span>', bloque)
                 ids = re.findall(r'data-map-score-element="" data-scorebot-team-id="(\d+)"', bloque)
-                if len(eq) >= 2 and len(ids) >= 2:
-                    lista.append({"id": int(mid.group(1)), "n1": eq[0].strip(), "n2": eq[1].strip(), "t1": int(ids[0]), "t2": int(ids[1])})
+                url = re.search(r'href="(/matches/\d+/[^"]+)"', bloque)
+                if len(eq) >= 2 and len(ids) >= 2 and url:
+                    lista.append({"id": int(mid.group(1)), "n1": eq[0].strip(), "n2": eq[1].strip(), "t1": int(ids[0]), "t2": int(ids[1]),
+                                  "url": url.group(1)})
             _D2["lista"], _D2["t"] = lista, time.time()
         except requests.RequestException:
             pass
@@ -217,8 +219,34 @@ def hltv(local: str, visitante: str) -> dict | None:
         d = parecido(m["n1"], local) + parecido(m["n2"], visitante)
         r = parecido(m["n1"], visitante) + parecido(m["n2"], local)
         if max(d, r) >= 1.5:
-            return {"id": m["id"], "tl": m["t1"] if d >= r else m["t2"], "tv": m["t2"] if d >= r else m["t1"]}
+            return {"id": m["id"], "tl": m["t1"] if d >= r else m["t2"], "tv": m["t2"] if d >= r else m["t1"],
+                    "_url": m["url"], "_giro": r > d}
     return None
+
+
+_D2M: dict = {}
+
+
+def mapas_d2(h: dict) -> dict:
+    """Resultado de los mapas ya acabados según dust2.us/HLTV: {"cache": (13, 5)} desde el punto de vista del local."""
+    c = _D2M.get(h["_url"])
+    if c and time.time() - c[0] < 90:
+        return c[1]
+    out = {}
+    try:
+        t = requests.get("https://www.dust2.us" + h["_url"], headers={**UA, "Accept": "text/html"}, timeout=25).text
+        for bloque in t.split('class="map-container-map-name">')[1:]:
+            nombre = bloque.split("<", 1)[0].strip().lower()
+            seg = bloque.split("map-container-map-name")[0]
+            a = re.search(r'map-container-score-left">\s*(\d+)\s*<', seg)
+            b = re.search(r'map-container-score-right">\s*(\d+)\s*<', seg)
+            if nombre and a and b and ("map-won" in seg or "map-lost" in seg):
+                x, y = int(a.group(1)), int(b.group(1))
+                out[nombre] = (y, x) if h["_giro"] else (x, y)
+    except requests.RequestException:
+        pass
+    _D2M[h["_url"]] = (time.time(), out)
+    return out
 
 
 # ---------------------------------------------------------------- Valorant: vlr.gg (rondas del mapa en juego)
@@ -431,7 +459,12 @@ def esports(cand: list) -> dict:
                     try:  # el móvil sacará las rondas de HLTV
                         h = hltv(x[0]["local"], x[0]["visitante"])
                         if h:
-                            r["hltv"] = h
+                            hechos = mapas_d2(h)
+                            for z in r.get("mapas") or []:  # mapas acabados sin marcador en bo3.gg
+                                k = (z[0] or "").lower()
+                                if k in hechos and (z[1] is None or "✓" in (z[1], z[2])):
+                                    z[1], z[2] = hechos[k]
+                            r["hltv"] = {k: v for k, v in h.items() if not k.startswith("_")}
                     except Exception:  # noqa: BLE001
                         pass
             liga = x[0].get("liga") or ""
