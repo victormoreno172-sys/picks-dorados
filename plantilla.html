@@ -932,9 +932,22 @@ function estado(p) {
   return { st: mins < 130 ? "in" : "post", m: "", det: mins < 130 ? "Vivo" : "Fin" };
 }
 // ¿Se cumplió el mercado con este marcador? (null si no se sabe)
-function acierta(mercado, m) {
+function acierta(mercado, m, local, visitante) {
   const r = /^(\d+)-(\d+)$/.exec(m || ""); if (!r) return null;
   const a = +r[1], b = +r[2], t = a + b;
+  if (local && visitante) {  // tenis y esports: los mercados llevan el nombre del jugador o equipo
+    if (mercado === "Gana " + local) return a > b;
+    if (mercado === "Gana " + visitante) return b > a;
+    let y = /^(Más|Menos) de ([\d.]+) (sets|mapas|partidas)$/.exec(mercado);
+    if (y) return y[1] === "Más" ? t > +y[2] : t < +y[2];
+    for (const [n, margen] of [[local, a - b], [visitante, b - a]]) {
+      if (mercado.startsWith(n + " ")) { y = /^([+-][\d.]+) (sets|mapas|partidas)$/.exec(mercado.slice(n.length + 1)); if (y) return margen + +y[1] > 0; }
+    }
+    if (mercado.startsWith("Resultado " + local + " ") && mercado.endsWith(" " + visitante)) {
+      y = /^(\d+)-(\d+)$/.exec(mercado.slice(("Resultado " + local + " ").length, mercado.length - visitante.length - 1));
+      if (y) return a === +y[1] && b === +y[2];
+    }
+  }
   const tabla = { "Gana local (1)": a > b, "Empate (X)": a === b, "Gana visitante (2)": b > a, "Local o empate (1X)": a >= b,
     "Visitante o empate (X2)": b >= a, "No hay empate (12)": a !== b, "Ambos marcan: Sí": a > 0 && b > 0, "Ambos marcan: No": !(a > 0 && b > 0),
     "Local marca": a > 0, "Visitante marca": b > 0, "Gana local": a > b, "Gana visitante": b > a };
@@ -1875,7 +1888,7 @@ function misApuestasActivasTodas() {
 function calcularApuestasBot(D, ahora) {
   const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
   const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
-  const OV = leer("ajustesBot"), CR = leer("cuotasReales"), IM = leer("importesBot");
+  const OV = leer("ajustesBot"), CR = leer("cuotasReales"), IM = leer("importesBot"), AU = leer("autoBot");
   const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
   const ganBanca = a => a.previa ? (a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0) : gan(a);
   const empezada = a => a.piernas.some(p => (p.fecha + " " + (p.hora || "00:00")) <= ahora);
@@ -1890,6 +1903,9 @@ function calcularApuestasBot(D, ahora) {
     if (o === "x") a.excluida = true;
     else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
     else if (o === "p") { a.ok = false; a.manual = true; }
+    // Sin corregir aún en el servidor: el resultado que vio la app de Partidos con los marcadores
+    else if (!("ok" in a) && AU[a.key] === "g") { a.ok = true; a.cuota_final = a.cuota; a.auto = true; }
+    else if (!("ok" in a) && AU[a.key] === "p") { a.ok = false; a.auto = true; }
   });
   const ap = todas.filter(a => !a.excluida);
   const cerradas = ap.filter(a => a.ok === true || a.ok === false).reduce((s, a) => s + ganBanca(a), 0);
@@ -1911,8 +1927,33 @@ function calcularApuestasBot(D, ahora) {
   return { todas, ap, OV, CR };
 }
 
+// Resultado automático: cuando todos los partidos de una apuesta han terminado y la app ve que se
+// acertó (o que alguno falló), se apunta como ganada/perdida aquí y en la app del bot (mismo móvil),
+// sin esperar a la corrección del servidor ni tener que marcarla a mano.
+function resultadosAutoBot() {
+  if (!MIS.datos) return;
+  let AU = {}; try { AU = JSON.parse(localStorage.getItem("autoBot") || "{}") || {}; } catch (e) {}
+  let cambio = false;
+  for (const a of MIS.datos.apuestas || []) {
+    if ("ok" in a) continue;
+    let mal = false, todas = true;
+    for (const pi of a.piernas) {
+      let v = pi.ok === true ? true : pi.ok === false ? false : null;
+      if (v === null && !("ok" in pi)) {
+        const x = partidoDePierna(pi), e = x ? estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]) : null;
+        if (e && e.st === "post") v = acierta(pi.mercado, e.m, pi.local, pi.visitante);
+      } else if (pi.ok === null && "ok" in pi) v = true;  // anulada: no cuenta
+      if (v === false) mal = true;
+      if (v !== true) todas = false;
+    }
+    const k = claveApBot(a), nuevo = mal ? "p" : todas ? "g" : null;
+    if (nuevo && AU[k] !== nuevo) { AU[k] = nuevo; cambio = true; }
+  }
+  if (cambio) try { localStorage.setItem("autoBot", JSON.stringify(AU)); } catch (e) {}
+}
 function misApuestasActivas() {
   if (!MIS.datos) return [];
+  resultadosAutoBot();
   const r = calcularApuestasBot(MIS.datos, AHORA.fecha + " " + AHORA.hora);
   const ayer = fechaMenos(AHORA.fecha, 1);
   return r.ap.map(a => Object.assign(a, { cuotaReal: a.cuota_bot ? a.cuota : null }))
@@ -1958,7 +1999,7 @@ function pintarMisApuestas() {
       const x = partidoDePierna(pi), p = x ? DATOS.dias[x[0]].partidos[x[1]] : null;
       const e = p ? estadoEnDia(x[0], p) : null;
       const mar = (e && /^(\d+)-(\d+)$/.exec(e.m || "")) || (pi.res ? [0, pi.res[0], pi.res[1]] : null);
-      let va = pi.ok === true ? true : pi.ok === false ? false : mar && e ? acierta(pi.mercado, e.m) : null;
+      let va = pi.ok === true ? true : pi.ok === false ? false : mar && e ? acierta(pi.mercado, e.m, pi.local, pi.visitante) : null;
       if (va !== null) alguna = true;
       if (va === false) falla = true;
       if (va !== true) vivoOk = false;

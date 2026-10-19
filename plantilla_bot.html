@@ -151,7 +151,7 @@ const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.pie
 function calcularApuestasBot(D, ahora) {
   const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
   const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
-  const OV = leer("ajustesBot"), CR = leer("cuotasReales"), IM = leer("importesBot");
+  const OV = leer("ajustesBot"), CR = leer("cuotasReales"), IM = leer("importesBot"), AU = leer("autoBot");
   const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
   const ganBanca = a => a.previa ? (a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0) : gan(a);
   const empezada = a => a.piernas.some(p => (p.fecha + " " + (p.hora || "00:00")) <= ahora);
@@ -166,6 +166,9 @@ function calcularApuestasBot(D, ahora) {
     if (o === "x") a.excluida = true;
     else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
     else if (o === "p") { a.ok = false; a.manual = true; }
+    // Sin corregir aún en el servidor: el resultado que vio la app de Partidos con los marcadores
+    else if (!("ok" in a) && AU[a.key] === "g") { a.ok = true; a.cuota_final = a.cuota; a.auto = true; }
+    else if (!("ok" in a) && AU[a.key] === "p") { a.ok = false; a.auto = true; }
   });
   const ap = todas.filter(a => !a.excluida);
   const cerradas = ap.filter(a => a.ok === true || a.ok === false).reduce((s, a) => s + ganBanca(a), 0);
@@ -308,7 +311,7 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
         ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span><button data-k="${esc(a.key)}" data-ov="">↺ Deshacer</button>`
         : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No la hice</button><button data-k="${esc(a.key)}" data-ov="g">✅ Acertada</button><button data-k="${esc(a.key)}" data-ov="p">❌ Fallada</button>`) + `</div>`;
       return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}${a.cuota_bot ? ` <small style="color:var(--muted);font-weight:400">(bot ${a.cuota_bot.toFixed(2).replace(".", ",")})</small>` : ""}</span>
-        <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}${a.manual ? " ✎" : ""}</span></span></div>` +
+        <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}${a.manual ? " ✎" : a.auto ? " ⚡" : ""}</span></span></div>` +
         (sem && !a.excluida ? `<div class="semaforo sem-${sem.c}">${sem.t}</div>` : "") + a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + acc + "</div>";
     }).join("") + "</div>";
 }).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
