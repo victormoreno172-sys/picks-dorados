@@ -1390,14 +1390,17 @@ function mapasEsports(p) {
     let estado2, cls = "";
     if (hecho) { estado2 = `<span class="mscore"><b class="${a > b ? "g" : ""}">${a}</b><i>–</i><b class="${b > a ? "g" : ""}">${b}</b></span>`; cls = "mxh"; }
     else if (n === nAct) {
-      const ev = r.envivo && r.envivo.n === n ? r.envivo : null;  // rondas al momento (DRAFT5)
+      const ev = r.envivo && r.envivo.n === n ? r.envivo : null;  // rondas (o asesinatos en LoL) al momento
       estado2 = ev ? `<span class="mxlive"><span class="mscore"><b class="${ev.a > ev.b ? "g" : ""}">${ev.a}</b><i>–</i><b class="${ev.b > ev.a ? "g" : ""}">${ev.b}</b></span><span class="mxest mxvivo"><i></i>En juego</span></span>`
         : `<span class="mxest mxvivo"><i></i>En juego</span>`;
       cls = "mxv"; }
     else if (decidido || (es.st === "post")) { estado2 = `<span class="mxest">No se juega</span>`; cls = "mxno"; }
     else estado2 = `<span class="mxest">Pendiente</span>`;
     const ganador = hecho ? (a > b ? 0 : 1) : -1;
-    return `<div class="mfila ${cls}"><span class="mnum">${n}</span><span class="mnom"><b>${esc(/^(tba|tbd)?$/i.test(m[0] || "") ? `${unidad} ${n}` : m[0])}</b>${ganador >= 0 ? `<small>Gana ${esc(ganador ? p.visitante : p.local)}</small>` : ""}</span>${estado2}</div>`;
+    const evx = n === nAct && r.envivo && r.envivo.n === n ? r.envivo : null;
+    const sub = ganador >= 0 ? `<small>Gana ${esc(ganador ? p.visitante : p.local)}</small>`
+      : evx && evx.extra ? `<small>${evx.unidad === "asesinatos" ? "Asesinatos · " : ""}${esc(evx.extra)}</small>` : "";
+    return `<div class="mfila ${cls}"><span class="mnum">${n}</span><span class="mnom"><b>${esc(/^(tba|tbd)?$/i.test(m[0] || "") ? `${unidad} ${n}` : m[0])}</b>${sub}</span>${estado2}</div>`;
   }).join("");
   return `<div class="mpcaja mesp">
     <div class="mpcab">${chip}<span class="mptit">Al mejor de ${bo}</span></div>
@@ -1405,7 +1408,9 @@ function mapasEsports(p) {
       <span class="mtot"><b class="${tot[0] > tot[1] ? "g" : ""}">${tot[0]}</b><i>–</i><b class="${tot[1] > tot[0] ? "g" : ""}">${tot[1]}</b></span>
       <span class="meq v"><b>${esc(p.visitante)}</b>${miniEsc((fi.esc || [])[1], p.visitante)}</span></div>
     <div class="mlista">${filas}</div>
-    <p class="mpnota">${r.envivo ? "Rondas del mapa en juego al momento (DRAFT5)." : `El resultado de cada ${lol ? "partida" : "mapa"} aparece al acabar${lol ? "" : " (las rondas en directo solo salen cuando DRAFT5 narra el partido)"}.`}</p>
+    <p class="mpnota">${r.envivo ? (lol ? `Asesinatos, oro, torres y dragones de la partida en juego al momento (${esc(r.envivo.fuente || "LoL Esports")}).` : `Rondas del mapa en juego al momento (${esc(r.envivo.fuente || "DRAFT5")}).`)
+      : vivo ? (r.hltv ? "Conectando con HLTV para ver las rondas del mapa en juego…" : `Ahora mismo ninguna fuente da ${lol ? "los datos de la partida" : "las rondas"} de este partido; el resultado de cada ${lol ? "partida" : "mapa"} sale al acabar.`)
+      : `El resultado de cada ${lol ? "partida" : "mapa"} aparece al acabar.`}</p>
   </div>`;
 }
 function marcadorPeriodos(p) {
@@ -1997,9 +2002,9 @@ function pintarPantallaAjustes() {
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       ${ES_APP ? `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar mis datos de la web</button>` : `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar datos</button>`}
       <p>Todo esto se guarda solo en este móvil.</p></section>
-    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "r365", "r365t", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
-      const nombre = { servidor: "Servidor de directo (basket y esports)", r365: "365Scores (reloj del basket)", r365t: "365Scores (tenis)", tenis: "ESPN (tenis)" }[k];
-      return `<div class="ajinfo"><span>${nombre}</span><b>${!e ? "—" : e.ok ? "✅ " + esc(e.t) + (e.act ? " (act. " + esc(e.act) + ")" : "") : "❌ " + esc(e.err || "")}</b></div>`; }).join("")}
+    <section class="ajb"><h3>Estado del directo</h3>${["servidor", "hltv", "r365", "r365t", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
+      const nombre = { servidor: "Servidor de directo (basket y esports)", hltv: "HLTV (rondas de CS2)", r365: "365Scores (reloj del basket)", r365t: "365Scores (tenis)", tenis: "ESPN (tenis)" }[k];
+      return `<div class="ajinfo"><span>${nombre}</span><b>${!e ? "—" : e.ok ? "✅ " + esc(e.t) + (e.act ? " (act. " + esc(e.act) + ")" : "") + (e.err ? " · " + esc(e.err) : "") : "❌ " + esc(e.err || "")}</b></div>`; }).join("")}
       <p>Solo se consulta lo que se está jugando. "—" = ahora no hacía falta.</p></section>
     <section class="ajb"><h3>Sobre la app</h3>
       <div class="ajinfo"><span>Datos actualizados</span><b>${esc(DATOS.generado || "")}</b></div>
@@ -2722,6 +2727,59 @@ async function json(url, ms = 12000) {
   finally { clearTimeout(t); }
 }
 var ESTADO_DIRECTO = {};
+// 🎯 CS2: rondas al momento desde el "scorebot" de HLTV. El servidor no puede entrar en HLTV, pero el
+// móvil sí: el servidor solo dice el número del partido (y de cada equipo) y el móvil se conecta.
+const HLTV = {};
+function cargarSocketIO() {
+  if (window.io) return Promise.resolve();
+  if (cargarSocketIO.pr) return cargarSocketIO.pr;
+  return cargarSocketIO.pr = new Promise((ok, ko) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/socket.io-client@2.5.0/dist/socket.io.js";
+    sc.onload = ok; sc.onerror = () => { cargarSocketIO.pr = null; ko(new Error("no carga")); };
+    document.head.appendChild(sc);
+  });
+}
+function aplicarHltv(p) {
+  const h = p._hltv;
+  if (!h || Date.now() - h.t > 180000 || !p.res || p.res.st !== "in") return false;
+  if (p.res.envivo && p.res.envivo.fuente !== "HLTV") return false;
+  const tot = (p.res.m || "0-0").split("-").map(x => +x || 0), n = tot[0] + tot[1] + 1;
+  const nm = (h.mapa || "").replace(/^de_/, ""), M = nm ? nm[0].toUpperCase() + nm.slice(1) : "";
+  const mapas = (p.res.mapas || []).map(z => z.slice());
+  if (M && mapas[n - 1] && !mapas[n - 1][0]) mapas[n - 1][0] = M;
+  return ponerRes(p, Object.assign({}, p.res, { mapas, envivo: { n, mapa: M, a: h.a, b: h.b, fuente: "HLTV" },
+    det: `Mapa ${n}${M ? " · " + M : ""} ${h.a}-${h.b}` }));
+}
+function cerrarHltv(id) { try { HLTV[id].sock.close(); } catch (e) {} delete HLTV[id]; }
+async function hltvVivo(lista) {
+  const ids = new Set(lista.map(p => String(p.res.hltv.id)));
+  for (const id of Object.keys(HLTV)) if (!ids.has(id)) cerrarHltv(id);
+  if (!lista.length || document.hidden) return;
+  try { await cargarSocketIO(); } catch (e) { ESTADO_DIRECTO.hltv = { ok: false, t: AHORA.hora, err: "no se pudo cargar socket.io" }; return; }
+  for (const p of lista) {
+    const h = p.res.hltv;
+    if (HLTV[h.id]) { HLTV[h.id].p = p; continue; }
+    const ent = HLTV[h.id] = { p, sock: null };
+    const sock = ent.sock = window.io("https://scorebot-lb.hltv.org", { transports: ["websocket"], reconnectionDelay: 5000, forceNew: true });
+    sock.on("connect", () => { sock.emit("readyForMatch", JSON.stringify({ token: "", listId: h.id })); ESTADO_DIRECTO.hltv = { ok: true, t: AHORA.hora, err: "conectado, sin datos aún" }; });
+    sock.on("connect_error", e => { ESTADO_DIRECTO.hltv = { ok: false, t: AHORA.hora, err: String((e && e.message) || e).slice(0, 60) }; });
+    sock.on("scoreboard", d => {
+      try { if (typeof d === "string") d = JSON.parse(d); } catch (e) { return; }
+      if (!d) return;
+      const q = ent.p, ct = +(d.counterTerroristScore ?? d.ctTeamScore ?? 0), tt = +(d.terroristScore ?? d.tTeamScore ?? 0);
+      const ctId = +(d.ctTeamId || 0), tId = +(d.tTeamId || d.terroristTeamId || 0);
+      let a, b;
+      if (ctId === h.tl || tId === h.tv) [a, b] = [ct, tt];
+      else if (ctId === h.tv || tId === h.tl) [a, b] = [tt, ct];
+      else [a, b] = parecido(q.local, d.ctTeamName || "") >= parecido(q.local, d.terroristTeamName || "") ? [ct, tt] : [tt, ct];
+      q._hltv = { a, b, mapa: d.mapName || "", t: Date.now() };
+      ESTADO_DIRECTO.hltv = { ok: true, t: AHORA.hora };
+      if (aplicarHltv(q) && document.activeElement !== $("busca")) pintarLista();
+    });
+  }
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) for (const id of Object.keys(HLTV)) cerrarHltv(id); });
 const horaAhora = () => { const d = new Date(); return `${d.getHours()}:${d.getMinutes()}`; };
 async function directoOtros(fechas) {
   const cand = { te: [], e: [], b: [] };
@@ -2820,8 +2878,13 @@ async function directoOtros(fechas) {
           if (p._reloj && Date.now() - p._reloj.t < 120000 && r.st === "in")  // reloj y marcador de 365Scores, cuartos del servidor
             rr = Object.assign({}, r, { m: p._reloj.m, det: `${p._reloj.per} ${p._reloj.rel}`.trim(), periodo: p._reloj.per, reloj: p._reloj.rel });
           if (ponerRes(p, rr)) { cambio = true; ya = true; }
+          if (aplicarHltv(p)) { cambio = true; ya = true; }
         }
       if (ya && document.activeElement !== $("busca")) pintarLista();  // se enseña ya, sin esperar al resto
+      const cs = [];
+      for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
+        for (const p of dia.partidos) if (p.res && p.res.st === "in" && p.res.hltv && !(p.res.envivo && p.res.envivo.fuente !== "HLTV")) cs.push(p);
+      hltvVivo(cs);
     } catch (e) {}
   })());
   await Promise.all(tareas);
