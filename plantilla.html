@@ -701,6 +701,9 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 
 <script>
 const DATOS = __DATOS__;
+// ¿Estamos dentro de la app Android?
+const ES_APP = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const URL_APK = "https://github.com/victormoreno172-sys/picks-dorados/releases/download/app/PicksDorados.apk";
 const GRUPOS = {
   f: [["Resultado", m => /Gana|Empate|o empate|No hay empate/.test(m)],
       ["Goles", m => /goles/.test(m)],
@@ -739,6 +742,9 @@ function aplicarTema() {
   const oscuro = AJ.tema === "oscuro" || (AJ.tema === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.tema = oscuro ? "oscuro" : "claro";
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = oscuro ? "#080d18" : "#f5f7fb";
+  // En la app, la barra de arriba del móvil con el mismo color que la app
+  try { const SB = ES_APP && window.Capacitor.Plugins.StatusBar;
+    if (SB) { SB.setBackgroundColor({ color: oscuro ? "#080d18" : "#f5f7fb" }); SB.setStyle({ style: oscuro ? "DARK" : "LIGHT" }); } } catch (e) {}
 }
 function aplicarUmbral() {
   if (DATOS.umbral0 === undefined) DATOS.umbral0 = DATOS.umbral;
@@ -1849,7 +1855,12 @@ function pintarPantallaAjustes() {
     <section class="ajb"><h3>Color de mis apuestas</h3>${paleta("colorApuesta", AJ.colorApuesta || "#c026ff", ["#c026ff", "#a3e635", "#00e5ff", "#ff2bd6", "#ff6b00", "#ffe600"])}
       <p>Así se pinta en la ficha del partido el mercado que has apostado (y el 🎟️ de la lista).</p></section>
     <section class="ajb"><h3>Competiciones que ves</h3><p style="margin:0 0 6px">Quita las que no te interesen y no saldrán en Partidos.</p>${listaLigas}</section>
+    ${!ES_APP ? `<section class="ajb"><h3>📲 App para Android</h3><p style="margin:0 0 6px">Picks Dorados como app: icono propio, pantalla completa y (pronto) notificaciones. Se actualiza sola.</p>
+      <a class="ajbtn" style="display:block;text-align:center;text-decoration:none;background:var(--gold);color:#1a1200;border-color:var(--gold)" href="${URL_APK}">⬇️ Descargar la app</a>
+      <button class="ajbtn" data-ajdatos="copiar">📋 Copiar mis datos para la app</button>
+      <p>Al instalar la app empieza vacía: copia aquí tus datos (favoritos, cuotas reales, apuestas marcadas…) y pégalos en la app, en Ajustes → Mis datos.</p></section>` : ""}
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
+      ${ES_APP ? `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar mis datos de la web</button>` : `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar datos</button>`}
       <p>Todo esto se guarda solo en este móvil.</p></section>
     <section class="ajb"><h3>Estado del directo</h3>${["servidor", "r365", "r365t", "tenis"].map(k => { const e = ESTADO_DIRECTO[k];
       const nombre = { servidor: "Servidor de directo (basket y esports)", r365: "365Scores (reloj del basket)", r365t: "365Scores (tenis)", tenis: "ESPN (tenis)" }[k];
@@ -2319,6 +2330,21 @@ document.addEventListener("click", e => {
   if (b.dataset.misrefrescar) { cargarMisApuestas(true); enDirecto(); return; }
   if (b.dataset.color) { AJ[b.dataset.color] = b.dataset.v; guardarAjustes(); aplicarColores(); pintarLista(); return; }
   if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); pintarLista(); return; }
+  if (b.dataset.ajdatos === "copiar") {
+    const d = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); d[k] = localStorage.getItem(k); } } catch (e) {}
+    const txt = "PICKSDORADOS:" + btoa(unescape(encodeURIComponent(JSON.stringify(d))));
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => alert(`Copiados ${Object.keys(d).length} datos. Abre la app → Ajustes → Mis datos → «Pegar mis datos de la web».`))
+      .catch(() => prompt("Copia este texto y pégalo en la app:", txt));
+    return; }
+  if (b.dataset.ajdatos === "pegar") {
+    const t = (prompt("Pega aquí el texto que copiaste en la web (empieza por PICKSDORADOS:)") || "").trim();
+    if (!t) return;
+    try {
+      const d = JSON.parse(decodeURIComponent(escape(atob(t.replace(/^PICKSDORADOS:/, "")))));
+      Object.entries(d).forEach(([k, v]) => localStorage.setItem(k, v));
+      alert(`Listo: ${Object.keys(d).length} datos pasados. La app se recarga.`); location.reload();
+    } catch (e) { alert("Ese texto no es válido. Vuelve a copiarlo en la web desde Ajustes."); }
+    return; }
   if (b.dataset.ajborrar === "favs") { if (!confirm("¿Borrar todos tus partidos y competiciones favoritos?")) return;
     est.favs = new Set(); est.ligasFav = new Set(); est.juegosFav = new Set(); try { localStorage.removeItem("favs"); localStorage.removeItem("ligasFav"); localStorage.removeItem("juegosFav"); } catch (e) {} pintarLista(); return; }
   if (b.dataset.endirecto) { const i = DATOS.dias.findIndex(d => d.fecha === AHORA.fecha); if (i >= 0) est.dia = i;

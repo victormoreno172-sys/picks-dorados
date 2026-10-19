@@ -3,6 +3,7 @@ name: Actualizar picks
 on:
   push:
     branches: [main]       # se lanza solo cada vez que cambia el código
+    paths-ignore: ["app/**", ".github/workflows/app.yml"]
   schedule:
     - cron: "15 4-22/2 * * *"
     - cron: "35 21 * * *"      # 23:35 de Madrid en verano: apuestas del día siguiente por Telegram

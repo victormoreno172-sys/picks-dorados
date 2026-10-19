@@ -1,0 +1,74 @@
+name: App Android
+# Compila la app (APK) de Picks Dorados: un contenedor que abre la web publicada, así que la app se
+# actualiza sola con cada cambio de la web. Solo hay que recompilar cuando cambia algo del propio
+# contenedor (icono, nombre, pantalla de inicio, notificaciones...).
+on:
+  workflow_dispatch:
+  push:
+    paths: ["app/**", ".github/workflows/app.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: app
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Icono y pantalla de inicio
+        run: pip install pillow && cd app && python iconos.py
+
+      - name: Proyecto Android
+        run: |
+          cd app
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx capacitor-assets generate --android --iconBackgroundColor '#07110c' --iconBackgroundColorDark '#07110c' --splashBackgroundColor '#07110c' --splashBackgroundColorDark '#07110c'
+          npx cap sync android
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"0.1.${{ github.run_number }}\"/" android/app/build.gradle
+          grep -n "versionCode\|versionName" android/app/build.gradle
+
+      - name: Compilar
+        run: cd app/android && chmod +x gradlew && ./gradlew assembleRelease --no-daemon -q
+
+      - name: Firmar
+        env:
+          CLAVE: ${{ secrets.APK_CLAVE }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$CLAVE" ]; then echo "::error::Falta el secreto APK_CLAVE (Settings > Secrets and variables > Actions)"; exit 1; fi
+          # La firma se crea una vez y se guarda cifrada con APK_CLAVE en la rama "firma":
+          # siempre la misma, para que las versiones nuevas se instalen encima de la anterior.
+          if git fetch -q origin firma 2>/dev/null && git show FETCH_HEAD:firma.jks.enc > firma.jks.enc 2>/dev/null && [ -s firma.jks.enc ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -in firma.jks.enc -out firma.jks -pass env:CLAVE
+          else
+            keytool -genkeypair -keystore firma.jks -alias picks -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$CLAVE" -keypass "$CLAVE" -dname "CN=Picks Dorados, O=Picks Dorados, C=ES"
+            openssl enc -aes-256-cbc -pbkdf2 -salt -in firma.jks -out firma.jks.enc -pass env:CLAVE
+            mkdir rama && cp firma.jks.enc rama/ && cd rama && git init -q && git checkout -q -b firma
+            git config user.name bot && git config user.email bot@local
+            git add firma.jks.enc && git commit -qm "firma de la app (cifrada)"
+            git push -q "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" firma
+            cd ..
+          fi
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/zipalign" -p -f 4 app/android/app/build/outputs/apk/release/app-release-unsigned.apk alineada.apk
+          "$BT/apksigner" sign --ks firma.jks --ks-pass env:CLAVE --ks-key-alias picks --key-pass env:CLAVE --out PicksDorados.apk alineada.apk
+          "$BT/apksigner" verify PicksDorados.apk && ls -la PicksDorados.apk
+          rm -f firma.jks
+
+      - name: Publicar la descarga
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view app >/dev/null 2>&1 || gh release create app --title "App Android" --notes "Picks Dorados para Android. Descarga PicksDorados.apk e instálala." --prerelease
+          gh release upload app PicksDorados.apk --clobber
+          gh release edit app --notes "Picks Dorados para Android · versión 0.1.${{ github.run_number }}. Descarga PicksDorados.apk e instálala (encima de la anterior, sin perder nada)."

@@ -173,6 +173,8 @@ details.pleg[open] > summary { margin-bottom: 10px; }
 </div>
 <script>
 const D = __DATOS__;
+try { const SB = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins.StatusBar;
+  if (SB) { SB.setBackgroundColor({ color: "#04060a" }); SB.setStyle({ style: "DARK" }); } } catch (e) {}
 const $ = id => document.getElementById(id);
 const eur = x => (x < 0 ? "−" : "") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
 const sig = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2).replace(".", ",") + " €";

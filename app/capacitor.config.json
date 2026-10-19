@@ -1,0 +1,28 @@
+{
+  "appId": "com.picksdorados.app",
+  "appName": "Picks Dorados",
+  "webDir": "www",
+  "server": {
+    "url": "https://victormoreno172-sys.github.io/picks-dorados/",
+    "allowNavigation": ["victormoreno172-sys.github.io"],
+    "errorPath": "sin-conexion.html"
+  },
+  "android": {
+    "backgroundColor": "#07110c"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1400,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 300,
+      "backgroundColor": "#07110c",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP"
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#f5f7fb"
+    }
+  }
+}
