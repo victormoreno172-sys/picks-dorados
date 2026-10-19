@@ -167,11 +167,14 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
             continue
         if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
             continue
-        ks = [k for k in a.picks if PROB_MIN <= k.prob and round(1.03 / k.prob, 2) >= CUOTA_MIN]
+        # Margen que se pide sobre la cuota justa: 3 %; en la WTA, 5 % (en el backtest sus +1,5 sets
+        # del 75-85 % aciertan ~1,5 puntos menos de lo previsto; en la ATP, algo más)
+        margen = 1.05 if (p.liga or "").startswith("WTA") else 1.03
+        ks = [k for k in a.picks if PROB_MIN <= k.prob and round(margen / k.prob, 2) >= CUOTA_MIN]
         if ks:
             k = max(ks, key=lambda k: k.prob)
             pi = _pierna(a, k)
-            pi["cuota"], pi["minima"] = round(1.03 / k.prob + 0.005, 2), True
+            pi["cuota"], pi["minima"] = round(margen / k.prob + 0.005, 2), True
             sin_cuota.append({"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"],
                               "prob": round(k.prob, 3), "importe": redondo(banca * PORCENTAJE)})
     sin_cuota.sort(key=lambda ap: -ap["prob"])
