@@ -285,6 +285,9 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .feq b { font: 700 16px/1.15 var(--display); overflow-wrap: normal; word-break: normal; hyphens: auto; max-width: 100%; }
 .feq b.largo { font-size: 14px; }
 .feq b.muylargo { font-size: 12.5px; }
+.rdesc { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0; padding: 7px 10px; border-radius: 12px; background: var(--gold-soft); color: var(--gold-ink); font-size: 13px; }
+.rdesc small { color: var(--muted); font-size: 11px; }
+.fdesc { color: var(--gold) !important; font: 600 11px var(--mono); }
 .feq .frk { margin-top: -4px; display: flex; flex-direction: column; align-items: center; gap: 1px; max-width: 100%; line-height: 1.15; }
 .feq .frk b { font: 800 13px var(--mono); color: var(--gold-ink); background: var(--gold-soft); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); padding: 1px 9px; border-radius: 999px; }
 .feq .frk i { font: 500 10.5px var(--body); font-style: normal; color: var(--muted); max-width: 100%; overflow-wrap: anywhere; text-align: center; }
@@ -1358,7 +1361,7 @@ function cargarResumen(fi) {
   RESUMEN[k] = Object.assign(r || {}, { cargando: true });
   fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${fi.slug}/summary?event=${fi.id}`, { cache: "no-store" })
     .then(x => x.json()).then(j => { RESUMEN[k] = { t: Date.now(), ev: eventosResumen(j) }; marcadorDeResumen(k, j);
-      const al = alinDeEspn(j); if (al && al.l && al.v) fi.alin = al; })  // alineaciones al momento (el servidor va cada hora)
+      const al = alinDeEspn(j); if (al && al.l && al.v) fi.alin = al; fi._desc = descuentos(j); })  // alineaciones al momento (el servidor va cada hora)
     .catch(() => { RESUMEN[k] = { t: Date.now(), error: true, ev: (r && r.ev) || null }; })
     .finally(() => { if (est.vista === "partido" && (est.tab === "resumen" || est.tab === "alin")) pintarLista(); });
 }
@@ -1376,6 +1379,16 @@ function marcadorDeResumen(id, j) {
     if (!/^\d+-\d+$/.test(res.m)) return;
     for (const d of DATOS.dias) for (const p of d.partidos) if (p.fi && p.fi.id === id) { marcaGol(p, res); p.res = res; }
   } catch (e) {}
+}
+function descuentos(j) {
+  const out = {};
+  for (const c of (j && j.commentary) || []) {
+    const m = /announced\s+(?:an?\s+additional\s+)?(\d+)\s+minutes?\s+of\s+added\s+time/i.exec(c.text || "") || /(\d+)\s+minutes?\s+of\s+(?:added|stoppage|injury)\s+time/i.exec(c.text || "");
+    if (!m) continue;
+    const t = /(\d+)/.exec((c.time || {}).displayValue || ""), min = t ? +t[1] : 0;
+    out[min && min < 80 ? "1" : "2"] = +m[1];
+  }
+  return out;
 }
 function eventosResumen(j) {
   const comp = ((j.header || {}).competitions || [])[0] || {};
@@ -1415,7 +1428,10 @@ function eventosResumen(j) {
     if (out.some(x => x.ico === "🚑" && x.min === min)) continue;
     out.push({ min, lado: m[2] === nomL ? "l" : m[2] === nomV ? "v" : "c", ico: "🚑", t: m[1], sub: "lesión" });
   }
-  const n = x => { const r = /(\d+)(?:'\+(\d+))?/.exec(x.min || ""); return r ? +r[1] + (r[2] ? +r[2] / 100 : 0) : 999; };
+  // Descuento que anuncia el cuarto árbitro ("Fourth official has announced 3 minutes of added time")
+  const desc = descuentos(j);
+  for (const [parte, mins] of Object.entries(desc)) out.push({ min: parte === "1" ? "45'" : "90'", desc: true, t: `+${mins} min de descuento`, sub: parte === "1" ? "1ª parte" : "2ª parte" });
+  const n = x => { const r = /(\d+)(?:'\+(\d+))?/.exec(x.min || ""); return r ? +r[1] + (r[2] ? +r[2] / 100 : 0) - (x.desc ? 0.001 : 0) : 999; };
   const seps = out.filter(x => x.sep), evs = out.filter(x => !x.sep).sort((a, b) => n(a) - n(b));
   const res = [];
   for (const e of evs) {
@@ -1497,7 +1513,7 @@ function pintarResumen(p) {
   const r = RESUMEN[fi.id];
   if (!r || !r.ev) return `<div class="vacio">${r && r.error ? "No se pudo cargar el resumen. Vuelve a intentarlo en un momento." : "Cargando resumen…"}</div>`;
   if (!r.ev.length) return `<div class="vacio">De momento no ha pasado nada destacable.</div>`;
-  return `<div class="resumen">` + r.ev.map(e => e.sep ? `<div class="rsep">${esc(e.sep)}</div>` :
+  return `<div class="resumen">` + r.ev.map(e => e.sep ? `<div class="rsep">${esc(e.sep)}</div>` : e.desc ? `<div class="rdesc"><span>⏱️</span><b>${esc(e.t)}</b><small>${esc(e.sub)}</small></div>` :
     `<div class="rev ${e.lado}"><span class="rmin">${esc(e.min)}</span><div class="rtx"><span class="rico">${e.ico}</span><span><b>${esc(e.t)}</b>${e.sub ? `<small>${esc(e.sub)}</small>` : ""}</span></div></div>`).join("") +
     `<p class="nota" style="text-align:center">Se actualiza solo cada minuto${es.st === "post" ? "" : " mientras se juega"}.</p></div>`;
 }
@@ -1549,7 +1565,9 @@ function pintarFicha() {
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b>${rkChip((p.rk || [])[0])}</div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
-        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" + conGol(p) : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + minutoTxt(es.det) : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
+        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" + conGol(p) : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + minutoTxt(es.det) : es.det)}</small>${(() => {
+          const d = fi._desc || {}, mm = /(\d+)'/.exec(es.det || ""), parte = mm && +mm[1] >= 46 ? "2" : "1";
+          return es.st === "in" && p.dep === "f" && d[parte] && mm && +mm[1] >= (parte === "1" ? 45 : 90) ? `<small class="fdesc">+${d[parte]} de descuento</small>` : ""; })()}${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
         if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
         const e2 = p.dep === "te" ? estimadasTenis(dia)[est.sel] : null;
         if (e2) return `<b class="est">≈${esc(e2.h)}</b><small>hora estimada<br>tras ${esc(e2.tras || "otro partido")}</small>`;
