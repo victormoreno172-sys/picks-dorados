@@ -73,6 +73,13 @@ except Exception as e:
     print(f"aviso: fichas no disponibles: {e}")
     traceback.print_exc()
 
+# Resultados que aún no han llegado por los CSV (fútbol europeo del fin de semana): de ESPN
+try:
+    import ficha
+    ficha.resultados_pendientes()
+except Exception as e:
+    print(f"aviso: resultados pendientes: {e}")
+
 # Historial de aciertos (si falla, la app sale igual sin esa pantalla)
 try:
     import historial

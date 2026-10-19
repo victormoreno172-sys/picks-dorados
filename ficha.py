@@ -332,3 +332,57 @@ def recuperar_empezados(datos_app: dict, ruta_previa: str):
                 n += 1
         dia["partidos"].sort(key=lambda p: (p.get("hora") or "99", p["liga"]))
     print(f"  partidos ya empezados recuperados de la versión anterior: {n}")
+
+
+def resultados_pendientes() -> int:
+    """Resultados de fútbol que aún no han llegado por los CSV (football-data tarda 1-3 días tras el
+    fin de semana): se cogen de ESPN para corregir ya las apuestas del bot y el historial."""
+    import apuestas
+    import config
+    import historial
+    pend = set()
+    hoy = datetime.now(TZ).date()
+    try:
+        for a in apuestas.cargar().get("apuestas", []):
+            for pi in a.get("piernas", []):
+                if "ok" not in pi:
+                    pend.add((pi["fecha"], pi.get("liga") or "", pi["local"], pi["visitante"]))
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso resultados pendientes (banca): {e}")
+    try:
+        for e in historial.cargar().get("partidos", {}).values():
+            if not e.get("res") and e.get("dep", "f") == "f":
+                pend.add((e["f"], e.get("liga") or "", e["l"], e["v"]))
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso resultados pendientes (historial): {e}")
+    cache: dict = {}
+    hechos = 0
+    for f, liga, l, v in pend:
+        try:
+            fecha = date.fromisoformat(f)
+        except ValueError:
+            continue
+        if fecha > hoy or (hoy - fecha).days > 10:
+            continue
+        if any((d.isoformat(), l, v) in historial.RESULTADOS for d in (fecha, fecha - timedelta(days=1), fecha + timedelta(days=1))):
+            continue
+        nombre = config.nombre_liga(liga) if liga else ""
+        if nombre and not nombre[0].isalnum() and " " in nombre:  # quitar la bandera
+            nombre = nombre.split(" ", 1)[1]
+        ds = SLUGS.get(nombre) or SLUGS.get(liga)
+        if not ds or ds[0] != "soccer":
+            continue
+        evs = []
+        for d in (fecha - timedelta(days=1), fecha, fecha + timedelta(days=1)):
+            if (*ds, d) not in cache:
+                cache[(*ds, d)] = _eventos(*ds, d)
+            evs += cache[(*ds, d)]
+        e = _emparejar({"local": l, "visitante": v, "hora": ""}, fecha, evs)
+        st = (e or {}).get("estado") or {}
+        m = st.get("m") or ""
+        if st.get("st") == "post" and "-" in m:
+            gl, gv = (int(x) for x in m.split("-"))
+            historial.anotar(fecha, l, v, gl, gv)
+            hechos += 1
+    print(f"  resultados de ESPN para lo pendiente: {hechos} de {len(pend)}")
+    return hechos
