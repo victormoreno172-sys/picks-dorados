@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -18,6 +19,21 @@ from analisis import Analisis
 CARPETA = os.path.dirname(os.path.abspath(__file__))
 SALIDA = os.path.join(CARPETA, "web")
 DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+
+# Versión de esta publicación: la app la compara con version.txt y, si hay una nueva, se recarga sola
+VERSION = str(int(time.time()))
+AUTO_RECARGA = """<script>(function () {
+  var V = "%s", base = location.pathname.indexOf("/bot/") >= 0 ? "../" : "";
+  function mira() {
+    fetch(base + "version.txt?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (t) {
+      t = (t || "").trim();
+      if (t && /^\\d+$/.test(t) && +t > +V) { var u = new URL(location.href); u.searchParams.set("v", t); location.replace(u.toString()); }
+    }).catch(function () {});
+  }
+  mira();
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) mira(); });
+})();</script>
+""" % VERSION
 
 CABECERA = """<!doctype html>
 <html lang="es">
@@ -90,7 +106,7 @@ def html(datos: dict, documento_completo: bool = True) -> str:
         cuerpo = f.read()
     # json seguro dentro de <script>
     js = json.dumps(datos, ensure_ascii=False).replace("</", "<\\/")
-    cuerpo = cuerpo.replace("__DATOS__", js)
+    cuerpo = cuerpo.replace("__DATOS__", js).replace('href="bot/"', f'href="bot/?v={VERSION}"') + AUTO_RECARGA
     return (CABECERA.replace("#0b1711", "#f5f7fb").replace("Picks Dorados", "Partidos") + cuerpo + "\n</body>\n</html>\n") if documento_completo else cuerpo
 
 
@@ -117,6 +133,8 @@ def escribir(datos: dict, carpeta: str = SALIDA):
         f.write(html(datos))
     with open(os.path.join(carpeta, "datos.json"), "w", encoding="utf-8") as f:
         json.dump(datos, f, ensure_ascii=False)
+    with open(os.path.join(carpeta, "version.txt"), "w", encoding="utf-8") as f:
+        f.write(VERSION)
     with open(os.path.join(carpeta, "manifest.webmanifest"), "w", encoding="utf-8") as f:
         json.dump(MANIFEST, f, ensure_ascii=False, indent=2)
     with open(os.path.join(carpeta, "icono.svg"), "w", encoding="utf-8") as f:

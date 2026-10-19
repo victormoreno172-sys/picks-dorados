@@ -21,7 +21,8 @@ def html(datos: dict) -> str:
         cuerpo = f.read()
     js = json.dumps(datos, ensure_ascii=False).replace("</", "<\\/")
     cabecera = web.CABECERA.replace("Picks Dorados", "Bot Dorado").replace("#0b1711", "#04060a")
-    return cabecera + cuerpo.replace("__DATOS__", js) + "\n</body>\n</html>\n"
+    cuerpo = cuerpo.replace('href="../"', f'href="../?v={web.VERSION}"')
+    return cabecera + cuerpo.replace("__DATOS__", js) + web.AUTO_RECARGA + "\n</body>\n</html>\n"
 
 
 def escribir(b: dict, carpeta: str = CARPETA):
