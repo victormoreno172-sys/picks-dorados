@@ -182,7 +182,8 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None) -> lis
     # 2 combinadas). Con importes en cadena al 5 %, 10 apuestas son ~40 % de la banca.
     elegidas = apuestas[:10]
     for ap in elegidas:
-        ap["fecha"] = ap["piernas"][0]["fecha"]
+        # El día de la apuesta es el del partido que empieza antes (aunque alguno acabe pasada la medianoche)
+        ap["fecha"] = min(ap["piernas"], key=lambda pi: (pi["fecha"], pi.get("hora") or "99"))["fecha"]
     sencillas = sorted([ap for ap in elegidas if ap["tipo"] == "Sencilla"], key=lambda ap: ap["piernas"][0]["hora"] or "99")
     elegidas = sencillas + [ap for ap in elegidas if ap["tipo"] != "Sencilla"]
     importes_en_cadena(elegidas, banca)
