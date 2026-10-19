@@ -2294,6 +2294,29 @@ function misApuestasActivasTodas() {
 // ---- Cálculo de las apuestas del bot con lo que marcaste en ESTE móvil (igual en la app del bot y en Partidos)
 // 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
 // anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
+// El mercado con el nombre del equipo, tal como lo buscarías en Winamax
+function textoMercado(p) {
+  const n = x => String(x).replace(".", ",");
+  let m = /^Hándicap (local|visitante) ([+-])([\d.]+)$/.exec(p.mercado);
+  if (m) {
+    const eq = m[1] === "local" ? p.local : p.visitante, l = +m[3];
+    return m[2] === "+" ? `${eq} +${n(l)} (gana, o pierde por ${Math.floor(l)} o menos)` : `${eq} −${n(l)} (gana por ${Math.ceil(l)} o más)`;
+  }
+  if (p.mercado === "Gana local") return `Gana ${p.local}`;
+  if (p.mercado === "Gana visitante") return `Gana ${p.visitante}`;
+  if (/^Local o empate/.test(p.mercado)) return `${p.local} o empate (1X)`;
+  if (/^Visitante o empate/.test(p.mercado)) return `${p.visitante} o empate (X2)`;
+  if (/^No hay empate/.test(p.mercado)) return `Gana uno de los dos, no empate (12)`;
+  return p.mercado;
+}
+// Si la casa no tiene esa línea exacta de hándicap, cuál vale igual
+function pistaLinea(p) {
+  const m = /^Hándicap (local|visitante) ([+-])([\d.]+)$/.exec(p.mercado);
+  if (!m) return "";
+  const eq = m[1] === "local" ? p.local : p.visitante, l = String(m[3]).replace(".", ",");
+  return m[2] === "+" ? `Si no está ${eq} +${l}: vale una con más puntos (+${String(+m[3] + 1).replace(".", ",")}…) a esta cuota o más. Con menos puntos, no. Si ${eq} sale como favorito en Winamax, no la hagas.`
+    : `Si no está ${eq} −${l}: vale una con menos puntos (−${String(Math.max(0.5, +m[3] - 1)).replace(".", ",")}…) a esta cuota o más. Con más puntos, no.`;
+}
 const HECHAS_DESDE = "2026-10-20";
 // Desde ese día cuenta tu dinero de verdad: lo que tenías en Winamax y solo las apuestas que marcas como hechas
 const INICIO_REAL = 72.54;   // 68,51 € en la cuenta + 4,03 € de la de Uchijima ya metidos
@@ -2433,7 +2456,7 @@ function pintarMisApuestas() {
       const tag = x ? "button" : "div", attrs = x ? ` data-abrirdia="${x[0]}" data-abrirp="${x[1]}" data-desde="misap"` : "";
       return `<${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
         <span class="mh">${hora}</span>
-        <span class="me"><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[0] : "", pi.local)}<span>${esc(pi.local)}</span></b><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[1] : "", pi.visitante)}<span>${esc(pi.visitante)}</span></b><small>${esc(pi.mercado)} · ${pi.minima ? "pide ≥ " : pi.estimada ? "≈" : ""}${(+pi.cuota).toFixed(2)}</small></span>
+        <span class="me"><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[0] : "", pi.local)}<span>${esc(pi.local)}</span></b><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[1] : "", pi.visitante)}<span>${esc(pi.visitante)}</span></b><small>${esc(textoMercado(pi))} · ${pi.minima ? "pide ≥ " : pi.estimada ? "≈" : ""}${(+pi.cuota).toFixed(2)}</small></span>
         <span class="mm">${mar ? `<span>${mar[1]}</span><span>${mar[2]}</span>` : ""}</span>
         <span class="ms">${sem}</span></${tag}>`;
     }).join("");
