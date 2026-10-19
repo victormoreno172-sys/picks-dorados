@@ -215,6 +215,23 @@ def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
     return partidos
 
 
+def _con_sorteo(lid: str, cal: list, copa: bool) -> list:
+    """Añade los cruces ya sorteados que ESPN aún no tiene (365Scores)."""
+    try:
+        import calendarios
+        extra = calendarios.proximos_copa(lid, cal)
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso sorteo {lid}: {e}")
+        return cal
+    for p in extra:
+        p.pop("fuente", None)
+        if copa or not re.search(r"(?i)liga|league|fase|grupo|jornada|matchday", p.get("r") or ""):
+            p["ko"] = 1
+    if extra:
+        print(f"  {lid}: {len(extra)} cruces sorteados añadidos (365Scores)")
+    return sorted(cal + extra, key=lambda p: (p["f"], p["h"]))
+
+
 def _eliminatoria(e: dict, slug: str) -> bool:
     """¿Partido de eliminatorias (playoffs de la NBA, rondas K.O. de copas y competiciones europeas)?"""
     se = e.get("season") or {}
@@ -761,6 +778,8 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
         except Exception as e:  # una liga rota no tumba las demás
             print(f"  aviso ligas {nombre}: {e}")
             continue
+        if slug.startswith("uefa"):
+            cal = _con_sorteo(lid, cal, copa=False)
         n_eq = sum(len(g["filas"]) for g in grupos) or len({p["l"] for p in cal} | {p["v"] for p in cal})
         jor = _jornadas(cal, n_eq, por_dia=deporte == "basketball", uefa=slug.startswith("uefa"))
         if not grupos and not jor:
@@ -778,6 +797,7 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
             continue
         if not cal:
             continue
+        cal = _con_sorteo(lid, cal, copa=True)
         jor = _rondas_copa(cal)
         archivos.append((lid, {"nombre": nombre, "dep": "f", "tipo": "copa", "grupos": [], "jornadas": jor,
                                "actual": _actual(jor, hoy)}))
