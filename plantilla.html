@@ -334,7 +334,9 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .esp.marc { font: 700 15px/1.25 var(--mono); color: var(--ink); }
 .fp.empezado.in .esp.marc { color: var(--red); }
 @keyframes latido { 50% { opacity: .35; } }
-.vivo { animation: latido 1.6s ease-in-out infinite; }
+/* En directo: rojo fijo, sin parpadear. Solo parpadea un rato cuando hay gol (o set/mapa) */
+@keyframes golazo { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .15; transform: scale(1.08); } }
+.gol { animation: golazo .55s ease-in-out 20; }
 
 /* ---------- pestaña Ligas ---------- */
 .lbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; align-items: center; gap: 10px; padding: 12px 0 10px; border-bottom: 1px solid var(--line); }
@@ -1108,7 +1110,7 @@ function filaPartido(p, idx) {
     <button class="fpcab" data-abrir="${idx}">
       <span class="hora">${hora}${rondaCorta(p) ? `<small class="rtag">${esc(rondaCorta(p))}</small>` : ""}</span>
       <span class="eqs"><b>${miniEsc(((p.fi || {}).esc || [])[0], p.local)}<span>${esc(p.local)}</span></b><b>${miniEsc(((p.fi || {}).esc || [])[1], p.visitante)}<span>${esc(p.visitante)}</span></b></span>
-      ${mar ? `<span class="esp marc"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : AJ.verEsperados ? `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>` : "<span></span>"}
+      ${mar ? `<span class="esp marc${conGol(p)}"><span>${mar[1]}</span><span>${mar[2]}</span></span>` : AJ.verEsperados ? `<span class="esp"><span>${num(p.gl)}</span><span>${num(p.gv)}</span></span>` : "<span></span>"}
       <span class="tikd">${partidoApostado(p) ? "🎟️" : ""}</span>
     </button>
     <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
@@ -1372,7 +1374,7 @@ function marcadorDeResumen(id, j) {
     const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
     const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : esDescanso(t) ? "Descanso" : (c.status.displayClock || t.shortDetail || "Vivo") };
     if (!/^\d+-\d+$/.test(res.m)) return;
-    for (const d of DATOS.dias) for (const p of d.partidos) if (p.fi && p.fi.id === id) p.res = res;
+    for (const d of DATOS.dias) for (const p of d.partidos) if (p.fi && p.fi.id === id) { marcaGol(p, res); p.res = res; }
   } catch (e) {}
 }
 function eventosResumen(j) {
@@ -1547,7 +1549,7 @@ function pintarFicha() {
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b>${rkChip((p.rk || [])[0])}</div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
-        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + minutoTxt(es.det) : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
+        if (es && es.m) return `<b class="${es.st === "in" ? "vivo" + conGol(p) : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + minutoTxt(es.det) : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
         if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
         const e2 = p.dep === "te" ? estimadasTenis(dia)[est.sel] : null;
         if (e2) return `<b class="est">≈${esc(e2.h)}</b><small>hora estimada<br>tras ${esc(e2.tras || "otro partido")}</small>`;
@@ -2913,7 +2915,7 @@ async function enDirecto() {
             const per = (c.status || {}).period || 0;
             if (t.state === "in") { res.periodo = per > 4 ? "Pr" : `${per}C`; res.reloj = c.status.displayClock || ""; res.det = esDescanso(t) ? "Descanso" : `${res.periodo} ${res.reloj}`.trim(); }
           }
-          if (JSON.stringify(res) !== JSON.stringify(p.res)) { p.res = res; cambio = true; }
+          if (JSON.stringify(res) !== JSON.stringify(p.res)) { marcaGol(p, res); p.res = res; cambio = true; }
         }
       } catch (e) {}
     }
@@ -2958,7 +2960,18 @@ function guardarFinal(p, res) {
   try { localStorage.setItem("resFinales", JSON.stringify(RES_FINALES)); } catch (e) {}
 }
 for (const d of DATOS.dias) for (const p of d.partidos) { const r = RES_FINALES[d.fecha + "|" + p.local + "|" + p.visitante]; if (r && !(p.res && p.res.st === "post")) p.res = r; }
-function ponerRes(p, res) { if (JSON.stringify(res) === JSON.stringify(p.res)) return false; p.res = res; guardarFinal(p, res); return true; }
+function ponerRes(p, res) { if (JSON.stringify(res) === JSON.stringify(p.res)) return false; marcaGol(p, res); p.res = res; guardarFinal(p, res); return true; }
+// ¡Gol! (o set/mapa): si el marcador sube con el partido en juego, parpadea un rato (en basket no, que sube sin parar)
+function marcaGol(p, res) {
+  if (!res || (p.dep || "f") === "b") return;
+  const a = /^(\d+)-(\d+)$/.exec((p.res || {}).m || ""), b = /^(\d+)-(\d+)$/.exec(res.m || "");
+  if (a && b && p.res.st === "in" && +b[1] + +b[2] > +a[1] + +a[2]) {
+    p._gol = Date.now();
+    setTimeout(() => { if (document.activeElement !== $("busca")) pintarLista(); }, GOL_MS + 300);  // se quita el parpadeo
+  }
+}
+const GOL_MS = 12000;
+const conGol = p => p && p._gol && Date.now() - p._gol < GOL_MS ? " gol" : "";
 async function json(url, ms = 12000) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
   try { const r = await fetch(url, { cache: "no-store", signal: c.signal }); if (!r.ok) throw new Error(r.status); return await r.json(); }
