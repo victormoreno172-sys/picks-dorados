@@ -208,9 +208,22 @@ def _calendario_espn(deporte: str, slug: str, hoy: date) -> list[dict]:
                              "el": eq["home"]["team"].get("logo", ""), "ev": eq["away"]["team"].get("logo", ""),
                              "m": es.get("m", ""), "st": es.get("st", "pre"),
                              "fase": (e.get("season") or {}).get("slug", "")})
+            if _eliminatoria(e, slug):
+                partidos[-1]["ko"] = 1
         m = sig
     partidos.sort(key=lambda p: (p["f"], p["h"]))
     return partidos
+
+
+def _eliminatoria(e: dict, slug: str) -> bool:
+    """¿Partido de eliminatorias (playoffs de la NBA, rondas K.O. de copas y competiciones europeas)?"""
+    se = e.get("season") or {}
+    if slug == "nba":
+        return se.get("type") == 3
+    f = (se.get("slug") or "").lower()
+    if re.search(r"group|league|regular|qualif|pre-?season|swiss", f):
+        return False
+    return bool(re.search(r"post|playoff|knockout|round-of|quarter|semi|final|eighth|16|ko", f))
 
 
 def _jornadas_liga(partidos: list) -> list[dict]:
@@ -783,6 +796,8 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
         d["otras"] = otras
     for _, d in archivos:  # fuera lo que el móvil no necesita
         for lista in [p for j in d["jornadas"] for p in j["p"]] + [p for o in d.get("otras", {}).values() for p in o]:
+            if lista.get("r") and d.get("tipo") == "copa":
+                lista["rn"] = lista["r"]  # nombre de la ronda (si ESPN lo da) para el cuadro
             for k in ("il", "iv", "r", "fase"):
                 lista.pop(k, None)
     archivos += _basket_europa(datos_app, hoy)

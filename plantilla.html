@@ -1808,16 +1808,18 @@ function pintarCuadro(j) {
   const doble = secs.l.length > 0;
   const tarjeta = (p, final) => {
     const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
-    const fin = p.st === "post" && mar, app = p.st !== "post" ? enLaApp(p) : null;
+    const fin = p.st === "post" && mar, app = p.st !== "post" ? enLaApp(p._abrir || p) : null;
+    const gan = p.gan ? (p.gan === p.l ? 1 : 2) : fin ? (a > b ? 1 : b > a ? 2 : 0) : 0;
     const fd = new Date(p.f + "T12:00:00"), fecha = `${f2(fd.getDate())}.${f2(fd.getMonth() + 1)}`;
-    const eq = (n, l, x, y) => `<div class="ceq ${fin && x > y ? "gana" : fin && x < y ? "pierde" : ""}">${miniEsc(l, n)}<span>${esc(n)}</span><b>${mar ? x : ""}</b></div>`;
-    const pie = p.st === "in" ? `<span class="vivo">● EN DIRECTO</span>` : p.st === "post" ? `<span>FINAL</span>` : `<span>${fecha} · ${esc(p.h || "--:--")}</span>`;
+    const eq = (n, l, x, k) => `<div class="ceq ${gan === k ? "gana" : gan && gan !== k ? "pierde" : ""}">${miniEsc(l, n)}<span>${esc(n)}</span><b>${mar ? x : ""}</b></div>`;
+    const ida = p.legs ? (p.serie ? `Serie · ${p.legs.length} partidos` : p.legs.map((q, i) => `${i ? "Vuelta" : "Ida"} ${q.st === "pre" ? "—" : esc((q.l === p.l ? q.m : (q.m || "").split("-").reverse().join("-")) || "—")}`).join(" · ")) : "";
+    const pie = p.st === "in" ? `<span class="vivo">● EN DIRECTO</span>` : p.st === "post" ? `<span>${ida || "FINAL"}</span>` : `<span>${ida ? ida + " · " : ""}${fecha} · ${esc(p.h || "--:--")}</span>`;
     const tag = app ? "button" : "div", attrs = app ? ` data-abrirdia="${app[0]}" data-abrirp="${app[1]}"` : "";
-    return `<${tag} class="cm ${p.st}${app ? " ir" : ""}"${attrs}>${eq(p.l, p.el, a, b)}${eq(p.v, p.ev, b, a)}
+    return `<${tag} class="cm ${p.st}${app ? " ir" : ""}"${attrs}>${eq(p.l, p.el, a, 1)}${eq(p.v, p.ev, b, 2)}
       <div class="cpie">${pie}${app && !mar ? '<span style="color:var(--gold)">% pronóstico</span>' : ""}</div></${tag}>`;
   };
   const columnas = cols => `<div class="cuadro">${cols.sort((x, y) => (x.ro - y.ro) || (x.i - y.i)).map(c => {
-    const final = /^(Gran final|Final)$/i.test(c.r || "");  // la final del torneo (no la de cada cuadro)
+    const final = /^(Gran final|Final|Finales de la NBA)$/i.test(c.r || "");  // la final del torneo (no la de cada cuadro)
     const tit = final && doble ? "Gran final" : corto(c.r);
     return `<div class="ccol${final ? " final" : ""}"><h4>${final ? "🏆 " : ""}${esc(tit)}</h4><div class="cpart">${c.p.slice().sort((x, y) => (x.pos || 0) - (y.pos || 0)).map(p => tarjeta(p, final)).join("")}</div></div>`;
   }).join("")}</div>`;
@@ -1825,6 +1827,126 @@ function pintarCuadro(j) {
   if (secs.u.length) h += `<div class="csec">${doble ? "<h3>Cuadro de ganadores</h3>" : ""}${columnas(secs.u)}</div>`;
   if (secs.l.length) h += `<div class="csec"><h3>Cuadro de perdedores</h3>${columnas(secs.l)}</div>`;
   return h + `<p class="nota" style="color:var(--muted);font-size:12px;margin:4px">Desliza a los lados para ver todas las rondas.${doble ? " Quien pierde en el cuadro de ganadores baja al de perdedores; quien pierde ahí, queda eliminado." : ""}</p>`;
+}
+// Cuadro para copas, torneos de tenis, eliminatorias europeas y playoffs (NBA): se arma con los partidos
+function cuadroComp(L) {
+  if (!L || !L.jornadas || L.dep === "e" || L.tipo === "ranking") return null;
+  let ps = L.jornadas.flatMap(j => j.p.map(p => Object.assign({ _j: j.t }, p)));
+  if (L.tipo !== "copa") { ps = ps.filter(p => p.ko); if (ps.length < 3) return null; }
+  else if (ps.some(p => p.ko)) ps = ps.filter(p => p.ko);
+  if (ps.length < 2) return null;
+  const nba = L.tipo === "nba" || L.dep === "b", tenis = L.dep === "te";
+  const dias = (a, b) => Math.abs((new Date(b) - new Date(a)) / 864e5);
+  const pd = n => !n || n === "Por decidir";
+  ps.sort((x, y) => (x.f + x.h).localeCompare(y.f + y.h));
+  // 1) Eliminatorias: los mismos dos rivales (ida y vuelta, o la serie de playoffs)
+  const ties = [], porClave = {};
+  const vistos = new Set();
+  ps = ps.filter(p => { if (pd(p.l) || pd(p.v)) return true; const k = p.f + "|" + p.l + "|" + p.v; if (vistos.has(k)) return false; vistos.add(k); return true; });
+  for (const p of ps) {
+    const k = [p.l, p.v].sort().join("|"), libre = pd(p.l) || pd(p.v);
+    let t = !libre && !tenis && porClave[k];
+    if (t && dias(t.ult, p.f) > 75) t = null;
+    if (!t) { t = { a: p.l, b: p.v, ea: p.el, eb: p.ev, legs: [], f: p.f, h: p.h, j: p._j, rn: (p.rn || "").replace(/ \((ida|vuelta)\)$/, "") }; ties.push(t); if (!libre) porClave[k] = t; }
+    t.legs.push(p); t.ult = p.f;
+  }
+  // Ida y vuelta aún sin rivales: se emparejan los partidos "Por decidir" de dos fechas seguidas con el mismo número
+  if (!nba && !tenis) {  // dos tandas seguidas con el mismo número de partidos = ida y vuelta (en un K.O. cada ronda tiene la mitad)
+    const libres = ties.filter(t => pd(t.a) || pd(t.b)), grupos = [];
+    for (const t of libres) { const g = grupos[grupos.length - 1]; if (g && dias(g[g.length - 1].f, t.f) <= 4) g.push(t); else grupos.push([t]); }
+    for (let i = 0; i + 1 < grupos.length; i++) {
+      const A = grupos[i], B = grupos[i + 1], gap = dias(A[0].f, B[0].f);
+      if (A.length === B.length && gap >= 5 && gap <= 75) {
+        B.forEach((t, k) => { A[k].legs.push(...t.legs); A[k].ult = t.ult; ties.splice(ties.indexOf(t), 1); });
+        i++;
+      }
+    }
+  }
+  // Fuera los cruces que no eliminan a nadie (fase de grupos o de liga): los dos siguen jugando después
+  const despues = (n, t) => !pd(n) && ties.some(x => x !== t && x.f > t.ult && (x.a === n || x.b === n));
+  for (let k = ties.length - 1; k >= 0; k--) if (despues(ties[k].a, ties[k]) && despues(ties[k].b, ties[k])) ties.splice(k, 1);
+  if (ties.length < 2) return null;
+  // 2) Rondas
+  let rondas = null;
+  const tienenNombre = tenis || (ties.every(t => t.rn) && new Set(ties.map(t => t.rn)).size > 1);
+  if (tienenNombre) {
+    rondas = [];
+    for (const t of ties) { const n = tenis ? t.j : t.rn; let r = rondas.find(r => r.n === n); if (!r) rondas.push(r = { n, t: [] }); r.t.push(t); }
+  } else {
+    const NOM = nba ? ["Final", "Finales de conferencia", "Semifinales de conferencia", "Primera ronda"]
+      : ["Final", "Semifinales", "Cuartos de final", "Octavos de final", "Dieciseisavos de final", "Treintaidosavos de final"];
+    // a) De la final hacia atrás: 1, 2, 4, 8… cruces por ronda (vale si la copa ya tiene su final en el calendario)
+    const orden = ties.slice().sort((x, y) => (y.f + y.h).localeCompare(x.f + x.h));
+    const atras = []; let i = 0, n = 1;
+    while (i < orden.length && atras.length < NOM.length) { atras.push({ n: NOM[atras.length], t: orden.slice(i, i + n) }); i += n; n *= 2; }
+    // Se comprueba de arriba abajo; si una ronda temprana no encaja, el cuadro empieza en la siguiente
+    let ok = atras.length > 0 && atras[0].t.length === 1, hasta = atras.length;
+    for (let k = 1; k < atras.length && ok; k++) {
+      const arriba = atras[k - 1].t, abajo = atras[k].t;
+      const ini = arriba.reduce((m, t) => t.f < m ? t.f : m, "9"), finAb = abajo.reduce((m, t) => t.ult > m ? t.ult : m, "");
+      const nombresAb = abajo.flatMap(t => [t.a, t.b]).filter(x => !pd(x));
+      let bien = finAb <= ini && new Set(nombresAb).size === nombresAb.length;
+      const nombresAr = arriba.flatMap(t => [t.a, t.b]).filter(x => !pd(x));
+      if (bien && nombresAr.length && k <= 3) {
+        const vienen = nombresAr.filter(x => abajo.some(t => t.a === x || t.b === x)).length;
+        if (k <= 2 && vienen / nombresAr.length < 0.9) bien = false;  // a la final y a semis se llega desde la ronda anterior
+      }
+      if (!bien) { if (k <= 2) ok = false; else hasta = k; break; }
+    }
+    const cand = atras.slice(0, hasta).reverse();
+    if (ok) rondas = cand;
+    else {
+      // b) Por dependencias: cada cruce es una ronda más que el anterior de sus equipos
+      const prev = (n, t) => { let r = null; for (const x of ties) if (x !== t && x.ult < t.f && (x.a === n || x.b === n)) r = x; return r; };
+      for (const t of ties) {
+        if (pd(t.a) && pd(t.b)) continue;
+        const ds = [t.a, t.b].filter(n => !pd(n)).map(n => { const x = prev(n, t); return x ? x.d : 0; });
+        t.d = 1 + Math.max(0, ...ds);
+      }
+      const K = Math.max(1, ...ties.filter(t => t.d).map(t => t.d));
+      ties.forEach(t => { if (!t.d) t.d = K + (ties.some(x => x.d === K && x.ult >= t.f) ? 0 : 1); });
+      const T = Math.max(...ties.map(t => t.d)), por = [];
+      for (let d = 1; d <= T; d++) { const ts = ties.filter(t => t.d === d); if (ts.length) por.push(ts); }
+      // Nombres por número de cruces si encajan (…, 8 = octavos, 4 = cuartos, 2 = semis, 1 = final)
+      const top = por[por.length - 1].length, potencias = [1, 2, 4].includes(top) && por.every((ts, k) => ts.length === top * 2 ** (por.length - 1 - k));
+      rondas = por.map((ts, k) => {
+        const lv = Math.log2(ts.length);
+        return { n: potencias && lv < NOM.length ? NOM[lv] : `Ronda ${k + 1}`, t: ts };
+      });
+    }
+  }
+  // 3) Ganador de cada eliminatoria: el que aparece en una ronda posterior; si no, el marcador
+  rondas.forEach((r, k) => r.t.forEach(t => {
+    const luego = rondas.slice(k + 1).flatMap(x => x.t);
+    let ga = 0, gb = 0, sa = 0, sb = 0, jug = 0;
+    for (const p of t.legs) {
+      const m = /^(\d+)-(\d+)$/.exec(p.m || ""); if (!m || p.st === "pre") continue;
+      let x = +m[1], y = +m[2]; if (p.l !== t.a) [x, y] = [y, x];
+      sa += x; sb += y; if (p.st === "post") { jug++; if (x > y) ga++; else if (y > x) gb++; }
+    }
+    t.serie = (nba || tenis) && t.legs.length > 1;
+    t.ma = t.serie ? ga : sa; t.mb = t.serie ? gb : sb;
+    t.hay = t.legs.some(p => p.st !== "pre" && /^\d+-\d+$/.test(p.m || ""));
+    if (!pd(t.a) && luego.some(x => x.a === t.a || x.b === t.a)) t.gan = t.a;
+    else if (!pd(t.b) && luego.some(x => x.a === t.b || x.b === t.b)) t.gan = t.b;
+    else if (t.legs.every(p => p.st === "post") && t.ma !== t.mb && (!t.serie || Math.max(t.ma, t.mb) >= 4 || !nba)) t.gan = t.ma > t.mb ? t.a : t.b;
+  }));
+  // 4) Orden del cuadro: los que se cruzan en la ronda siguiente, juntos
+  for (let k = rondas.length - 2; k >= 0; k--) {
+    const sig = rondas[k + 1].t, quedan = rondas[k].t.slice(), nuevo = [];
+    for (const t of sig) for (const x of [t.a, t.b]) {
+      const i = quedan.findIndex(q => q.a === x || q.b === x); if (i >= 0) nuevo.push(quedan.splice(i, 1)[0]);
+    }
+    rondas[k].t = nuevo.concat(quedan);
+  }
+  const out = [];
+  rondas.forEach((r, k) => r.t.forEach((t, i) => {
+    const vivo = t.legs.some(p => p.st === "in"), fin = !vivo && t.legs.every(p => p.st === "post");
+    const prox = t.legs.find(p => p.st !== "post") || t.legs[t.legs.length - 1];
+    out.push({ f: prox.f, h: prox.h, l: t.a, v: t.b, el: t.ea, ev: t.eb, m: t.hay ? `${t.ma}-${t.mb}` : "", st: vivo ? "in" : fin ? "post" : "pre",
+      r: r.n, ro: k, pos: i, gan: t.gan, legs: t.legs.length > 1 ? t.legs : null, serie: t.serie, _abrir: prox });
+  }));
+  return { p: out, tipo: "cuadro" };
 }
 function filaJornada(p, equipo) {
   const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
@@ -1870,10 +1992,15 @@ function pintarClasif() {
   const tenis = L.dep === "te";
   const tabs = [["tabla", L.tipo === "ranking" ? "Ranking" : "Clasificación"], ["jor", L.dep === "e" && (L.jornadas[0] || {}).t && /^Fase \d/.test(L.jornadas[0].t) ? "Fases" : L.tipo === "nba" || L.dep === "e" ? "Partidos" : L.tipo === "copa" ? "Rondas" : "Jornadas"], ["eq", tenis ? "Jugadores" : "Equipos"]];
   if (L.tipo === "copa") { tabs.splice(0, 1); if (est.ltab === "tabla") est.ltab = "jor"; }
+  const CQ = cuadroComp(L);
+  if (CQ) { tabs.unshift(["cuadro", L.tipo === "nba" ? "Playoffs" : "Cuadro"]); if (L.tipo === "copa" && est.ltab === "jor" && !est.ltabElegida) est.ltab = "cuadro"; }
+  else if (est.ltab === "cuadro") est.ltab = tabs[0][0];
   if (!L.jornadas.length) { const i = tabs.findIndex(t => t[0] === "jor"); if (i >= 0) tabs.splice(i, 1); if (est.ltab === "jor") est.ltab = tabs[0][0]; }
   if (L.dep === "e" && L.tipo !== "ranking") h += tarjetaInfoTorneo(nombre, L);
   h += `<nav class="ltabs">${tabs.map(([k, n]) => `<button data-ltab="${k}" aria-pressed="${est.ltab === k}">${n}</button>`).join("")}</nav>`;
-  if (est.ltab === "tabla") {
+  if (est.ltab === "cuadro" && CQ) {
+    h += pintarCuadro(CQ);
+  } else if (est.ltab === "tabla") {
     if (!L.grupos.length || !L.grupos.some(g => g.filas.length)) h += `<div class="vacio">Todavía no hay clasificación.</div>`;
     else h += L.grupos.map(g => (g.n ? `<div class="grupo-t">${esc(g.n)}</div>` : "") + tablaClasif(L, g)).join("");
     if (L.nota) h += `<p class="nota" style="color:var(--muted);font-size:12px;margin:10px 4px 0">${esc(L.nota)}</p>`;
@@ -2545,7 +2672,7 @@ document.addEventListener("click", e => {
     if (r && r.fi && RESUMEN[r.fi.id]) RESUMEN[r.fi.id].t = 0;  // el resumen se vuelve a pedir ya
     enDirecto(); comprobar(true); pintarLista(); return; }
   if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && (l.tipo === "copa" || (/^e-/.test(l.id) && l.tipo !== "ranking"))) ? "jor" : "tabla"; est.jor = null; est.equipo = null;
-    if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
+    est.ltabElegida = false; if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.tinfo !== undefined) { est.tinfo = est.tinfo === b.dataset.tinfo ? null : b.dataset.tinfo; pintarLista(); return; }
   if (b.dataset.misdia) { est.misDias = est.misDias || new Set(); const d = b.dataset.misdia; est.misDias.has(d) ? est.misDias.delete(d) : est.misDias.add(d); pintarLista(); return; }
   if (b.dataset.juegofav) { const k = b.dataset.juegofav; est.juegosFav.has(k) ? est.juegosFav.delete(k) : est.juegosFav.add(k);
@@ -2553,7 +2680,7 @@ document.addEventListener("click", e => {
   if (b.dataset.juego) { est.vista = "juego"; est.juego = b.dataset.juego; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligasdep) { est.ligasDep = b.dataset.ligasdep; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
-  if (b.dataset.ltab) { est.ltab = b.dataset.ltab; pintarLista(); return; }
+  if (b.dataset.ltab) { est.ltab = b.dataset.ltab; est.ltabElegida = true; pintarLista(); return; }
   if (b.dataset.cvista) { est.cvista = b.dataset.cvista; pintarLista(); return; }
   if (b.dataset.jor !== undefined) { est.jor = +b.dataset.jor; est.ltab = "jor"; pintarLista(); return; }
   if (b.dataset.equipo !== undefined) { est.equipo = b.dataset.equipo; est.compEq = null; window.scrollTo({ top: 0 }); pintarLista(); return; }
