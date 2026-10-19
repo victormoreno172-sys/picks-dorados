@@ -1,6 +1,7 @@
-import json, rankings
+import json, re, rankings
 out = {}
-for n, f in (("cs2", rankings.cs2), ("val", rankings.valorant), ("lol", rankings.lol), ("atp", lambda: rankings.tenis("atp")), ("wta", lambda: rankings.tenis("wta"))):
-    d = f(); out[n] = [len(d), sorted(d.items(), key=lambda x: x[1])[:8]]
-t = rankings._get("https://www.dust2.us/ranking"); i = t.find("ranked-team"); out["cs2raw"] = t[i:i+1500]
+t = rankings._get("https://www.dust2.us/ranking")
+out["links"] = list(set(re.findall(r'href="(/ranking[^"]*)"', t)))[:20]
+i = t.find("Vitality"); out["ctx"] = t[max(0, i-2500):i+1000]
+t2 = rankings._get("https://www.vlr.gg/rankings"); i = t2.find("Team Vitality"); out["vlr"] = re.sub(r"\s+", " ", t2[max(0, i-3000):i+200])
 json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False)
