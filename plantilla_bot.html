@@ -81,6 +81,12 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
 .ap.x .acc { opacity: 1; }
 .nota2 { font-size: 12px; color: var(--muted); }
 .pista { margin-top: 6px; line-height: 1.35; }
+.cal { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 9px 0; border-top: 1px solid rgba(255,255,255,.07); }
+.cal:first-child { border-top: 0; }
+.cal .h { font: 500 12px var(--mono); color: var(--muted); padding-top: 2px; }
+.cal b { font-weight: 600; }
+.cal .q { grid-column: 2; font-size: 12px; color: var(--muted); }
+.cal .bot { color: var(--gold, #f2bf3e); font-size: 11px; margin-left: 4px; }
 
 .disp { margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 204, 77, .25); background: rgba(255, 204, 77, .06); display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; }
 .disp span { font-size: 13px; color: var(--muted); }
@@ -169,6 +175,8 @@ details.pleg[open] > summary { margin-bottom: 10px; }
     <div class="kpis" id="dinero"></div>
     <div class="kpis" id="kpis"></div>
   </section>
+  <details class="caja pleg" data-pleg="calib"><summary><h2>📸 Partidos para calibrar <small id="ncalib"></small></h2></summary><div id="calib"><p class="nota2">Cargando…</p></div>
+    <p class="nota">Haz captura en Winamax de lo que pone en cada uno y pásasela a Claude en el chat. Con eso comparamos lo que piensa el bot con lo que piensa la casa y lo corregimos. Con 10–12 partidos basta. ★ = está en las apuestas del bot.</p></details>
   <details class="caja pleg" data-pleg="evol"><summary><h2>📈 Evolución <small id="rango"></small></h2></summary><div id="grafica"></div></details>
   <details class="caja pleg" data-pleg="tipos"><summary><h2>🎟️ Por tipo</h2></summary><div id="tipos"></div></details>
   <details class="caja pleg" data-pleg="otros"><summary><h2>⚽ Por deporte y cuota</h2></summary><div id="otros"></div></details>
@@ -316,6 +324,34 @@ $("ajsaldo").onclick = () => {
   location.reload();
 };
 const tuTotal = tuSaldo + aj;
+// ---- Partidos para calibrar: los que necesitan cuotas reales de Winamax (primero los de las apuestas de hoy)
+(async () => {
+  const caja = $("calib");
+  try {
+    const R = await (await fetch("../datos.json?t=" + Date.now(), { cache: "no-store" })).json();
+    const enBot = new Set(D.apuestas.filter(a => !a.excluida || a.sinHacer).flatMap(a => a.piernas.map(p => p.local + "|" + p.visitante)));
+    const COPA = /Champions|Europa|Conference/i;
+    const L = [];
+    for (const dia of (R.dias || []).slice(0, 2)) for (const p of dia.partidos || []) {
+      if ((dia.fecha + " " + (p.hora || "00:00")) <= _ahora || (p.res && p.res.st && p.res.st !== "pre")) continue;
+      const bot = enBot.has(p.local + "|" + p.visitante);
+      let pide = null, prio = 9;
+      if (p.dep === "b") { pide = "Ganador · hándicap principal · total de puntos"; prio = /NBA/.test(p.liga) ? 4 : 2; }
+      else if (p.dep === "f" && (COPA.test(p.liga) || bot)) { pide = "Doble oportunidad (1X, X2, 12) · más/menos 2,5 goles"; prio = 3; }
+      if (!pide) continue;
+      if (bot) prio = 0;
+      if (dia.fecha !== _ahora.slice(0, 10)) prio += 0.5;
+      L.push({ prio, f: dia.fecha, cor: dia.fecha_corta, h: p.hora, dep: p.dep, txt: `${p.local} – ${p.visitante}`, liga: p.liga, pide, bot });
+    }
+    L.sort((a, b) => a.prio - b.prio || (a.f + a.h).localeCompare(b.f + b.h));
+    const sel = L.slice(0, 15).sort((a, b) => (a.f + a.h).localeCompare(b.f + b.h));
+    $("ncalib").textContent = sel.length ? `${sel.length} partidos` : "";
+    caja.innerHTML = sel.length ? sel.map(x => `<div class="cal"><span class="h">${x.f === _ahora.slice(0, 10) ? "" : esc(x.cor) + " "}${esc(x.h)}</span>
+      <span>${x.dep === "b" ? "🏀" : "⚽"} <b>${esc(x.txt)}</b>${x.bot ? '<span class="bot">★</span>' : ""}</span>
+      <span class="q">${esc(x.liga)} · ${esc(x.pide)}</span></div>`).join("")
+      : `<p class="nota2">Hoy no hay partidos pendientes que calibrar.</p>`;
+  } catch (e) { caja.innerHTML = `<p class="nota2">No se ha podido cargar la lista.</p>`; }
+})();
 $("variacion").innerHTML = `<span class="${tuTotal >= INICIO_REAL ? "pos" : "neg"}">${sig(tuTotal - INICIO_REAL)} (${pct(tuTotal / INICIO_REAL - 1)})</span> <span style="color:var(--muted)">desde ${eur(INICIO_REAL)} el 20/10</span>`;
 $("dinero").innerHTML = [
   [eur(tuJuego), "en juego ahora"],
