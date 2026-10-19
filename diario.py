@@ -96,6 +96,7 @@ try:
     import ligas
     print(f"[{datetime.now():%H:%M:%S}] ligas")
     ligas.escribir(datos_app)
+    web.escribir(datos_app)  # otra vez, ya con la posición de cada equipo en su liga o ranking
 except Exception as e:
     import traceback
     print(f"aviso: ligas no disponibles: {e}")

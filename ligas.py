@@ -887,3 +887,63 @@ def escribir(datos_app: dict, carpeta: str = SALIDA):
     with open(os.path.join(carpeta, "indice.json"), "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False)
     print(f"  ligas: {len(indice)} competiciones con clasificación y calendario")
+    try:
+        _posiciones(archivos, datos_app)
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso posiciones: {e}")
+
+
+def _posiciones(archivos: list, datos_app: dict):
+    """Pone en cada partido de la app la posición de cada equipo antes de jugar ("3º LaLiga", "#5 ranking CS2")."""
+    from directo import parecido, nom
+    ligas_pos: dict[str, dict] = {}   # nombre de la liga -> {equipo: texto}
+    domestica: dict[str, str] = {}    # equipo -> posición en su liga (para copas y Europa)
+    rankings: dict[str, dict] = {}    # "e-cs2", "t-atp"... -> {equipo: texto}
+    for lid, d in archivos:
+        if d["tipo"] in ("futbol", "nba", "basket"):
+            corto = d["nombre"]
+            tabla = {}
+            for g in d.get("grupos") or []:
+                lado = re.sub(r"^Conferencia ", "", g.get("n") or "")
+                for f in g.get("filas") or []:
+                    if f.get("pos") and (f.get("pj") or d["tipo"] == "nba" or f.get("g") is not None):
+                        tabla[f["eq"]] = f"{f['pos']}º {lado or corto}" if lado else f"{f['pos']}º {corto}"
+            if tabla:
+                ligas_pos[nom(corto)] = tabla
+                if lid not in ("champions", "europa", "conference"):
+                    for e, t in tabla.items():
+                        domestica.setdefault(e, t)
+        elif d["tipo"] == "ranking":
+            juego = d["nombre"].split(" · ")[0]
+            rankings[lid[:5]] = {f["eq"]: f"#{f['pos']} ranking {juego}" for g in d.get("grupos") or [] for f in g.get("filas") or []}
+
+    def buscar(tabla: dict, n: str) -> str:
+        if not n or not tabla:
+            return ""
+        if n in tabla:
+            return tabla[n]
+        mejor, pm = "", 0.0
+        for e, t in tabla.items():
+            x = parecido(n, e)
+            if x > pm:
+                mejor, pm = t, x
+        return mejor if pm >= 0.85 else ""
+
+    n_ok = 0
+    for dia in datos_app.get("dias", []):
+        for p in dia["partidos"]:
+            dep = p.get("dep", "f")
+            nombres = (p.get("fi") or {}).get("n") or [p["local"], p["visitante"]]
+            liga = p.get("liga", "")
+            rk = ["", ""]
+            for i, n in enumerate(nombres[:2]):
+                if dep == "e":
+                    rk[i] = buscar(rankings.get("e-" + liga.split(" · ")[0].lower()[:3], {}), n)
+                elif dep == "te":
+                    rk[i] = buscar(rankings.get("t-atp" if liga.startswith("ATP") else "t-wta", {}), n)
+                else:
+                    rk[i] = buscar(ligas_pos.get(nom(liga), {}), n) or buscar(domestica, n)
+            if any(rk):
+                p["rk"] = rk
+                n_ok += 1
+    print(f"  posiciones: {n_ok} partidos con la clasificación de sus equipos")
