@@ -131,6 +131,9 @@ details.plegable > summary > span:first-child { flex: 1; min-width: 0; }
 .sem2.sem-verde { background: rgba(57,245,160,.1); color: #39f5a0; }
 .sem2.sem-rojo { background: rgba(255,90,110,.1); color: #ff7a8a; }
 .sem2.sem-azul { background: rgba(80,160,255,.12); color: #7ab8ff; }
+.ap.s { border-style: dashed; opacity: .92; }
+.badge.s { color: #ffd25e; }
+.acc button.hice { border-color: rgba(57, 245, 160, .6) !important; color: #39f5a0 !important; font-weight: 700; }
 .sem2.sem-amarillo { background: rgba(255,200,60,.1); color: #ffd25e; }
 .acc button { padding: 4px 9px; font-size: 11.5px; }
 .ap { padding: 8px 10px !important; margin-bottom: 7px !important; }
@@ -193,6 +196,7 @@ const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.pie
 // ---- Cálculo de las apuestas del bot con lo que marcaste en ESTE móvil (igual en la app del bot y en Partidos)
 // 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
 // anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
+const HECHAS_DESDE = "2026-10-20";
 function calcularApuestasBot(D, ahora) {
   const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
   const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
@@ -214,16 +218,18 @@ function calcularApuestasBot(D, ahora) {
     // Sin corregir aún en el servidor: el resultado que vio la app de Partidos con los marcadores
     else if (!("ok" in a) && AU[a.key] === "g") { a.ok = true; a.cuota_final = a.cuota; a.auto = true; }
     else if (!("ok" in a) && AU[a.key] === "p") { a.ok = false; a.auto = true; }
+    // Desde el 20/10 solo cuentan las que marcas como hechas (✋ o poniendo la cuota real): no se da por hecho que las haces
+    if (!a.excluida && !a.previa && a.fecha >= HECHAS_DESDE && !["h", "g", "p"].includes(o) && !CR[a.key]) { a.excluida = true; a.sinHacer = true; }
   });
   const ap = todas.filter(a => !a.excluida);
-  const cerradas = ap.filter(a => a.ok === true || a.ok === false).reduce((s, a) => s + ganBanca(a), 0);
-  const dias = [...new Set(ap.map(a => a.fecha))].sort();
-  let cambios = false;
+  const cand = todas.filter(a => !a.excluida || a.sinHacer);   // las propuestas también llevan su importe sugerido
+  const dias = [...new Set(cand.map(a => a.fecha))].sort();
+  let cambios = false, banca = D.inicial;   // banca al empezar cada día (lo que de verdad tenías)
   for (const d of dias) {
-    const del = ap.filter(a => a.fecha === d);
-    const otras = ap.filter(a => a.fecha !== d && !("ok" in a)).reduce((s, a) => s + a.importe, 0);
-    let disp = D.inicial + cerradas - otras;
-    const banca = D.inicial + cerradas, recalc = [];
+    const del = cand.filter(a => a.fecha === d);
+    const otras = ap.filter(a => a.fecha !== d && !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
+    let disp = banca - otras;
+    const recalc = [];
     for (const a of del) {
       if (IM[a.key] && (empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
       else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
@@ -235,6 +241,7 @@ function calcularApuestasBot(D, ahora) {
     const libre = Math.max(0, 0.30 * banca - fijo), enRecalc = totalDia - fijo;
     if (recalc.length && enRecalc > libre) recalc.forEach(a => { a.importe = Math.max(0.1, Math.round(a.importe * libre / enRecalc * 100) / 100); });
     for (const a of del) if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
+    banca += ap.filter(a => a.fecha === d && "ok" in a).reduce((s, a) => s + ganBanca(a), 0);
   }
   if (cambios) try { localStorage.setItem("importesBot", JSON.stringify(IM)); } catch (e) {}
   return { todas, ap, OV, CR };
@@ -242,6 +249,7 @@ function calcularApuestasBot(D, ahora) {
 
 const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
 const _ahora = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
+const yaEmpezo = a => a.piernas.some(p => (p.fecha + " " + (p.hora || "00:00")) <= _ahora);
 const _calc = calcularApuestasBot(D, _ahora);
 D.apuestas = _calc.todas;
 let OV = _calc.OV, CR = _calc.CR;
@@ -369,7 +377,7 @@ const dias = Object.keys(porDia).sort().reverse();
 $("nap").textContent = `${ap.length} en total`;
 const icono = p => p.ok === true ? "✅" : p.ok === false ? "❌" : p.ok === null ? "➖" : "⏳";
 $("lista").innerHTML = dias.length ? dias.map(d => {
-  const l = porDia[d], r = resumen(l);
+  const l = porDia[d], r = resumen(l.filter(a => !a.excluida));
   // Días ya pasados: plegados en un desplegable (el de hoy y los siguientes, siempre a la vista)
   const pasado = d < _ahora.slice(0, 10);
   const g = l.filter(a => !a.excluida && a.ok === true).length, pe = l.filter(a => !a.excluida && a.ok === false).length;
@@ -379,15 +387,23 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
     : `<h3><span>${d === _ahora.slice(0, 10) ? "Hoy · " : ""}${d.slice(8, 10)}/${d.slice(5, 7)}</span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></h3>`;
   return (pasado ? `<details class="dia plegable">` : `<div class="dia">`) + cab +
     // Las que no hiciste ("No hecha") van al final del día, debajo de las hechas
-    [...l.filter(a => !a.excluida), ...l.filter(a => a.excluida)].map((a, i) => {
-      const cls = a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
-      const est = a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
+    [...l.filter(a => !a.excluida || (a.sinHacer && !yaEmpezo(a))), ...l.filter(a => a.excluida && !(a.sinHacer && !yaEmpezo(a)))].map((a, i) => {
+      const porHacer = a.sinHacer && !yaEmpezo(a);
+      const cls = porHacer ? "s" : a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
+      const est = porHacer ? "Por hacer" : a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
       const o = OV[a.key];
       const sem = semaforo(a);
-      const cr = a.excluida ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}" class="${sem ? "sem-" + sem.c : ""}">${a.cuota_bot ? "💶 " + a.cuota.toFixed(2).replace(".", ",") : "💶 Cuota"}</button>`;
-      const acc = `<div class="acc">` + cr + (o
-        ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span><button data-k="${esc(a.key)}" data-ov="">↺ Deshacer</button>`
-        : `<button data-k="${esc(a.key)}" data-ov="x">🚫 No hecha</button><button data-k="${esc(a.key)}" data-ov="g" aria-label="Acertada">✅</button><button data-k="${esc(a.key)}" data-ov="p" aria-label="Fallada">❌</button>`) + `</div>`;
+      const cr = a.excluida && !porHacer ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}" class="${sem ? "sem-" + sem.c : ""}">${a.cuota_bot ? "💶 " + a.cuota.toFixed(2).replace(".", ",") : "💶 Cuota"}</button>`;
+      const k = esc(a.key), bot = (x, t, extra = "") => `<button data-k="${k}" data-ov="${x}"${extra}>${t}</button>`;
+      const acc = `<div class="acc">` + (a.sinHacer
+        // Propuesta del bot: tú dices si la haces (hasta entonces no se descuenta de tu dinero)
+        ? (porHacer ? bot("h", "✋ La he hecho", ' class="hice"') + cr + bot("x", "🚫 No la hago")
+          : `<span class="nota2">No la marcaste como hecha</span>` + bot("h", "✋ Sí la hice"))
+        : cr + (o === "h"
+          ? `<span class="nota2">✋ Hecha</span>` + (("ok" in a) ? "" : bot("g", "✅", ' aria-label="Acertada"') + bot("p", "❌", ' aria-label="Fallada"')) + bot("", "↺ No la hice")
+          : o
+          ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span>` + bot(a.fecha >= HECHAS_DESDE && o !== "x" ? "h" : "", "↺ Deshacer")
+          : bot("x", "🚫 No hecha") + bot("g", "✅", ' aria-label="Acertada"') + bot("p", "❌", ' aria-label="Fallada"'))) + `</div>`;
       const f2 = x => (+x).toFixed(2).replace(".", ",");
       const piernasH = a.piernas.map(p => `<div class="leg2">
           <div class="l1"><span class="lh">${esc(p.hora || "")}</span><b>${esc(p.local)} – ${esc(p.visitante)}</b>${p.res ? `<span class="lres">${p.res[0]}-${p.res[1]}</span>` : ""}<span class="lic">${icono(p)}</span></div>
@@ -443,7 +459,7 @@ document.addEventListener("click", e => {
 document.addEventListener("click", e => {
   const b = e.target.closest("button[data-ov]");
   if (!b) return;
-  if (b.dataset.ov === "x" && !confirm("¿Quitar esta apuesta? Dejará de contar en la banca y en las estadísticas.")) return;
+  if (b.dataset.ov === "x" && !confirm("¿No la haces? No contará en tu dinero ni en las estadísticas.")) return;
   if (b.dataset.ov) OV[b.dataset.k] = b.dataset.ov; else delete OV[b.dataset.k];
   try { localStorage.setItem("ajustesBot", JSON.stringify(OV)); } catch (err) {}
   location.reload();

@@ -2294,6 +2294,7 @@ function misApuestasActivasTodas() {
 // ---- Cálculo de las apuestas del bot con lo que marcaste en ESTE móvil (igual en la app del bot y en Partidos)
 // 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
 // anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
+const HECHAS_DESDE = "2026-10-20";
 function calcularApuestasBot(D, ahora) {
   const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
   const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
@@ -2315,16 +2316,18 @@ function calcularApuestasBot(D, ahora) {
     // Sin corregir aún en el servidor: el resultado que vio la app de Partidos con los marcadores
     else if (!("ok" in a) && AU[a.key] === "g") { a.ok = true; a.cuota_final = a.cuota; a.auto = true; }
     else if (!("ok" in a) && AU[a.key] === "p") { a.ok = false; a.auto = true; }
+    // Desde el 20/10 solo cuentan las que marcas como hechas (✋ o poniendo la cuota real): no se da por hecho que las haces
+    if (!a.excluida && !a.previa && a.fecha >= HECHAS_DESDE && !["h", "g", "p"].includes(o) && !CR[a.key]) { a.excluida = true; a.sinHacer = true; }
   });
   const ap = todas.filter(a => !a.excluida);
-  const cerradas = ap.filter(a => a.ok === true || a.ok === false).reduce((s, a) => s + ganBanca(a), 0);
-  const dias = [...new Set(ap.map(a => a.fecha))].sort();
-  let cambios = false;
+  const cand = todas.filter(a => !a.excluida || a.sinHacer);   // las propuestas también llevan su importe sugerido
+  const dias = [...new Set(cand.map(a => a.fecha))].sort();
+  let cambios = false, banca = D.inicial;   // banca al empezar cada día (lo que de verdad tenías)
   for (const d of dias) {
-    const del = ap.filter(a => a.fecha === d);
-    const otras = ap.filter(a => a.fecha !== d && !("ok" in a)).reduce((s, a) => s + a.importe, 0);
-    let disp = D.inicial + cerradas - otras;
-    const banca = D.inicial + cerradas, recalc = [];
+    const del = cand.filter(a => a.fecha === d);
+    const otras = ap.filter(a => a.fecha !== d && !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
+    let disp = banca - otras;
+    const recalc = [];
     for (const a of del) {
       if (IM[a.key] && (empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
       else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
@@ -2336,6 +2339,7 @@ function calcularApuestasBot(D, ahora) {
     const libre = Math.max(0, 0.30 * banca - fijo), enRecalc = totalDia - fijo;
     if (recalc.length && enRecalc > libre) recalc.forEach(a => { a.importe = Math.max(0.1, Math.round(a.importe * libre / enRecalc * 100) / 100); });
     for (const a of del) if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
+    banca += ap.filter(a => a.fecha === d && "ok" in a).reduce((s, a) => s + ganBanca(a), 0);
   }
   if (cambios) try { localStorage.setItem("importesBot", JSON.stringify(IM)); } catch (e) {}
   return { todas, ap, OV, CR };
