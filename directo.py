@@ -167,6 +167,8 @@ def draft5(local: str, visitante: str) -> dict | None:
     for i, sc in enumerate(scores):
         nm = ((sc.get("map") or {}).get("mapName") or "")
         bonito = nm.replace("de_", "").title()
+        if bonito.lower() in ("tba", "tbd", ""):
+            bonito = ""  # mapa aún sin elegir
         a, b = int(sc.get("scoreA") or 0), int(sc.get("scoreB") or 0)
         if i >= jugados and nm in ultimo and sum(ultimo[nm]) > a + b:
             a, b = ultimo[nm]
@@ -200,6 +202,9 @@ def esports(cand: list) -> dict:
             if x[1]:
                 a, b = b, a
             fin = estado == "finished"
+            bo = int(m.get("bo_type") or 0)
+            if bo and max(a, b) > bo // 2:
+                fin = True  # la serie ya está decidida aunque la fuente no la haya cerrado
             r = {"st": "post" if fin else "in", "m": f"{a}-{b}", "det": "Final" if fin else f"Mapa {a + b + 1}"}
             # Mapa a mapa (nombre y rondas), desde el punto de vista del local de la app
             try:
@@ -217,6 +222,14 @@ def esports(cand: list) -> dict:
                     if x[1]:
                         s1, s2 = s2, s1
                     mapas.append([(juego.get("map_name") or "").replace("de_", "").title(), s1, s2])
+                # Mapas acabados sin marcador: el ganador sale del marcador de la serie
+                fl = [i for i, z in enumerate(mapas) if z[1] is None and i < a + b]
+                if fl:
+                    ga = a - sum(1 for z in mapas if z[1] is not None and z[1] > z[2])
+                    gb = b - sum(1 for z in mapas if z[1] is not None and z[2] > z[1])
+                    if ga + gb == len(fl) and (ga == 0 or gb == 0):
+                        for i in fl:
+                            mapas[i][1:] = ["✓", ""] if ga else ["", "✓"]
                 r["mapas"] = mapas
                 # Mapa que se está jugando ahora (la fuente solo da el marcador al terminar cada mapa)
                 if not fin:
@@ -231,7 +244,16 @@ def esports(cand: list) -> dict:
                     d5 = draft5(x[0]["local"], x[0]["visitante"])
                 except Exception:  # noqa: BLE001
                     d5 = None
+                # Solo si DRAFT5 narra de verdad el partido y no va por detrás de bo3.gg
                 if d5:
+                    jd5 = sum(int(z) for z in d5["m"].split("-"))
+                    if jd5 < a + b or not (jd5 or d5["envivo"] or d5["fin"]):
+                        d5 = None
+                if d5:
+                    viejos = r.get("mapas") or []
+                    for i, z in enumerate(d5["mapas"]):  # nombres que DRAFT5 aún no tiene
+                        if not z[0] and i < len(viejos) and viejos[i][0]:
+                            z[0] = viejos[i][0]
                     r["m"], r["mapas"] = d5["m"], d5["mapas"]
                     if d5["fin"] and not fin:
                         r["st"], r["det"] = "post", "Final"

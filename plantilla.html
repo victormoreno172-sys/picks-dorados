@@ -1397,7 +1397,7 @@ function mapasEsports(p) {
     else if (decidido || (es.st === "post")) { estado2 = `<span class="mxest">No se juega</span>`; cls = "mxno"; }
     else estado2 = `<span class="mxest">Pendiente</span>`;
     const ganador = hecho ? (a > b ? 0 : 1) : -1;
-    return `<div class="mfila ${cls}"><span class="mnum">${n}</span><span class="mnom"><b>${esc(m[0] || `${unidad} ${n}`)}</b>${ganador >= 0 ? `<small>Gana ${esc(ganador ? p.visitante : p.local)}</small>` : ""}</span>${estado2}</div>`;
+    return `<div class="mfila ${cls}"><span class="mnum">${n}</span><span class="mnom"><b>${esc(/^(tba|tbd)?$/i.test(m[0] || "") ? `${unidad} ${n}` : m[0])}</b>${ganador >= 0 ? `<small>Gana ${esc(ganador ? p.visitante : p.local)}</small>` : ""}</span>${estado2}</div>`;
   }).join("");
   return `<div class="mpcaja mesp">
     <div class="mpcab">${chip}<span class="mptit">Al mejor de ${bo}</span></div>
@@ -1413,7 +1413,7 @@ function marcadorPeriodos(p) {
   const es = estado(p) || {}, r = p.res || {};
   const fi = p.fi || {};
   let cab = [], l = [], v = [], tot = (r.m || "").split("-"), titulo = "";
-  if (r.mapas && r.mapas.length) { cab = r.mapas.map((m, i) => m[0] || `M${i + 1}`); l = r.mapas.map(m => m[1]); v = r.mapas.map(m => m[2]); titulo = "Mapas"; }
+  if (r.mapas && r.mapas.length) { cab = r.mapas.map((m, i) => /^(tba|tbd)?$/i.test(m[0] || "") ? `M${i + 1}` : m[0]); l = r.mapas.map(m => m[1]); v = r.mapas.map(m => m[2]); titulo = "Mapas"; }
   else if (r.parc && r.parc.cab && r.parc.cab.length) { cab = r.parc.cab; l = r.parc.l; v = r.parc.v; titulo = p.dep === "te" ? "Sets" : "Cuartos"; }
   const vivo = es.st === "in";
   const chip = vivo ? `<span class="mpchip"><i></i>${esc(es.det || "En juego")}</span>` : es.st === "post" ? `<span class="mpchip fin">Final</span>` : "";
