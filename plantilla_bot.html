@@ -198,7 +198,7 @@ const deporte = a => a.piernas.every(p => p.dep === "b") ? "🏀 Basket" : a.pie
 // anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
 const HECHAS_DESDE = "2026-10-20";
 // Desde ese día cuenta tu dinero de verdad: lo que tenías en Winamax y solo las apuestas que marcas como hechas
-const INICIO_REAL = 73.86;
+const INICIO_REAL = 72.54;   // 68,51 € en la cuenta + 4,03 € de la de Uchijima ya metidos
 const ajusteReal = () => { try { const j = JSON.parse(localStorage.getItem("ajusteSaldoBot") || "null"); return j && j.r ? (j.v || 0) : 0; } catch (e) { return 0; } };
 function calcularApuestasBot(D, ahora) {
   const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
@@ -214,7 +214,7 @@ function calcularApuestasBot(D, ahora) {
       a.cuota_bot = a.cuota; a.cuota = CR[a.key];
       if (a.ok === true && a.piernas.every(p => p.ok !== null)) a.cuota_final = a.cuota;
     }
-    const o = OV[a.key];
+    const o = OV[a.key] || (a.hecha ? "h" : undefined);   // "hecha": apuntada como hecha desde el servidor
     a.marcada = o === "h";   // ya la has metido en Winamax: su importe no se mueve
     if (o === "x") a.excluida = true;
     else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
@@ -237,7 +237,8 @@ function calcularApuestasBot(D, ahora) {
     let disp = banca - otras;
     const recalc = [];
     for (const a of del) {
-      if (IM[a.key] && (a.marcada || empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
+      if (a.hecha) { /* importe real apuntado en el servidor */ }
+      else if (IM[a.key] && (a.marcada || empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
       else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
       else if (d >= ahora.slice(0, 10)) { a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100); recalc.push(a); }
       disp -= a.importe;
@@ -403,7 +404,7 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       const porHacer = a.sinHacer && !yaEmpezo(a);
       const cls = porHacer ? "s" : a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
       const est = porHacer ? "Por hacer" : a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
-      const o = OV[a.key];
+      const o = OV[a.key] || (a.hecha ? "h" : undefined);   // "hecha": apuntada como hecha desde el servidor
       const sem = semaforo(a);
       const cr = a.excluida && !porHacer ? "" : `<button data-cuota="${esc(a.key)}" data-bot="${(a.cuota_bot || a.cuota).toFixed(2)}" class="${sem ? "sem-" + sem.c : ""}">${a.cuota_bot ? "💶 " + a.cuota.toFixed(2).replace(".", ",") : "💶 Cuota"}</button>`;
       const k = esc(a.key), bot = (x, t, extra = "") => `<button data-k="${k}" data-ov="${x}"${extra}>${t}</button>`;
@@ -412,7 +413,7 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
         ? (porHacer ? bot("h", "✋ La he hecho", ' class="hice"') + cr + bot("x", "🚫 No la hago")
           : `<span class="nota2">No la marcaste como hecha</span>` + bot("h", "✋ Sí la hice"))
         : cr + (o === "h"
-          ? `<span class="nota2">✋ Hecha</span>` + (("ok" in a) ? "" : bot("g", "✅", ' aria-label="Acertada"') + bot("p", "❌", ' aria-label="Fallada"')) + bot("", "↺ No la hice")
+          ? `<span class="nota2">✋ Hecha</span>` + (("ok" in a) ? "" : bot("g", "✅", ' aria-label="Acertada"') + bot("p", "❌", ' aria-label="Fallada"')) + bot(a.hecha ? "x" : "", "↺ No la hice")
           : o
           ? `<span class="nota2">${o === "x" ? "Quitada por ti" : "Corregida por ti"}</span>` + bot(a.fecha >= HECHAS_DESDE && o !== "x" ? "h" : "", "↺ Deshacer")
           : bot("x", "🚫 No hecha") + bot("g", "✅", ' aria-label="Acertada"') + bot("p", "❌", ' aria-label="Fallada"'))) + `</div>`;
