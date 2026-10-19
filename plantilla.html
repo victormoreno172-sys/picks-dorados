@@ -358,6 +358,32 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .leyenda2 div { display: flex; align-items: center; gap: 8px; }
 .leyenda2 i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
 .jsel { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+/* Cuadro de eliminatorias (esports) */
+.cvista { display: flex; gap: 6px; margin: 0 0 10px; }
+.cvista button { flex: 1; font: 600 13px var(--body); padding: 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+.cvista button[aria-pressed="true"] { color: var(--ink); border-color: var(--gold); box-shadow: inset 0 -2px 0 var(--gold); }
+.csec { margin: 4px 0 14px; }
+.csec > h3 { font: 700 12px var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 4px 8px; }
+.cuadro { display: flex; gap: 26px; overflow-x: auto; padding: 4px 4px 12px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.ccol { display: flex; flex-direction: column; min-width: 176px; max-width: 176px; scroll-snap-align: start; }
+.ccol > h4 { font: 700 11px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--gold); text-align: center; margin: 0 0 8px; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+.ccol.final > h4 { color: var(--gold); }
+.cpart { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 12px; }
+.cm { position: relative; display: block; width: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px; box-shadow: var(--sombra); cursor: default; }
+.cm.ir { cursor: pointer; }
+.cm.in { border-color: var(--red); }
+.ccol:not(:last-child) .cm::after { content: ""; position: absolute; right: -27px; top: 50%; width: 26px; border-top: 2px solid var(--line); }
+.ccol:not(:first-child) .cm::before { content: ""; position: absolute; left: -14px; top: 50%; width: 13px; border-top: 2px solid var(--line); }
+.cm .ceq { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 6px; font-size: 13px; padding: 2px 0; }
+.cm .ceq span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cm .ceq b { font: 700 13px var(--mono); }
+.cm .ceq.gana span, .cm .ceq.gana b { font-weight: 800; color: var(--gold); }
+.cm .ceq.pierde { opacity: .5; }
+.cm .ceq + .ceq { border-top: 1px dashed var(--line); }
+.cm .cpie { font: 600 10px var(--mono); color: var(--muted); margin-top: 3px; display: flex; justify-content: space-between; }
+.cm .cpie .vivo { color: var(--red); }
+.ccol.final .cm { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), var(--sombra); }
+
 .jsel button { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font: 700 18px var(--body); color: var(--ink); cursor: pointer; }
 .jsel button:disabled { opacity: .3; }
 .jsel label { flex: 1; position: relative; }
@@ -1764,6 +1790,42 @@ function enLaApp(p) {
   }
   return null;
 }
+// Cuadro de eliminatorias: columnas por ronda (ganadores arriba, perdedores abajo), como los de la Champions
+function esCuadro(j) {
+  if (j.tipo) return j.tipo === "cuadro";
+  return j.p.some(p => p.r) && j.p.every(p => !p.r || /final|semifinal|cuartos|octavos|cuadro|tercer/i.test(p.r));
+}
+function pintarCuadro(j) {
+  const lado = r => /perdedores/i.test(r || "") ? "l" : "u";
+  const corto = r => (r || "Ronda").replace(/ del cuadro de (ganadores|perdedores)$/i, "").replace(/ · cuadro de (ganadores|perdedores)$/i, "");
+  const secs = { u: [], l: [] };
+  for (const p of j.p) {
+    const s = secs[lado(p.r)];
+    let c = s.find(c => c.r === p.r);
+    if (!c) s.push(c = { r: p.r, ro: p.ro ?? 0, i: s.length, p: [] });
+    c.p.push(p);
+  }
+  const doble = secs.l.length > 0;
+  const tarjeta = (p, final) => {
+    const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
+    const fin = p.st === "post" && mar, app = p.st !== "post" ? enLaApp(p) : null;
+    const fd = new Date(p.f + "T12:00:00"), fecha = `${f2(fd.getDate())}.${f2(fd.getMonth() + 1)}`;
+    const eq = (n, l, x, y) => `<div class="ceq ${fin && x > y ? "gana" : fin && x < y ? "pierde" : ""}">${miniEsc(l, n)}<span>${esc(n)}</span><b>${mar ? x : ""}</b></div>`;
+    const pie = p.st === "in" ? `<span class="vivo">● EN DIRECTO</span>` : p.st === "post" ? `<span>FINAL</span>` : `<span>${fecha} · ${esc(p.h || "--:--")}</span>`;
+    const tag = app ? "button" : "div", attrs = app ? ` data-abrirdia="${app[0]}" data-abrirp="${app[1]}"` : "";
+    return `<${tag} class="cm ${p.st}${app ? " ir" : ""}"${attrs}>${eq(p.l, p.el, a, b)}${eq(p.v, p.ev, b, a)}
+      <div class="cpie">${pie}${app && !mar ? '<span style="color:var(--gold)">% pronóstico</span>' : ""}</div></${tag}>`;
+  };
+  const columnas = cols => `<div class="cuadro">${cols.sort((x, y) => (x.ro - y.ro) || (x.i - y.i)).map(c => {
+    const final = /^(Gran final|Final)$/i.test(c.r || "");  // la final del torneo (no la de cada cuadro)
+    const tit = final && doble ? "Gran final" : corto(c.r);
+    return `<div class="ccol${final ? " final" : ""}"><h4>${final ? "🏆 " : ""}${esc(tit)}</h4><div class="cpart">${c.p.slice().sort((x, y) => (x.pos || 0) - (y.pos || 0)).map(p => tarjeta(p, final)).join("")}</div></div>`;
+  }).join("")}</div>`;
+  let h = "";
+  if (secs.u.length) h += `<div class="csec">${doble ? "<h3>Cuadro de ganadores</h3>" : ""}${columnas(secs.u)}</div>`;
+  if (secs.l.length) h += `<div class="csec"><h3>Cuadro de perdedores</h3>${columnas(secs.l)}</div>`;
+  return h + `<p class="nota" style="color:var(--muted);font-size:12px;margin:4px">Desliza a los lados para ver todas las rondas.${doble ? " Quien pierde en el cuadro de ganadores baja al de perdedores; quien pierde ahí, queda eliminado." : ""}</p>`;
+}
 function filaJornada(p, equipo) {
   const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
   const fd = new Date(p.f + "T12:00:00"), fecha = `${f2(fd.getDate())}.${f2(fd.getMonth() + 1)}.`;
@@ -1826,7 +1888,8 @@ function pintarClasif() {
         <label><select id="seljor" aria-label="Jornada">${J.map((x, i) => `<option value="${i}" ${i === est.jor ? "selected" : ""}>${esc(x.t)}${i === L.actual ? " · actual" : ""}</option>`).join("")}</select></label>
         <button data-jor="${est.jor + 1}" ${est.jor === J.length - 1 ? "disabled" : ""} aria-label="Siguiente">›</button></div>
         <div class="jfecha">${j.desde === j.hasta ? fd(j.desde) : fd(j.desde) + " – " + fd(j.hasta)} · ${j.p.length} partidos</div>` +
-        j.p.map(p => filaJornada(p)).join("");
+        (esCuadro(j) ? `<div class="cvista"><button data-cvista="cuadro" aria-pressed="${est.cvista !== "lista"}">🏆 Cuadro</button><button data-cvista="lista" aria-pressed="${est.cvista === "lista"}">☰ Lista</button></div>` : "") +
+        (esCuadro(j) && est.cvista !== "lista" ? pintarCuadro(j) : j.p.map(p => filaJornada(p)).join(""));
       if (est.jor !== L.actual) h += `<button class="irtabla" data-jor="${L.actual}">Ir a la jornada actual <span>›</span></button>`;
     }
   } else {
@@ -2481,7 +2544,7 @@ document.addEventListener("click", e => {
   if (b.dataset.refrescar) { const r = est.vista === "partido" && DATOS.dias[est.dia].partidos[est.sel];
     if (r && r.fi && RESUMEN[r.fi.id]) RESUMEN[r.fi.id].t = 0;  // el resumen se vuelve a pedir ya
     enDirecto(); comprobar(true); pintarLista(); return; }
-  if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && l.tipo === "copa") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
+  if (b.dataset.lid !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = (LIGAS.indice || []).some(l => l.id === b.dataset.lid && (l.tipo === "copa" || (/^e-/.test(l.id) && l.tipo !== "ranking"))) ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.tinfo !== undefined) { est.tinfo = est.tinfo === b.dataset.tinfo ? null : b.dataset.tinfo; pintarLista(); return; }
   if (b.dataset.misdia) { est.misDias = est.misDias || new Set(); const d = b.dataset.misdia; est.misDias.has(d) ? est.misDias.delete(d) : est.misDias.add(d); pintarLista(); return; }
@@ -2491,6 +2554,7 @@ document.addEventListener("click", e => {
   if (b.dataset.ligasdep) { est.ligasDep = b.dataset.ligasdep; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.volverliga) { est.vista = "ligas"; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ltab) { est.ltab = b.dataset.ltab; pintarLista(); return; }
+  if (b.dataset.cvista) { est.cvista = b.dataset.cvista; pintarLista(); return; }
   if (b.dataset.jor !== undefined) { est.jor = +b.dataset.jor; est.ltab = "jor"; pintarLista(); return; }
   if (b.dataset.equipo !== undefined) { est.equipo = b.dataset.equipo; est.compEq = null; window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.salirequipo) { est.equipo = null; est.compEq = null; pintarLista(); return; }

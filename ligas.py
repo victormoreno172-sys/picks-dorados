@@ -601,6 +601,7 @@ def _jornadas_fases(E: dict, logos: dict) -> tuple[list, list]:
     import fases
     bloques: dict[tuple, list] = {}
     tablas: dict[tuple, dict] = {}
+    tipos: dict[tuple, str] = {}
     for f, grupo, ronda, orden, m in fases.partidos(E):
         t1, t2 = m.get("team1") or {}, m.get("team2") or {}
         n1, n2 = t1.get("name") or "Por decidir", t2.get("name") or "Por decidir"
@@ -615,9 +616,10 @@ def _jornadas_fases(E: dict, logos: dict) -> tuple[list, list]:
         a, b = m.get("team1_score"), m.get("team2_score")
         p = {"f": fe, "h": h, "l": n1, "v": n2, "el": logos.get(n1, t1.get("image_url") or ""), "ev": logos.get(n2, t2.get("image_url") or ""),
              "m": f"{a}-{b}" if (hecho or vivo) and a is not None and b is not None else "", "st": "post" if hecho else "in" if vivo else "pre",
-             "r": ronda, "_o": (orden, fe, h)}
+             "r": ronda, "ro": orden, "pos": m.get("position") or 0, "_o": (orden, fe, h)}
         clave = (f["n"], f["nombre"] + (f" · {grupo}" if grupo else ""))
         bloques.setdefault(clave, []).append(p)
+        tipos[clave] = f["tipo"]
         # Tabla de los grupos (y de la fase suiza)
         if f["tipo"] == "grupo" and hecho and t1.get("name") and t2.get("name"):
             tb = tablas.setdefault(clave, {})
@@ -633,7 +635,8 @@ def _jornadas_fases(E: dict, logos: dict) -> tuple[list, list]:
     jor = []
     for (n, titulo), ps in sorted(bloques.items(), key=lambda kv: (kv[0][0], kv[0][1])):
         ps.sort(key=lambda p: p.pop("_o"))
-        jor.append({"t": titulo, "desde": min(p["f"] for p in ps), "hasta": max(p["f"] for p in ps), "p": ps})
+        jor.append({"t": titulo, "desde": min(p["f"] for p in ps), "hasta": max(p["f"] for p in ps), "p": ps,
+                    "tipo": tipos.get((n, titulo), "")})
     grupos = []
     for (n, titulo), tb in sorted(tablas.items()):
         filas = [{"eq": e, "logo": logos.get(e, ""), "g": r[0], "p": r[1], "pj": r[0] + r[1], "dif": r[2]} for e, r in tb.items()]
