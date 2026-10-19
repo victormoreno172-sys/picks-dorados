@@ -285,6 +285,8 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .feq b { font: 700 16px/1.15 var(--display); overflow-wrap: normal; word-break: normal; hyphens: auto; max-width: 100%; }
 .feq b.largo { font-size: 14px; }
 .feq b.muylargo { font-size: 12.5px; }
+.feq .frk { margin-top: -6px; font: 600 11px var(--mono); color: var(--gold); background: var(--gold-soft); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.eq .eqrk { display: block; font: 600 10px var(--mono); color: var(--muted); margin-top: 2px; letter-spacing: 0; }
 .escudo { width: clamp(56px, 18vw, 76px); height: clamp(56px, 18vw, 76px); object-fit: contain; border-radius: 18px; background: #fff; padding: 8px; box-shadow: 0 8px 20px -10px rgba(11, 18, 32, .45); border: 1px solid var(--line); }
 .escudo.ini { display: grid; place-items: center; font: 700 26px var(--display); color: #fff; background: linear-gradient(135deg, #0b1220, #334155); border: 0; }
 .fcentro { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 0; }
@@ -920,7 +922,7 @@ function tarjeta(p, idx) {
     <button class="estrella" data-fav="${idx}" aria-pressed="${fav}" aria-label="${fav ? "Quitar de favoritos" : "Añadir a favoritos"}">${fav ? "★" : "☆"}</button>
     <button class="cab" data-id="${id}" aria-expanded="${abierto}">
       <div class="meta"><span>${esc(p.liga)}${p.casa && !/media|ESPN/.test(p.casa) ? ` · <span class="casa">${esc(p.casa)}</span>` : ""}</span><span>${esc(p.hora || "--:--")}</span></div>
-      <div class="equipos"><div class="eq ${tam(p.local)}">${esc(p.local)}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : esp ? (/LOL/.test(p.liga) ? "partidas esp." : "mapas esp.") : ten ? "sets esp." : "goles esp."}</span></div><div class="eq v ${tam(p.visitante)}">${esc(p.visitante)}</div></div>
+      <div class="equipos"><div class="eq ${tam(p.local)}">${esc(p.local)}${(p.rk || [])[0] ? `<small class="eqrk">${esc(p.rk[0])}</small>` : ""}</div><div class="xg"><b>${num(p.gl)}</b> – <b>${num(p.gv)}</b><br><span style="font-size:10px">${basket ? "puntos esp." : esp ? (/LOL/.test(p.liga) ? "partidas esp." : "mapas esp.") : ten ? "sets esp." : "goles esp."}</span></div><div class="eq v ${tam(p.visitante)}">${esc(p.visitante)}${(p.rk || [])[1] ? `<small class="eqrk">${esc(p.rk[1])}</small>` : ""}</div></div>
       <div class="xgbar" aria-hidden="true"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div>
       ${top ? `<div class="top">${top}</div>` : `<div class="sinpicks">Ningún mercado llega al ${pct(DATOS.umbral)}.</div>`}
       <div class="mas">${abierto ? "Ocultar mercados ▲" : `Ver los ${p.picks.length} mercados ▼`}</div>
@@ -1520,14 +1522,14 @@ function pintarFicha() {
       <button class="ico" data-fav="${est.sel}" aria-pressed="${fav}" aria-label="Favorito">${fav ? "★" : "☆"}</button></span></div>
     <button class="fliga" data-liga-ir="${esc(ligaBase(p.liga))}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
     <div class="fequipos">
-      <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b></div>
+      <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b>${(p.rk || [])[0] ? `<small class="frk">${esc(p.rk[0])}</small>` : ""}</div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
         if (es && es.m) return `<b class="${es.st === "in" ? "vivo" : ""}">${esc(es.m.replace("-", " - "))}</b><small class="${es.st === "in" ? "vivo" : ""}">${esc(es.st === "in" ? "● " + (es.juegos ? "Juegos " : "") + minutoTxt(es.det) : es.det)}</small>${es.juegos ? `<small>${esc(es.juegos)}</small>` : ""}`;
         if (es) return `<b>${esc(p.hora || "--:--")}</b><small>${esc(es.det)}</small>`;
         const e2 = p.dep === "te" ? estimadasTenis(dia)[est.sel] : null;
         if (e2) return `<b class="est">≈${esc(e2.h)}</b><small>hora estimada<br>tras ${esc(e2.tras || "otro partido")}</small>`;
         return `<b>${esc(p.hora || "--:--")}</b><small>${esc(p.marcador ? "más probable " + p.marcador : "")}</small>`; })()}</div>
-      <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b class="${tam(p.visitante)}">${esc(p.visitante)}</b></div>
+      <div class="feq">${escudo((fi.esc || [])[1], p.visitante)}<b class="${tam(p.visitante)}">${esc(p.visitante)}</b>${(p.rk || [])[1] ? `<small class="frk">${esc(p.rk[1])}</small>` : ""}</div>
     </div>
     ${rondaDe(p) ? (() => { const t = rondaDe(p).split(" · "), r = t.pop();
         return `<div class="fronda ${/^Final$/.test(r) ? "final" : ""}"><b>${/^Final$/.test(r) ? "🏆 " : ""}${esc(r)}</b><small>${esc(t.join(" · "))}</small></div>`; })()
