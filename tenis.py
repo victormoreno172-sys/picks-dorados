@@ -386,11 +386,8 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             if len(hist) < 300 or not prox:
                 continue
             elo = EloTenis(tour).ajustar(hist)
-            try:
-                import rankings
-                elo.poner_ranking({f"{tour}-{n}": r for n, r in rankings.tenis(tour.lower()).items()})
-            except Exception as e:  # noqa: BLE001
-                print(f"  aviso ranking {tour}: {e}")
+            # Probado el 20/10 contra cuotas de Winamax: mezclar con el ranking oficial empeoraba el error
+            # medio (10,7 -> 11,9 puntos), así que no se usa (poner_ranking queda para pruebas).
             ELO[tour] = elo
             for p in prox:
                 INFO[(p.fecha.isoformat(), p.n1, p.n2)] = {"esc": [p.flag1, p.flag2], "estadio": p.sede or p.torneo}

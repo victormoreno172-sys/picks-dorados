@@ -118,7 +118,7 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
     partidos = []
     for a in lista:
         p = a.partido
-        if _deporte(a) not in ("f", "b", "te"):  # tenis: modelo calibrado (calibracion/backtest_tenis.py)
+        if _deporte(a) not in ("f", "b"):  # tenis fuera del bot por ahora (ver más abajo)
             continue
         if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
             continue  # ya ha empezado
@@ -163,7 +163,10 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
     sin_cuota = []
     for a in lista:
         p = a.partido
-        if _deporte(a) not in ("f", "b", "te") or id(a) in usados:
+        # Tenis fuera del bot (20/10): comparado con Winamax, el modelo se desvía ~10 puntos de media y las
+        # "gangas" que encuentra son sobre todo sus propios errores (p. ej. Uchijima 73 % frente a 59 %).
+        # Sus pronósticos siguen en la app; el bot vuelve a apostar tenis cuando el modelo se acerque a la casa.
+        if _deporte(a) not in ("f", "b") or id(a) in usados:
             continue
         if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
             continue
