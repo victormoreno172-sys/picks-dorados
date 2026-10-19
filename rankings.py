@@ -1,6 +1,6 @@
 """
 Rankings oficiales (o los de referencia) para poner la posición de cada equipo o jugador:
-  CS2 -> ranking mundial de HLTV (dust2.us)   Valorant -> vlr.gg   LoL -> Global Power Rankings de Riot
+  CS2 -> ranking mundial oficial de Valve (VRS)   Valorant -> vlr.gg   LoL -> Global Power Rankings de Riot
   Tenis -> ranking ATP / WTA (ESPN)
 Devuelven {nombre: posición}.
 """
@@ -28,16 +28,21 @@ def _get(url: str) -> str:
 
 
 def cs2() -> dict:
-    """Top 20 mundial de HLTV (en dust2.us, su web hermana)."""
-    t = _get("https://www.dust2.us/ranking")
+    """Ranking mundial oficial de Valve (VRS), el que decide las invitaciones a los Majors."""
+    base = "https://api.github.com/repos/ValveSoftware/counter-strike_regional_standings/contents/live"
+    try:
+        anos = sorted(x["name"] for x in json.loads(_get(base) or "[]") if x.get("type") == "dir")
+        if not anos:
+            return {}
+        fich = sorted(x["name"] for x in json.loads(_get(f"{base}/{anos[-1]}") or "[]") if "global" in x.get("name", ""))
+    except (ValueError, TypeError, KeyError):
+        return {}
+    if not fich:
+        return {}
+    t = _get(f"https://raw.githubusercontent.com/ValveSoftware/counter-strike_regional_standings/main/live/{anos[-1]}/{fich[-1]}")
     out = {}
-    for bloque in t.split('class="ranking-team"')[1:]:
-        bloque = bloque.split('class="ranking-team"')[0][:4000]
-        pos = re.search(r'class="ranking-number"[^>]*>\s*#?(\d+)', bloque)
-        nombre = (re.search(r'class="ranking-team-name[^"]*"[^>]*>\s*([^<]+?)\s*<', bloque)
-                  or re.search(r'<img[^>]+alt="([^"]+)"', bloque) or re.search(r'title="([^"]+)"', bloque))
-        if pos and nombre:
-            out.setdefault(html.unescape(nombre.group(1)).strip(), int(pos.group(1)))
+    for m in re.finditer(r"^\|\s*(\d+)\s*\|\s*\d+\s*\|\s*([^|]+?)\s*\|", t, re.M):
+        out.setdefault(m.group(2), int(m.group(1)))
     return out
 
 
@@ -81,7 +86,7 @@ def tenis(tour: str) -> dict:
 
 def todos() -> dict:
     out = {}
-    for clave, f, etiqueta in (("e-cs2", cs2, "HLTV"), ("e-val", valorant, "VLR"), ("e-lol", lol, "mundial"),
+    for clave, f, etiqueta in (("e-cs2", cs2, "mundial"), ("e-val", valorant, "VLR"), ("e-lol", lol, "mundial"),
                                ("t-atp", lambda: tenis("atp"), "ATP"), ("t-wta", lambda: tenis("wta"), "WTA")):
         try:
             d = f()
