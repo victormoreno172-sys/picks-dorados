@@ -370,7 +370,8 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
     ? `<summary><span><b>${d.slice(8, 10)}/${d.slice(5, 7)}</b> <small>${l.length} apuesta${l.length > 1 ? "s" : ""} · ✅ ${g} · ❌ ${pe}${pend ? " · ⏳ " + pend : ""}</small></span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></summary>`
     : `<h3><span>${d === _ahora.slice(0, 10) ? "Hoy · " : ""}${d.slice(8, 10)}/${d.slice(5, 7)}</span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></h3>`;
   return (pasado ? `<details class="dia plegable">` : `<div class="dia">`) + cab +
-    l.map((a, i) => {
+    // Las que no hiciste ("No hecha") van al final del día, debajo de las hechas
+    [...l.filter(a => !a.excluida), ...l.filter(a => a.excluida)].map((a, i) => {
       const cls = a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
       const est = a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
       const o = OV[a.key];
