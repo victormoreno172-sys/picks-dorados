@@ -1,13 +1,6 @@
-import json, re, requests
-UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"}
+import json, rankings
 out = {}
-for u in ("https://site.api.espn.com/apis/site/v2/sports/tennis/atp/rankings", "https://sports.core.api.espn.com/v2/sports/tennis/leagues/atp/rankings",
-          "https://www.dust2.us/ranking", "https://www.dust2.us/ranking/teams", "https://www.vlr.gg/rankings", "https://lolesports.com/en-US/gpr"):
-    try:
-        r = requests.get(u, headers={**UA, "Accept": "text/html,application/json"}, timeout=25)
-        t = r.text
-        i = max(t.find("Sinner"), t.find("Vitality"), t.find("rank"))
-        out[u] = [r.status_code, len(t), t[:300], t[max(0, i - 300):i + 900]]
-    except Exception as e:
-        out[u] = str(e)
+for n, f in (("cs2", rankings.cs2), ("val", rankings.valorant), ("lol", rankings.lol), ("atp", lambda: rankings.tenis("atp")), ("wta", lambda: rankings.tenis("wta"))):
+    d = f(); out[n] = [len(d), sorted(d.items(), key=lambda x: x[1])[:8]]
+t = rankings._get("https://www.dust2.us/ranking"); i = t.find("ranked-team"); out["cs2raw"] = t[i:i+1500]
 json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False)

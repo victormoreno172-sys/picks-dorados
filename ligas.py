@@ -929,6 +929,12 @@ def _posiciones(archivos: list, datos_app: dict):
                 mejor, pm = t, x
         return mejor if pm >= 0.85 else ""
 
+    oficiales: dict[str, dict] = {}
+    try:  # rankings oficiales (HLTV, vlr.gg, Riot, ATP, WTA) por delante de los nuestros
+        import rankings as rk_of
+        oficiales = rk_of.todos()
+    except Exception as e:  # noqa: BLE001
+        print(f"  aviso rankings oficiales: {e}")
     n_ok = 0
     for dia in datos_app.get("dias", []):
         for p in dia["partidos"]:
@@ -937,10 +943,9 @@ def _posiciones(archivos: list, datos_app: dict):
             liga = p.get("liga", "")
             rk = ["", ""]
             for i, n in enumerate(nombres[:2]):
-                if dep == "e":
-                    rk[i] = buscar(rankings.get("e-" + liga.split(" · ")[0].lower()[:3], {}), n)
-                elif dep == "te":
-                    rk[i] = buscar(rankings.get("t-atp" if liga.startswith("ATP") else "t-wta", {}), n)
+                if dep in ("e", "te"):
+                    k = ("e-" + liga.split(" · ")[0].lower()[:3]) if dep == "e" else ("t-atp" if liga.startswith("ATP") else "t-wta")
+                    rk[i] = buscar(oficiales.get(k, {}), n) or buscar(rankings.get(k, {}), n).replace("ranking", "nivel")
                 else:
                     rk[i] = buscar(ligas_pos.get(nom(liga), {}), n) or buscar(domestica, n)
             if any(rk):
