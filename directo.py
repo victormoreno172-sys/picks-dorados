@@ -179,11 +179,172 @@ def draft5(local: str, visitante: str) -> dict | None:
         else:
             mapas.append([bonito, None, None])
             if i == jugados and not d.get("isFinished") and (a or b or nm in ultimo):
-                envivo = {"n": i + 1, "mapa": bonito, "a": a, "b": b}
+                envivo = {"n": i + 1, "mapa": bonito, "a": a, "b": b, "fuente": "DRAFT5"}
     if giro:
         sa, sb = sb, sa
     fin = bool(d.get("isFinished") or d.get("isOver"))
     return {"m": f"{sa}-{sb}", "mapas": mapas, "envivo": envivo, "fin": fin}
+
+
+
+# ---------------------------------------------------------------- CS2: id del partido en HLTV (para el móvil)
+# Los servidores de HLTV no dejan entrar a GitHub, pero el móvil sí puede abrir su "scorebot" (rondas al
+# momento). Aquí solo se averigua el número del partido y de cada equipo en dust2.us (web hermana de HLTV).
+_D2 = {"t": 0, "lista": []}
+
+
+def _d2_lista() -> list:
+    if time.time() - _D2["t"] > 300:
+        try:
+            t = requests.get("https://www.dust2.us/matches", headers={**UA, "Accept": "text/html"}, timeout=25).text
+            lista = []
+            for bloque in t.split('class="match-list-component')[1:]:
+                mid = re.search(r'data-scorebot-match-id="(\d+)"', bloque)
+                if not mid:
+                    continue
+                eq = re.findall(r'<span class="text-ellipsis">([^<]+)</span>', bloque)
+                ids = re.findall(r'data-map-score-element="" data-scorebot-team-id="(\d+)"', bloque)
+                if len(eq) >= 2 and len(ids) >= 2:
+                    lista.append({"id": int(mid.group(1)), "n1": eq[0].strip(), "n2": eq[1].strip(), "t1": int(ids[0]), "t2": int(ids[1])})
+            _D2["lista"], _D2["t"] = lista, time.time()
+        except requests.RequestException:
+            pass
+    return _D2["lista"]
+
+
+def hltv(local: str, visitante: str) -> dict | None:
+    for m in _d2_lista():
+        d = parecido(m["n1"], local) + parecido(m["n2"], visitante)
+        r = parecido(m["n1"], visitante) + parecido(m["n2"], local)
+        if max(d, r) >= 1.5:
+            return {"id": m["id"], "tl": m["t1"] if d >= r else m["t2"], "tv": m["t2"] if d >= r else m["t1"]}
+    return None
+
+
+# ---------------------------------------------------------------- Valorant: vlr.gg (rondas del mapa en juego)
+_VLR = {"t": 0, "lista": []}
+
+
+def _vlr_lista() -> list:
+    if time.time() - _VLR["t"] > 120:
+        try:
+            t = requests.get("https://www.vlr.gg/matches", headers={**UA, "Accept": "text/html"}, timeout=25).text
+            lista = []
+            for bloque in t.split('class="wf-module-item match-item')[1:]:
+                href = re.search(r'href="(/\d+/[^"]+)"', bloque) or re.search(r"^[^>]*?href=\"(/\d+/[^\"]+)\"", bloque)
+                eq = [re.sub(r"<[^>]+>", "", x).strip() for x in re.findall(r'match-item-vs-team-name">\s*<div class="text-of">(.*?)</div>', bloque, re.S)]
+                if href and len(eq) >= 2 and re.search(r'ml-status">\s*LIVE', bloque):
+                    lista.append({"url": href.group(1), "n1": eq[0], "n2": eq[1]})
+            _VLR["lista"], _VLR["t"] = lista, time.time()
+        except requests.RequestException:
+            pass
+    return _VLR["lista"]
+
+
+def _limpio(html: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
+
+
+def vlr(local: str, visitante: str) -> dict | None:
+    """Mapas y rondas desde vlr.gg, desde el punto de vista del local."""
+    m = None
+    for x in _vlr_lista():
+        d = parecido(x["n1"], local) + parecido(x["n2"], visitante)
+        r = parecido(x["n1"], visitante) + parecido(x["n2"], local)
+        if max(d, r) >= 1.5:
+            m, giro = x, r > d
+            break
+    if not m:
+        return None
+    try:
+        t = requests.get("https://www.vlr.gg" + m["url"], headers={**UA, "Accept": "text/html"}, timeout=25).text
+    except requests.RequestException:
+        return None
+    mapas, envivo, sa, sb = [], None, 0, 0
+    for bloque in re.split(r'<div class="vm-stats-game\s*[^"]*" data-game-id="', t)[1:]:
+        if bloque.startswith("all"):
+            continue
+        cab = bloque.split('class="vlr-rounds')[0]
+        sc = re.findall(r'<div class="score([^"]*)"[^>]*>\s*(\d+)\s*</div>', cab)
+        nm = re.search(r'class="map-name">.*?<span[^>]*>\s*([A-Za-z]+)', cab, re.S)
+        nombre = nm.group(1) if nm else ""
+        if len(sc) < 2:
+            mapas.append([nombre, None, None])
+            continue
+        a, b = int(sc[0][1]), int(sc[1][1])
+        gana_a, gana_b = "mod-win" in sc[0][0], "mod-win" in sc[1][0]
+        if giro:
+            a, b, gana_a, gana_b = b, a, gana_b, gana_a
+        if gana_a or gana_b:
+            mapas.append([nombre, a, b])
+            sa, sb = sa + gana_a, sb + gana_b
+        else:
+            mapas.append([nombre, None, None])
+            if envivo is None:
+                envivo = {"n": len(mapas), "mapa": nombre, "a": a, "b": b, "fuente": "vlr.gg"}
+    if not mapas:
+        return None
+    return {"m": f"{sa}-{sb}", "mapas": mapas, "envivo": envivo}
+
+
+# ---------------------------------------------------------------- LoL: datos oficiales de Riot (lolesports)
+LOL_H = {**UA, "x-api-key": "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"}
+_LOL = {"t": 0, "ev": []}
+
+
+def lol(local: str, visitante: str) -> dict | None:
+    """Partida en juego: asesinatos, oro, torres y dragones de cada equipo (punto de vista del local)."""
+    if time.time() - _LOL["t"] > 60:
+        try:
+            j = requests.get("https://esports-api.lolesports.com/persisted/gw/getLive?hl=es-ES", headers=LOL_H, timeout=20).json()
+            _LOL["ev"] = [e for e in ((j.get("data") or {}).get("schedule") or {}).get("events") or [] if e.get("match")]
+            _LOL["t"] = time.time()
+        except (requests.RequestException, ValueError):
+            pass
+    ev = None
+    for e in _LOL["ev"]:
+        tt = (e.get("match") or {}).get("teams") or []
+        if len(tt) < 2:
+            continue
+        n1 = [tt[0].get("name", ""), tt[0].get("code", "")]
+        n2 = [tt[1].get("name", ""), tt[1].get("code", "")]
+        d = max(parecido(x, local) for x in n1) + max(parecido(x, visitante) for x in n2)
+        r = max(parecido(x, visitante) for x in n1) + max(parecido(x, local) for x in n2)
+        if max(d, r) >= 1.5:
+            ev = e
+            break
+    if not ev:
+        return None
+    try:
+        det = requests.get("https://esports-api.lolesports.com/persisted/gw/getEventDetails",
+                           params={"hl": "es-ES", "id": ev["match"]["id"]}, headers=LOL_H, timeout=20).json()["data"]["event"]["match"]
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        return None
+    nombres = {t["id"]: t.get("name", "") for t in det.get("teams") or []}
+    juego = next((g for g in det.get("games") or [] if g.get("state") == "inProgress"), None)
+    if not juego:
+        return None
+    desde = datetime.utcfromtimestamp((int(time.time()) - 60) // 10 * 10).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    try:
+        w = requests.get(f"https://feed.lolesports.com/livestats/v1/window/{juego['id']}", params={"startingTime": desde},
+                         headers=UA, timeout=20).json()
+    except (requests.RequestException, ValueError):
+        return None
+    fr = (w.get("frames") or [None])[-1]
+    if not fr:
+        return None
+    md = w.get("gameMetadata") or {}
+    azul = nombres.get((md.get("blueTeamMetadata") or {}).get("esportsTeamId"), "")
+    A, B = fr.get("blueTeam") or {}, fr.get("redTeam") or {}
+    if parecido(azul, visitante) > parecido(azul, local):
+        A, B = B, A
+    k = lambda x: f"{(x or 0) / 1000:.1f}k"  # noqa: E731
+    extra = (f"Oro {k(A.get('totalGold'))}–{k(B.get('totalGold'))} · Torres {A.get('towers', 0)}–{B.get('towers', 0)}"
+             f" · Dragones {len(A.get('dragons') or [])}–{len(B.get('dragons') or [])}")
+    if A.get("barons") or B.get("barons"):
+        extra += f" · Barones {A.get('barons', 0)}–{B.get('barons', 0)}"
+    return {"envivo": {"n": int(juego.get("number") or 1), "mapa": "", "a": int(A.get("totalKills") or 0),
+                       "b": int(B.get("totalKills") or 0), "unidad": "asesinatos", "extra": extra, "fuente": "LoL Esports"}}
 
 
 def esports(cand: list) -> dict:
@@ -266,6 +427,38 @@ def esports(cand: list) -> dict:
                         if n <= len(d5["mapas"]):
                             r["det"] = f"Mapa {n} · {d5['mapas'][n - 1][0]}"
                     r["fuente"] = "DRAFT5"
+                if not fin and not r.get("envivo"):
+                    try:  # el móvil sacará las rondas de HLTV
+                        h = hltv(x[0]["local"], x[0]["visitante"])
+                        if h:
+                            r["hltv"] = h
+                    except Exception:  # noqa: BLE001
+                        pass
+            liga = x[0].get("liga") or ""
+            if not fin and ("VAL" in liga or "Valorant" in liga):
+                try:
+                    v = vlr(x[0]["local"], x[0]["visitante"])
+                except Exception:  # noqa: BLE001
+                    v = None
+                if v and sum(int(z) for z in v["m"].split("-")) >= a + b:
+                    viejos = r.get("mapas") or []
+                    for i, z in enumerate(v["mapas"]):
+                        if not z[0] and i < len(viejos):
+                            z[0] = viejos[i][0]
+                    r["m"], r["mapas"] = v["m"], v["mapas"] + viejos[len(v["mapas"]):]
+                    if v["envivo"]:
+                        e = v["envivo"]
+                        r["envivo"], r["det"] = e, f"Mapa {e['n']} · {e['mapa']} {e['a']}-{e['b']}".replace("  ", " ")
+                    r["fuente"] = "vlr.gg"
+            if not fin and ("LOL" in liga or "League" in liga):
+                try:
+                    v = lol(x[0]["local"], x[0]["visitante"])
+                except Exception:  # noqa: BLE001
+                    v = None
+                if v:
+                    e = v["envivo"]
+                    r["envivo"], r["det"] = e, f"Partida {e['n']} · {e['a']}-{e['b']} en asesinatos"
+                    r["fuente"] = "LoL Esports"
             res[x[0]["clave"]] = r
     return res
 
