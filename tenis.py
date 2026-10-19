@@ -388,7 +388,7 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             elo = EloTenis(tour).ajustar(hist)
             try:
                 import rankings
-                elo.poner_ranking({f"{tour}-{i}": r for i, r in rankings.tenis_ids(tour.lower()).items()})
+                elo.poner_ranking({f"{tour}-{n}": r for n, r in rankings.tenis(tour.lower()).items()})
             except Exception as e:  # noqa: BLE001
                 print(f"  aviso ranking {tour}: {e}")
             ELO[tour] = elo
