@@ -3076,7 +3076,8 @@ async function directoOtros(fechas) {
   for (const dia of DATOS.dias.filter(d => fechas.includes(d.fecha)))
     for (const p of dia.partidos) {
       const dep = p.dep || "f";
-      if (!cand[dep] || !empezado(dia, p) || (p.res && p.res.st === "post")) continue;
+      // Esports y basket acabados también: el servidor puede completar después el resultado de cada mapa o cuarto
+      if (!cand[dep] || !empezado(dia, p) || (p.res && p.res.st === "post" && dep === "te")) continue;
       if (dep === "b" && p.fi && p.fi.slug === "nba") continue;  // la NBA ya va por ESPN
       cand[dep].push(p);
     }
