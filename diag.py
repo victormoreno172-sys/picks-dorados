@@ -6,15 +6,34 @@ def g(u, h=None):
         r = requests.get(u, headers={"User-Agent": UA, **(h or {})}, timeout=25); return r.status_code, r.text
     except Exception as e: return 0, str(e)
 s, t = g("https://www.dust2.us/matches/2398989/big-vs-private", {"Accept": "text/html"})
-out["st"] = s
-txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "|", t))
-i = txt.find("Dust2.us| |")
-out["mapas_txt"] = [txt[m.start()-200:m.start()+400] for m in re.finditer(r"(?i)mapholder|Mirage|Inferno|Nuke|Ancient|Anubis|Train|Overpass|Dust2", txt)][:4]
-out["attrs"] = list(set(re.findall(r'data-[a-z-]*(?:scorebot|socket|live|match)[a-z-]*="[^"]{0,200}"', t)))[:20]
-out["urls"] = list(set(re.findall(r'(?:https?:)?//[a-z0-9.-]*(?:scorebot|hltv|dust2)[a-z0-9.-]*[^"\'\s<]{0,80}', t)))[:30]
-out["classes"] = list(set(re.findall(r'class="([^"]*(?:score|map|live)[^"]*)"', t)))[:40]
-for u in ("https://scorebot-lb.hltv.org/socket.io/?EIO=3&transport=polling", "https://scorebot-secure.hltv.org/socket.io/?EIO=3&transport=polling",
-          "https://scorebot-lb.hltv.org/socket.io/?EIO=4&transport=polling", "https://www.hltv.org/matches/2398989/big-vs-private"):
-    out[u] = list(g(u, {"Origin": "https://www.hltv.org", "Referer": "https://www.hltv.org/"}))
-    out[u][1] = out[u][1][:400]
+i = t.find("map-container-score-live")
+out["d2_raw"] = t[max(0, i-2500):i+1500]
+s, t = g("https://www.dust2.us/matches", {"Accept": "text/html"})
+i = t.find("match-list-live-score")
+out["d2_list_raw"] = t[max(0, i-1500):i+1500]
+for op in ("ub", "888es", "pafes"):
+    s, t = g(f"https://eu-offering-api.kambicdn.com/offering/v2018/{op}/listView/esports/all/all/all/in-play.json?lang=es_ES&market=ES&useCombined=true")
+    out["kambi_" + op] = [s, len(t)]
+    try:
+        j = json.loads(t)
+        evs = j.get("events") or []
+        out["kambi_" + op].append([(e["event"].get("name"), e.get("liveData", {}).get("score")) for e in evs[:8]])
+        hit = [e for e in evs if "liveData" in e]
+        if hit:
+            out["kambi_live_" + op] = json.dumps(hit[0].get("liveData"))[:2000]
+            s2, t2 = g(f"https://eu-offering-api.kambicdn.com/offering/v2018/{op}/event/livedata/{hit[0]['event']['id']}.json?lang=es_ES&market=ES")
+            out["kambi_ld_" + op] = [s2, t2[:2500]]
+        break
+    except Exception as e:
+        out["kambi_" + op].append(t[:300])
+for u in ("https://1xbet.com/LiveFeed/Get1x2_VZip?sports=40&count=50&lng=en&mode=4&country=1&getEmpty=true",
+          "https://1xlite-90823.world/LiveFeed/Get1x2_VZip?sports=40&count=50&lng=en&mode=4&getEmpty=true"):
+    s, t = g(u)
+    out[u] = [s, t[:300]]
+    try:
+        j = json.loads(t)
+        vs = j.get("Value") or []
+        out[u + "_n"] = [(v.get("O1"), v.get("O2"), v.get("SC")) for v in vs if "BIG" in str(v.get("O1")) + str(v.get("O2")) or "Counter" in str(v.get("L"))][:4]
+    except Exception:
+        pass
 json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False, default=str)
