@@ -2150,8 +2150,16 @@ async function syncPush() {
   }, 800);
 }
 // Al tocar una notificación: abrir ese partido
+// Al abrir la app (o volver a ella) se quitan los avisos ya entregados: así no se queda el "1" en el icono
+function limpiarAvisos() {
+  const FM = ES_APP && capPlugin("FirebaseMessaging");
+  if (!FM || !FM.removeAllDeliveredNotifications) return;
+  try { Promise.resolve(FM.removeAllDeliveredNotifications()).catch(() => {}); } catch (e) {}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) limpiarAvisos(); });
 function escucharPush() {
   const FM = ES_APP && capPlugin("FirebaseMessaging");
+  limpiarAvisos();
   if (!FM || escucharPush.hecho) return;
   escucharPush.hecho = true;
   try {
