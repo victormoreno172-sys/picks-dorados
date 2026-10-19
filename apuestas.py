@@ -158,26 +158,33 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
                              "cuota": cuota, "prob": round(prod(k.prob for *_, k in piernas), 3),
                              "importe": redondo(banca * PORCENTAJE)})
 
-    # Basket y tenis sin cuota en la API (ACB, Lega, torneos pequeños de tenis...): sencillas con la cuota mínima que
-    # hay que encontrar en Winamax (la de la app + 3 %). El saldo se calcula con esa cuota mínima.
+    # Sin cuota real de la casa (basket ACB, tenis, y fútbol con cuota ≈): sencillas con la cuota mínima que
+    # hay que encontrar en Winamax (la justa + 3 %). El saldo se calcula con esa cuota mínima.
     sin_cuota = []
     for a in lista:
         p = a.partido
-        if _deporte(a) not in ("b", "te") or id(a) in usados or any(k.cuota for k in a.picks):
+        if _deporte(a) not in ("f", "b", "te") or id(a) in usados:
             continue
         if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
             continue
         # Margen que se pide sobre la cuota justa: 3 %; en la WTA, 5 % (en el backtest sus +1,5 sets
         # del 75-85 % aciertan ~1,5 puntos menos de lo previsto; en la ATP, algo más)
         margen = 1.05 if "WTA" in (p.liga or "") else 1.03
-        ks = [k for k in a.picks if PROB_MIN <= k.prob and round(margen / k.prob, 2) >= CUOTA_MIN]
+        # Solo mercados sin cuota real de la casa (sin cuota o con cuota estimada ≈): con cuota real ya
+        # sabemos si compensa. Fútbol incluido: la cuota ≈ no es la de Winamax, hay que mirarla.
+        ks = [k for k in a.picks if PROB_MIN <= k.prob and round(margen / k.prob, 2) >= CUOTA_MIN
+              and (not k.cuota or k.estimada)]
         if ks:
-            k = max(ks, key=lambda k: k.prob)
+            # El que más opciones tiene de encontrarse en Winamax: cuota ≈ más cerca de la mínima
+            cerca = lambda k: (k.cuota * k.prob / margen) if k.cuota else 0.97  # noqa: E731
+            k = max(ks, key=lambda k: (round(cerca(k), 2), k.prob))
             pi = _pierna(a, k)
             pi["cuota"], pi["minima"] = round(margen / k.prob + 0.005, 2), True
             sin_cuota.append({"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"],
-                              "prob": round(k.prob, 3), "importe": redondo(banca * PORCENTAJE)})
-    sin_cuota.sort(key=lambda ap: -ap["prob"])
+                              "prob": round(k.prob, 3), "importe": redondo(banca * PORCENTAJE), "_cerca": cerca(k)})
+    sin_cuota.sort(key=lambda ap: (-round(ap["_cerca"], 2), -ap["prob"]))
+    for ap in sin_cuota:
+        ap.pop("_cerca", None)
 
     # Combinadas (doble y triple) también con patas de "pide ≥" (tenis y basket), si no han salido con
     # cuotas de la casa: cada pata ya lleva su 3 % de margen y la combinada pide el producto de las mínimas.
@@ -203,7 +210,7 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
             apuestas.append({"tipo": nombre, "piernas": pis, "cuota": round(prod(pi["cuota"] for pi in pis), 2),
                              "prob": round(prod(pi["prob"] for pi in pis), 3), "importe": redondo(banca * PORCENTAJE)})
     # Si hay pocas con cuota real (días flojos de fútbol), más hueco para las de "pide ≥" (tenis y basket)
-    hueco = max(2, min(5, MAX_SENCILLAS + 2 - len([x for x in apuestas if x["tipo"] == "Sencilla"])))
+    hueco = max(2, min(8, MAX_SENCILLAS + 2 - len([x for x in apuestas if x["tipo"] == "Sencilla"])))
     apuestas = [x for x in apuestas if x["tipo"] == "Sencilla"] + sin_cuota[:hueco] + \
                [x for x in apuestas if x["tipo"] != "Sencilla"]
 
