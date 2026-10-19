@@ -105,6 +105,13 @@ svg.graf path { filter: drop-shadow(0 0 6px currentColor); }
 .acc button.sem-verde { border-color: rgba(57, 245, 160, .5) !important; color: #39f5a0 !important; }
 .acc button.sem-rojo { border-color: rgba(255, 90, 110, .5) !important; color: #ff7a8a !important; }
 .acc button.sem-azul { border-color: rgba(80, 160, 255, .55) !important; color: #7ab8ff !important; }
+details.plegable { border: 1px solid var(--line); border-radius: 12px; padding: 0 10px; margin: 8px 0; }
+details.plegable > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 11px 0; cursor: pointer; font-family: var(--mono); }
+details.plegable > summary::-webkit-details-marker { display: none; }
+details.plegable > summary::after { content: "▾"; color: var(--muted); margin-left: 6px; }
+details.plegable[open] > summary::after { content: "▴"; }
+details.plegable > summary small { display: block; color: var(--muted); font-family: inherit; font-size: 11px; margin-top: 3px; }
+details.plegable > summary > span:first-child { flex: 1; min-width: 0; }
 </style>
 <div class="wrap">
   <header><h1>Bot <span>Dorado</span></h1><div class="upd" id="upd"></div></header>
@@ -315,7 +322,14 @@ $("nap").textContent = `${ap.length} en total`;
 const icono = p => p.ok === true ? "✅" : p.ok === false ? "❌" : p.ok === null ? "➖" : "⏳";
 $("lista").innerHTML = dias.length ? dias.map(d => {
   const l = porDia[d], r = resumen(l);
-  return `<div class="dia"><h3><span>${d.slice(8, 10)}/${d.slice(5, 7)}</span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></h3>` +
+  // Días ya pasados: plegados en un desplegable (el de hoy y los siguientes, siempre a la vista)
+  const pasado = d < _ahora.slice(0, 10);
+  const g = l.filter(a => !a.excluida && a.ok === true).length, pe = l.filter(a => !a.excluida && a.ok === false).length;
+  const pend = l.filter(a => !a.excluida && !("ok" in a)).length;
+  const cab = pasado
+    ? `<summary><span><b>${d.slice(8, 10)}/${d.slice(5, 7)}</b> <small>${l.length} apuesta${l.length > 1 ? "s" : ""} · ✅ ${g} · ❌ ${pe}${pend ? " · ⏳ " + pend : ""}</small></span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></summary>`
+    : `<h3><span>${d === _ahora.slice(0, 10) ? "Hoy · " : ""}${d.slice(8, 10)}/${d.slice(5, 7)}</span><span class="${r.b >= 0 ? "pos" : "neg"}">${r.n ? sig(r.b) : ""}</span></h3>`;
+  return (pasado ? `<details class="dia plegable">` : `<div class="dia">`) + cab +
     l.map((a, i) => {
       const cls = a.excluida ? "x" : a.ok === true ? "g" : a.ok === false ? "p" : "";
       const est = a.excluida ? "No hecha" : a.ok === true ? `Ganada ${sig(gan(a))}` : a.ok === false ? `Perdida ${sig(gan(a))}` : a.ok === null ? "Anulada" : "En juego";
@@ -328,7 +342,7 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       return `<div class="ap ${cls}"><div class="top"><span>${i + 1}. ${esc(a.tipo)} · ${a.cuota.toFixed(2).replace(".", ",")}${a.cuota_bot ? ` <small style="color:var(--muted);font-weight:400">(bot ${a.cuota_bot.toFixed(2).replace(".", ",")})</small>` : ""}</span>
         <span class="eur">${eur(a.importe)} <span class="badge ${cls}">${est}${a.manual ? " ✎" : a.auto ? " ⚡" : ""}</span></span></div>` +
         (sem && !a.excluida ? `<div class="semaforo sem-${sem.c}">${sem.t}</div>` : "") + a.piernas.map(p => `<div class="leg">${icono(p)} ${esc(p.hora || "")} · <b>${esc(p.local)} – ${esc(p.visitante)}</b> · ${esc(p.mercado)}${p.minima ? " (pide ≥ " + p.cuota.toFixed(2) + ")" : p.estimada ? " (≈" + p.cuota.toFixed(2) + ")" : " (" + p.cuota.toFixed(2) + ")"}${p.res ? ` · <span style="font-family:var(--mono)">${p.res[0]}-${p.res[1]}</span>` : ""}</div>`).join("") + acc + "</div>";
-    }).join("") + "</div>";
+    }).join("") + (pasado ? "</details>" : "</div>");
 }).join("") : '<p class="vacio">El bot aún no ha hecho apuestas.</p>';
 
 document.addEventListener("click", e => {
