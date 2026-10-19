@@ -2730,6 +2730,17 @@ var ESTADO_DIRECTO = {};
 // 🎯 CS2: rondas al momento desde el "scorebot" de HLTV. El servidor no puede entrar en HLTV, pero el
 // móvil sí: el servidor solo dice el número del partido (y de cada equipo) y el móvil se conecta.
 const HLTV = {};
+// Último marcador de cada mapa por partido (se guarda en el móvil para no perderlo al cerrar la app)
+const HLTV_MAPAS = (() => { try { return JSON.parse(localStorage.getItem("hltvMapas") || "{}"); } catch (e) { return {}; } })();
+function guardarMapaHltv(id, mapa, a, b) {
+  if (!id || !mapa) return;
+  const k = mapa.replace(/^de_/, "").toLowerCase(), o = HLTV_MAPAS[id] ||= {};
+  const g = o[k]; if (g && g[0] === a && g[1] === b) return;
+  if (g && a + b < g[0] + g[1]) return;  // nunca hacia atrás
+  o[k] = [a, b, Date.now()];
+  for (const x of Object.keys(HLTV_MAPAS)) if (Object.values(HLTV_MAPAS[x]).every(v => Date.now() - (v[2] || 0) > 2 * 864e5)) delete HLTV_MAPAS[x];
+  try { localStorage.setItem("hltvMapas", JSON.stringify(HLTV_MAPAS)); } catch (e) {}
+}
 function cargarSocketIO() {
   if (window.io) return Promise.resolve();
   if (cargarSocketIO.pr) return cargarSocketIO.pr;
@@ -2747,6 +2758,12 @@ function aplicarHltv(p) {
   const tot = (p.res.m || "0-0").split("-").map(x => +x || 0);
   const nm = (h.mapa || "").replace(/^de_/, ""), M = nm ? nm[0].toUpperCase() + nm.slice(1) : "";
   const mapas = (p.res.mapas || []).map(z => z.slice());
+  // Mapas ya acabados sin resultado en la fuente: se completan con el último marcador que dio HLTV de ese mapa
+  const guard = HLTV_MAPAS[p.res.hltv && p.res.hltv.id] || {};
+  mapas.forEach((z, k) => {
+    const g = guard[(z[0] || "").toLowerCase()];
+    if (g && k < tot[0] + tot[1] && (z[1] == null || z[1] === "✓" || z[2] === "✓")) mapas[k] = [z[0], g[0], g[1]];
+  });
   // ¿De qué mapa es este marcador? Por el nombre (el scorebot sigue en el mapa que acaba de terminar)
   let i = M ? mapas.findIndex(z => (z[0] || "").toLowerCase() === M.toLowerCase()) : -1;
   if (i < 0) i = tot[0] + tot[1];
@@ -2841,6 +2858,7 @@ async function hltvVivo(lista) {
       else if (ctId === h.tv || tId === h.tl) [a, b] = [tt, ct];
       else [a, b] = parecido(q.local, d.ctTeamName || "") >= parecido(q.local, d.terroristTeamName || "") ? [ct, tt] : [tt, ct];
       q._hltv = { a, b, mapa: d.mapName || "", t: Date.now() };
+      guardarMapaHltv(h.id, d.mapName || "", a, b);
       ESTADO_DIRECTO.hltv = { ok: true, t: AHORA.hora };
       if (aplicarHltv(q) && document.activeElement !== $("busca")) pintarLista();
     });
