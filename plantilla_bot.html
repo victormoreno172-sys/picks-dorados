@@ -218,8 +218,8 @@ function calcularApuestasBot(D, ahora) {
     // Sin corregir aún en el servidor: el resultado que vio la app de Partidos con los marcadores
     else if (!("ok" in a) && AU[a.key] === "g") { a.ok = true; a.cuota_final = a.cuota; a.auto = true; }
     else if (!("ok" in a) && AU[a.key] === "p") { a.ok = false; a.auto = true; }
-    // Desde el 20/10 solo cuentan las que marcas como hechas (✋ o poniendo la cuota real): no se da por hecho que las haces
-    if (!a.excluida && !a.previa && a.fecha >= HECHAS_DESDE && !["h", "g", "p"].includes(o) && !CR[a.key]) { a.excluida = true; a.sinHacer = true; }
+    // Desde el 20/10 solo cuentan las que marcas con ✋: poner la cuota real es solo para ver el semáforo y decidir
+    if (!a.excluida && !a.previa && a.fecha >= HECHAS_DESDE && !["h", "g", "p"].includes(o)) { a.excluida = true; a.sinHacer = true; }
   });
   const ap = todas.filter(a => !a.excluida);
   const cand = todas.filter(a => !a.excluida || a.sinHacer);   // las propuestas también llevan su importe sugerido
