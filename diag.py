@@ -5,35 +5,25 @@ def g(u, h=None):
     try:
         r = requests.get(u, headers={"User-Agent": UA, **(h or {})}, timeout=25); return r.status_code, r.text
     except Exception as e: return 0, str(e)
-s, t = g("https://www.dust2.us/matches/2398989/big-vs-private", {"Accept": "text/html"})
-i = t.find("map-container-score-live")
-out["d2_raw"] = t[max(0, i-2500):i+1500]
-s, t = g("https://www.dust2.us/matches", {"Accept": "text/html"})
-i = t.find("match-list-live-score")
-out["d2_list_raw"] = t[max(0, i-1500):i+1500]
-for op in ("ub", "888es", "pafes"):
-    s, t = g(f"https://eu-offering-api.kambicdn.com/offering/v2018/{op}/listView/esports/all/all/all/in-play.json?lang=es_ES&market=ES&useCombined=true")
-    out["kambi_" + op] = [s, len(t)]
-    try:
-        j = json.loads(t)
-        evs = j.get("events") or []
-        out["kambi_" + op].append([(e["event"].get("name"), e.get("liveData", {}).get("score")) for e in evs[:8]])
-        hit = [e for e in evs if "liveData" in e]
-        if hit:
-            out["kambi_live_" + op] = json.dumps(hit[0].get("liveData"))[:2000]
-            s2, t2 = g(f"https://eu-offering-api.kambicdn.com/offering/v2018/{op}/event/livedata/{hit[0]['event']['id']}.json?lang=es_ES&market=ES")
-            out["kambi_ld_" + op] = [s2, t2[:2500]]
-        break
-    except Exception as e:
-        out["kambi_" + op].append(t[:300])
-for u in ("https://1xbet.com/LiveFeed/Get1x2_VZip?sports=40&count=50&lng=en&mode=4&country=1&getEmpty=true",
-          "https://1xlite-90823.world/LiveFeed/Get1x2_VZip?sports=40&count=50&lng=en&mode=4&getEmpty=true"):
-    s, t = g(u)
-    out[u] = [s, t[:300]]
-    try:
-        j = json.loads(t)
-        vs = j.get("Value") or []
-        out[u + "_n"] = [(v.get("O1"), v.get("O2"), v.get("SC")) for v in vs if "BIG" in str(v.get("O1")) + str(v.get("O2")) or "Counter" in str(v.get("L"))][:4]
-    except Exception:
-        pass
+SR = {"Origin": "https://s5.sir.sportradar.com", "Referer": "https://s5.sir.sportradar.com/"}
+for u in ("https://lsc.fn.sportradar.com/common/en/Etc:UTC/gismo/sport_matches/109/2026-10-19",
+          "https://lsc.fn.sportradar.com/common/en/Etc:UTC/gismo/event_fullfeed/0/1/109",
+          "https://lsc.fn.sportradar.com/sportradar/en/Europe:Berlin/gismo/config_tree_mini/41/0/109",
+          "https://lsc.fn.sportradar.com/common/en/Etc:UTC/gismo/livescore_matches/109"):
+    s, t = g(u, SR); out[u] = [s, len(t), t[:400]]
+    i = t.find("PRIVATE"); 
+    if i < 0: i = t.find("Private")
+    if i >= 0: out[u + "_hit"] = t[max(0, i-1500):i+1500]
+P = {"X-API-Key": "CmX2KcMrXuFmNg6YFbmTxE0y9CIrOi0R", "Referer": "https://www.pinnacle.com/"}
+s, t = g("https://guest.api.arcadia.pinnacle.com/0.1/sports/12/matchups/live", P)
+try:
+    j = json.loads(t); hit = [m for m in j if "BIG" in json.dumps(m)]
+    out["pin"] = [s, len(j), json.dumps(hit[:1])[:2500]]
+except Exception as e:
+    out["pin"] = [s, t[:300]]
+# GosuGamers / escorenews / egamersworld quick reach
+for u in ("https://escorenews.com/en/csgo/live", "https://egamersworld.com/counterstrike/matches", "https://www.gosugamers.net/counter-strike/matches",
+          "https://www.strafe.com/esports-betting/live/", "https://bo3.gg/matches/current", "https://api.pandascore.co/csgo/matches/running"):
+    s, t = g(u, {"Accept": "text/html"}); i = t.find("PRIVATE")
+    out[u] = [s, len(t), t[max(0, i-600):i+900] if i >= 0 else ""]
 json.dump(out, open("resultado.json", "w"), indent=1, ensure_ascii=False, default=str)
