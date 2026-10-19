@@ -260,12 +260,14 @@ class EloTenis:
         print(f"  tenis: ranking oficial como base ({len(ranks)} jugadores; Elo = {a:.0f} {b:+.1f}·ln(puesto))")
         return self
 
+    LAMBDA0 = 0.0  # peso fijo del ranking aunque tenga muchos partidos (el Elo no sabe el nivel de los Challenger)
+
     def _rating(self, j: str) -> float:
         g = self.general.get(j, 1500)
         if j in self.prior:
             n = self.n.get(j, 0)
-            w = n / (n + self.N_PRIOR)
-            return w * g + (1 - w) * self.prior[j]
+            lam = self.LAMBDA0 + (1 - self.LAMBDA0) * self.N_PRIOR / (n + self.N_PRIOR)
+            return (1 - lam) * g + lam * self.prior[j]
         return g
 
     def p_partido(self, j1: str, j2: str, sup: str) -> float:
@@ -386,7 +388,7 @@ def analizar_dias(hoy: date, n_dias: int) -> dict[date, list[Analisis]]:
             elo = EloTenis(tour).ajustar(hist)
             try:
                 import rankings
-                elo.poner_ranking(rankings.tenis_ids(tour.lower()))
+                elo.poner_ranking({f"{tour}-{i}": r for i, r in rankings.tenis_ids(tour.lower()).items()})
             except Exception as e:  # noqa: BLE001
                 print(f"  aviso ranking {tour}: {e}")
             ELO[tour] = elo
