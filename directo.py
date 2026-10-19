@@ -214,17 +214,42 @@ def _d2_lista() -> list:
     return _D2["lista"]
 
 
-def hltv(local: str, visitante: str) -> dict | None:
+def hltv(local: str, visitante: str, terminado: bool = False) -> dict | None:
     for m in _d2_lista():
         d = parecido(m["n1"], local) + parecido(m["n2"], visitante)
         r = parecido(m["n1"], visitante) + parecido(m["n2"], local)
         if max(d, r) >= 1.5:
             return {"id": m["id"], "tl": m["t1"] if d >= r else m["t2"], "tv": m["t2"] if d >= r else m["t1"],
                     "_url": m["url"], "_giro": r > d}
+    # Ya terminado: se busca en los resultados de dust2 (por el enlace "equipo1-vs-equipo2"; los más recientes primero)
+    for mid, slug in (_d2_resultados() if terminado else []):
+        if "-vs-" not in slug:
+            continue
+        a, b = slug.split("-vs-", 1)
+        a, b = a.replace("-", " "), b.replace("-", " ")
+        d = parecido(a, local) + parecido(b, visitante)
+        r = parecido(a, visitante) + parecido(b, local)
+        if max(d, r) >= 1.5:
+            return {"id": int(mid), "tl": 0, "tv": 0, "_url": f"/matches/{mid}/{slug}", "_giro": r > d}
     return None
 
 
+_D2R = {"t": 0, "l": []}
+
+
+def _d2_resultados() -> list:
+    if time.time() - _D2R["t"] > 600:
+        try:
+            t = requests.get("https://www.dust2.us/results", headers={**UA, "Accept": "text/html"}, timeout=25).text
+            _D2R["l"] = list(dict.fromkeys(re.findall(r'href="/matches/(\d+)/([a-z0-9-]+)"', t)))
+            _D2R["t"] = time.time()
+        except requests.RequestException:
+            pass
+    return _D2R["l"]
+
+
 _D2M: dict = {}
+_HV: dict = {}  # partido -> datos de HLTV (para seguir leyendo sus mapas cuando ya ha terminado)
 
 
 def mapas_d2(h: dict) -> dict:
@@ -406,7 +431,8 @@ def esports(cand: list) -> dict:
                     if w is None and juego.get("status") == "upcoming":
                         mapas.append([(juego.get("map_name") or "").replace("de_", "").title(), None, None])
                         continue
-                    gana1 = parecido(juego.get("winner_clan_name") or "", t1) >= 0.85
+                    wn = juego.get("winner_clan_name") or ""
+                    gana1 = parecido(wn, t1) >= parecido(wn, (m.get("team2") or {}).get("name", ""))
                     s1, s2 = (w, l) if gana1 else (l, w)
                     if x[1]:
                         s1, s2 = s2, s1
@@ -455,18 +481,21 @@ def esports(cand: list) -> dict:
                         if n <= len(d5["mapas"]):
                             r["det"] = f"Mapa {n} · {d5['mapas'][n - 1][0]}"
                     r["fuente"] = "DRAFT5"
-                if not fin and not r.get("envivo"):
-                    try:  # el móvil sacará las rondas de HLTV
-                        h = hltv(x[0]["local"], x[0]["visitante"])
-                        if h:
-                            hechos = mapas_d2(h)
-                            for z in r.get("mapas") or []:  # mapas acabados sin marcador en bo3.gg
-                                k = (z[0] or "").lower()
-                                if k in hechos and (z[1] is None or "✓" in (z[1], z[2])):
-                                    z[1], z[2] = hechos[k]
+                try:  # HLTV/dust2: resultado de cada mapa (manda sobre bo3.gg) y, en directo, el móvil saca las rondas
+                    h = _HV.get(x[0]["clave"]) if fin else None
+                    h = h or hltv(x[0]["local"], x[0]["visitante"], terminado=fin)
+                    if h:
+                        _HV[x[0]["clave"]] = h  # al acabar desaparece de la portada de dust2: se recuerda
+                        r["d2"] = [h["_url"], h["_giro"], h["id"], h["tl"], h["tv"]]
+                        hechos = mapas_d2(h)
+                        for z in r.get("mapas") or []:
+                            k = (z[0] or "").lower()
+                            if k in hechos:
+                                z[1], z[2] = hechos[k]
+                        if not fin and not r.get("envivo"):
                             r["hltv"] = {k: v for k, v in h.items() if not k.startswith("_")}
-                    except Exception:  # noqa: BLE001
-                        pass
+                except Exception:  # noqa: BLE001
+                    pass
             liga = x[0].get("liga") or ""
             if not fin and ("VAL" in liga or "Valorant" in liga):
                 try:
@@ -689,6 +718,10 @@ def main():
         anterior, finales = {}, {}
     # Para no repetir avisos al empezar otra vuelta: estado de cada partido y apuestas ya avisadas
     previos = {**(anterior.get("res") or {}), **(anterior.get("push") or {})}
+    for k, v in (anterior.get("res") or {}).items():  # partidos de CS2 ya vistos en HLTV
+        d2 = v.get("d2")
+        if isinstance(d2, list) and len(d2) == 5:
+            _HV[k] = {"_url": d2[0], "_giro": d2[1], "id": d2[2], "tl": d2[3], "tv": d2[4]}
     avisados: dict = anterior.get("avisados") or {}
     bot, t_bot = {}, 0
     import avisos

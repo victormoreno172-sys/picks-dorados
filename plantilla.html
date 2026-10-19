@@ -1790,6 +1790,14 @@ function enLaApp(p) {
   }
   return null;
 }
+// Calendarios de ligas y torneos: se generan cada hora; si la app ya tiene el partido en directo o acabado, manda eso
+function alDia(p) {
+  if (!p || p.st === "post") return p;
+  const a = enLaApp(p); if (!a) return p;
+  const r = DATOS.dias[a[0]].partidos[a[1]].res;
+  if (!r || !["in", "post"].includes(r.st) || !/^\d+-\d+$/.test(r.m || "")) return p;
+  return Object.assign({}, p, { st: r.st, m: r.m });
+}
 // Cuadro de eliminatorias: columnas por ronda (ganadores arriba, perdedores abajo), como los de la Champions
 function esCuadro(j) {
   if (j.tipo) return j.tipo === "cuadro";
@@ -1807,8 +1815,9 @@ function pintarCuadro(j) {
   }
   const doble = secs.l.length > 0;
   const tarjeta = (p, final) => {
+    if (!p.legs) p = alDia(p);
     const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
-    const fin = p.st === "post" && mar, app = p.st !== "post" ? enLaApp(p._abrir || p) : null;
+    const fin = p.st === "post" && mar, app = enLaApp(p._abrir || p);
     const gan = p.gan ? (p.gan === p.l ? 1 : 2) : fin ? (a > b ? 1 : b > a ? 2 : 0) : 0;
     const fd = new Date(p.f + "T12:00:00"), fecha = `${f2(fd.getDate())}.${f2(fd.getMonth() + 1)}`;
     const eq = (n, l, x, k) => `<div class="ceq ${gan === k ? "gana" : gan && gan !== k ? "pierde" : ""}">${miniEsc(l, n)}<span>${esc(n)}</span><b>${mar ? x : ""}</b></div>`;
@@ -1831,7 +1840,7 @@ function pintarCuadro(j) {
 // Cuadro para copas, torneos de tenis, eliminatorias europeas y playoffs (NBA): se arma con los partidos
 function cuadroComp(L) {
   if (!L || !L.jornadas || L.dep === "e" || L.tipo === "ranking") return null;
-  let ps = L.jornadas.flatMap(j => j.p.map(p => Object.assign({ _j: j.t }, p)));
+  let ps = L.jornadas.flatMap(j => j.p.map(p => Object.assign({ _j: j.t }, alDia(p))));
   if (L.tipo !== "copa") { ps = ps.filter(p => p.ko); if (ps.length < 3) return null; }
   else if (ps.some(p => p.ko)) ps = ps.filter(p => p.ko);
   if (ps.length < 2) return null;
@@ -1953,11 +1962,12 @@ function cuadroComp(L) {
   return { p: out, tipo: "cuadro" };
 }
 function filaJornada(p, equipo) {
+  p = alDia(p);
   const mar = /^(\d+)-(\d+)$/.exec(p.m || ""), a = mar ? +mar[1] : null, b = mar ? +mar[2] : null;
   const fd = new Date(p.f + "T12:00:00"), fecha = `${f2(fd.getDate())}.${f2(fd.getMonth() + 1)}.`;
   const tagc = (p.c ? `<small class="ctag">${infoLiga(p.c).flag} ${esc(p.c)}</small>` : "") + (p.r ? `<small class="ctag rtagj ${p.r === "Final" ? "final" : ""}">${p.r === "Final" ? "🏆 " : ""}${esc(p.r)}</small>` : "");
   const hora = p.st === "in" ? `<b>● VIVO</b>` : p.st === "post" ? `<b>FIN</b>` : p.st === "susp" ? `<b>Apl.</b>` : `<b>${esc(p.h || "--:--")}</b>`;
-  const app = p.st !== "post" ? enLaApp(p) : null;
+  const app = enLaApp(p);
   let derecha = mar ? `<span class="jm"><span>${a}</span><span>${b}</span></span>` : `<span></span>`;
   if (equipo && mar) { const yo = p.l === equipo ? a : b, el = p.l === equipo ? b : a, r = yo > el ? "W" : yo < el ? "L" : "D";
     derecha = `<span class="jm"><span>${a}</span><span>${b}</span></span>`;
