@@ -427,6 +427,8 @@ def actualizar(por_dia: dict):
         dia = ahora.date()
     else:
         dia = None
+    if b.get("forzar"):  # puesto a mano en el historial: sacar ya las de ese día (una vez)
+        dia = date.fromisoformat(b.pop("forzar"))
     if dia and (b.get("ultimo_envio") or "") < dia.isoformat():
         pendiente = sum(a["importe"] for a in b["apuestas"] if "ok" not in a and not a.get("previa"))  # dinero aún en juego
         elegidas = elegir(por_dia.get(dia, []), saldo(b) - pendiente, ahora, cal, banca_total=saldo(b))
