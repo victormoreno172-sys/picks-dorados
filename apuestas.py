@@ -108,7 +108,7 @@ def _pierna(a, k) -> dict:
 VALOR_MIN = 0.02            # con valor: Winamax paga al menos un 2 % más que la cuota justa
 PEOR_EV = -0.07             # sin valor: lo menos malo del día (Winamax FR pierde ~6-9 % de media en estas cuotas)
 N_DIA = 6                   # sencillas por día
-PCT_SIN_VALOR = 0.025       # y con poco dinero cada una (el 2,5 % de lo que queda)
+PCT_SIN_VALOR = 0.03        # cada apuesta entre el 3 % (sin valor) y el 5 % (con valor) de lo que queda
 CUOTA_MIN_V, CUOTA_MAX_V = 1.30, 3.20
 
 
@@ -307,7 +307,8 @@ def elegir_modelo(lista, banca: float, ahora: datetime, cal: dict | None = None,
     return elegidas
 
 
-PCT_MAX = 0.10  # ninguna apuesta pasa del 10 % de lo que queda
+PCT_MAX = 0.05  # ninguna apuesta pasa del 5 % de lo que queda
+PCT_VALOR = 0.04  # con valor: 4 % + un poco de Kelly, hasta el 5 %
 
 
 def porcentaje(ap: dict) -> float:
@@ -323,7 +324,7 @@ def porcentaje(ap: dict) -> float:
     if any(pi.get("estimada") or pi.get("minima") for pi in ap.get("piernas", [])):
         ventaja /= 2
     kelly = max(0.0, ventaja / (c - 1))
-    return round(min(PCT_MAX, PORCENTAJE + kelly / 4), 4)
+    return round(min(PCT_MAX, max(PCT_SIN_VALOR, PCT_VALOR + kelly / 4)), 4)
 
 
 TOPE_DIA = 0.30  # entre todas las apuestas de un día, como mucho el 30 % de la banca
