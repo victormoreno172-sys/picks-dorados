@@ -27,7 +27,11 @@ import requests
 import config
 
 URL = "https://api.the-odds-api.com/v4"
-CASAS = "winamax_fr,winamax_de"  # se prefiere la francesa
+CASAS = "winamax_fr,winamax_de,pinnacle"  # se prefiere la francesa; Pinnacle solo como referencia
+# Pinnacle: la casa con menos margen del mundo. Sus cuotas, quitándoles el margen, son la mejor
+# estimación que hay de la probabilidad real ("cuota justa"). Pedirla no cuesta créditos de más
+# (The Odds API cobra por cada grupo de 10 casas). El bot solo apuesta si Winamax paga más que eso.
+CACHE_SUF = ".p"  # cambia el nombre de la caché para que se descarguen ya con Pinnacle
 CACHE = os.path.join(config.CARPETA_CACHE, "cuotas")
 TZ = ZoneInfo(config.ZONA_HORARIA)
 
@@ -54,9 +58,64 @@ class EventoCuotas:
     cuotas: dict[str, float] = field(default_factory=dict)  # nuestro nombre de mercado -> cuota
     spread_local: float | None = None  # línea de hándicap del local (negativa = favorito)
     total: float | None = None
+    justas: dict[str, float] = field(default_factory=dict)      # mercado -> probabilidad sin margen (Pinnacle)
+    cuotas_de: dict[str, float] = field(default_factory=dict)   # Winamax Alemania, por si paga más
 
 
 # --------------------------------------------------------------- traducir
+def _leer(b: dict, ev: dict, basket: bool, unidad: str):
+    """Cuotas de una casa con nuestros nombres, y los grupos de resultados que se excluyen entre sí."""
+    cuotas, grupos, spread_local, total = {}, [], None, None
+    for m in b.get("markets", []):
+        por_linea: dict = {}
+        for o in m.get("outcomes", []):
+            precio, nombre, punto = o.get("price"), o.get("name"), o.get("point")
+            if not precio:
+                continue
+            lado = "local" if nombre == ev["home_team"] else "visitante" if nombre == ev["away_team"] else None
+            clave = None
+            if m["key"] == "h2h":
+                if basket and lado:
+                    clave = f"Gana {lado}"
+                elif not basket:
+                    clave = {"local": "Gana local (1)", "visitante": "Gana visitante (2)"}.get(lado)
+                    if nombre == "Draw":
+                        clave = "Empate (X)"
+                linea = "h2h"
+            elif m["key"] == "totals" and punto is not None:
+                pal = {"Over": "Más", "Under": "Menos"}.get(nombre)
+                if pal:
+                    clave = f"{pal} de {punto:g} {unidad}"
+                    if total is None or nombre == "Over":
+                        total = float(punto)
+                linea = ("t", punto)
+            elif m["key"] == "spreads" and punto is not None and lado:
+                clave = f"Hándicap {lado} {punto:+g}"
+                if lado == "local":
+                    spread_local = float(punto)
+                linea = ("s", abs(punto))
+            if clave:
+                cuotas[clave] = precio
+                por_linea.setdefault(linea, []).append(clave)
+        grupos += [g for g in por_linea.values() if len(g) >= 2]
+    return cuotas, grupos, spread_local, total
+
+
+def _sin_margen(cuotas: dict, grupos: list, basket: bool) -> dict[str, float]:
+    p = {}
+    for g in grupos:
+        if any(k in ("Gana local (1)", "Empate (X)", "Gana visitante (2)") for k in g) and len(g) != 3:
+            continue  # 1X2 incompleto
+        s = sum(1 / cuotas[k] for k in g)
+        if s > 0:
+            for k in g:
+                p[k] = (1 / cuotas[k]) / s
+    if all(k in p for k in ("Gana local (1)", "Empate (X)", "Gana visitante (2)")):
+        p1, px, p2 = p["Gana local (1)"], p["Empate (X)"], p["Gana visitante (2)"]
+        p.update({"Local o empate (1X)": p1 + px, "Visitante o empate (X2)": p2 + px, "No hay empate (12)": p1 + p2})
+    return p
+
+
 def _traducir(ev: dict, liga: str) -> EventoCuotas | None:
     casas = {b["key"]: b for b in ev.get("bookmakers", [])}
     b = casas.get("winamax_fr") or casas.get("winamax_de")
@@ -67,31 +126,12 @@ def _traducir(ev: dict, liga: str) -> EventoCuotas | None:
     unidad = "puntos" if basket else "goles"
     e = EventoCuotas(liga, dt.date(), ev["home_team"], ev["away_team"],
                      "Winamax" + (" FR" if b["key"] == "winamax_fr" else " DE"))
-    for m in b.get("markets", []):
-        for o in m.get("outcomes", []):
-            precio, nombre, punto = o.get("price"), o.get("name"), o.get("point")
-            if not precio:
-                continue
-            lado = "local" if nombre == ev["home_team"] else "visitante" if nombre == ev["away_team"] else None
-            if m["key"] == "h2h":
-                if basket and lado:
-                    e.cuotas[f"Gana {lado}"] = precio
-                elif not basket:
-                    clave = {"local": "Gana local (1)", "visitante": "Gana visitante (2)"}.get(lado)
-                    if nombre == "Draw":
-                        clave = "Empate (X)"
-                    if clave:
-                        e.cuotas[clave] = precio
-            elif m["key"] == "totals" and punto is not None:
-                pal = {"Over": "Más", "Under": "Menos"}.get(nombre)
-                if pal:
-                    e.cuotas[f"{pal} de {punto:g} {unidad}"] = precio
-                    if e.total is None or nombre == "Over":
-                        e.total = float(punto)
-            elif m["key"] == "spreads" and punto is not None and lado:
-                e.cuotas[f"Hándicap {lado} {punto:+g}"] = precio
-                if lado == "local":
-                    e.spread_local = float(punto)
+    e.cuotas, _, e.spread_local, e.total = _leer(b, ev, basket, unidad)
+    if b["key"] == "winamax_fr" and "winamax_de" in casas:
+        e.cuotas_de = _leer(casas["winamax_de"], ev, basket, unidad)[0]
+    if "pinnacle" in casas:
+        pc, pg, _, _ = _leer(casas["pinnacle"], ev, basket, unidad)
+        e.justas = _sin_margen(pc, pg, basket)
     return e if e.cuotas else None
 
 
@@ -143,7 +183,7 @@ def obtener(hoy: date) -> list[EventoCuotas]:
     for clave, liga in deportes.items():
         if clave not in activos:
             continue
-        ruta = os.path.join(CACHE, f"{clave}.json")
+        ruta = os.path.join(CACHE, f"{clave}{CACHE_SUF}.json")
         fresco = os.path.exists(ruta) and time.time() - os.path.getmtime(ruta) < 20 * 3600
         if fresco:
             continue
@@ -171,7 +211,7 @@ def obtener(hoy: date) -> list[EventoCuotas]:
             continue
         try:
             datos = _get(f"sports/{clave}/odds", bookmakers=CASAS, markets=mercados, oddsFormat="decimal")
-            with open(os.path.join(CACHE, f"{clave}.json"), "w", encoding="utf-8") as f:
+            with open(os.path.join(CACHE, f"{clave}{CACHE_SUF}.json"), "w", encoding="utf-8") as f:
                 json.dump(datos, f)
             gastado += coste
         except requests.RequestException as e:
@@ -181,7 +221,7 @@ def obtener(hoy: date) -> list[EventoCuotas]:
 
     salida = []
     for clave, liga in deportes.items():
-        ruta = os.path.join(CACHE, f"{clave}.json")
+        ruta = os.path.join(CACHE, f"{clave}{CACHE_SUF}.json")
         if not os.path.exists(ruta) or time.time() - os.path.getmtime(ruta) > 72 * 3600:
             continue
         with open(ruta, encoding="utf-8") as f:

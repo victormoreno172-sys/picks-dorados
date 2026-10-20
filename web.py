@@ -80,8 +80,15 @@ def a_json(por_dia: dict[date, list[Analisis]], hoy: date, demo: bool = False) -
     dias = []
     for d, lista in sorted(por_dia.items()):
         partidos = []
+        try:
+            import cuotas as _cu
+            _inst = _cu.instancia(hoy)
+        except Exception:  # noqa: BLE001
+            _inst = None
         for a in lista:
             p = a.partido
+            ev = _inst.buscar(p.liga, p.fecha, p.local, p.visitante) if _inst else None
+            justas = ev.justas if ev else {}
             partidos.append({
                 "liga": config.nombre_liga(p.liga).split(" ", 1)[-1],
                 "hora": p.hora, "local": p.local, "visitante": p.visitante,
@@ -92,7 +99,8 @@ def a_json(por_dia: dict[date, list[Analisis]], hoy: date, demo: bool = False) -
                 "picks": [{"m": k.mercado, "p": round(float(k.prob), 4),
                            "c": float(k.cuota) if k.cuota else None,
                            "d": bool(k.dorado), "v": bool(k.valor), "r": bool(k.rojo),
-                           "e": bool(k.estimada)} for k in a.picks],
+                           "e": bool(k.estimada),
+                           **({"j": round(1 / justas[k.mercado], 2)} if justas.get(k.mercado) else {})} for k in a.picks],
             })
         dias.append({"fecha": d.isoformat(), "fecha_corta": d.strftime("%d/%m"),
                      "etiqueta": etiqueta(d, hoy), "partidos": partidos})

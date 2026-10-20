@@ -480,7 +480,7 @@ $("lista").innerHTML = dias.length ? dias.map(d => {
       const f2 = x => (+x).toFixed(2).replace(".", ",");
       const piernasH = a.piernas.map(p => `<div class="leg2">
           <div class="l1"><span class="lh">${esc(p.hora || "")}</span><b>${esc(p.local)} – ${esc(p.visitante)}</b>${p.res ? `<span class="lres">${p.res[0]}-${p.res[1]}</span>` : ""}<span class="lic">${icono(p)}</span></div>
-          <div class="l2"><span class="mk">${esc(textoMercado(p))}</span><span class="ct">${p.minima ? "pide ≥ " : p.estimada ? "≈ " : ""}${f2(p.cuota)}</span></div>${pistaLinea(p) ? `<div class="nota2 pista">${esc(pistaLinea(p))}</div>` : ""}</div>`).join("");
+          <div class="l2"><span class="mk">${esc(textoMercado(p))}</span><span class="ct">${p.minima ? "pide ≥ " : p.estimada ? "≈ " : ""}${f2(p.cuota)}</span></div>${pistaLinea(p) ? `<div class="nota2 pista">${esc(pistaLinea(p))}</div>` : ""}${p.justa ? `<div class="nota2 pista">Cuota justa ${f2(p.justa)} (Pinnacle sin margen) · Winamax daba ${f2(p.vista)}. Si en la tuya está por debajo de ${f2(p.cuota)}, no compensa.</div>` : ""}</div>`).join("");
       const cobro = a.importe * a.cuota;
       return `<div class="ap ${cls}">
         <div class="top"><span class="tipo">${i + 1}. ${esc(a.tipo)}</span><span class="badge ${cls}">${est}${a.manual ? " ✎" : a.auto ? " ⚡" : ""}</span></div>

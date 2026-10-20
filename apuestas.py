@@ -105,7 +105,74 @@ def _pierna(a, k) -> dict:
             "cuota": float(k.cuota or 0), "estimada": bool(k.estimada)}
 
 
+VALOR_MIN = 0.02            # Winamax tiene que pagar al menos un 2 % más que la cuota justa
+CUOTA_MIN_V, CUOTA_MAX_V = 1.15, 4.0
+
+
+def _linea_entera(mercado: str) -> bool:
+    """Las líneas asiáticas (3.25, 3.0…) no existen igual en Winamax: solo x.5 o sin línea."""
+    import re
+    m = re.search(r"([+-]?\d+(?:\.\d+)?) (goles|puntos)$", mercado) or re.search(r"Hándicap \w+ ([+-][\d.]+)$", mercado)
+    return not m or float(m.group(1)) % 1 == 0.5
+
+
 def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_total: float | None = None) -> list[dict]:
+    """
+    Desde el 20/10 el bot no se fía de su propio modelo para apostar: compara la cuota de Winamax con la
+    cuota justa de Pinnacle (sus cuotas sin margen, la mejor estimación que existe de la probabilidad real)
+    y solo propone las apuestas en que Winamax paga más. Muchos días no habrá ninguna, y está bien:
+    Winamax se queda ~10 % de margen y casi nunca regala nada. Fútbol y basket de las competiciones que
+    cubre The Odds API (grandes ligas, Champions, Europa, NBA, Euroliga).
+    """
+    import cuotas as _cuotas
+    cu = _cuotas.instancia(ahora.date())
+    cand = []
+    for a in lista:
+        p = a.partido
+        dep = _deporte(a)
+        if dep not in ("f", "b"):
+            continue
+        if p.hora and p.fecha == ahora.date() and p.hora <= ahora.strftime("%H:%M"):
+            continue
+        ev = cu.buscar(p.liga, p.fecha, p.local, p.visitante)
+        if not ev or not ev.justas:
+            continue
+        mejor = None
+        for m, pj in ev.justas.items():
+            vista = max(ev.cuotas.get(m) or 0, ev.cuotas_de.get(m) or 0)
+            if not vista or not _linea_entera(m):
+                continue
+            minima = round((1 + VALOR_MIN) / pj + 0.005, 2)
+            valor = vista * pj - 1
+            if valor >= VALOR_MIN and CUOTA_MIN_V <= minima <= CUOTA_MAX_V and (not mejor or valor > mejor[0]):
+                mejor = (valor, m, pj, minima, vista)
+        if mejor:
+            valor, m, pj, minima, vista = mejor
+            pi = {"fecha": p.fecha.isoformat(), "hora": p.hora, "liga": p.liga, "dep": dep, "local": p.local,
+                  "visitante": p.visitante, "mercado": m, "prob": round(pj, 3), "cuota": minima,
+                  "estimada": False, "minima": True, "justa": round(1 / pj, 2), "vista": vista}
+            cand.append((valor, a, pi))
+    cand.sort(key=lambda x: -x[0])
+    print(f"  bot: {len(cand)} apuestas con valor frente a Pinnacle")
+    apuestas = [{"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"], "prob": pi["prob"], "importe": 0.1}
+                for _, _, pi in cand[:MAX_SENCILLAS + 2]]
+    # Combinadas: solo si hay patas de valor bastante seguras (≥ 50 %) de partidos distintos
+    patas = [pi for _, _, pi in cand if pi["prob"] >= 0.5]
+    for n, nombre in ((2, "Combinada doble"), (3, "Combinada triple")):
+        if len(patas) >= n:
+            pis = [dict(x) for x in patas[:n]]
+            apuestas.append({"tipo": nombre, "piernas": pis, "cuota": round(prod(x["cuota"] for x in pis), 2),
+                             "prob": round(prod(x["prob"] for x in pis), 3), "importe": 0.1})
+    for ap in apuestas:
+        ap["fecha"] = min(ap["piernas"], key=lambda pi: (pi["fecha"], pi.get("hora") or "99"))["fecha"]
+    sencillas = sorted([x for x in apuestas if x["tipo"] == "Sencilla"], key=lambda x: x["piernas"][0]["hora"] or "99")
+    apuestas = sencillas + [x for x in apuestas if x["tipo"] != "Sencilla"]
+    importes_en_cadena(apuestas, banca, banca_total)
+    return apuestas
+
+
+def elegir_modelo(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_total: float | None = None) -> list[dict]:
+    """Selección antigua, con las probabilidades de nuestro modelo (hasta el 20/10)."""
     # Calibración automática: las probabilidades se corrigen con lo que de verdad se ha acertado
     # en cada deporte y tipo de mercado (calibracion_auto.py) antes de elegir.
     if cal:
