@@ -105,8 +105,11 @@ def _pierna(a, k) -> dict:
             "cuota": float(k.cuota or 0), "estimada": bool(k.estimada)}
 
 
-VALOR_MIN = 0.02            # Winamax tiene que pagar al menos un 2 % más que la cuota justa
-CUOTA_MIN_V, CUOTA_MAX_V = 1.15, 4.0
+VALOR_MIN = 0.02            # con valor: Winamax paga al menos un 2 % más que la cuota justa
+PEOR_EV = -0.07             # sin valor: lo menos malo del día (Winamax FR pierde ~6-9 % de media en estas cuotas)
+N_DIA = 6                   # sencillas por día
+PCT_SIN_VALOR = 0.025       # y con poco dinero cada una (el 2,5 % de lo que queda)
+CUOTA_MIN_V, CUOTA_MAX_V = 1.30, 3.20
 
 
 def _linea_entera(mercado: str) -> bool:
@@ -139,25 +142,33 @@ def elegir(lista, banca: float, ahora: datetime, cal: dict | None = None, banca_
             continue
         mejor = None
         for m, pj in ev.justas.items():
+            # La cuota de Winamax FR es la más parecida a la española; la alemana solo si es la misma o mejor
             vista = max(ev.cuotas.get(m) or 0, ev.cuotas_de.get(m) or 0)
-            if not vista or not _linea_entera(m):
+            if not vista or not _linea_entera(m) or not CUOTA_MIN_V <= vista <= CUOTA_MAX_V:
                 continue
-            minima = round((1 + VALOR_MIN) / pj + 0.005, 2)
             valor = vista * pj - 1
-            if valor >= VALOR_MIN and CUOTA_MIN_V <= minima <= CUOTA_MAX_V and (not mejor or valor > mejor[0]):
-                mejor = (valor, m, pj, minima, vista)
+            if valor >= PEOR_EV and (not mejor or valor > mejor[0]):
+                mejor = (valor, m, pj, vista)
         if mejor:
-            valor, m, pj, minima, vista = mejor
+            valor, m, pj, vista = mejor
+            # Cuota mínima que hay que encontrar en tu Winamax: con valor, la justa + 2 %; sin él, la que
+            # deja la pérdida esperada en ese máximo del 7 % (o lo que pagaba Winamax, si es menos exigente)
+            suelo = VALOR_MIN if valor >= VALOR_MIN else PEOR_EV
+            minima = min(round((1 + suelo) / pj + 0.005, 2), vista)
             pi = {"fecha": p.fecha.isoformat(), "hora": p.hora, "liga": p.liga, "dep": dep, "local": p.local,
                   "visitante": p.visitante, "mercado": m, "prob": round(pj, 3), "cuota": minima,
-                  "estimada": False, "minima": True, "justa": round(1 / pj, 2), "vista": vista}
+                  "estimada": False, "minima": True, "justa": round(1 / pj, 2), "vista": vista,
+                  "ev": round(valor, 3)}
             cand.append((valor, a, pi))
     cand.sort(key=lambda x: -x[0])
-    print(f"  bot: {len(cand)} apuestas con valor frente a Pinnacle")
-    apuestas = [{"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"], "prob": pi["prob"], "importe": 0.1}
-                for _, _, pi in cand[:MAX_SENCILLAS + 2]]
-    # Combinadas: solo si hay patas de valor bastante seguras (≥ 50 %) de partidos distintos
-    patas = [pi for _, _, pi in cand if pi["prob"] >= 0.5]
+    con_valor = [x for x in cand if x[0] >= VALOR_MIN]
+    print(f"  bot: {len(con_valor)} con valor frente a Pinnacle, {len(cand)} candidatas (pérdida ≤ 7 %)")
+    # Primero todas las que tienen valor; si no llegan a N_DIA, se completa con las menos malas
+    elegidas_c = (con_valor + [x for x in cand if x[0] < VALOR_MIN])[:max(N_DIA, len(con_valor))]
+    apuestas = [{"tipo": "Sencilla", "piernas": [pi], "cuota": pi["cuota"], "prob": pi["prob"], "importe": 0.1,
+                 "valor": pi["ev"] >= VALOR_MIN, "ev": pi["ev"]} for _, _, pi in elegidas_c]
+    # Combinadas: solo con patas de valor bastante seguras (≥ 50 %): juntar patas sin valor multiplica la pérdida
+    patas = [pi for v, _, pi in con_valor if pi["prob"] >= 0.5]
     for n, nombre in ((2, "Combinada doble"), (3, "Combinada triple")):
         if len(patas) >= n:
             pis = [dict(x) for x in patas[:n]]
@@ -304,6 +315,8 @@ def porcentaje(ap: dict) -> float:
     (probabilidad × cuota > 1), un extra de Kelly a la cuarta parte, hasta el 10 %.
     Con cuotas estimadas (≈ o "pide ≥") la ventaja cuenta a la mitad, porque no es segura."""
     c, p = float(ap.get("cuota") or 0), float(ap.get("prob") or 0)
+    if ap.get("valor") is False:   # sin valor (lo menos malo del día): poco dinero
+        return PCT_SIN_VALOR
     if c <= 1.0 or p <= 0:
         return PORCENTAJE
     ventaja = p * c - 1
