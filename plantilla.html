@@ -542,6 +542,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rres { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; border-radius: 10px; padding: 6px; }
 .rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
 .rmes p { margin: 6px 0 0; }
+.rq { margin: 0 0 7px; font-size: 13px; font-weight: 700; color: #4f46e5; }
 .evs { display: grid; gap: 14px; }
 .ev { position: relative; overflow: hidden; width: 100%; height: 132px; display: flex; align-items: flex-end; text-align: left; border: 0; border-radius: 22px; padding: 16px; color: #fff; cursor: pointer; font: inherit; box-shadow: 0 10px 24px rgba(15, 23, 42, .22); isolation: isolate; }
 .ev:active { transform: scale(.985); }
@@ -2718,21 +2719,39 @@ let RETO = (() => { try { const r = JSON.parse(localStorage.getItem(RETO_K) || "
 function guardarReto() { try { localStorage.setItem(RETO_K, JSON.stringify(RETO)); } catch (e) {} }
 const N_RETO = 6, BONUS_RETO = 10;
 const ptsReto = p => Math.max(1, Math.round(10 / Math.max(p, 0.02)));
-function opcionesReto(p) {
+// Cada partido trae una pregunta distinta: quién gana, goles, si marcan los dos, puntos…
+const nomCorto = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
+function preguntasReto(p) {
   const pk = m => (p.picks.find(k => k.m === m) || {}).p;
-  let ops;
-  if ((p.dep || "f") === "f") ops = [["Gana local (1)", "1"], ["Empate (X)", "X"], ["Gana visitante (2)", "2"]].map(([m, c]) => ({ m, c, p: pk(m) }));
-  else if (p.dep === "b") ops = [["Gana local", "1"], ["Gana visitante", "2"]].map(([m, c]) => ({ m, c, p: pk(m) }));
-  else return null;
-  if (ops.some(o => !o.p)) return null;
-  const s = ops.reduce((t, o) => t + o.p, 0);
-  ops.forEach(o => { o.p = Math.round(o.p / s * 1000) / 1000; });
-  return ops;
+  const norm = ops => { if (ops.some(o => !o.p)) return null; const t = ops.reduce((a, o) => a + o.p, 0); ops.forEach(o => { o.p = Math.round(o.p / t * 1000) / 1000; }); return ops; };
+  const L = nomCorto(p.local), V = nomCorto(p.visitante), qs = [];
+  if ((p.dep || "f") === "f") {
+    let o = norm([{ m: "Gana local (1)", c: "1", n: L, p: pk("Gana local (1)") }, { m: "Empate (X)", c: "X", n: "Empate", p: pk("Empate (X)") }, { m: "Gana visitante (2)", c: "2", n: V, p: pk("Gana visitante (2)") }]);
+    if (o) qs.push({ tipo: "1x2", q: "¿Quién gana?", ops: o });
+    o = norm([{ m: "Más de 2.5 goles", c: "+", n: "3 o más", p: pk("Más de 2.5 goles") }, { m: "Menos de 2.5 goles", c: "−", n: "2 o menos", p: pk("Menos de 2.5 goles") }]);
+    if (o) qs.push({ tipo: "goles", q: "¿Cuántos goles habrá?", ops: o });
+    o = norm([{ m: "Ambos marcan: Sí", c: "Sí", n: "Marcan los dos", p: pk("Ambos marcan: Sí") }, { m: "Ambos marcan: No", c: "No", n: "Alguno no marca", p: pk("Ambos marcan: No") }]);
+    if (o) qs.push({ tipo: "ambos", q: "¿Marcan los dos equipos?", ops: o });
+    o = norm([{ m: "Más de 3.5 goles", c: "+", n: "4 o más", p: pk("Más de 3.5 goles") }, { m: "Menos de 3.5 goles", c: "−", n: "3 o menos", p: pk("Menos de 3.5 goles") }]);
+    if (o) qs.push({ tipo: "goles4", q: "¿Partido loco? (4 goles o más)", ops: o });
+  } else if (p.dep === "b") {
+    let o = norm([{ m: "Gana local", c: "1", n: L, p: pk("Gana local") }, { m: "Gana visitante", c: "2", n: V, p: pk("Gana visitante") }]);
+    if (o) qs.push({ tipo: "1x2", q: "¿Quién gana?", ops: o });
+    // La línea de puntos más igualada
+    const lineas = p.picks.map(k => /^Más de ([\d.]+) puntos$/.exec(k.m)).filter(Boolean).map(x => +x[1])
+      .filter(l => pk(`Menos de ${l} puntos`)).sort((a, b) => Math.abs(pk(`Más de ${a} puntos`) - .5) - Math.abs(pk(`Más de ${b} puntos`) - .5));
+    if (lineas.length) { const l = lineas[0], ls = String(l).replace(".", ",");
+      o = norm([{ m: `Más de ${l} puntos`, c: "+", n: `Más de ${ls}`, p: pk(`Más de ${l} puntos`) }, { m: `Menos de ${l} puntos`, c: "−", n: `Menos de ${ls}`, p: pk(`Menos de ${l} puntos`) }]);
+      if (o) qs.push({ tipo: "puntos", q: "¿Cuántos puntos entre los dos?", ops: o }); }
+  }
+  return qs;
 }
+function opcionesReto(p) { const q = preguntasReto(p); return q.length ? q : null; }
 // Los 6 partidos del día: los de las competiciones más importantes (como mucho 2 por competición), y se
 // quedan fijos para todo el día (con sus porcentajes) la primera vez que abres el juego
 function retoDelDia(fecha) {
-  if (RETO.dias[fecha]) return RETO.dias[fecha];
+  const ya = RETO.dias[fecha];
+  if (ya && (ya.v === 2 || Object.keys(ya.picks || {}).length)) return ya;   // el de antes (solo quién gana) se rehace si no has jugado
   const dia = DATOS.dias.find(d => d.fecha === fecha); if (!dia) return null;
   const ahoraMin = fecha === AHORA.fecha ? AHORA.hora : "00:00";
   const cand = dia.partidos.filter(p => ["f", "b"].includes(p.dep || "f") && !/Pretemporada/i.test(p.liga) && (p.hora || "99") > ahoraMin && opcionesReto(p))
@@ -2745,7 +2764,13 @@ function retoDelDia(fecha) {
   }
   if (!elegidos.length) return null;
   elegidos.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
-  RETO.dias[fecha] = { partidos: elegidos.map(p => ({ local: p.local, visitante: p.visitante, liga: p.liga, hora: p.hora, dep: p.dep || "f", fecha, ops: opcionesReto(p) })), picks: {} };
+  // Preguntas variadas: se van turnando (quién gana, goles, marcan los dos…) según lo que tenga cada partido
+  const turno = { f: ["1x2", "goles", "ambos", "1x2", "goles4", "ambos"], b: ["1x2", "puntos"] }, n = { f: 0, b: 0 };
+  RETO.dias[fecha] = { v: 2, partidos: elegidos.map(p => {
+    const d = p.dep === "b" ? "b" : "f", qs = preguntasReto(p), quiero = turno[d][n[d]++ % turno[d].length];
+    const q = qs.find(x => x.tipo === quiero) || qs[0];
+    return { local: p.local, visitante: p.visitante, liga: p.liga, hora: p.hora, dep: p.dep || "f", fecha, q: q.q, ops: q.ops };
+  }), picks: {} };
   guardarReto();
   return RETO.dias[fecha];
 }
@@ -2872,7 +2897,7 @@ function pintarReto() {
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
     const hora = s.e && s.e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(s.e.det))}</span>` : s.final ? `<span class="fin">FIN</span>` : esc(x.hora || "");
     const marc = s.e && /^(\d+)-(\d+)$/.exec(s.e.m || "");
-    const etiqueta = o => o.c === "1" ? nom(x.local) : o.c === "2" ? nom(x.visitante) : "Empate";
+    const etiqueta = o => o.n || (o.c === "1" ? nom(x.local) : o.c === "2" ? nom(x.visitante) : "Empate");
     const botones = x.ops.map(o => {
       const yo = mio === o.m, va = s.gana === o.m;
       return `<button class="rop ${yo ? "yo" : ""} ${s.final && va ? "ok" : ""} ${s.final && yo && !va ? "ko" : ""}" ${s.empezado ? "disabled" : `data-retopick="${esc(k)}" data-m="${esc(o.m)}"`}>
@@ -2886,13 +2911,14 @@ function pintarReto() {
     } else if (!mio && s.empezado) res = `<p class="rres">No lo pronosticaste</p>`;
     const attrs = s.pos ? ` data-abrirdia="${s.pos[0]}" data-abrirp="${s.pos[1]}" data-desde="reto"` : "";
     return `<article class="rpart"><button class="rcab"${attrs}><span class="rh">${hora}</span><span class="req">${esc(x.local)}<br>${esc(x.visitante)}</span><span class="rmk">${marc ? `${marc[1]}<br>${marc[2]}` : ""}</span><small>${esc(ligaBase(x.liga))}</small></button>
-      <div class="rops n${x.ops.length}">${botones}</div>${res}</article>`;
+      <p class="rq">${esc(x.q || "¿Quién gana?")}</p><div class="rops n${x.ops.length}">${botones}</div>${res}</article>`;
   }).join("");
   h += `<section class="mcard rmes"><h3>📅 Este mes</h3><div class="mkpis">
       <div><b>${m.yo}</b><span>tus puntos</span></div><div><b>${m.app}</b><span>puntos de la app</span></div>
       <div><b>${m.ganados}/${m.jugados}</b><span>días ganados</span></div><div><b>${m.racha ? "🔥 " + m.racha : "–"}</b><span>racha de días</span></div></div>
       <p>Has acertado <b>${m.aciertosVsApp}</b> partido${m.aciertosVsApp === 1 ? "" : "s"} en los que la app falló.</p></section>
-    <details class="mcard"><summary><b>¿Cómo se juega?</b></summary><p>Cada día hay ${N_RETO} partidos. Elige quién gana (o empate) antes de que empiece cada uno. La app 🤖 elige siempre lo más probable.</p>
+    <details class="mcard"><summary><b>¿Cómo se juega?</b></summary><p>Cada día hay ${N_RETO} partidos. Responde la pregunta de cada uno antes de que empiece. La app 🤖 elige siempre lo más probable.</p>
+      <p>Cada partido trae una pregunta distinta: quién gana, cuántos goles habrá, si marcan los dos, los puntos en baloncesto…</p>
       <p><b>Puntos:</b> acertar vale 10 ÷ la probabilidad: un favorito al 70 % da +14; un empate al 25 %, +40. Si aciertas uno en el que la app falla, <b>+${BONUS_RETO} extra</b>. Solo cuentan los partidos que pronostiques, para ti y para la app.</p>
       <p>Pronto: ranking con más gente y premios (camisetas, balones…).</p></details>`;
   $("vista").innerHTML = h;
