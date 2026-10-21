@@ -3406,15 +3406,11 @@ document.addEventListener("change", e => {
 // Minuto del partido en juego (para la Segunda oportunidad)
 const minutoDe = e => { const m = /(\d+)/.exec(String((e && e.det) || "")); return m ? +m[1] : 99; };
 // Avatar y nivel de los jugadores de prueba
-// Los jugadores de prueba siguen las mismas normas: un avatar o marco de pago solo si les llegan las monedas
-// que han ganado, y uno de nivel solo si tienen ese nivel. Mientras no, llevan uno gratis y sin marco.
-function perfilBot(b, i, xp) {
-  const nv = nivelDe(xp || 0).n, mon = Math.round((xp || 0) / 10);
-  const gratis = CAT.avatar.filter(a => !a.precio && !a.nivel), deseado = CAT.avatar.filter(a => !a.nivel)[(i * 7) % 16];
-  const avatar = !deseado.precio || mon >= deseado.precio ? deseado : gratis[i % gratis.length];
-  const quiere = CAT.marco[(i * 5) % CAT.marco.length];
-  const marco = !quiere.nivel && !quiere.precio ? quiere : (quiere.nivel && nv >= quiere.nivel) || (quiere.precio && mon - (avatar.precio || 0) >= quiere.precio) ? quiere : CAT.marco[0];
-  return { avatar: avatar.id, marco: marco.id, color: "normal" };
+// Avatar y marco de los jugadores de prueba: variados, solo para que la tabla se vea como con gente real
+function perfilBot(b, i) {
+  const libres = CAT.avatar.filter(a => !a.nivel), a = libres[i % libres.length];
+  const marcos = ["ninguno", "ninguno", "bronce", "plata", "ninguno", "oro", "neon", "fuego"];
+  return { avatar: a.id, marco: marcos[i % marcos.length], color: "normal" };
 }
 // ================================================================ Semanas del mes (para el ranking semanal)
 // Semanas completas de lunes a domingo. Cada semana es del mes en el que cae su jueves (como en el calendario
