@@ -1378,6 +1378,13 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .bvem { background: var(--surface); border: 1px solid var(--line); border-radius: calc(16px * var(--rad)); padding: 12px; } .bvem summary { cursor: pointer; font-weight: 700; list-style: none; text-align: center; }
 .bvem summary::-webkit-details-marker { display: none; } .bvem[open] summary { margin-bottom: 10px; } .bvem .bvl { margin-bottom: 10px; } .bvem .lnk { display: block; margin: 10px auto 0; }
 .bvmsg { margin: 0; min-height: 18px; text-align: center; font-weight: 600; color: var(--red); }
+/* Perfil de otro jugador */
+.rrow[data-rk] { cursor: pointer; } .rrow[data-rk]:active { transform: scale(.985); }
+.pxmc.jg .pxprev { min-height: 0; padding: 0; background: none; } .pxmc.jg .pxprev .pcab { padding: 18px 12px 14px; }
+.jgk { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; } .jgk div { background: var(--bar); border-radius: calc(12px * var(--rad)); padding: 8px 4px; display: flex; flex-direction: column; gap: 2px; }
+.jgk b { font: 800 17px var(--display); color: var(--ink); } .jgk small { font-size: 11px; color: var(--muted); }
+.jgh { margin: 6px 0 0; align-self: flex-start; font: 800 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.jgvit { width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } .jgvit .vslot { min-height: 64px; }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -1919,6 +1926,7 @@ function enVivo() {
   return l;
 }
 function pintarLista() {
+  RKREG = [];
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
   document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina", "temporada", "arcade"].includes(est.vista);
@@ -3628,7 +3636,7 @@ function fichaOnline() {
   for (const z of y.log) { if (z.go || z.ok === undefined) continue; const a = arc[z.d] ||= [0, 0, 0]; a[0] += z.g || 0; a[1] += z.ok ? 1 : 0; a[2]++; }
   const n = nombreOnline();
   return { n, nl: n.toLowerCase(), nv: nivelDe(totalXP()).n, t: Date.now(), reto, arc: { d: arc, mejor: y.mejor },
-    p: { avatar: PERFIL.avatar === "foto" ? "a1" : PERFIL.avatar || "a1", marco: PERFIL.marco || "ninguno", tarjeta: PERFIL.tarjeta || "clasica", color: PERFIL.color || "normal", tt: tituloYo() } };
+    p: { avatar: PERFIL.avatar === "foto" ? "a1" : PERFIL.avatar || "a1", marco: PERFIL.marco || "ninguno", tarjeta: PERFIL.tarjeta || "clasica", color: PERFIL.color || "normal", tt: tituloYo(), vit: vitrina() } };
 }
 // Sin nombre elegido sales como «Jugador XXXX» (con tu código), para que se vea que ya has entrado
 const nombreOnline = () => PERFIL.nombre && PERFIL.nombre.length >= 3 ? PERFIL.nombre : "Jugador " + ((FBA && FBA.uid) || "????").slice(0, 4).toUpperCase();
@@ -3667,8 +3675,11 @@ async function syncOnline(repintar) {
 }
 const rkOnline = () => { if (!fbOn()) return false; let m = est.rkModo; if (!m) try { m = localStorage.getItem("rkModo"); } catch (e) {} return (m || "online") === "online"; };
 const otrosOnline = () => ONL.lista.filter(x => !FBA || x.uid !== FBA.uid);
-function sumaOnline(m, dias) { const t = { pts: 0, ok: 0, jug: 0, vsApp: 0 }; for (const d of dias) { const v = (m || {})[d]; if (v) { t.pts += v[0] || 0; t.ok += v[1] || 0; t.jug += v[2] || 0; t.vsApp += v[3] || 0; } } return t; }
-const filaOnline = (o, extra) => ({ n: o.n, uid: o.uid, online: true, perfil: o.p || {}, nv: o.nv, e: (o.p && o.p.tt) || "", ...extra });
+// Suma los días de un jugador online dentro del periodo (rango [desde, hasta]) o, si no hay, de la lista de días
+function sumaOnline(m, dias, rango) { const t = { pts: 0, ok: 0, jug: 0, vsApp: 0 };
+  const ks = rango ? Object.keys(m || {}).filter(d => d >= rango[0] && d <= rango[1]) : dias;
+  for (const d of ks) { const v = (m || {})[d]; if (v) { t.pts += v[0] || 0; t.ok += v[1] || 0; t.jug += v[2] || 0; t.vsApp += v[3] || 0; } } return t; }
+const filaOnline = (o, extra) => ({ n: o.n, uid: o.uid, online: true, perfil: o.p || {}, nv: o.nv, e: (o.p && o.p.tt) || "", o, ...extra });
 // Selector Online / De prueba y estado de la conexión (encima de cada clasificación)
 function chipModo() {
   if (!fbOn()) return "";
@@ -3803,13 +3814,14 @@ function puntosDia(r, elige, dobles) {
   }
   return { pts, ok, jug, vsApp };
 }
-function clasificacionReto(dias) {
+const rangoMes = mes => [mes + "-01", mes + "-31"];
+function clasificacionReto(dias, rango) {
   const filas = [];
   const suma = (elige, yo) => dias.reduce((t, d) => { const r = RETO.dias[d], c = puntosDia(r, x => elige(x, r), yo ? r.dobles : null); return { pts: t.pts + c.pts, ok: t.ok + c.ok, jug: t.jug + c.jug, vsApp: t.vsApp + c.vsApp }; }, { pts: 0, ok: 0, jug: 0, vsApp: 0 });
   const xb = xpBots();
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...suma((x, r) => r.picks[claveReto(x)], true) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
-  if (rkOnline()) otrosOnline().forEach(o => filas.push(filaOnline(o, sumaOnline(o.reto, dias))));
+  if (rkOnline()) otrosOnline().forEach(o => filas.push(filaOnline(o, sumaOnline(o.reto, dias, rango))));
   else BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
   // Desempate: más aciertos y luego más aciertos en los que falló la app; si sigue igual, comparten puesto
   filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || b.vsApp - a.vsApp || (a.yo ? -1 : b.yo ? 1 : 0));
@@ -3839,12 +3851,34 @@ function premioDe(tipo, f) {
 const kXP = n => n >= 1000 ? (n / 1000).toLocaleString("es-ES") + "k" : String(n);
 // Clasificación de los desafíos: cada fila es una tarjeta (el fondo del jugador) de lado a lado,
 // con el puesto, el jugador, el premio, los aciertos y los puntos encima
+// Filas de las clasificaciones pintadas (para abrir el perfil de quien toques)
+var RKREG = [];
+function verJugador(f) {
+  if (f.yo) { est.vista = "perfil"; pintarLista(); window.scrollTo(0, 0); return; }
+  const o = f.o, p = f.perfil || {}, mes = AHORA.fecha.slice(0, 7);
+  const ficha = `<div class="pcab tj tj-${f.app ? "vencedor" : p.tarjeta || "clasica"} pxpc">${f.app ? `<span class="av" style="--s:72px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(p, 72)}
+    <b class="pnom nc-${p.color || "normal"}">${esc(f.n)}</b><span class="ptit">${esc(f.app ? "Siempre lo más probable" : f.online ? p.tt || "" : f.e || "")}</span></div>`;
+  let datos = `<div class="jgk"><div><b>${f.pts ? f.pos + ".º" : "–"}</b><small>puesto</small></div><div><b>${fmtN(f.pts || 0)}</b><small>puntos</small></div><div><b>${f.ok || 0}/${f.jug || 0}</b><small>aciertos</small></div>${f.vsApp !== undefined && !f.app ? `<div><b>${f.vsApp}</b><small>contra la app</small></div>` : f.mejor !== undefined ? `<div><b>×${Math.max(1, Math.min(8, f.mejor || 0))}</b><small>récord combo</small></div>` : ""}</div>`;
+  if (o) {
+    const rd = o.reto || {}, dias = Object.keys(rd), en = d => d >= TEMP1.desde && d <= TEMP1.hasta;
+    const sm = (f2) => dias.filter(f2).reduce((t, d) => t + (rd[d][0] || 0), 0), ok = dias.reduce((t, d) => t + (rd[d][1] || 0), 0), jg = dias.reduce((t, d) => t + (rd[d][2] || 0), 0);
+    const ad = (o.arc && o.arc.d) || {}, arcPts = Object.values(ad).reduce((t, v) => t + (v[0] || 0), 0);
+    datos += `<h4 class="jgh">📊 Sus números</h4><div class="jgk"><div><b>${fmtN(sm(d => d.startsWith(mes)))}</b><small>puntos este mes</small></div><div><b>${fmtN(sm(en) + arcPts)}</b><small>Temporada 0</small></div>
+      <div><b>${jg ? Math.round(ok / jg * 100) + " %" : "–"}</b><small>acierto</small></div><div><b>${dias.length}</b><small>días jugados</small></div>
+      <div><b>${fmtN(arcPts)}</b><small>HI-SCORE</small></div><div><b>×${Math.max(1, Math.min(8, (o.arc && o.arc.mejor) || 0))}</b><small>récord combo</small></div></div>`;
+    const vit = (p.vit || []).filter(v => { const [t, id] = v.split(":"); return t === "ins" ? INSIGNIAS.some(x => x[0] === id) : t === "av" ? CAT.avatar.some(x => x.id === id) : CAT.tarjeta.some(x => x.id === id); });
+    if (vit.length) datos += `<h4 class="jgh">🏆 Su vitrina</h4><div class="jgvit">${vit.map(v => `<span class="vslot si">${dibujoVitrina(v)}</span>`).join("")}</div>`;
+  }
+  abrirModal(`<button class="pxx" data-pxcerrar aria-label="Cerrar">✕</button><small class="pxtag">${f.app ? "🤖 LA APP" : f.online ? "🌐 JUGADOR ONLINE" : "🤖 JUGADOR DE PRUEBA"}${f.nv ? " · NIVEL " + f.nv : ""}</small>
+    <div class="pxprev">${ficha}</div>${datos}<p>${f.online ? "Los puntos se actualizan cada vez que juega." : f.app ? "La app juega siempre lo más probable: ganarle es el reto." : "Jugador inventado para probar la clasificación."}</p>`, "gen jg");
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-rk]"); if (!b || e.target.closest("[data-pver],[data-pzver]")) return; const f = RKREG[+b.dataset.rk]; if (f) verJugador(f); });
 function tablaRanking(filas, todas, tipo) {
   const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10), conPrem = !!PREMIOS_RANK[tipo];
   const prem = f => { const x = premioDe(tipo, f); return conPrem ? `<span class="rpr">${x ? `<span class="rprc">${x.fis ? x.fis.replace("✨", "") : ""}${kXP(x.mon)}🪙<small>+${kXP(x.xp)} XP</small></span>` : ""}</span>` : ""; };
   const av = f => f.app ? `<span class="av" style="--s:28px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(f.perfil, 28);
   const tj = f => f.perfil && f.perfil.tarjeta && f.perfil.tarjeta !== "clasica" ? " tj tj-" + f.perfil.tarjeta : "";
-  const fila = f => `<div class="rrow${conPrem ? " cp" : ""} ${f.yo ? "yo" : f.app ? "app" : ""}${tj(f)}"><span class="rpos">${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</span>
+  const fila = f => `<div class="rrow${conPrem ? " cp" : ""} ${f.yo ? "yo" : f.app ? "app" : ""}${tj(f)}" role="button" tabindex="0" data-rk="${RKREG.push(f) - 1}"><span class="rpos">${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</span>
     <span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : f.online ? "nc-" + (f.perfil.color || "normal") : ""}">${esc(f.n)}${f.online ? ' <i class="ronl">●</i>' : ""}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span>${prem(f)}<span class="rac">${f.ok}/${f.jug}</span><span class="rpt"><b>${f.pts}</b></span></div>`;
   return `<div class="rtab"><div class="rrow rhead${conPrem ? " cp" : ""}"><span>#</span><span>Jugador</span>${conPrem ? "<span>Premio</span>" : ""}<span>Acier.</span><span>Pts</span></div>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<div class="rsep">···</div>` + fila(yo) : ""}</div>`;
 }
@@ -3855,7 +3889,7 @@ function seccionClasif() {
   const vista = est.clasR || "hoy", w = sems.find(x => x.i === (est.semR || actual)) || sems[0];
   const ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : vista === "semana" ? Object.keys(RETO.dias).filter(d => w.dias.includes(d))
     : vista === "temporada" ? diasTemporada() : dias;
-  const filas = clasificacionReto(ds), yo = filas.find(f => f.yo);
+  const filas = clasificacionReto(ds, vista === "hoy" ? [AHORA.fecha, AHORA.fecha] : vista === "semana" ? [w.desde, w.hasta] : rangoMes(mes)), yo = filas.find(f => f.yo);
   const lp = (pos, txt) => `<div><span>${pos}</span><span>${txt}</span></div>`;
   const premios = vista === "semana" ? `<details class="rprem"><summary>🎁 Premios de la semana</summary><div class="rprl">${lp("🥇", "1.000 🪙 · 3.000 XP")}${lp("🥈", "600 🪙 · 3.000 XP")}${lp("🥉", "400 🪙 · 3.000 XP")}${lp("4.º–10.º", "200 🪙 · 1.500 XP")}</div></details>`
     : vista === "mes" ? `<details class="rprem"><summary>🎁 Premios del mes</summary><div class="rprl">${lp("🥇", "👕✨ 5.000 🪙 · 10.000 XP")}${lp("🥈", "⚽✨ 3.000 🪙 · 10.000 XP")}${lp("🥉", "🧣✨ 2.000 🪙 · 10.000 XP")}${lp("4.º–10.º", "1.000 🪙 · 5.000 XP")}</div><small>✨ Los 3 primeros: set animado «Vencedor de la máquina» (tarjeta, marco y avatar). 👕⚽🧣 cuando haya ranking online.</small></details>`
@@ -3944,7 +3978,7 @@ function pintarDesafios() {
     if (ev.id === "premios") {
       on = true;
       const mes = AHORA.fecha.slice(0, 7), ds = Object.keys(RETO.dias).filter(d => d.startsWith(mes));
-      const yo = clasificacionReto(ds).find(f => f.yo); estado = `Vas ${yo.pos}.º de ${BOTS_RETO.length + 2}`;
+      const filas = clasificacionReto(ds, rangoMes(mes)), yo = filas.find(f => f.yo); estado = `Vas ${yo.pos}.º de ${filas.length}`;
     }
     if (ev.id === "reto") {
       on = true;
@@ -3964,7 +3998,7 @@ function pintarEvento() {
   const ev = EVENTOS.find(e => e.id === est.evento) || EVENTOS[1];
   if (ev.id === "premios") {
     const temp = est.rkp === "temporada", mes = AHORA.fecha.slice(0, 7), dias = temp ? diasTemporada() : Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
-    const filas = temp ? clasificacionTemp(dias) : clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
+    const filas = temp ? clasificacionTemp(dias) : clasificacionReto(dias, rangoMes(mes)), f = new Date(AHORA.fecha + "T12:00:00");
     $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
       <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${temp ? "Temporada 0" : "Ranking de " + ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>${temp ? `1 oct – 31 dic · ${quedanTemp()}` : "Suma de Gánale a la app de todo el mes"}</small></span></section>
       <div class="rseg mtabs"><button data-rkp="mes" aria-pressed="${!temp}">Mes</button><button data-rkp="temporada" aria-pressed="${temp}">Temporada 0</button></div>
@@ -4206,13 +4240,13 @@ function procesarRecompensas() {
   for (const mes of [...new Set(dias.map(mesDeSemana))]) for (const w of semanasMes(mes)) {
     const k = `sem:${mes}:${w.i}`; if (w.hasta >= AHORA.fecha || PERFIL.cobrados[k]) continue;
     const ds = dias.filter(d => w.dias.includes(d)); if (!ds.length) { PERFIL.cobrados[k] = 1; continue; }
-    const yo = clasificacionReto(ds).find(f => f.yo); if (!yo.jug) { PERFIL.cobrados[k] = 1; continue; }
+    const yo = clasificacionReto(ds, [w.desde, w.hasta]).find(f => f.yo); if (!yo.jug) { PERFIL.cobrados[k] = 1; continue; }
     const pos = yo.pos, mon = pos === 1 ? 1000 : pos === 2 ? 600 : pos === 3 ? 400 : pos <= 10 ? 200 : 0, xp = pos <= 3 ? 3000 : pos <= 10 ? 1500 : 0;
     if (mon) cobrar(k, `${pos}.º de la semana ${w.i} (${fCorta(w.desde)}–${fCorta(w.hasta)})`, xp, mon, { pos }); else PERFIL.cobrados[k] = 1;
   }
   for (const mes of [...new Set(dias.map(d => d.slice(0, 7)))]) {
     if (mes >= AHORA.fecha.slice(0, 7) || PERFIL.cobrados["mes:" + mes]) continue;
-    const yo = clasificacionReto(dias.filter(d => d.startsWith(mes))).find(f => f.yo);
+    const yo = clasificacionReto(dias.filter(d => d.startsWith(mes)), rangoMes(mes)).find(f => f.yo);
     if (!yo.jug) { PERFIL.cobrados["mes:" + mes] = 1; continue; }
     const pos = yo.pos, mon = [5000, 3000, 2000][pos - 1] || (pos <= 10 ? 1000 : 0), xp = pos <= 3 ? 10000 : pos <= 10 ? 5000 : 0;
     if (mon && cobrar("mes:" + mes, `${pos}.º del mes (${mes.slice(5)}/${mes.slice(0, 4)})${pos <= 3 ? " · set animado de Gánale a la app" : ""}`, xp, mon, { pos }) && pos <= 3)
@@ -4961,12 +4995,13 @@ function partidaArc(dias, elige, cont) {
   return { pts, ok, jug, racha, mejor, fallos, log };
 }
 const picksYoArc = (d, r) => (r.picks || []).map(pk => ({ x: xArc(r, pk.i, pk.t), m: pk.m }));
-function clasificacionArc(dias) {
+function clasificacionArc(dias, rango) {
+  rango = rango || [ARC.desde, ARC.hasta];
   dias = dias || diasArc();
   const xb = xpBots(), filas = [];
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...partidaArc(dias, picksYoArc, ARCD.cont) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...partidaArc(dias, (d, r) => picksAppArc(r), {}) });
-  if (rkOnline()) otrosOnline().forEach(o => { const a = (o.arc && o.arc.d) || {}, t = sumaOnline(a, dias); filas.push(filaOnline(o, { ...t, mejor: (o.arc && o.arc.mejor) || 0 })); });
+  if (rkOnline()) otrosOnline().forEach(o => { const a = (o.arc && o.arc.d) || {}, t = sumaOnline(a, dias, rango); filas.push(filaOnline(o, { ...t, mejor: (o.arc && o.arc.mejor) || 0 })); });
   else BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...partidaArc(dias, (d, r) => picksBotArc(b, d, r), {}) }));
   if (_arcSucio) { _arcSucio = false; guardarArc(); }
   filas.sort((a, b) => b.pts - a.pts || b.mejor - a.mejor || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
@@ -4976,7 +5011,7 @@ function clasificacionArc(dias) {
 }
 // Clasificación de la temporada: Gánale a la app + los eventos de temporada
 function clasificacionTemp(dias) {
-  const base = clasificacionReto(dias), arc = clasificacionArc(diasArc().filter(d => d >= TEMP1.desde && d <= TEMP1.hasta));
+  const base = clasificacionReto(dias, [TEMP1.desde, TEMP1.hasta]), arc = clasificacionArc(diasArc().filter(d => d >= TEMP1.desde && d <= TEMP1.hasta), [TEMP1.desde, TEMP1.hasta]);
   for (const f of base) { const a = arc.find(x => f.uid ? x.uid === f.uid : x.n === f.n && !!x.yo === !!f.yo); if (a) { f.pts += a.pts; f.ok += a.ok; f.jug += a.jug; } }
   base.sort((a, b) => b.pts - a.pts || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null; base.forEach((f, i) => { const k = f.pts + "|" + f.ok; if (k !== ant) { pos = i + 1; ant = k; } f.pos = pos; });
