@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap">
 <style>
 /* Layout: una columna de "boletos" por partido, cabecera fija con los días; el oro solo para los picks ≥ umbral */
 :root {
@@ -1046,6 +1046,58 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 :root[data-skin="neon"] header, :root[data-skin="neon"] .abajo { background: rgba(11, 6, 24, .9); border-color: #ff2bd6; }
 :root[data-skin="neon"] .mcard, :root[data-skin="neon"] .mhero, :root[data-skin="neon"] .partido, :root[data-skin="neon"] .rpart { box-shadow: 0 0 0 1px rgba(255,43,214,.35), 0 0 18px rgba(34,211,238,.12); }
 @media (prefers-reduced-motion: reduce) { :root[data-skin] body::before { animation: none !important; } }
+
+/* ================= Temporada 0 · Pixel ================= */
+.tbanner { position: relative; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; border: 3px solid #ffcd75; border-radius: 4px; padding: 14px; margin: 0 0 14px; cursor: pointer;
+  background: #1a1c2c; color: #f4f4f4; box-shadow: 6px 6px 0 #000; font: inherit; image-rendering: pixelated;
+  background-image: linear-gradient(45deg, rgba(255,255,255,.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.04) 75%), linear-gradient(45deg, rgba(255,255,255,.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.04) 75%);
+  background-size: 16px 16px; background-position: 0 0, 8px 8px; }
+.tbanner .tbart { width: 64px; height: 48px; flex: none; animation: pxSalto 1.2s steps(2) infinite; }
+@keyframes pxSalto { 50% { transform: translateY(-4px); } }
+.tbanner .tbt { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.tbanner small, .tcab0 small { font: 9px "Press Start 2P", var(--mono); color: #ffcd75; letter-spacing: .04em; }
+.tbanner b { font: 13px "Press Start 2P", var(--mono); color: #fff; line-height: 1.4; }
+.tbanner em { font: 700 11px var(--mono); font-style: normal; color: #a7f0c2; }
+.tbbar, .pbarra { display: block; height: 10px; background: #333c57; border: 2px solid #000; } .tbbar i, .pbarra i { display: block; height: 100%; background: repeating-linear-gradient(90deg, #38b764 0 6px, #a7f070 6px 12px); }
+.tbreg { position: absolute; top: -10px; right: 10px; font: 9px "Press Start 2P", var(--mono); background: #b13e53; color: #fff; padding: 5px 6px; border: 2px solid #000; animation: pxSalto .8s steps(2) infinite; }
+.tcab0 { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; background: #1a1c2c; color: #fff; border: 3px solid #ffcd75; box-shadow: 6px 6px 0 #000; padding: 18px 14px 14px; margin-bottom: 14px; border-radius: 4px; }
+.tcab0 .tbart { width: 96px; height: 72px; animation: pxSalto 1.2s steps(2) infinite; } .tcab0 > b { font: 28px "Press Start 2P", var(--mono); color: #a7f070; text-shadow: 4px 4px 0 #000; }
+.tcab0 > span { font: 700 12px var(--mono); color: #94b0c2; }
+.tcabk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin-top: 6px; } .tcabk div { background: #333c57; border: 2px solid #000; padding: 8px 4px; display: flex; flex-direction: column; gap: 3px; }
+.tcabk b { font: 13px "Press Start 2P", var(--mono); color: #ffcd75; } .tcabk small { font: 700 10px var(--body); color: #c2c3c7; letter-spacing: 0; }
+.mcard.t0 h3 { font: 11px "Press Start 2P", var(--mono); line-height: 1.5; }
+.ldias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.ldia { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; background: var(--bar); border: 2px solid var(--line); border-radius: 4px; }
+.ldia small { font: 700 9px var(--mono); color: var(--muted); } .ldia span { font-size: 18px; } .ldia b { font: 700 9px var(--mono); } .ldia em { font: 700 9px var(--mono); font-style: normal; color: #f59e0b; }
+.ldia.ok { opacity: .45; } .ldia.hoy { border-color: #38b764; box-shadow: 0 0 0 2px #38b764; animation: pxSalto .9s steps(2) infinite; } .ldia.cofre { background: var(--gold-soft); }
+.prail { display: flex; gap: 6px; overflow-x: auto; padding: 10px 2px 8px; -webkit-overflow-scrolling: touch; }
+.pesc { position: relative; flex: none; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 3px; background: var(--bar); border: 2px solid var(--line); border-radius: 4px; }
+.pesc .pen { font: 9px "Press Start 2P", var(--mono); color: var(--muted); } .pesc .pei { font-size: 22px; height: 28px; display: grid; place-items: center; }
+.pesc small { font-size: 9.5px; text-align: center; line-height: 1.15; color: var(--muted); min-height: 22px; }
+.pesc.gordo { border-color: #ffcd75; background: color-mix(in srgb, #ffcd75 14%, var(--bar)); } .pesc.ok { opacity: .5; } .pesc i { position: absolute; top: 3px; right: 5px; font-style: normal; font-size: 10px; color: #16a34a; font-weight: 800; }
+.pesc.sig { box-shadow: 0 0 0 2px #38b764; opacity: 1; }
+.dsf { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); } .dsf:first-of-type { border-top: 0; }
+.dst { font-size: 13px; font-weight: 600; } .dsb { height: 8px; background: var(--bar); border: 2px solid var(--line); } .dsb i { display: block; height: 100%; background: #38b764; }
+.dsp { font: 700 11px var(--mono); color: var(--muted); } .dsf.ok .dst { text-decoration: line-through; opacity: .7; } .dsf.ok .dsp { color: #16a34a; }
+/* Tarjetas, marcos y tema pixel */
+.tj.tj-pixel { background-color: #29366f; background-image: linear-gradient(0deg, #38b764 0 22%, transparent 22%), linear-gradient(0deg, #257179 0 40%, transparent 40%),
+  repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,255,255,.08) 20px 24px); image-rendering: pixelated; }
+.tj.tj-arcade8 { background-color: #1a1c2c; background-image: radial-gradient(2px 2px, #fff 98%, transparent), radial-gradient(2px 2px, #ffcd75 98%, transparent), linear-gradient(0deg, #b13e53 0 12%, transparent 12%);
+  background-size: 40px 30px, 60px 46px, 100% 100%; background-position: 0 0, 20px 10px, 0 0; animation: pxEstrellas 6s steps(24) infinite; }
+@keyframes pxEstrellas { to { background-position: -40px 0, -40px 10px, 0 0; } }
+.mr-pixel { background: repeating-conic-gradient(#ffcd75 0 25%, #1a1c2c 0 50%) 0 0 / 8px 8px !important; border-radius: 4px !important; } .mr-pixel .avi { border-radius: 2px !important; }
+.mr-pixelrgb { background: repeating-conic-gradient(#ff004d 0 25%, #29adff 0 50%) 0 0 / 8px 8px !important; border-radius: 4px !important; animation: pxRgb 2s steps(6) infinite; } .mr-pixelrgb .avi { border-radius: 2px !important; }
+@keyframes pxRgb { to { filter: hue-rotate(360deg); } }
+.sk-pixel { background-color: #1a1c2c; background-image: linear-gradient(0deg, #38b764 0 20%, transparent 20%), radial-gradient(3px 3px, #fff 98%, transparent); background-size: 100% 100%, 22px 18px; image-rendering: pixelated; border: 3px solid #ffcd75; border-radius: 4px; }
+:root[data-skin="pixel"] { --bg: #1a1c2c; --surface: #262b44; --ink: #f4f4f4; --muted: #94b0c2; --line: #3a4466; --bar: #333c57; --gold: #ffcd75; --gold-soft: #3b2f1e; --gold-ink: #ffe7a8; --grad: linear-gradient(135deg, #ffcd75, #ef7d57); --display: "Press Start 2P", monospace; }
+:root[data-skin="pixel"] body { background: #1a1c2c; }
+:root[data-skin="pixel"] body::before { mask-image: none; background-size: 96px 96px, 160px 128px, 16px 16px; animation: pxEstrellas 30s steps(60) infinite;
+  background-image: radial-gradient(2px 2px, #f4f4f4 98%, transparent), radial-gradient(2px 2px, #ffcd75 98%, transparent), linear-gradient(rgba(255,255,255,.025) 2px, transparent 2px); }
+:root[data-skin="pixel"] .mcard, :root[data-skin="pixel"] .mhero, :root[data-skin="pixel"] .partido, :root[data-skin="pixel"] .rpart, :root[data-skin="pixel"] .comps, :root[data-skin="pixel"] .ajb, :root[data-skin="pixel"] .pcab, :root[data-skin="pixel"] .pbar {
+  border-radius: 4px !important; border: 2px solid #000 !important; box-shadow: 4px 4px 0 #000 !important; }
+:root[data-skin="pixel"] .sec, :root[data-skin="pixel"] h3, :root[data-skin="pixel"] .mlab { font-family: "Press Start 2P", monospace !important; font-size: 11px !important; line-height: 1.5; }
+:root[data-skin="pixel"] header, :root[data-skin="pixel"] .abajo { background: #1a1c2c; border-color: #000; }
+@media (prefers-reduced-motion: reduce) { .tbanner .tbart, .tcab0 .tbart, .tbreg, .ldia.hoy, .tj-arcade8, .mr-pixelrgb { animation: none !important; } }
 </style>
 
 <div class="wrap">
@@ -1151,7 +1203,7 @@ let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorO
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 // Temas de la app (paquetes de interfaz): cambian toda la app. Se guardan en el perfil (perfilV1.skin)
-const SKIN_BG = { estadio: "#06111f", oro: "#070707", pizarra: "#12261d", galaxia: "#070313", neon: "#0b0618" };
+const SKIN_BG = { estadio: "#06111f", oro: "#070707", pizarra: "#12261d", galaxia: "#070313", neon: "#0b0618", pixel: "#1a1c2c" };
 function skinActual() { try { const p = JSON.parse(localStorage.getItem("perfilV1") || "null"); return p && SKIN_BG[p.skin] ? p.skin : ""; } catch (e) { return ""; } }
 function aplicarTema() {
   const skin = skinActual();
@@ -1484,7 +1536,7 @@ function enVivo() {
 function pintarLista() {
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina"].includes(est.vista);
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina", "temporada"].includes(est.vista);
   if (est.vista === "buscar") return pintarBuscadorGeneral();
   if (est.vista === "reto") return pintarReto();
   if (est.vista === "desafios") return pintarDesafios();
@@ -1494,6 +1546,7 @@ function pintarLista() {
   if (est.vista === "tienda") return pintarTienda();
   if (est.vista === "guia") return pintarGuia();
   if (est.vista === "elegirvitrina") return pintarElegirVitrina();
+  if (est.vista === "temporada") return pintarTemporada();
   if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
@@ -3218,7 +3271,7 @@ const PREMIOS_RANK = { semana: [[1000, 3000], [600, 3000], [400, 3000], [200, 15
   temporada: [[10000, 20000], [6000, 20000], [4000, 20000]] };
 function premioDe(tipo, f) {
   if (!PREMIOS_RANK[tipo] || !f.pts || f.pos > 10) return null;
-  if (tipo === "temporada") return f.pos <= 3 ? { mon: PREMIOS_RANK.temporada[f.pos - 1][0], xp: 20000, fis: "🎨" } : null;
+  if (tipo === "temporada") return f.pos <= 3 ? { mon: PREMIOS_RANK.temporada[f.pos - 1][0], xp: 20000, fis: "🏷️" } : null;
   const [mon, xp] = PREMIOS_RANK[tipo][Math.min(f.pos, 4) - 1];
   return { mon, xp, fis: tipo === "mes" && f.pos <= 3 ? ["👕", "⚽", "🧣"][f.pos - 1] + "✨" : "" };
 }
@@ -3244,7 +3297,7 @@ function seccionClasif() {
   const lp = (pos, txt) => `<div><span>${pos}</span><span>${txt}</span></div>`;
   const premios = vista === "semana" ? `<details class="rprem"><summary>🎁 Premios de la semana</summary><div class="rprl">${lp("🥇", "1.000 🪙 · 3.000 XP")}${lp("🥈", "600 🪙 · 3.000 XP")}${lp("🥉", "400 🪙 · 3.000 XP")}${lp("4.º–10.º", "200 🪙 · 1.500 XP")}</div></details>`
     : vista === "mes" ? `<details class="rprem"><summary>🎁 Premios del mes</summary><div class="rprl">${lp("🥇", "👕✨ 5.000 🪙 · 10.000 XP")}${lp("🥈", "⚽✨ 3.000 🪙 · 10.000 XP")}${lp("🥉", "🧣✨ 2.000 🪙 · 10.000 XP")}${lp("4.º–10.º", "1.000 🪙 · 5.000 XP")}</div><small>✨ Los 3 primeros: set animado «Vencedor de la máquina» (tarjeta, marco y avatar). 👕⚽🧣 cuando haya ranking online.</small></details>`
-    : vista === "temporada" ? `<p class="rtemp">🗓️ <b>Temporada 1</b> · 1 oct – 31 dic · ${quedanTemp()}</p><details class="rprem"><summary>🎁 Premios de la temporada</summary><div class="rprl">${lp("🥇", "🎨 Tema Oro y negro · 10.000 🪙 · 20.000 XP")}${lp("🥈", "🎨 Tema Oro y negro · 6.000 🪙 · 20.000 XP")}${lp("🥉", "🎨 Tema Oro y negro · 4.000 🪙 · 20.000 XP")}</div><small>El tema Oro y negro solo se consigue aquí: no se puede comprar.</small></details>` : "";
+    : vista === "temporada" ? `<p class="rtemp">🗓️ <b>Temporada 0</b> · 1 oct – 31 dic · ${quedanTemp()}</p><details class="rprem"><summary>🎁 Premios de la temporada</summary><div class="rprl">${lp("🥇", "🏷️ Campeón T0 · 10.000 🪙 · 20.000 XP")}${lp("🥈", "🏷️ Campeón T0 · 6.000 🪙 · 20.000 XP")}${lp("🥉", "🏷️ Campeón T0 · 4.000 🪙 · 20.000 XP")}</div><small>El título Campeón T0 solo se consigue aquí.</small></details>` : "";
   return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button><button data-clasr="temporada" aria-pressed="${vista === "temporada"}">Temp.</button></div></div>
     ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
     ${filas.some(f => f.pts) ? `<p>Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.</p>` : ""}
@@ -3320,7 +3373,7 @@ const ARTE_EV = {
 };
 function pintarDesafios() {
   procesarRecompensas();
-  let h = `` + barraJugador() + `<div class="evs">`;
+  let h = `` + barraJugador() + bannerTemporada() + `<div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
     if (ev.id === "premios") {
@@ -3348,9 +3401,9 @@ function pintarEvento() {
     const temp = est.rkp === "temporada", mes = AHORA.fecha.slice(0, 7), dias = temp ? diasTemporada() : Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
     const filas = clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
     $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
-      <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${temp ? "Temporada 1" : "Ranking de " + ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>${temp ? `1 oct – 31 dic · ${quedanTemp()}` : "Suma de Gánale a la app de todo el mes"}</small></span></section>
-      <div class="rseg mtabs"><button data-rkp="mes" aria-pressed="${!temp}">Mes</button><button data-rkp="temporada" aria-pressed="${temp}">Temporada 1</button></div>
-      <section class="mcard">${tablaRanking(filas, true, temp ? "temporada" : "mes")}<p class="apnota">${temp ? "Top 3 de la temporada: tema exclusivo Oro y negro + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP." : "Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda."} De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
+      <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${temp ? "Temporada 0" : "Ranking de " + ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>${temp ? `1 oct – 31 dic · ${quedanTemp()}` : "Suma de Gánale a la app de todo el mes"}</small></span></section>
+      <div class="rseg mtabs"><button data-rkp="mes" aria-pressed="${!temp}">Mes</button><button data-rkp="temporada" aria-pressed="${temp}">Temporada 0</button></div>
+      <section class="mcard">${tablaRanking(filas, true, temp ? "temporada" : "mes")}<p class="apnota">${temp ? "Top 3 de la temporada: título Campeón T0 + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP." : "Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda."} De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
     return;
   }
   $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
@@ -3444,11 +3497,12 @@ const CAT = {
     ["a21", "🌋", "#9a3412", { nivel: 75 }], ["a22", "⚡", "#4338ca", { nivel: 90 }], ["a23", "🌟", "#a16207", { nivel: 110 }], ["a24", "🛡️", "#334155", { nivel: 130 }],
     ["a25", "🐲", "#047857", { nivel: 150 }], ["a26", "🔱", "#0f172a", { nivel: 175 }], ["a27", "♾️", "#000000", { nivel: 200 }],
     ["a28", "🤖", "#1e1b4b", { evento: "reto", anim: "robot", n: "Robot campeón" }],
+    ["a29", "👾", "#312e81", { pase: 10, n: "Invasor" }], ["a30", "🕹️", "#1a1c2c", { pase: 35, n: "Joystick" }],
   ].map(([id, e, bg, x]) => ({ id, e, bg, ...(x || {}) })),
   marco: [["ninguno", "Sin marco"], ["bronce", "Bronce", { nivel: 10 }], ["plata", "Plata", { nivel: 20 }], ["oro", "Oro", { nivel: 40 }], ["neon", "Neón", { precio: 2000 }],
     ["esmeralda", "Esmeralda", { nivel: 60 }], ["fuego", "Fuego", { precio: 3000 }], ["rubi", "Rubí", { nivel: 80 }], ["arcoiris", "Arcoíris", { precio: 4000 }],
     ["diamante", "Diamante", { nivel: 100 }], ["legendario", "Legendario", { nivel: 150 }], ["inmortal", "Inmortal", { nivel: 200 }],
-    ["circuito", "Circuito", { evento: "reto" }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+    ["circuito", "Circuito", { evento: "reto" }], ["pixel", "Pixel", { pase: 20 }], ["pixelrgb", "Pixel arcoíris", { pase: 45 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   color: [["normal", "Normal"], ["dorado", "Dorado", { nivel: 5 }], ["cian", "Cian", { precio: 1000 }], ["rosa", "Rosa", { precio: 1000 }], ["neonv", "Verde neón", { nivel: 25 }],
     ["fuegoc", "Fuego", { precio: 2500 }], ["arcoirisc", "Arcoíris", { nivel: 120 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   // Tarjetas: el fondo de tu ficha (barra de Desafíos, perfil y tu fila en la clasificación)
@@ -3458,13 +3512,13 @@ const CAT = {
     ["leyenda", "Leyenda ✨", { nivel: 100, anim: 1 }], ["infinito", "Infinito ✨", { nivel: 150, anim: 1 }],
     ["carbono", "Carbono", { precio: 1500 }], ["pasion", "Rojo pasión", { precio: 1200 }], ["retro", "Retro 90", { precio: 2000 }],
     ["aurora", "Aurora ✨", { precio: 6000, anim: 1 }], ["lava", "Lava ✨", { precio: 7000, anim: 1 }], ["galaxia", "Galaxia ✨", { precio: 8000, anim: 1 }],
-    ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+    ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }], ["pixel", "Pixel", { pase: 15 }], ["arcade8", "Arcade 8-bit ✨", { pase: 40, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   // Temas de toda la app
-  skin: [["", "Normal"], ["estadio", "Estadio de noche", { perfil: true }], ["oro", "Oro y negro", { evento: "temporada" }],
-    ["pizarra", "Pizarra táctica", { nivel: 20 }], ["galaxia", "Galaxia ✨", { nivel: 60, anim: 1 }], ["neon", "Neón Arcade ✨", { precio: 10000, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+  skin: [["", "Normal"], ["estadio", "Estadio de noche", { perfil: true }], ["oro", "Oro y negro", { pase: 25 }],
+    ["pizarra", "Pizarra táctica", { nivel: 20 }], ["galaxia", "Galaxia ✨", { nivel: 60, anim: 1 }], ["neon", "Neón Arcade ✨", { precio: 10000, anim: 1 }], ["pixel", "Pixel art ✨", { pase: 50, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   titulo: [["rango", "Tu rango"], ["profeta", "El Profeta", { precio: 2000 }], ["empates", "Rey del Empate", { precio: 2000 }], ["matematico", "Matemático", { precio: 1500 }],
     ["cazagigantes", "Cazagigantes", { insignia: "giganta" }], ["visionario", "Visionario", { nivel: 35 }], ["barrio", "Leyenda del barrio", { nivel: 70 }],
-    ["elegido", "El Elegido", { nivel: 140 }], ["inmortalt", "Inmortal", { nivel: 200 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+    ["elegido", "El Elegido", { nivel: 140 }], ["inmortalt", "Inmortal", { nivel: 200 }], ["pixelmaster", "Pixel Master", { pase: 30 }], ["campeont0", "Campeón T0", { evento: "temporada" }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
 };
 const avatarDe = id => CAT.avatar.find(a => a.id === id) || CAT.avatar[0];
 // Insignias (se calculan con lo que has hecho)
@@ -3481,7 +3535,7 @@ const INSIGNIAS = [
 ];
 function tieneItem(tipo, it) {
   if (it.perfil) return !!PERFIL.nombre;   // regalo por crearte el perfil en la Arena
-  if (it.evento) return PERFIL.comprados.includes(tipo + ":" + it.id);   // solo para el podio del evento o la temporada
+  if (it.evento || it.pase) return PERFIL.comprados.includes(tipo + ":" + it.id);   // podio del evento o de la temporada, o pase de temporada
   if (!it.precio && !it.nivel && !it.insignia) return true;
   if (it.nivel) return nivelDe(totalXP()).n >= it.nivel;
   if (it.insignia) return datosJugador().insignias.includes(it.insignia);
@@ -3535,15 +3589,15 @@ function procesarRecompensas() {
         const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
         if (mio === s.gana) {
           const pts = (ptsReto(x.ops.find(o => o.m === mio).p) + (top.m === s.gana ? 0 : BONUS_RETO)) * (r.dobles && r.dobles[k] ? 2 : 1);
-          cobrar(`ac:${d}:${k}`, `${top.m === s.gana ? "Acierto" : "¡Acierto contra la app!"}${r.dobles && r.dobles[k] ? " ×2" : ""} · ${x.local} – ${x.visitante}`, pts * 10, pts);
+          cobrar(`ac:${d}:${k}`, `${top.m === s.gana ? "Acierto" : "¡Acierto contra la app!"}${r.dobles && r.dobles[k] ? " ×2" : ""} · ${x.local} – ${x.visitante}`, pts * 10, pts, enTemp(d) ? { est: 1 } : null);
         }
       }
     }
     const todos = r.partidos.every(x => r.picks[claveReto(x)]), empezados = r.partidos.every(x => estadoReto(x).empezado);
-    if (todos && empezados) cobrar(`comp:${d}`, `Día completo (${d.slice(8)}/${d.slice(5, 7)})`, 200, 20);
+    if (todos && empezados) cobrar(`comp:${d}`, `Día completo (${d.slice(8)}/${d.slice(5, 7)})`, 200, 20, enTemp(d) ? { est: 1 } : null);
     const c = cuentaReto(r);
     if (c.jugados && c.jugados === c.elegidos && r.partidos.every(x => !r.picks[claveReto(x)] || estadoReto(x).final) && c.yo > c.app)
-      cobrar(`gana:${d}`, `Le ganaste el día a la app (${c.yo}–${c.app})`, 500, 50);
+      cobrar(`gana:${d}`, `Le ganaste el día a la app (${c.yo}–${c.app})`, 500, 50, enTemp(d) ? { est: 2 } : null);
     racha = ant && fechaMenos(d, 1) === ant ? racha + 1 : 1; ant = d;
     for (const [nr, xp, mon] of [[3, 300, 50], [7, 1000, 200], [30, 5000, 1000]]) if (racha === nr) cobrar(`racha${nr}:${d}`, `Racha de ${nr} días jugando 🔥`, xp, mon);
   }
@@ -3567,9 +3621,10 @@ function procesarRecompensas() {
   // Temporada 1 (octubre–diciembre de 2026): el top 3 se lleva el tema Oro y negro
   if (AHORA.fecha > TEMP1.hasta && !PERFIL.cobrados["temp1"]) {
     const ds = dias.filter(d => d >= TEMP1.desde && d <= TEMP1.hasta), yo = ds.length ? clasificacionReto(ds).find(f => f.yo) : null;
-    if (yo && yo.jug && yo.pos <= 3) { cobrar("temp1", `🏆 ${yo.pos}.º de la Temporada 1 · tema Oro y negro`, 20000, [10000, 6000, 4000][yo.pos - 1], { pos: yo.pos }); PERFIL.comprados.push("skin:oro"); }
+    if (yo && yo.jug && yo.pos <= 3) { cobrar("temp1", `🏆 ${yo.pos}.º de la Temporada 0 · título Campeón T0`, 20000, [10000, 6000, 4000][yo.pos - 1], { pos: yo.pos }); PERFIL.comprados.push("titulo:campeont0"); }
     else PERFIL.cobrados["temp1"] = 1;
   }
+  try { recompensasTemporada(); } catch (e) { console.warn(e); }
   // Subidas de nivel: monedas siempre y regalos cada 5 y 10 niveles
   const nv = nivelDe(totalXP()).n;
   while (PERFIL.nivelCobrado < nv) {
@@ -3606,6 +3661,7 @@ function xpEnCamino() {
 // Vitrina: hasta 5 cosas tuyas para lucir (insignias, avatares o tarjetas). Se guardan como "ins:id", "av:id", "tj:id".
 const VITRINA_MAX = 5;
 const TEMP1 = { desde: "2026-10-01", hasta: "2026-12-31" };
+const enTemp = d => d >= TEMP1.desde && d <= TEMP1.hasta;
 function vitrina() {
   const dj = datosJugador();
   return (PERFIL.vitrina || []).map(v => v.includes(":") ? v : "ins:" + v).filter(v => {
@@ -3711,7 +3767,7 @@ function centrarCarril() {
 function pintarPersonalizar() {
   const sec = (tipo, titulo, pinta) => `<section class="mcard"><h3>${titulo}</h3><div class="pgrid ${tipo}">${CAT[tipo].map(it => {
     const ok = tieneItem(tipo, it), puesto = PERFIL[tipo] === it.id;
-    const cand = it.perfil ? "Crea tu perfil" : it.evento === "temporada" ? "Top 3 Temporada 1" : it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
+    const cand = it.perfil ? "Crea tu perfil" : it.pase ? `Pase T0 · esc. ${it.pase}` : it.evento === "temporada" ? "Top 3 Temporada 0" : it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
     return `<button class="pit ${puesto ? "on" : ""} ${ok ? "" : "lock"}" ${ok ? `data-poner="${tipo}" data-id="${it.id}"` : `data-vista="tienda"`}>${pinta(it)}${ok ? "" : `<small>🔒 ${cand}</small>`}</button>`;
   }).join("")}</div></section>`;
   let h = `<div class="volv"><button class="ico" data-vista="perfil" aria-label="Volver">‹</button></div>
@@ -3777,7 +3833,7 @@ function pintarTienda() {
   } else if (cat === "comodin") h += rejilla(comodines.map(c => cartaTienda("comodin", c, mon)));
   else if (cat === "excl") {
     h += `<p class="tnota">No se compran: se ganan quedando arriba. Así, quien los lleva demuestra que lo ha conseguido.</p>
-    <div class="texcl r-leg"><span class="tcp">${dibujoTienda("skin", { id: "oro" })}</span><span><b>Tema Oro y negro</b><small>Top 3 de la Temporada 1 (oct–dic) · ${quedanTemp()}</small></span><span class="tlock">${tieneItem("skin", { id: "oro", evento: "temporada" }) ? "✓ Tuyo" : "🔒"}</span></div>
+    <div class="texcl r-leg"><span class="tcp">${dibujoTienda("skin", { id: "oro" })}</span><span><b>Tema Oro y negro</b><small>Top 3 de la Temporada 0 (oct–dic) · ${quedanTemp()}</small></span><span class="tlock">${tieneItem("skin", { id: "oro", evento: "temporada" }) ? "✓ Tuyo" : "🔒"}</span></div>
     <div class="texcl r-leg"><span class="tcp" style="display:flex;gap:8px;align-items:center"><span class="av mr-circuito" style="--s:46px"><span class="avi" style="background:#1e1b4b"><span class="ava-robot">🤖</span></span></span><span class="tjmini tj tj-vencedor" style="width:70px;height:46px"></span></span><span><b>Set «Vencedor de la máquina»</b><small>Tarjeta, marco y avatar animados · top 3 del mes en Gánale a la app</small></span><span class="tlock">${PERFIL.comprados.includes("tarjeta:vencedor") ? "✓ Tuyo" : "🔒"}</span></div>`;
   } else if (cat === "fis") {
     h += `<p class="tnota">Premios de verdad con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online con cuentas verificadas.</p>` +
@@ -3895,7 +3951,7 @@ const BASES_EVENTO = {
     ["Clasificaciones", "Hay clasificación del día, de cada semana (de lunes a domingo; cada semana cuenta para el mes en el que cae su jueves) y del mes, con los puntos sumados en ese periodo."],
     ["Desempates", "A igualdad de puntos gana quien tenga más aciertos y, si sigue el empate, quien tenga más aciertos en los que la app falló. Si persiste, se comparte el puesto: los premios virtuales se dan completos a cada uno y un premio físico se sortearía entre los empatados."],
     ["Premios de cada semana", "1.º 1.000 monedas, 2.º 600 y 3.º 400, más 3.000 XP cada uno. Del 4.º al 10.º, 200 monedas y 1.500 XP. Se cobran solos cuando acaba la semana."],
-    ["Temporada 1", "Del 1 de octubre al 31 de diciembre de 2026 se suman los puntos de todos los días. El top 3 se lleva el tema exclusivo Oro y negro (no se puede comprar), además de 10.000, 6.000 y 4.000 monedas y 20.000 XP."],
+    ["Temporada 0", "Del 1 de octubre al 31 de diciembre de 2026 se suman los puntos de todos los días. El top 3 se lleva el tema exclusivo Oro y negro (no se puede comprar), además de 10.000, 6.000 y 4.000 monedas y 20.000 XP."],
     ["Premios de cada mes", "1.º 5.000 monedas, 2.º 3.000 y 3.º 2.000, más 10.000 XP cada uno. Los tres se llevan además el set animado exclusivo «Vencedor de la máquina» (tarjeta, marco Circuito y avatar Robot campeón), que no se puede comprar. Del 4.º al 10.º, 1.000 monedas y 5.000 XP. Con ranking online: 1.º camiseta, 2.º balón y 3.º bufanda."],
   ],
   superv: [["Mecánica (borrador)", "Cada jornada se elige un equipo que crees que va a ganar, sin poder repetir equipo en todo el evento. Si empata o pierde, quedas eliminado. Gana el último que siga vivo; si caen todos a la vez, ganan los que llegaron más lejos."]],
@@ -3942,6 +3998,132 @@ function pintarGuia() {
     <li><b>¿Dónde se guarda todo?</b> De momento en tu móvil. Cuando haya cuentas online, se guardará en tu cuenta.</li>
     <li><b>¿Cuesta algo?</b> No. Todo es gratis.</li></ul></section>`;
 }
+// ================================================================ Temporada 0 (de prueba) · Pixel
+// Pase de temporada de 50 escalones con estrellas ⭐, regalo diario por entrar, desafíos semanales y especiales
+// y la clasificación de la temporada. Las estrellas se ganan jugando (aciertos, días completos, ganar a la app),
+// con el regalo diario y con los desafíos.
+const TEMP = { n: 0, nombre: "Temporada 0", tema: "Pixel", desde: TEMP1.desde, hasta: TEMP1.hasta };
+const EST_ESCALON = 6, ESCALONES = 50;
+const totalEst = () => PERFIL.mov.reduce((s, m) => s + (m.est || 0), 0);
+const escalonDe = est => Math.min(ESCALONES, Math.floor(est / EST_ESCALON));
+// Regalos del pase: objetos de la temática en los escalones redondos; en el resto, monedas o comodines
+const PASE_OBJ = { 10: ["avatar", "a29"], 15: ["tarjeta", "pixel"], 20: ["marco", "pixel"], 25: ["skin", "oro"], 30: ["titulo", "pixelmaster"],
+  35: ["avatar", "a30"], 40: ["tarjeta", "arcade8"], 45: ["marco", "pixelrgb"], 50: ["skin", "pixel"] };
+function regaloPase(n) {
+  if (PASE_OBJ[n]) { const [t, id] = PASE_OBJ[n], it = CAT[t].find(x => x.id === id); return { t, id, it, txt: (it.n || "Avatar " + it.e).replace(" ✨", "") }; }
+  if (n === 5) return { t: "comodin", id: "doble", txt: "Comodín ×2" };
+  if (n % 12 === 0) return { t: "comodin", id: "segunda", txt: "Segunda oportunidad" };
+  return { t: "mon", mon: 50 + 5 * n, txt: `${50 + 5 * n} monedas` };
+}
+// Regalo diario: 7 días seguidos; si fallas uno, vuelves al día 1
+const LOGIN = [{ mon: 50, est: 1 }, { mon: 75, est: 1 }, { com: "doble", est: 1 }, { mon: 100, est: 1 }, { mon: 150, est: 1 }, { com: "segunda", est: 1 }, { mon: 300, est: 3, cofre: 1 }];
+function estadoLogin() {
+  const l = PERFIL.login || {}, ayer = fechaMenos(AHORA.fecha, 1);
+  if (l.ult === AHORA.fecha) return { hecho: true, dia: l.dia };
+  return { hecho: false, dia: l.ult === ayer ? (l.dia % 7) + 1 : 1 };
+}
+// Estadísticas de unos días del reto (para los desafíos)
+function statsDias(dias) {
+  const st = { aciertos: 0, dias: 0, vsapp: 0, empates: 0, ganaapp: 0, completos: 0, basket: 0, perfecto: 0 };
+  for (const d of dias) {
+    const r = RETO.dias[d]; if (!r || !Object.keys(r.picks).length) continue;
+    st.dias++;
+    let ok = 0, jug = 0;
+    for (const x of r.partidos) {
+      const mio = r.picks[claveReto(x)]; if (!mio) continue;
+      const s = estadoReto(x); if (!s.final || !s.gana) continue;
+      jug++;
+      const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
+      if (mio === s.gana) { ok++; st.aciertos++; if (top.m !== s.gana) st.vsapp++; if (mio === "Empate (X)") st.empates++; if (x.dep === "b") st.basket++; }
+    }
+    if (r.partidos.every(x => r.picks[claveReto(x)])) st.completos++;
+    const c = cuentaReto(r); if (c.jugados && c.jugados === c.elegidos && c.yo > c.app) st.ganaapp++;
+    if (jug >= 4 && ok === jug) st.perfecto++;
+  }
+  return st;
+}
+const DESAFIOS = [
+  { id: "aciertos", t: "Acierta {n} pronósticos", n: [5, 8, 12] }, { id: "dias", t: "Juega {n} días", n: [3, 4, 5] },
+  { id: "vsapp", t: "Acierta {n} partidos en los que falle la app", n: [1, 2, 3] }, { id: "empates", t: "Acierta {n} empates", n: [1, 2, 2] },
+  { id: "ganaapp", t: "Gánale el día a la app {n} veces", n: [1, 2, 2] }, { id: "completos", t: "Completa {n} días (todos pronosticados)", n: [2, 3, 4] },
+  { id: "basket", t: "Acierta {n} partidos de baloncesto", n: [2, 3, 4] },
+];
+function desafiosSemana() {
+  const lun = lunesDe(AHORA.fecha), h = Math.floor(new Date(lun + "T12:00:00") / 6048e5);
+  const orden = DESAFIOS.map((d, i) => [d, azar("sem" + h + d.id)]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(x => x[0]);
+  const dias = [...Array(7)].map((_, k) => sumaDias(lun, k)).filter(d => d <= AHORA.fecha), st = statsDias(dias);
+  return orden.map((d, k) => { const n = d.n[k]; return { key: `ds:${lun}:${d.id}`, t: d.t.replace("{n}", n), n, v: Math.min(n, st[d.id]), est: 3 + k, mon: 100 + 50 * k }; });
+}
+function desafiosEspeciales() {
+  const st = statsDias(diasTemporada());
+  return [{ id: "vsapp", t: "Acierta 10 partidos en los que falle la app", n: 10, est: 10, mon: 1000 }, { id: "dias", t: "Juega 30 días en la temporada", n: 30, est: 10, mon: 1000 },
+    { id: "aciertos", t: "Consigue 60 aciertos", n: 60, est: 8, mon: 800 }, { id: "perfecto", t: "Haz un día perfecto (todo acertado, mínimo 4)", n: 1, est: 5, mon: 500 }]
+    .map(d => ({ ...d, key: `de0:${d.id}`, v: Math.min(d.n, st[d.id]) }));
+}
+// Se cobra solo lo conseguido (lo llama procesarRecompensas)
+function recompensasTemporada() {
+  if (AHORA.fecha < TEMP.desde || AHORA.fecha > TEMP.hasta) return;
+  for (const d of desafiosSemana().concat(desafiosEspeciales())) if (d.v >= d.n) cobrar(d.key, `⭐ Desafío: ${d.t}`, 0, d.mon, { est: d.est });
+  const esc = escalonDe(totalEst());
+  for (let n = 1; n <= esc; n++) {
+    if (PERFIL.cobrados["pase0:" + n]) continue;
+    const g = regaloPase(n);
+    if (g.t === "mon") cobrar("pase0:" + n, `🎮 Pase T0 · escalón ${n}: ${g.txt}`, 0, g.mon);
+    else if (g.t === "comodin") { if (cobrar("pase0:" + n, `🎮 Pase T0 · escalón ${n}: ${g.txt}`, 0, 0)) PERFIL.comodines[g.id]++; }
+    else if (cobrar("pase0:" + n, `🎮 Pase T0 · escalón ${n}: ${g.txt}`, 0, 0)) { const k = g.t + ":" + g.id; if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k); }
+  }
+}
+// ---- Rectángulo de la temporada en la Arena (debajo del perfil)
+function bannerTemporada() {
+  const est = totalEst(), nE = escalonDe(est), dentro = est - nE * EST_ESCALON, lg = estadoLogin();
+  return `<button class="tbanner" data-vista="temporada">${ARTE_PIXEL}<span class="tbt"><small>${TEMP.nombre.toUpperCase()} · ${TEMP.tema.toUpperCase()}</small><b>Pase de temporada</b>
+    <span class="tbbar"><i style="width:${nE >= ESCALONES ? 100 : dentro / EST_ESCALON * 100}%"></i></span><em>Escalón ${nE}/${ESCALONES} · ⭐ ${est} · ${quedanTemp()}</em></span>
+    ${lg.hecho ? "" : `<span class="tbreg">🎁 Regalo</span>`}</button>`;
+}
+const ARTE_PIXEL = `<svg class="tbart" viewBox="0 0 16 12" shape-rendering="crispEdges" aria-hidden="true">
+  <g fill="#38b764"><rect x="3" y="2" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="11" y="3" width="1" height="1"/>
+  <rect x="3" y="4" width="10" height="1"/><rect x="2" y="5" width="2" height="1"/><rect x="5" y="5" width="6" height="1"/><rect x="12" y="5" width="2" height="1"/>
+  <rect x="1" y="6" width="14" height="1"/><rect x="1" y="7" width="1" height="1"/><rect x="3" y="7" width="10" height="1"/><rect x="14" y="7" width="1" height="1"/>
+  <rect x="1" y="8" width="1" height="1"/><rect x="3" y="8" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="8" width="1" height="1"/>
+  <rect x="4" y="9" width="3" height="1"/><rect x="9" y="9" width="3" height="1"/></g><rect x="4" y="5" width="1" height="1" fill="#fff"/><rect x="11" y="5" width="1" height="1" fill="#fff"/></svg>`;
+// ---- Pantalla de la temporada
+function pintarTemporada() {
+  procesarRecompensas();
+  const est = totalEst(), nE = escalonDe(est), dentro = est - nE * EST_ESCALON, lg = estadoLogin();
+  const dsT = diasTemporada(), filas = clasificacionReto(dsT), yo = filas.find(f => f.yo);
+  const icoRegalo = g => g.t === "mon" ? "🪙" : g.t === "comodin" ? (g.id === "doble" ? "×2" : "🔄") : g.t === "skin" ? "🎨" : g.t === "tarjeta" ? "🪪" : g.t === "marco" ? "🖼️" : g.t === "titulo" ? "🏷️" : g.it.e;
+  const pase = [...Array(ESCALONES)].map((_, k) => { const n = k + 1, g = regaloPase(n), ok = nE >= n, gordo = g.t !== "mon" && g.t !== "comodin";
+    return `<div class="pesc ${ok ? "ok" : ""} ${gordo ? "gordo" : ""} ${n === nE + 1 ? "sig" : ""}"><span class="pen">${n}</span><span class="pei">${icoRegalo(g)}</span><small>${esc(g.txt)}</small>${ok ? '<i>✓</i>' : ""}</div>`; }).join("");
+  const dia = (d, k) => { const n = k + 1, hecho = lg.hecho ? n <= lg.dia : n < lg.dia, hoy = !lg.hecho && n === lg.dia;
+    return `<div class="ldia ${hecho ? "ok" : ""} ${hoy ? "hoy" : ""} ${d.cofre ? "cofre" : ""}"><small>Día ${n}</small><span>${d.cofre ? "🎁" : d.com ? (d.com === "doble" ? "×2" : "🔄") : "🪙"}</span><b>${d.mon ? fmtN(d.mon) : d.com === "doble" ? "Comodín" : "2.ª opor."}</b><em>+${d.est}⭐</em></div>`; };
+  const barra = d => `<div class="dsf ${d.v >= d.n ? "ok" : ""}"><span class="dst">${esc(d.t)}</span><span class="dsb"><i style="width:${d.v / d.n * 100}%"></i></span><span class="dsp">${d.v}/${d.n} · +${d.est}⭐ · +${fmtN(d.mon)}🪙${d.v >= d.n ? " ✓" : ""}</span></div>`;
+  let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
+  <section class="tcab0">${ARTE_PIXEL}<small>${TEMP.nombre.toUpperCase()} · DE PRUEBA</small><b>PIXEL</b><span>${fCorta(TEMP.desde)} – ${fCorta(TEMP.hasta)} · ${quedanTemp()}</span>
+    <div class="tcabk"><div><b>⭐ ${est}</b><small>estrellas</small></div><div><b>${nE}/${ESCALONES}</b><small>escalón</small></div><div><b>${yo.pts ? yo.pos + ".º" : "–"}</b><small>clasificación</small></div></div></section>
+  <section class="mcard t0"><h3>🎁 Regalo diario</h3><p class="apnota" style="margin:0 0 8px">Entra cada día. Si te saltas uno, vuelves al día 1.</p><div class="ldias">${LOGIN.map(dia).join("")}</div>
+    ${lg.hecho ? `<p class="apnota" style="text-align:center;margin:8px 0 0">✅ Ya has recogido el de hoy. Vuelve mañana para el día ${(lg.dia % 7) + 1}.</p>` : `<button class="apbtn" data-login="1" style="margin-top:10px">Recoger el regalo del día ${lg.dia}</button>`}</section>
+  <section class="mcard t0"><h3>🎮 Pase de temporada</h3><p class="apnota" style="margin:0 0 6px">Cada ${EST_ESCALON} ⭐ subes un escalón y te llevas su regalo. Escalón 25: tema Oro y negro · Escalón 50: tema Pixel art.</p>
+    <div class="pbarra"><i style="width:${nE >= ESCALONES ? 100 : dentro / EST_ESCALON * 100}%"></i></div><small class="apnota">${nE >= ESCALONES ? "¡Pase completado!" : `${dentro}/${EST_ESCALON} ⭐ para el escalón ${nE + 1}`}</small>
+    <div class="prail" id="prail">${pase}</div>
+    <p class="apnota">Estrellas: +1 por acierto, +1 por día completo, +2 por ganarle el día a la app, más el regalo diario y los desafíos.</p></section>
+  <section class="mcard t0"><h3>📅 Desafíos de la semana</h3>${desafiosSemana().map(barra).join("")}<p class="apnota">Cambian cada lunes.</p></section>
+  <section class="mcard t0"><h3>💎 Desafíos especiales</h3>${desafiosEspeciales().map(barra).join("")}<p class="apnota">Duran toda la temporada.</p></section>
+  <section class="mcard t0"><h3>🏆 Clasificación de la temporada</h3>${tablaRanking(filas, false, "temporada")}
+    <button class="apbtn ap2" data-vista="evento" data-evento="premios" data-rkp="temporada" style="margin-top:10px">Ver la clasificación completa</button>
+    <p class="apnota">Top 3: título «Campeón T0» + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP.</p></section>`;
+  $("vista").innerHTML = h;
+  const r = $("prail"), s = r && r.querySelector(".pesc.sig"); if (s) r.scrollLeft = Math.max(0, s.offsetLeft - r.offsetLeft - 80);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-login]"); if (!b) return;
+  const lg = estadoLogin(); if (lg.hecho) return;
+  const d = LOGIN[lg.dia - 1];
+  if (cobrar(`login:${AHORA.fecha}`, `🎁 Regalo diario · día ${lg.dia}${d.cofre ? " (cofre)" : ""}`, 0, d.mon || 0, { est: d.est })) {
+    if (d.com) PERFIL.comodines[d.com]++;
+    PERFIL.login = { ult: AHORA.fecha, dia: lg.dia }; guardarPerfil();
+  }
+  procesarRecompensas(); pintarLista();
+});
 // ---------------------------------------------------------------- buscador general (botón Buscar de abajo)
 // Busca en todo: partidos de todos los días y deportes, competiciones y equipos/jugadores
 const NOMBRE_DEP_B = { f: "⚽ Fútbol", b: "🏀 Basket", te: "🎾 Tenis", e: "🎮 Esports" };
@@ -4036,7 +4218,7 @@ function pintarSelector() {
     const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
   }).join("");
-  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
+  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina", "temporada"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
 }
 
 function pintarAjustes() { return; }
