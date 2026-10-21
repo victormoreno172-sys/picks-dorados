@@ -1113,8 +1113,6 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .tj.tj-arcade8 { background: radial-gradient(1.5px 1.5px, #fff 98%, transparent) 0 0 / 40px 30px, url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAwCAIAAABhdOiYAAADK0lEQVR42u1aPWvbQBi+EzXSYroU2qoeam/p2JJCt0A8u+DQRIsp+B8kQw0htDTtoiX9AyVLFkNJhszZAyl4dLYmg6vG4C2LjAZ1OHG+nlTdhz5OsvViwr0XI58eP8/7JUO9ZoLK/m8a8x1Wd71E9+PORuleEK4UgwbP31A79u1lBVA0NGGY3NnIePRyFQGKRyeeSiUAaO455CEplx+dz913ePPT2Y8YjKzu+vDsJ1eQnntOjJuP6TVz7jn4JfeNkuiEXcowOgCABzyHI10lDPJPCM73BDDiERf55rDQOBg0eY1f+TMoQKdzF/idO/8kVyJrTHT8+jly/fq5EowAAPDhE2pRoEJR4eGwYYmRWhMyKipHBmnhLBboi7LGFTMEkFkgLZXBXgAQ7DFCoXucGseNvslI8wFGjSsAAFrkHKcROkbfJO+fiZFckI6shtgM0puTxc5NI3+McqgSY2pFLT7Hk+gAAPTmRBSdIlRS2QbphPblw/fkZV4SY7ajiluNuef4g+Hi82xLiUJ5mlUFDArQ2d8I/P0NfzCUUNnB7mHCoY99exmJArkfOfnKlkEIIGhbiERooYpEBY1BAAAsMVJrxbH4kWlOMQjaFgIokj7un7rx9H4JGcQcVyN0jKM9vWbqNdM42pOLQQqtEAOzJAxKOE4rB0A4N4VHwqK1aOq3o1GplPMhTxbPguTRyXJiVe6hPZ5YwfsOACBYpNotaumcUmm3lenEig0QVcVG9rRqu63F0Co8vVIlsYPdw6/fPmLKrJ36+F/XW8LXTJjFMp1YSUqMQmfcniJ33J6unfq5qQxPrFCdpTcnnHGav5vTChUFmHIOq1tuYsWfMZNmMUpfciora6vBw8P3O2+vtyACBS9EQc8IHWaxxlPN/XMzEk8jEIN+Wc/wTmv4WwKjperFyBS29LZaP6CSkIiWW6tVBJN4nAmrH3HmUQclH3SI1kSiFZP0ddQzyJ2NXlw8HrencuOOJQ/SFHcKiJFKibneK+aOeoD427a0ZE9iQVIGraUxSvd42UpMqJJ0jx2jb6K/VQwqX4Fe1UGsGLTd2txubSKnWofXFYMY9hcnw+p7v7tk6gAAAABJRU5ErkJggg==") center / cover; image-rendering: pixelated; animation: pxArcade 3s steps(15) infinite; }
 @keyframes pxArcade { to { background-position: 0 30px, center; } }
 @keyframes pxEstrellas { to { background-position: -40px 0, -40px 10px, 0 0; } }
-.mr-pixel { background: repeating-conic-gradient(#ffcd75 0 25%, #1a1c2c 0 50%) 0 0 / 8px 8px !important; border-radius: 4px !important; } .mr-pixel .avi { border-radius: 2px !important; }
-.mr-pixelrgb { background: repeating-conic-gradient(#ff004d 0 25%, #29adff 0 50%) 0 0 / 8px 8px !important; border-radius: 4px !important; animation: pxRgb 2s steps(6) infinite; } .mr-pixelrgb .avi { border-radius: 2px !important; }
 @keyframes pxRgb { to { filter: hue-rotate(360deg); } }
 .sk-pixel { background-color: #1a1c2c; background-image: linear-gradient(0deg, #38b764 0 20%, transparent 20%), radial-gradient(3px 3px, #fff 98%, transparent); background-size: 100% 100%, 22px 18px; image-rendering: pixelated; border: 3px solid #ffcd75; border-radius: 4px; }
 :root[data-skin="pixel"], .skp-pixel { --bg: #1a1c2c; --surface: #262b44; --ink: #f4f4f4; --muted: #94b0c2; --line: #3a4466; --bar: #333c57; --gold: #ffcd75; --gold-soft: #3b2f1e; --gold-ink: #ffe7a8; --grad: linear-gradient(135deg, #ffcd75, #ef7d57); --display: "Pixelify Sans", "Space Grotesk", system-ui, sans-serif;  --red: #ff004d; --red-soft: #3b1020; --red-ink: #ff77a8; --ok: #38b764; --ok-soft: #12301f; --ok-ink: #a7f070; --value: #41a6f6; --pitch: #38b764; --acc: #73eff7; --acc2: #a7f070; --apuesta: #ff77a8; --rad: .12;  --hero1: #29366f; --hero2: #5d275d; }
@@ -1286,7 +1284,6 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .arlog.ok i { color: #a7f070; } .arlog.ko i { color: #ff004d; } .arlog.go i { color: #5f574f; }
 .tj.tj-hiscore { background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAwCAIAAABhdOiYAAADbklEQVR42u1ZP2gTURj/7qhYexzeUApJ62WpgSJkMLYIZgh0ye4S8Faz6CKUilIqitTBQpe61DVCNkezCBkyiJUOBSkElxzqgWQ4CbGBDDpcE1/uvbu89+5PL/o+wsfHL9/73vd+933fXS7SxQtpiFH6ljqb6sL0iBQzQVMnsqBAEOTZ7PER1O8cJSQIvVCOwnAImp2/npAgfLL14JknQQtKFgCYdN9Snfok2uiHsLZz5IqD+wfB8Tz983H0871tr/PKP3qtBSXLpM86YpAn2mNdM8i71uqZsisO7h8E7w/ylYrhH5/pvNIVrWi2a3qmTCww84ulL6dwEABgPqtrXdQGANNWodNyEMfZwb2Co54jfyp8uAsRd3L2isPUfTMA4MXOaCd60bWuiaVSqRgHB1X/Vay46YubtoquZSXFTRCndFom5QjcfLm16c07Eof1euD56Msp01aJeEKfg8x2jQDa5GcQL5xhO1vVtS5eMtyRA1QQOgt82idTBkgR8xu72pPi0OfjrpfxGcRTQfrcEpP26m3Xt+gqXesW0pdR7cI9+SXtO3GWua4HuiOTNtu1GX1uyfz1lUkDWEj2f+3m8SHW+eATZ+hvYYxYyGyyYBhnHAdiDgQbi0PMx7mTuHA9Uw5UQTQTIcQ4IQxE73zq1QYRl26lDY6dmt9/AoBTt7iNioP7x8H9+fDg+RDeB/ERFL80T3YLKxsoUjKK9Woj8hdmrAQ1jw8LudX/560I822ej52bn187xodrd8Oyp/iFWcko4iB6JFZbe/GGiNNXfSCC1pVTel0yihN96tVG82SXMqZTFP62/egOa56oLuRWudfK68rp+94lej14+47Gs7CygSIAQNTKmuFUBKWNatbM+bS0ffV2DJ3c+3j2a15ZM8KyWXN4+unVkxv3mO9i8RA0vSL+9hEECYIEQYKgBIv0+2FtcX8H/+Lb/ccCPyNIlIlfBaWVHA2RlA4BlycwvqggxgqivxRRuCVwX9nlNLInFiqNG2uW9LK4v4Nm6+OGH83f0+UsWoy3xYJXAV/hxLMR/RJ5YiD6Voq6rQK2G1/ryf7U8B0yTnbQA7PSRMOUmEF0MyiUa56QIOGmIQdppfNtq9Dbjdh6cijUhELxuU/uSF53JKdwIuJIDOmQHhRjK5yIInOHlf+xtgq93f4AjGiX6cEXCAEAAAAASUVORK5CYII=") center / cover; image-rendering: pixelated; }
 .tj.tj-hiscore::after { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(1.5px 1.5px, #fff 98%, transparent); background-size: 37px 23px; animation: arcParpa 1s steps(1) infinite; }
-.mr-arcade { background: repeating-conic-gradient(#ffec27 0 25%, #ff004d 0 50%) 0 0 / 8px 8px !important; animation: pxRgb 1.4s steps(5) infinite; }
 .av.mr-arcade, .av.mr-arcade .avi { border-radius: 0 !important; clip-path: polygon(0 14%, 7% 14%, 7% 7%, 14% 7%, 14% 0, 86% 0, 86% 7%, 93% 7%, 93% 14%, 100% 14%, 100% 86%, 93% 86%, 93% 93%, 86% 93%, 86% 100%, 14% 100%, 14% 93%, 7% 93%, 7% 86%, 0 86%); }
 @media (prefers-reduced-motion: reduce) { .arcban .arcb3, .archead .arcmar, .arcvid span.on, .arccombo b.fuego, .tj-hiscore::after, .mr-arcade { animation: none !important; } }
 
@@ -1305,6 +1302,55 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .apn { display: block; font: 400 11px "Pixelify Sans", var(--body); color: #83769c; text-align: center; margin: 4px 0 0; } p.apn { padding: 0 9px 10px; }
 .aphitos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .aphitos > div { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
 .aphitos > div > b { font: 11px "Press Start 2P", monospace; color: #ff004d; text-align: center; } .aphitos .apm { flex: 1; justify-content: center; } .aphitos .apo { flex: 1; }
+
+/* ---- Marcos pixel: cada uno con su propio dibujo y su propia animación (solo se mueve el marco, nunca el avatar) */
+.av:is(.mr-pixel, .mr-pixelrgb, .mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss, .mr-arcade) { filter: none !important; box-shadow: none !important; image-rendering: pixelated;
+  padding: calc(var(--s) * .11) !important; width: calc(var(--s) * 1.22) !important; height: calc(var(--s) * 1.22) !important; }
+.av:is(.mr-pixel, .mr-pixelrgb, .mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss, .mr-arcade) .avi { z-index: 1; animation: none !important; }
+.av:is(.mr-pixel, .mr-pixelrgb, .mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss, .mr-arcade)::before,
+.av:is(.mr-pixel, .mr-pixelrgb, .mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss, .mr-arcade)::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+/* Pixel: caja de menú de videojuego con relieve (luz arriba, sombra abajo) */
+.av.mr-pixel { background: linear-gradient(135deg, #fff3c4 0 32%, #ffcd75 32% 68%, #a8601e 68%) !important; }
+.av.mr-pixel::after { inset: 4%; background: #1a1c2c; }
+/* Pixel arcoíris ✨: franjas de colores que avanzan */
+.av.mr-pixelrgb { background: linear-gradient(90deg, #ff004d 0 12.5%, #ffa300 0 25%, #ffec27 0 37.5%, #00e436 0 50%, #29adff 0 62.5%, #83769c 0 75%, #ff77a8 0 87.5%, #ff004d 0) 0 0 / 200% 100% !important; animation: mrArco 2.4s steps(16) infinite !important; }
+@keyframes mrArco { to { background-position: -200% 0; } }
+/* Madera: tablas con vetas y cuatro clavos */
+.av.mr-pxmadera { background: repeating-linear-gradient(0deg, #8b5a2b 0 3px, #6e4420 3px 4px, #a0693a 4px 7px, #5d3a1a 7px 8px) !important; }
+.av.mr-pxmadera::after { z-index: 2; background: radial-gradient(circle at 4.5% 50%, #c2c3c7 0 3%, transparent 3.5%), radial-gradient(circle at 95.5% 50%, #c2c3c7 0 3%, transparent 3.5%), radial-gradient(circle at 50% 4.5%, #c2c3c7 0 3%, transparent 3.5%), radial-gradient(circle at 50% 95.5%, #c2c3c7 0 3%, transparent 3.5%); }
+/* Hielo: bloques de hielo con brillos */
+.av.mr-pxhielo { background: linear-gradient(135deg, #ffffff 0 18%, #c6ecff 18% 40%, #73eff7 40% 62%, #29adff 62% 82%, #1d6fd1 82%) !important; }
+.av.mr-pxhielo::after { z-index: 0; background: radial-gradient(1.5px 1.5px, #fff 98%, transparent) 0 0 / 7px 9px; opacity: .9; animation: arcParpa 1.6s steps(1) infinite; }
+/* Lava: piedra con burbujas que se mueven */
+.av.mr-pxlava { background: linear-gradient(#ff004d, #7e2553) !important; }
+.av.mr-pxlava::before { background: radial-gradient(circle, #ffec27 0 22%, transparent 26%) 0 0 / 12px 12px, radial-gradient(circle, #ffa300 0 30%, transparent 34%) 6px 6px / 12px 12px; animation: mrLava 1.8s steps(6) infinite; }
+@keyframes mrLava { to { background-position: 0 -12px, 6px -6px; } }
+/* Menta: caramelo de rayas */
+.av.mr-pxmenta { background: repeating-linear-gradient(45deg, #a7f070 0 5px, #f4f4f4 5px 10px, #38b764 10px 15px, #f4f4f4 15px 20px) !important; }
+/* Oro pixel: lingote con destello que pasa y gemas */
+.av.mr-pxoro { background: linear-gradient(135deg, #fff3c4, #ffcd75 40%, #c98a1b) !important; }
+.av.mr-pxoro::before { background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,.95) 47%, transparent 54%) 0 0 / 250% 100% no-repeat; animation: mrDestello 2.8s steps(14) infinite; }
+@keyframes mrDestello { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.av.mr-pxoro::after { z-index: 2; background: radial-gradient(circle at 50% 4.5%, #ff004d 0 3.5%, transparent 4%), radial-gradient(circle at 95.5% 50%, #29adff 0 3.5%, transparent 4%), radial-gradient(circle at 50% 95.5%, #00e436 0 3.5%, transparent 4%), radial-gradient(circle at 4.5% 50%, #ff77a8 0 3.5%, transparent 4%); }
+/* Neón 8-bit ✨: tubo de neón que parpadea */
+.av.mr-pxneon { background: #0b0618 !important; }
+.av.mr-pxneon::before { inset: 2%; box-shadow: inset 0 0 0 2px #ff2bd6, inset 0 0 0 4px #22d3ee; animation: mrNeonPx 2.2s steps(1) infinite; }
+@keyframes mrNeonPx { 0%, 40%, 48%, 100% { opacity: 1; } 44% { opacity: .2; } 70% { box-shadow: inset 0 0 0 2px #22d3ee, inset 0 0 0 4px #ff2bd6; } }
+/* Marco glitch ✨: dos copias de color que se descolocan */
+.av.mr-pxglitch { background: #000 !important; }
+.av.mr-pxglitch::before { inset: 0 6% 0 0; background: #ff004d; animation: mrGlitchA 1.3s steps(1) infinite; } .av.mr-pxglitch::after { inset: 0 0 0 6%; background: #29adff; mix-blend-mode: screen; animation: mrGlitchB 1.3s steps(1) infinite; }
+@keyframes mrGlitchA { 0% { transform: translate(-3px, 0); } 30% { transform: translate(-1px, 2px); } 60% { transform: translate(-4px, -1px); } 80% { transform: translate(0, 0); } }
+@keyframes mrGlitchB { 0% { transform: translate(3px, 0); } 30% { transform: translate(1px, -2px); } 60% { transform: translate(4px, 1px); } 80% { transform: translate(0, 0); } }
+/* Marco del jefe ✨: con pinchos y que late */
+.av.av.mr-pxboss { clip-path: polygon(50% 0, 60% 8%, 75% 1%, 80% 12%, 96% 4%, 90% 20%, 99% 25%, 92% 40%, 100% 50%, 92% 60%, 99% 75%, 90% 80%, 96% 96%, 80% 88%, 75% 99%, 60% 92%, 50% 100%, 40% 92%, 25% 99%, 20% 88%, 4% 96%, 10% 80%, 1% 75%, 8% 60%, 0 50%, 8% 40%, 1% 25%, 10% 20%, 4% 4%, 20% 12%, 25% 1%, 40% 8%) !important;
+  padding: calc(var(--s) * .15) !important; width: calc(var(--s) * 1.3) !important; height: calc(var(--s) * 1.3) !important; background: #2a0610 !important; }
+.av.mr-pxboss::before { background: radial-gradient(circle, #ff004d 30%, #7e2553 70%); animation: mrBoss 1s steps(2) infinite; }
+@keyframes mrBoss { 50% { opacity: .45; } }
+/* Arcade ✨: bombillas de máquina recreativa que se persiguen */
+.av.mr-arcade { background: #3b0a2a !important; }
+.av.mr-arcade::before { background: radial-gradient(circle, #ffec27 0 30%, transparent 36%) 0 0 / 8px 8px, radial-gradient(circle, #ff004d 0 30%, transparent 36%) 4px 4px / 8px 8px; animation: mrBombillas .8s steps(2) infinite; }
+@keyframes mrBombillas { to { background-position: 4px 4px, 0 0; } }
+@media (prefers-reduced-motion: reduce) { .av[class*="mr-p"]::before, .av[class*="mr-p"]::after, .av.mr-arcade::before, .av.mr-pixelrgb { animation: none !important; } }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -1369,15 +1415,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 /* Marcos pixel premium */
 .mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss { border-radius: 4px !important; }
 :is(.mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss) .avi { border-radius: 2px !important; }
-.mr-pxmadera { background: repeating-conic-gradient(#8b5a2b 0 25%, #5d3a1a 0 50%) 0 0 / 8px 8px !important; }
-.mr-pxhielo { background: repeating-conic-gradient(#73eff7 0 25%, #f4f4f4 0 50%) 0 0 / 8px 8px !important; }
-.mr-pxlava { background: repeating-conic-gradient(#ef7d57 0 25%, #b13e53 0 50%) 0 0 / 8px 8px !important; }
-.mr-pxmenta { background: repeating-conic-gradient(#a7f070 0 25%, #38b764 0 50%) 0 0 / 8px 8px !important; }
-.mr-pxoro { background: repeating-conic-gradient(#ffcd75 0 25%, #ef7d57 0 50%) 0 0 / 8px 8px !important; box-shadow: 0 0 0 2px #000; }
-.mr-pxneon { background: repeating-conic-gradient(#ff2bd6 0 25%, #22d3ee 0 50%) 0 0 / 8px 8px !important; animation: pxRgb 1.6s steps(8) infinite; box-shadow: 0 0 10px #ff2bd6; }
-.mr-pxglitch { background: repeating-conic-gradient(#ff004d 0 25%, #000 0 50%, #29adff 0 75%, #000 0) 0 0 / 8px 8px !important; animation: pxTiembla 1s steps(3) infinite; }
 @keyframes pxTiembla { 33% { transform: translate(1px, -1px); } 66% { transform: translate(-1px, 1px); } }
-.mr-pxboss { background: repeating-conic-gradient(#b13e53 0 25%, #000 0 50%) 0 0 / 8px 8px !important; animation: pxBoss 1s steps(2) infinite; }
 @keyframes pxBoss { 50% { box-shadow: 0 0 0 3px #ff004d, 0 0 14px #ff004d; } }
 /* Colores de nombre pixel */
 .nc-pxverde { color: #38b764 !important; text-shadow: 0 0 6px rgba(56,183,100,.6); } .nc-pxambar { color: #ffb000 !important; text-shadow: 0 0 6px rgba(255,176,0,.55); }
