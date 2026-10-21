@@ -519,6 +519,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
   font: 700 12px/22px var(--mono); font-style: normal; border: 2px solid var(--bg); }
 .abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+.pcam { color: #6d28d9; font-weight: 700; }
 .gbtn { width: 100%; text-align: left; border: 1px dashed var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 10px 14px; margin: 0 0 12px; font: 600 13px var(--body); cursor: pointer; }
 .lnk { border: 0; background: none; padding: 0; color: #4f46e5; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
 .rsem { width: 100%; margin: 8px 0 2px; font: 600 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; }
@@ -2928,7 +2929,7 @@ function clasificacionReto(dias) {
   const xb = xpBots();
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...suma((x, r) => r.picks[claveReto(x)], true) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
-  BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
+  BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
   // Desempate: más aciertos y luego más aciertos en los que falló la app; si sigue igual, comparten puesto
   filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || b.vsApp - a.vsApp || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null;
@@ -3071,7 +3072,7 @@ function pintarReto() {
   if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
   const c = cuentaReto(r), m = resumenMesReto();
   const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
-  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
+  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}${xpEnCamino() ? ` · +${xpEnCamino()} XP al empezar` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
   h += r.partidos.map(x => {
     const s = estadoReto(x), mio = r.picks[claveReto(x)], k = claveReto(x);
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
@@ -3278,9 +3279,15 @@ function avatarHTML(o, tam) {
 }
 const nombreYo = () => PERFIL.nombre || "Tú";
 const tituloYo = () => { const t = CAT.titulo.find(x => x.id === PERFIL.titulo); return !t || t.id === "rango" ? rangoDe(nivelDe(totalXP()).n) : t.n; };
+// XP que llegará cuando empiecen los partidos que ya has pronosticado hoy (el pronóstico se cobra al empezar,
+// para que no se pueda ganar XP eligiendo y quitando)
+function xpEnCamino() {
+  const r = RETO.dias[AHORA.fecha]; if (!r) return 0;
+  return r.partidos.filter(x => r.picks[claveReto(x)] && !estadoReto(x).empezado).length * 50;
+}
 function barraJugador() {
   const xp = totalXP(), nv = nivelDe(xp);
-  return `<div class="pbar"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 46)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>Nv ${nv.n} · ${esc(tituloYo())}</small>
+  return `<div class="pbar"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 46)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>Nv ${nv.n} · ${esc(tituloYo())}${xpEnCamino() ? ` · <span class="pcam">+${xpEnCamino()} XP en camino</span>` : ""}</small>
       <span class="pxp"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span></span></button>
     <button class="pmon" data-vista="tienda">🪙 ${fmtN(totalMon())}</button></div>`;
 }
@@ -3293,6 +3300,7 @@ function pintarPerfil() {
   <section class="pcab">${avatarHTML(PERFIL, 96)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
     <div class="pniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}</span></div>
     <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
+    ${xpEnCamino() ? `<small class="psig">⏳ +${xpEnCamino()} XP en camino: se suman cuando empiecen los partidos que has pronosticado. Las monedas llegan al acertar.</small>` : ""}
     ${sig ? `<small class="psig">Siguiente regalo en el nivel ${sig.nivel}: ${esc(sig.n || "avatar " + sig.e)}</small>` : ""}
     <div class="pacc"><button class="apbtn" data-vista="personalizar">✏️ Personalizar</button><button class="apbtn ap2" data-vista="tienda">🪙 ${fmtN(totalMon())} · Tienda</button></div></section>
   <section class="mcard"><h3>📊 Tus números</h3><div class="mkpis">
@@ -3398,10 +3406,15 @@ document.addEventListener("change", e => {
 // Minuto del partido en juego (para la Segunda oportunidad)
 const minutoDe = e => { const m = /(\d+)/.exec(String((e && e.det) || "")); return m ? +m[1] : 99; };
 // Avatar y nivel de los jugadores de prueba
-function perfilBot(b, i) {
-  const libres = CAT.avatar.filter(a => !a.nivel), a = libres[i % libres.length];
-  const marcos = ["ninguno", "ninguno", "bronce", "plata", "ninguno", "oro", "neon", "fuego"];
-  return { avatar: a.id, marco: marcos[i % marcos.length], color: "normal" };
+// Los jugadores de prueba siguen las mismas normas: un avatar o marco de pago solo si les llegan las monedas
+// que han ganado, y uno de nivel solo si tienen ese nivel. Mientras no, llevan uno gratis y sin marco.
+function perfilBot(b, i, xp) {
+  const nv = nivelDe(xp || 0).n, mon = Math.round((xp || 0) / 10);
+  const gratis = CAT.avatar.filter(a => !a.precio && !a.nivel), deseado = CAT.avatar.filter(a => !a.nivel)[(i * 7) % 16];
+  const avatar = !deseado.precio || mon >= deseado.precio ? deseado : gratis[i % gratis.length];
+  const quiere = CAT.marco[(i * 5) % CAT.marco.length];
+  const marco = !quiere.nivel && !quiere.precio ? quiere : (quiere.nivel && nv >= quiere.nivel) || (quiere.precio && mon - (avatar.precio || 0) >= quiere.precio) ? quiere : CAT.marco[0];
+  return { avatar: avatar.id, marco: marco.id, color: "normal" };
 }
 // ================================================================ Semanas del mes (para el ranking semanal)
 // Semanas completas de lunes a domingo. Cada semana es del mes en el que cae su jueves (como en el calendario
