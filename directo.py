@@ -841,6 +841,17 @@ def main():
                 avisados = {k: v for k, v in avisados.items() if k[:10] >= limite2}
             except Exception as e:  # noqa: BLE001
                 print(f"  aviso notificaciones: {e}")
+        # 23:30: aviso a los que juegan en la Arena de que ya están los partidos de mañana
+        if con_avisos and ahora.strftime("%H:%M") >= "23:30":
+            k_ar = ahora.date().isoformat() + "|arena"
+            if k_ar not in avisados:
+                try:
+                    avisos.enviar(["arena"], "🏟️ Ya están los partidos de mañana",
+                                  "Gánale a la app y HI-SCORE: haz tus pronósticos antes de que empiecen.", {"vista": "desafios"}, "arena")
+                    avisados[k_ar] = 1
+                    print("  aviso Arena enviado")
+                except Exception as e:  # noqa: BLE001
+                    print(f"  aviso Arena: {e}")
         contenido = {"ts": ahora.strftime("%H:%M:%S"), "res": res, "push": push, "avisados": avisados}
         firma = json.dumps([res, push, avisados], sort_keys=True, ensure_ascii=False)
         if firma != ultimo or (res and time.time() - t_pub > 150):  # y cada 2,5 min para que se vea que está vivo

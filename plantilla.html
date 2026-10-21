@@ -1590,7 +1590,7 @@ const esRojo = k => false;  // el rojo se quitó de la app
 try { est.soloOro = localStorage.getItem("soloOro") === "1"; est.dep = localStorage.getItem("dep") || "f"; } catch (e) {}
 // ---------------------------------------------------------------- ajustes (guardados en el móvil)
 let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorOro: null, colorApuesta: "#c026ff", verEsperados: false,
-  pushI: true, pushG: true, pushF: true, pushAp: true, pushBot: true };
+  pushI: true, pushG: true, pushF: true, pushAp: true, pushBot: true, pushArena: true };
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 // Temas de la app (paquetes de interfaz): cambian toda la app. Se guardan en el perfil (perfilV1.skin)
@@ -2966,6 +2966,7 @@ function temasDeseados() {
   for (const j of est.juegosFav) ents.push("j:" + j);
   for (const e of ents) for (const tp of tipos) t.add(tp + "_" + hashTema(e));
   // Partidos en los que tienes una apuesta en juego: avisos de empieza, goles y final
+  if (CUENTA && AJ.pushArena !== false) t.add("arena");   // «ya puedes jugar los partidos de mañana» (23:30)
   if (AJ.pushAp) for (const a of MIAS.apuestas) if (!("ok" in a)) for (const pi of patas(a)) if (pi.fecha >= hoy) for (const tp of tipos) t.add(tp + "_" + hashTema("p:" + pi.local + "|" + pi.visitante));
   return t;
 }
@@ -3008,6 +3009,7 @@ function escucharPush() {
     FM.addListener("notificationActionPerformed", ev => {
       const d = ((ev && ev.notification) || {}).data || {};
       if (d.vista === "misap") { est.vista = "misap"; pintar(); return; }
+      if (d.vista === "desafios" || d.vista === "reto") { est.vista = d.vista; pintar(); return; }
       if (!d.p) return;
       const [f, l, v] = d.p.split("|");
       DATOS.dias.forEach((dia, di) => dia.partidos.forEach((p, i) => {
@@ -3056,6 +3058,7 @@ function pintarPantallaAjustes() {
       <div class="ajfila"><span>Goles, sets y mapas</span>${seg("pushG", [["true", "Sí"], ["false", "No"]])}</div>
       <div class="ajfila"><span>Resultado final</span>${seg("pushF", [["true", "Sí"], ["false", "No"]])}</div>
       <div class="ajfila"><span>Partidos de tus apuestas (empieza, goles, final)</span>${seg("pushAp", [["true", "Sí"], ["false", "No"]])}</div>
+      <div class="ajfila"><span>Arena: ya puedes jugar los partidos de mañana (23:30)</span>${seg("pushArena", [["true", "Sí"], ["false", "No"]])}</div>
       <p style="margin:8px 0 0">${esc(PUSH.estado || "Preparando…")}</p></section>` : ""}
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       ${ES_APP ? `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar mis datos de la web</button>` : `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar datos</button>`}
@@ -3500,6 +3503,11 @@ setInterval(() => { if (!document.hidden) { if (est.vista === "misap") pintarLis
 // Solo cuentan los partidos que pronosticas (para ti y para la app). De momento se guarda en este móvil.
 const RETO_K = "retoV1";
 let RETO = (() => { try { const r = JSON.parse(localStorage.getItem(RETO_K) || "null"); if (r && r.dias) return r; } catch (e) {} return { dias: {} }; })();
+// Día de juego de la Arena: a partir de las 23:30 ya se pronostica el día siguiente
+function diaJuego() { if (AHORA.hora < "23:30") return AHORA.fecha; const d = new Date(AHORA.fecha + "T12:00:00"); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); }
+// Reinicio de las clasificaciones: solo cuentan los días desde INICIO_RANK (lo de antes se borra)
+const INICIO_RANK = "2026-10-22";
+for (const d of Object.keys(RETO.dias)) if (d < INICIO_RANK) delete RETO.dias[d];
 function guardarReto() { try { localStorage.setItem(RETO_K, JSON.stringify(RETO)); } catch (e) {} try { subirPronto(); } catch (e) {} }
 const N_RETO = 6, BONUS_RETO = 10;
 const ptsReto = p => Math.max(1, Math.round(10 / Math.max(p, 0.02)));
@@ -3635,7 +3643,7 @@ const FS = () => `https://firestore.googleapis.com/v1/projects/${FB.projectId}/d
 // Tu ficha: nombre, aspecto y los puntos de cada día (Gánale a la app y HI-SCORE)
 function fichaOnline() {
   const reto = {};
-  for (const d of Object.keys(RETO.dias)) { const r = RETO.dias[d]; if (!r.partidos || !Object.keys(r.picks || {}).length) continue;
+  for (const d of Object.keys(RETO.dias)) { const r = RETO.dias[d]; if (d < INICIO_RANK || !r.partidos || !Object.keys(r.picks || {}).length) continue;
     const c = puntosDia(r, x => r.picks[claveReto(x)], r.dobles); reto[d] = [c.pts, c.ok, c.jug, c.vsApp]; }
   const arc = {}, y = partidaArc(diasArc(), picksYoArc, ARCD.cont);
   for (const z of y.log) { if (z.go || z.ok === undefined) continue; const a = arc[z.d] ||= [0, 0, 0]; a[0] += z.g || 0; a[1] += z.ok ? 1 : 0; a[2]++; }
@@ -3684,7 +3692,7 @@ const rkOnline = () => { if (!fbOn()) return false; let m = est.rkModo; if (!m) 
 const otrosOnline = () => ONL.lista.filter(x => !FBA || x.uid !== FBA.uid);
 // Suma los días de un jugador online dentro del periodo (rango [desde, hasta]) o, si no hay, de la lista de días
 function sumaOnline(m, dias, rango) { const t = { pts: 0, ok: 0, jug: 0, vsApp: 0 };
-  const ks = rango ? Object.keys(m || {}).filter(d => d >= rango[0] && d <= rango[1]) : dias;
+  const ks = (rango ? Object.keys(m || {}).filter(d => d >= rango[0] && d <= rango[1]) : dias).filter(d => d >= INICIO_RANK);
   for (const d of ks) { const v = (m || {})[d]; if (v) { t.pts += v[0] || 0; t.ok += v[1] || 0; t.jug += v[2] || 0; t.vsApp += v[3] || 0; } } return t; }
 const filaOnline = (o, extra) => ({ n: o.n, uid: o.uid, online: true, perfil: o.p || {}, nv: o.nv, e: (o.p && o.p.tt) || "", o, ...extra });
 // Selector Online / De prueba y estado de la conexión (encima de cada clasificación)
@@ -3730,6 +3738,7 @@ async function entrarArena(modo, nombre, email, clave, yaTengo) {
       PERFIL.nombre = nombre.slice(0, 16);
     }
     est.mejorar = false; guardarCuenta(); guardarPerfil(); try { localStorage.setItem("arenaVista", "1"); } catch (e) {}
+    try { syncPush(); } catch (e) {}
     _subH = ""; est.vista = "desafios"; pintarLista(); syncOnline(true);
   } catch (e) { say(errFB(e.message || e)); }
 }
@@ -3895,9 +3904,9 @@ function seccionClasif() {
   const sems = semanasMes(mesDeSemana(AHORA.fecha)), actual = (sems.find(w => w.dias.includes(AHORA.fecha)) || sems[0]).i;
   if (est.clasR === "temporada") est.clasR = "hoy";   // la de la temporada está en la pantalla de la Temporada
   const vista = est.clasR || "hoy", w = sems.find(x => x.i === (est.semR || actual)) || sems[0];
-  const ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : vista === "semana" ? Object.keys(RETO.dias).filter(d => w.dias.includes(d))
+  const ds = vista === "hoy" ? Object.keys(RETO.dias).filter(d => d === diaJuego()) : vista === "semana" ? Object.keys(RETO.dias).filter(d => w.dias.includes(d))
     : vista === "temporada" ? diasTemporada() : dias;
-  const filas = clasificacionReto(ds, vista === "hoy" ? [AHORA.fecha, AHORA.fecha] : vista === "semana" ? [w.desde, w.hasta] : rangoMes(mes)), yo = filas.find(f => f.yo);
+  const filas = clasificacionReto(ds, vista === "hoy" ? [diaJuego(), diaJuego()] : vista === "semana" ? [w.desde, w.hasta] : rangoMes(mes)), yo = filas.find(f => f.yo);
   const lp = (pos, txt) => `<div><span>${pos}</span><span>${txt}</span></div>`;
   const premios = vista === "semana" ? `<details class="rprem"><summary>🎁 Premios de la semana</summary><div class="rprl">${lp("🥇", "1.000 🪙 · 3.000 XP")}${lp("🥈", "600 🪙 · 3.000 XP")}${lp("🥉", "400 🪙 · 3.000 XP")}${lp("4.º–10.º", "200 🪙 · 1.500 XP")}</div></details>`
     : vista === "mes" ? `<details class="rprem"><summary>🎁 Premios del mes</summary><div class="rprl">${lp("🥇", "👕✨ 5.000 🪙 · 10.000 XP")}${lp("🥈", "⚽✨ 3.000 🪙 · 10.000 XP")}${lp("🥉", "🧣✨ 2.000 🪙 · 10.000 XP")}${lp("4.º–10.º", "1.000 🪙 · 5.000 XP")}</div><small>✨ Los 3 primeros: set animado «Vencedor de la máquina» (tarjeta, marco y avatar). 👕⚽🧣 cuando haya ranking online.</small></details>`
@@ -3935,7 +3944,7 @@ function resumenMesReto() {
   return { yo, app, ganados, jugados, racha, aciertosVsApp };
 }
 function bannerReto() {
-  const r = DATOS.dias.some(d => d.fecha === AHORA.fecha) ? retoDelDia(AHORA.fecha) : null;
+  const r = DATOS.dias.some(d => d.fecha === diaJuego()) ? retoDelDia(diaJuego()) : null;
   if (!r) return "";
   const c = cuentaReto(r), pend = r.partidos.filter(x => !r.picks[claveReto(x)] && !estadoReto(x).empezado).length;
   return `<button class="retoban" data-vista="reto"><span class="rbi">🎯</span><span class="rbt"><b>Gánale a la app</b><small>${pend ? `Te quedan ${pend} partido${pend > 1 ? "s" : ""} por pronosticar hoy` : c.elegidos ? "Hoy ya has jugado: mira cómo vas" : "El reto de hoy ya ha empezado"}</small></span><span class="rbm">Tú <b>${c.yo}</b> – <b>${c.app}</b> App</span></button>`;
@@ -3990,7 +3999,7 @@ function pintarDesafios() {
     }
     if (ev.id === "reto") {
       on = true;
-      const r = DATOS.dias.some(d => d.fecha === AHORA.fecha) ? retoDelDia(AHORA.fecha) : null;
+      const r = DATOS.dias.some(d => d.fecha === diaJuego()) ? retoDelDia(diaJuego()) : null;
       if (r) {
         const c = cuentaReto(r), pend = r.partidos.filter(x => !r.picks[claveReto(x)] && !estadoReto(x).empezado).length;
         estado = `Tú ${c.yo} – ${c.app} App` + (c.vivos ? ` · ● ${c.vivos} en juego` : pend ? ` · ${pend} por jugar` : "");
@@ -4020,7 +4029,7 @@ function pintarEvento() {
 }
 function pintarReto() {
   procesarRecompensas();
-  const r = retoDelDia(AHORA.fecha);
+  const r = retoDelDia(diaJuego());
   let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>`;
   if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
   const c = cuentaReto(r), m = resumenMesReto();
@@ -4068,7 +4077,7 @@ function pintarReto() {
 document.addEventListener("click", e => { const b = e.target.closest("[data-evento]"); if (b) est.evento = b.dataset.evento; }, true);
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-retopick]"); if (!b) return;
-  const r = RETO.dias[AHORA.fecha]; if (!r) return;
+  const r = RETO.dias[diaJuego()]; if (!r) return;
   const x = r.partidos.find(y => claveReto(y) === b.dataset.retopick); if (!x) return;
   const st = estadoReto(x), k = b.dataset.retopick;
   if (st.empezado) {   // solo con la Segunda oportunidad activa y dentro de su tiempo
@@ -4304,7 +4313,7 @@ const tituloYo = () => { const t = CAT.titulo.find(x => x.id === PERFIL.titulo);
 // XP que llegará cuando empiecen los partidos que ya has pronosticado hoy (el pronóstico se cobra al empezar,
 // para que no se pueda ganar XP eligiendo y quitando)
 function xpEnCamino() {
-  const r = RETO.dias[AHORA.fecha]; if (!r) return 0;
+  const r = RETO.dias[diaJuego()]; if (!r) return 0;
   return r.partidos.filter(x => r.picks[claveReto(x)] && !estadoReto(x).empezado).length * 50;
 }
 // Vitrina: hasta 5 cosas tuyas para lucir (insignias, avatares o tarjetas). Se guardan como "ins:id", "av:id", "tj:id".
@@ -4545,7 +4554,7 @@ document.addEventListener("click", e => {
     guardarPerfil(); brindis(`✅ ¡${nombre} es tuyo!`); pintarLista(); return;
   }
   if (b.dataset.comodin) {   // usar un comodín en un partido del reto
-    const r = RETO.dias[AHORA.fecha], k = b.dataset.k; if (!r) return;
+    const r = RETO.dias[diaJuego()], k = b.dataset.k; if (!r) return;
     const x = r.partidos.find(y => claveReto(y) === k); if (!x) return;
     if (b.dataset.comodin === "doble") {
       r.dobles = r.dobles || {};
@@ -4853,7 +4862,7 @@ function pintarTemporada() {
 }
 // ---- Rectángulo del evento en la Arena y en la pantalla de la temporada
 function bannerArcade() {
-  if (AHORA.fecha < ARC.desde) return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b><span class="arcb2">¡Empieza ${ARC.desde === sumaDias(AHORA.fecha, 1) ? "mañana" : "el " + fCorta(ARC.desde)}! Mira los premios</span><span class="arcb3">PRONTO</span></button>`;
+  if (diaJuego() < ARC.desde) return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b><span class="arcb2">¡Empieza ${ARC.desde === sumaDias(AHORA.fecha, 1) ? "mañana" : "el " + fCorta(ARC.desde)}! Mira los premios</span><span class="arcb3">PRONTO</span></button>`;
   const y = estadoYoArc(), fin = AHORA.fecha > ARC.hasta;
   const vid = "♥".repeat(y.vidas) + "♡".repeat(Math.max(0, ARC.vidas - y.vidas));
   return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b>
@@ -4877,7 +4886,7 @@ function premiosArc() {
 // ---- Pantalla del evento
 function pintarArcade() {
   procesarRecompensas();
-  const hoy = AHORA.fecha, r = enArc(hoy) && DATOS.dias.some(d => d.fecha === hoy) ? poolArc(hoy) : null, y = estadoYoArc();
+  const hoy = diaJuego(), r = enArc(hoy) && DATOS.dias.some(d => d.fecha === hoy) ? poolArc(hoy) : null, y = estadoYoArc();
   const filas = clasificacionArc(), yo = filas.find(f => f.yo), fin = hoy > ARC.hasta;
   const go = y.vidas <= 0 && !fin, picks = r ? r.picks : [];
   const corazones = [...Array(ARC.vidas + (ARCD.cont[y.sem] ? 1 : 0))].map((_, k) => `<span class="${k < y.vidas ? "on" : ""}">${px("corazon", 18)}</span>`).join("");
@@ -4915,8 +4924,8 @@ function pintarArcade() {
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-arcpick],[data-arccont]"); if (!b) return;
-  if (b.dataset.arccont) { const sem = lunesDe(AHORA.fecha); if (!ARCD.cont[sem] && PERFIL.comodines.segunda > 0) { PERFIL.comodines.segunda--; ARCD.cont[sem] = 1; guardarArc(); guardarPerfil(); } pintarLista(); return; }
-  const [i, t, m] = b.dataset.arcpick.split("|"), r = ARCD.dias[AHORA.fecha]; if (!r) return;
+  if (b.dataset.arccont) { const sem = lunesDe(diaJuego()); if (!ARCD.cont[sem] && PERFIL.comodines.segunda > 0) { PERFIL.comodines.segunda--; ARCD.cont[sem] = 1; guardarArc(); guardarPerfil(); } pintarLista(); return; }
+  const [i, t, m] = b.dataset.arcpick.split("|"), r = ARCD.dias[diaJuego()]; if (!r) return;
   const idx = r.picks.findIndex(pk => pk.i === +i);
   if (idx >= 0 && r.picks[idx].t === t && r.picks[idx].m === m) r.picks.splice(idx, 1);   // tocar otra vez la misma: se quita
   else if (idx >= 0) r.picks[idx] = { i: +i, t, m };
@@ -5029,13 +5038,13 @@ function clasificacionTemp(dias) {
 }
 // Estado de tu semana: vidas que te quedan y si ya has usado el «continuar»
 function estadoYoArc() {
-  const yo = partidaArc(diasArc(), picksYoArc, ARCD.cont), sem = lunesDe(AHORA.fecha);
+  const yo = partidaArc(diasArc(), picksYoArc, ARCD.cont), sem = lunesDe(diaJuego());
   const vidas = Math.max(0, ARC.vidas + (ARCD.cont[sem] ? 1 : 0) - (yo.fallos[sem] || 0));
   return { ...yo, vidas, sem, combo: multiArc(yo.racha) };
 }
 // Premios: estrellas y XP por acierto, hitos de combo y el podio al acabar
 function recompensasArc() {
-  if (AHORA.fecha < ARC.desde) return;   // aún no ha empezado
+  if (diaJuego() < ARC.desde) return;   // aún no ha empezado
   const yo = partidaArc(diasArc(), picksYoArc, ARCD.cont);
   for (const z of yo.log) if (z.ok) cobrar(`arc:${z.d}:${z.x.i}:${z.x.tipo}`, `🕹️ HI-SCORE · acierto ×${z.mult} (+${z.g})`, 50 + z.g * 5, 0, enTemp(z.d) ? { est: 1 } : null);
   const hitos = [[4, 150, 3, null, "Combo ×4"], [6, 300, 5, ["titulo", "combo6"], "Combo ×6 · título Combo ×6"], [8, 600, 8, ["avatar", "ficha"], "Combo ×8 · avatar Ficha arcade"]];
