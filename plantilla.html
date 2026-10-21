@@ -1264,6 +1264,24 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 :root[data-skin="pxconsola"] .sec, :root[data-skin="pxconsola"] h3 { font-family: "Press Start 2P", monospace !important; font-size: 11px !important; line-height: 1.5; }
 :root[data-skin="pxconsola"] header, :root[data-skin="pxconsola"] .abajo { background: #0f380f; border-color: #0a260a; }
 @media (prefers-reduced-motion: reduce) { .tj-pxmatrix, .tj-pxglitch, .tj-pxespacio, .mr-pxneon, .mr-pxglitch, .mr-pxboss, .nc-pxarcoiris, .pprem.anim .ppi { animation: none !important; } }
+/* Pase compacto: 5 niveles a la vista y la pista a todo el ancho */
+.ppromo { padding: 7px 8px !important; gap: 8px !important; margin-top: 8px !important; } .ppromo span { flex: 1; min-width: 0; }
+.ppromo b { font-size: 8px !important; } .ppromo small { font-size: 11px !important; margin-top: 2px !important; } .ppromo.on { display: flex !important; flex-direction: column; align-items: flex-start; }
+.ppbtn { font-size: 7px !important; padding: 7px 6px !important; }
+.pmapa { margin: 8px -12px 0 !important; padding: 6px 6px 12px !important; gap: 4px !important; border-left: 0 !important; border-right: 0 !important; }
+.pcol { width: calc((100% - 16px) / 5) !important; gap: 4px !important; }
+.pmw { height: 9px; font-size: 6px !important; } .pnodo { width: 24px !important; height: 18px !important; font-size: 7px !important; border-width: 2px !important; }
+.pcol::before { top: 20px !important; left: -4px !important; height: 3px !important; }
+.pmapa .pesc { border-width: 2px !important; }
+.pfree { padding: 5px 1px 4px !important; } .pmapa .pesc .pei { height: 24px !important; font-size: 16px !important; } .pmapa .pesc .pei .pxs { width: 16px; height: 16px; }
+.pmapa .pesc .pei .pxxp { font-size: 9px; } .pmapa .pesc .pei .pxcom { width: 16px; height: 21px; font-size: 7px; border-width: 1.5px; } .pmapa .pesc .pei .pxobj { font-size: 17px; }
+.pmapa .pesc small { font-size: 8px !important; min-height: 18px !important; line-height: 1.05 !important; }
+.pmapa .pesc .pprem { padding: 3px 1px 4px !important; border-top-width: 2px !important; } .pmapa .pesc .pprem .ppi { height: 28px !important; }
+.pmapa .pesc .pprem small { font-size: 8px !important; min-height: 17px !important; }
+.pmapa .ppav { width: 24px !important; height: 24px !important; font-size: 14px !important; } .pmapa .ppsw { width: 32px !important; height: 20px !important; }
+.pmapa .ppsw.ppmr { width: 24px !important; height: 24px !important; } .pmapa .ppsw.ppmr b { width: 11px !important; height: 11px !important; } .pmapa .ppaa { font-size: 10px; } .pmapa .ppti { font-size: 15px; }
+.pmapa .pesc i .pxs { width: 9px; height: 8px; } .pmapa .pesc .pprem em { font-size: 7px; }
+.pmapa .pesc.sig { box-shadow: 0 0 0 2px #a7f070, 3px 3px 0 2px #000 !important; } .pmapa .pesc.sig::after { font-size: 6px !important; padding: 2px 3px !important; top: -10px !important; }
 :root[data-vt="pixel"] .rrow { border-radius: 0 !important; border: 2px solid #000 !important; box-shadow: 3px 3px 0 #000; }
 :root[data-vt="pixel"] .rrow b, :root[data-vt="pixel"] .rrow small { font-family: "Pixelify Sans", var(--body); }
 @media (prefers-reduced-motion: reduce) { .ppips span.on, .pmapa .pesc.gordo, .pmapa .pesc.sig::after { animation: none !important; } }
@@ -4348,8 +4366,8 @@ function pintarTemporada() {
     <div class="pnivel"><span class="pnv">NV ${nE}</span><div class="ppips">${pips}</div><span class="pnv sig">${nE >= ESCALONES ? "MAX" : "NV " + (nE + 1)}</span></div>
     <small class="apnota" style="display:block;text-align:center;margin:4px 0 0">${nE >= ESCALONES ? "¡Pase completado!" : `${dentro}/${EST_ESCALON} ★ para el nivel ${nE + 1}`}</small>
     ${gG ? `<div class="pgordo" data-pver="f${sigG}" style="cursor:pointer"><span class="pgi">${gG.t === "skin" ? `<span class="skmini sk-${gG.id}" style="width:54px;height:54px"></span>` : gG.t === "tarjeta" ? `<span class="tjmini tj tj-${gG.id}" style="width:64px;height:44px"></span>` : icoRegalo(gG)}</span><span><small>PRÓXIMO PREMIO GORDO</small><b>${esc(gG.txt)}</b><em>Nivel ${sigG} · te faltan ${(sigG * EST_ESCALON - est)} ★</em></span></div>` : ""}
-    ${prem ? `<div class="ppromo on"><b>💎 PASE PREMIUM ACTIVO</b><small>Te llevas también la fila de abajo de cada nivel y no ves anuncios esta temporada.</small></div>`
-      : `<div class="ppromo"><span><b>💎 PASE PREMIUM</b><small>50 objetos pixel exclusivos (uno por nivel, la fila de abajo) y sin anuncios toda la temporada. Solo estética: no da monedas ni ventajas.</small></span><button class="pxbtn ppbtn" disabled>3,99 € · PRONTO</button></div>`}
+    ${prem ? `<div class="ppromo on"><b>💎 PREMIUM ACTIVO</b><small>Fila de abajo desbloqueada · sin anuncios</small></div>`
+      : `<div class="ppromo"><span><b>💎 PREMIUM</b><small>50 objetos exclusivos + sin anuncios</small></span><button class="pxbtn ppbtn" disabled>3,99 € · PRONTO</button></div>`}
     <div class="pmapa" id="prail">${mapa}</div>
     <p class="apnota">★ +1 por acierto, +1 por día completo, +2 por ganarle el día a la app, y más con el regalo diario y las misiones.</p></section>
   <section class="mcard t0 tw-mis"><h3>📜 MISIONES</h3>
@@ -4360,7 +4378,7 @@ function pintarTemporada() {
     <p class="apnota">Top 3: título «Campeón T0» + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP.</p></section>`;
   $("vista").innerHTML = h;
   const tr = $("prail"), sg = tr && tr.querySelector(".pesc.sig");
-  if (sg) tr.scrollLeft = sg.closest(".pcol").offsetLeft - tr.offsetLeft - tr.clientWidth / 2 + 48;
+  if (sg) { const c = sg.closest(".pcol"); tr.scrollLeft = c.offsetLeft - tr.offsetLeft - (tr.clientWidth - c.offsetWidth) / 2; }
   else if (tr && nE >= ESCALONES) tr.scrollLeft = tr.scrollWidth;
 }
 // ---- Ventana con la vista previa de un premio del pase
