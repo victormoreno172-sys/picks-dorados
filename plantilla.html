@@ -1070,10 +1070,10 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .ldia { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; background: var(--bar); border: 2px solid var(--line); border-radius: 4px; }
 .ldia small { font: 700 9px var(--mono); color: var(--muted); } .ldia span { font-size: 18px; } .ldia b { font: 700 9px var(--mono); } .ldia em { font: 700 9px var(--mono); font-style: normal; color: #f59e0b; }
 .ldia.ok { opacity: .45; } .ldia.hoy { border-color: #38b764; box-shadow: 0 0 0 2px #38b764; animation: pxSalto .9s steps(2) infinite; } .ldia.cofre { background: var(--gold-soft); }
-.prail { display: flex; gap: 6px; overflow-x: auto; padding: 10px 2px 8px; -webkit-overflow-scrolling: touch; }
-.pesc { position: relative; flex: none; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 3px; background: var(--bar); border: 2px solid var(--line); border-radius: 4px; }
+.prail { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 10px 0 8px; }
+.pesc { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 3px; background: var(--bar); border: 2px solid var(--line); border-radius: 4px; }
 .pesc .pen { font: 9px "Press Start 2P", var(--mono); color: var(--muted); } .pesc .pei { font-size: 22px; height: 28px; display: grid; place-items: center; }
-.pesc small { font-size: 9.5px; text-align: center; line-height: 1.15; color: var(--muted); min-height: 22px; }
+.pesc small { font-size: 8.5px; word-break: break-word; text-align: center; line-height: 1.15; color: var(--muted); min-height: 22px; }
 .pesc.gordo { border-color: #ffcd75; background: color-mix(in srgb, #ffcd75 14%, var(--bar)); } .pesc.ok { opacity: .5; } .pesc i { position: absolute; top: 3px; right: 5px; font-style: normal; font-size: 10px; color: #16a34a; font-weight: 800; }
 .pesc.sig { box-shadow: 0 0 0 2px #38b764; opacity: 1; }
 .dsf { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); } .dsf:first-of-type { border-top: 0; }
@@ -4011,8 +4011,9 @@ const PASE_OBJ = { 10: ["avatar", "a29"], 15: ["tarjeta", "pixel"], 20: ["marco"
   35: ["avatar", "a30"], 40: ["tarjeta", "arcade8"], 45: ["marco", "pixelrgb"], 50: ["skin", "pixel"] };
 function regaloPase(n) {
   if (PASE_OBJ[n]) { const [t, id] = PASE_OBJ[n], it = CAT[t].find(x => x.id === id); return { t, id, it, txt: (it.n || "Avatar " + it.e).replace(" ✨", "") }; }
-  if (n === 5) return { t: "comodin", id: "doble", txt: "Comodín ×2" };
-  if (n % 12 === 0) return { t: "comodin", id: "segunda", txt: "Segunda oportunidad" };
+  if (n === 5 || n % 10 === 3) return { t: "comodin", id: "doble", txt: "Comodín ×2" };
+  if (n % 10 === 8) return { t: "comodin", id: "segunda", txt: "Segunda oportunidad" };
+  if (n % 2 === 0) return { t: "xp", xp: 100 + 10 * n, txt: `${100 + 10 * n} XP` };
   return { t: "mon", mon: 50 + 5 * n, txt: `${50 + 5 * n} monedas` };
 }
 // Regalo diario: 7 días seguidos; si fallas uno, vuelves al día 1
@@ -4068,16 +4069,17 @@ function recompensasTemporada() {
   for (let n = 1; n <= esc; n++) {
     if (PERFIL.cobrados["pase0:" + n]) continue;
     const g = regaloPase(n);
-    if (g.t === "mon") cobrar("pase0:" + n, `🎮 Pase T0 · escalón ${n}: ${g.txt}`, 0, g.mon);
-    else if (g.t === "comodin") { if (cobrar("pase0:" + n, `🎮 Pase T0 · escalón ${n}: ${g.txt}`, 0, 0)) PERFIL.comodines[g.id]++; }
-    else if (cobrar("pase0:" + n, `🎮 Pase T0 · escalón ${n}: ${g.txt}`, 0, 0)) { const k = g.t + ":" + g.id; if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k); }
+    if (g.t === "mon") cobrar("pase0:" + n, `🎮 Pase T0 · nivel ${n}: ${g.txt}`, 0, g.mon);
+    else if (g.t === "xp") cobrar("pase0:" + n, `🎮 Pase T0 · nivel ${n}: ${g.txt}`, g.xp, 0);
+    else if (g.t === "comodin") { if (cobrar("pase0:" + n, `🎮 Pase T0 · nivel ${n}: ${g.txt}`, 0, 0)) PERFIL.comodines[g.id]++; }
+    else if (cobrar("pase0:" + n, `🎮 Pase T0 · nivel ${n}: ${g.txt}`, 0, 0)) { const k = g.t + ":" + g.id; if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k); }
   }
 }
 // ---- Rectángulo de la temporada en la Arena (debajo del perfil)
 function bannerTemporada() {
   const est = totalEst(), nE = escalonDe(est), dentro = est - nE * EST_ESCALON, lg = estadoLogin();
   return `<button class="tbanner" data-vista="temporada">${ARTE_PIXEL}<span class="tbt"><small>${TEMP.nombre.toUpperCase()} · ${TEMP.tema.toUpperCase()}</small><b>Pase de temporada</b>
-    <span class="tbbar"><i style="width:${nE >= ESCALONES ? 100 : dentro / EST_ESCALON * 100}%"></i></span><em>Escalón ${nE}/${ESCALONES} · ⭐ ${est} · ${quedanTemp()}</em></span>
+    <span class="tbbar"><i style="width:${nE >= ESCALONES ? 100 : dentro / EST_ESCALON * 100}%"></i></span><em>Nivel ${nE}/${ESCALONES} · ⭐ ${est} · ${quedanTemp()}</em></span>
     ${lg.hecho ? "" : `<span class="tbreg">🎁 Regalo</span>`}</button>`;
 }
 const ARTE_PIXEL = `<svg class="tbart" viewBox="0 0 16 12" shape-rendering="crispEdges" aria-hidden="true">
@@ -4091,19 +4093,19 @@ function pintarTemporada() {
   procesarRecompensas();
   const est = totalEst(), nE = escalonDe(est), dentro = est - nE * EST_ESCALON, lg = estadoLogin();
   const dsT = diasTemporada(), filas = clasificacionReto(dsT), yo = filas.find(f => f.yo);
-  const icoRegalo = g => g.t === "mon" ? "🪙" : g.t === "comodin" ? (g.id === "doble" ? "×2" : "🔄") : g.t === "skin" ? "🎨" : g.t === "tarjeta" ? "🪪" : g.t === "marco" ? "🖼️" : g.t === "titulo" ? "🏷️" : g.it.e;
-  const pase = [...Array(ESCALONES)].map((_, k) => { const n = k + 1, g = regaloPase(n), ok = nE >= n, gordo = g.t !== "mon" && g.t !== "comodin";
+  const icoRegalo = g => g.t === "mon" ? "🪙" : g.t === "xp" ? "XP" : g.t === "comodin" ? (g.id === "doble" ? "×2" : "🔄") : g.t === "skin" ? "🎨" : g.t === "tarjeta" ? "🪪" : g.t === "marco" ? "🖼️" : g.t === "titulo" ? "🏷️" : g.it.e;
+  const pase = [...Array(ESCALONES)].map((_, k) => { const n = k + 1, g = regaloPase(n), ok = nE >= n, gordo = !["mon", "xp", "comodin"].includes(g.t);
     return `<div class="pesc ${ok ? "ok" : ""} ${gordo ? "gordo" : ""} ${n === nE + 1 ? "sig" : ""}"><span class="pen">${n}</span><span class="pei">${icoRegalo(g)}</span><small>${esc(g.txt)}</small>${ok ? '<i>✓</i>' : ""}</div>`; }).join("");
   const dia = (d, k) => { const n = k + 1, hecho = lg.hecho ? n <= lg.dia : n < lg.dia, hoy = !lg.hecho && n === lg.dia;
     return `<div class="ldia ${hecho ? "ok" : ""} ${hoy ? "hoy" : ""} ${d.cofre ? "cofre" : ""}"><small>Día ${n}</small><span>${d.cofre ? "🎁" : d.com ? (d.com === "doble" ? "×2" : "🔄") : "🪙"}</span><b>${d.mon ? fmtN(d.mon) : d.com === "doble" ? "Comodín" : "2.ª opor."}</b><em>+${d.est}⭐</em></div>`; };
   const barra = d => `<div class="dsf ${d.v >= d.n ? "ok" : ""}"><span class="dst">${esc(d.t)}</span><span class="dsb"><i style="width:${d.v / d.n * 100}%"></i></span><span class="dsp">${d.v}/${d.n} · +${d.est}⭐ · +${fmtN(d.mon)}🪙${d.v >= d.n ? " ✓" : ""}</span></div>`;
   let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
   <section class="tcab0">${ARTE_PIXEL}<small>${TEMP.nombre.toUpperCase()} · DE PRUEBA</small><b>PIXEL</b><span>${fCorta(TEMP.desde)} – ${fCorta(TEMP.hasta)} · ${quedanTemp()}</span>
-    <div class="tcabk"><div><b>⭐ ${est}</b><small>estrellas</small></div><div><b>${nE}/${ESCALONES}</b><small>escalón</small></div><div><b>${yo.pts ? yo.pos + ".º" : "–"}</b><small>clasificación</small></div></div></section>
+    <div class="tcabk"><div><b>⭐ ${est}</b><small>estrellas</small></div><div><b>${nE}/${ESCALONES}</b><small>nivel del pase</small></div><div><b>${yo.pts ? yo.pos + ".º" : "–"}</b><small>clasificación</small></div></div></section>
   <section class="mcard t0"><h3>🎁 Regalo diario</h3><p class="apnota" style="margin:0 0 8px">Entra cada día. Si te saltas uno, vuelves al día 1.</p><div class="ldias">${LOGIN.map(dia).join("")}</div>
     ${lg.hecho ? `<p class="apnota" style="text-align:center;margin:8px 0 0">✅ Ya has recogido el de hoy. Vuelve mañana para el día ${(lg.dia % 7) + 1}.</p>` : `<button class="apbtn" data-login="1" style="margin-top:10px">Recoger el regalo del día ${lg.dia}</button>`}</section>
-  <section class="mcard t0"><h3>🎮 Pase de temporada</h3><p class="apnota" style="margin:0 0 6px">Cada ${EST_ESCALON} ⭐ subes un escalón y te llevas su regalo. Escalón 25: tema Oro y negro · Escalón 50: tema Pixel art.</p>
-    <div class="pbarra"><i style="width:${nE >= ESCALONES ? 100 : dentro / EST_ESCALON * 100}%"></i></div><small class="apnota">${nE >= ESCALONES ? "¡Pase completado!" : `${dentro}/${EST_ESCALON} ⭐ para el escalón ${nE + 1}`}</small>
+  <section class="mcard t0"><h3>🎮 Pase de temporada</h3><p class="apnota" style="margin:0 0 6px">${ESCALONES} niveles, cada uno con su regalo. Cada ${EST_ESCALON} ⭐ subes 1 nivel. Nivel 25: tema Oro y negro · Nivel 50: tema Pixel art.</p>
+    <div class="pbarra"><i style="width:${nE >= ESCALONES ? 100 : dentro / EST_ESCALON * 100}%"></i></div><small class="apnota">${nE >= ESCALONES ? "¡Pase completado!" : `${dentro}/${EST_ESCALON} ⭐ para el nivel ${nE + 1}`}</small>
     <div class="prail" id="prail">${pase}</div>
     <p class="apnota">Estrellas: +1 por acierto, +1 por día completo, +2 por ganarle el día a la app, más el regalo diario y los desafíos.</p></section>
   <section class="mcard t0"><h3>📅 Desafíos de la semana</h3>${desafiosSemana().map(barra).join("")}<p class="apnota">Cambian cada lunes.</p></section>
