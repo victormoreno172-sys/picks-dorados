@@ -4883,7 +4883,7 @@ function pintarTemporada() {
 }
 // ---- Rectángulo del evento en la Arena y en la pantalla de la temporada
 function bannerArcade() {
-  if (diaJuego() < ARC.desde) return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b><span class="arcb2">¡Empieza ${ARC.desde === sumaDias(AHORA.fecha, 1) ? "mañana" : "el " + fCorta(ARC.desde)}! Mira los premios</span><span class="arcb3">PRONTO</span></button>`;
+  if (diaJuego() < ARC.desde) return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b><span class="arcb2">${ARC.desde === sumaDias(AHORA.fecha, 1) ? "¡Partidos a las 23:30!" : "¡Empieza el " + fCorta(ARC.desde) + "!"} Mira los premios</span><span class="arcb3">PRONTO</span></button>`;
   const y = estadoYoArc(), fin = AHORA.fecha > ARC.hasta;
   const vid = "♥".repeat(y.vidas) + "♡".repeat(Math.max(0, ARC.vidas - y.vidas));
   return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b>
@@ -4935,7 +4935,7 @@ function pintarArcade() {
         return `<button class="arop ${yoEs ? "yo" : ""}" ${cerrado || (!yoEs && !mio && picks.length >= ARC.picks) ? "disabled" : `data-arcpick="${i}|${q.tipo}|${esc(o.m)}"`}><b>${esc(o.n || o.m)}</b><span>${Math.round(o.p * 100)}% · +${ptsReto(o.p)}</span></button>`; }).join("")}</div></div>`).join("");
       return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" ${mio ? "open" : ""}><summary><span class="arh">${s0.empezado ? "●" : esc(pa.hora || "")}</span><span class="are"><b>${esc(pa.local)}</b><b>${esc(pa.visitante)}</b><small>${esc(ligaBase(pa.liga))}</small></span>${mio ? '<span class="armk">★</span>' : ""}</summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
     }).join("")}</section>`;
-  } else if (!fin) h += `<div class="vacio">${hoy < ARC.desde ? `El evento empieza el ${fCorta(ARC.desde)}: ese día podrás elegir tus 3 primeros pronósticos.` : "Hoy no hay partidos para el evento. Vuelve mañana."}</div>`;
+  } else if (!fin) h += `<div class="vacio">${hoy < ARC.desde ? `El evento empieza el ${fCorta(ARC.desde)}. Sus partidos salen la noche antes, a las 23:30: ahí podrás elegir tus 3 primeros pronósticos.` : "Hoy no hay partidos para el evento. A las 23:30 salen los de mañana."}</div>`;
   const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
   if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
     return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span><b>${esc(o.n || o.m)}</b><small>${esc(nomC(z.x.local))} – ${esc(nomC(z.x.visitante))}</small></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
