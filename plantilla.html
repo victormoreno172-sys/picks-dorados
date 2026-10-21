@@ -1786,7 +1786,7 @@ function detalle(p) {
 function estado(p) {
   const dia = DATOS.dias[est.dia];
   if (p.res) return p.res;
-  if (!empezado(dia, p)) return null;
+  if (!empezado(dia, p) || p._pre) return null;
   // Tenis y esports: los partidos suelen empezar más tarde de su hora (van uno detrás de otro).
   // Sin confirmación de una fuente en directo, se deja como pendiente, no como "Vivo".
   if (p.dep === "te" || p.dep === "e") {
@@ -5627,6 +5627,7 @@ async function enDirecto() {
         const j = await r.json();
         for (const e of j.events || []) {
           const c = e.competitions[0], t = c.status.type, p = cand.find(x => x.fi.id === e.id);
+          if (p) p._pre = t.state === "pre";   // ESPN aún no lo da por empezado (retraso): no se pone "Vivo"
           if (!p || !["in", "post"].includes(t.state)) continue;
           const h = c.competitors.find(x => x.homeAway === "home"), a = c.competitors.find(x => x.homeAway === "away");
           const res = { st: t.state, m: `${parseInt(h.score)}-${parseInt(a.score)}`, det: t.state === "post" ? "Final" : esDescanso(t) ? "Descanso" : (c.status.displayClock || "Vivo") };
