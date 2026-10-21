@@ -542,11 +542,21 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rres { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; border-radius: 10px; padding: 6px; }
 .rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
 .rmes p { margin: 6px 0 0; }
-.dnota { font-size: 12.5px; color: var(--muted); margin: -2px 4px 14px; text-align: center; }
-.dpronto { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; opacity: .85; }
-.dpronto .dpi { font-size: 24px; } .dpronto span:nth-child(2) { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.dpronto b { font-size: 14px; } .dpronto small { font-size: 12px; color: var(--muted); line-height: 1.35; }
-.dtag { font: 700 10px var(--mono); padding: 4px 8px; border-radius: 999px; background: var(--bar); color: var(--muted); }
+.evs { display: grid; gap: 12px; }
+.ev { position: relative; overflow: hidden; width: 100%; display: grid; grid-template-columns: 56px minmax(0, 1fr); grid-template-rows: auto auto; gap: 4px 12px; align-items: center; text-align: left;
+  border: 0; border-radius: 22px; padding: 18px 16px 14px; min-height: 128px; color: #fff; cursor: pointer; font: inherit; box-shadow: 0 8px 22px rgba(15, 23, 42, .18); }
+.ev::after { content: ""; position: absolute; right: -30px; top: -30px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.10); }
+.ev .evico { grid-row: 1 / 3; font-size: 40px; text-align: center; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
+.ev .evtx { display: flex; flex-direction: column; gap: 3px; min-width: 0; z-index: 1; }
+.ev .evtx b { font-size: 19px; letter-spacing: -.01em; } .ev .evtx small { font-size: 12.5px; opacity: .9; line-height: 1.35; } .ev .evx { font-weight: 700; opacity: 1 !important; margin-top: 2px; }
+.ev .evchip { grid-column: 2; justify-self: start; z-index: 1; font: 700 11px var(--mono); padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.22); }
+.ev .evchip.on { background: #fff; color: #1e1b4b; }
+.ev-app { background: linear-gradient(125deg, #1d4ed8, #7c3aed); }
+.ev-sup { background: linear-gradient(125deg, #065f46, #0d9488); }
+.ev-porra { background: linear-gradient(125deg, #c2410c, #e11d48); }
+.ev-amigos { background: linear-gradient(125deg, #be185d, #9333ea); }
+.ev-premios { background: linear-gradient(125deg, #b45309, #eab308); }
+.evgrande { cursor: default; margin-bottom: 14px; }
 /* ---------- Estadísticas (tus apuestas) y formulario para apuntarlas ---------- */
 .mcard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--sombra); padding: 14px; margin-bottom: 12px; }
 .mcard h3 { margin: 0 0 6px; font-size: 16px; } .mcard p { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.4; }
@@ -1201,10 +1211,11 @@ function enVivo() {
 function pintarLista() {
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios"].includes(est.vista);
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento"].includes(est.vista);
   if (est.vista === "buscar") return pintarBuscadorGeneral();
   if (est.vista === "reto") return pintarReto();
   if (est.vista === "desafios") return pintarDesafios();
+  if (est.vista === "evento") return pintarEvento();
   if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
@@ -2770,19 +2781,38 @@ function bannerReto() {
   const c = cuentaReto(r), pend = r.partidos.filter(x => !r.picks[claveReto(x)] && !estadoReto(x).empezado).length;
   return `<button class="retoban" data-vista="reto"><span class="rbi">🎯</span><span class="rbt"><b>Gánale a la app</b><small>${pend ? `Te quedan ${pend} partido${pend > 1 ? "s" : ""} por pronosticar hoy` : c.elegidos ? "Hoy ya has jugado: mira cómo vas" : "El reto de hoy ya ha empezado"}</small></span><span class="rbm">Tú <b>${c.yo}</b> – <b>${c.app}</b> App</span></button>`;
 }
-// Pantalla Desafíos: todos los juegos juntos
+// Pantalla Desafíos: un rectángulo por evento, cada uno con su estilo; al tocarlo entras en él
+const EVENTOS = [
+  { id: "reto", ico: "🤖", t: "Gánale a la app", d: "6 partidos al día. Tú contra la máquina: acierta donde ella falla.", tema: "ev-app", activo: true },
+  { id: "superv", ico: "🛡️", t: "Supervivencia", d: "Cada jornada, un equipo que gane y sin repetir. Si falla, fuera. Gana el último en pie.", tema: "ev-sup" },
+  { id: "porra", ico: "📋", t: "Porra semanal", d: "Los 10 partidos gordos de la semana. El que más acierte se lleva premio.", tema: "ev-porra" },
+  { id: "amigos", ico: "👥", t: "Ligas con amigos", d: "Crea una liga, pásales el código y compite con tu grupo en todos los desafíos.", tema: "ev-amigos" },
+  { id: "premios", ico: "🎁", t: "Ranking y premios", d: "Clasificación con toda la gente que juegue y premios cada mes: camisetas, balones…", tema: "ev-premios" },
+];
 function pintarDesafios() {
-  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div>`;
-  h += (DATOS.dias.some(d => d.fecha === AHORA.fecha) ? bannerReto() : "") ||
-    `<button class="retoban" data-vista="reto"><span class="rbi">🎯</span><span class="rbt"><b>Gánale a la app</b><small>Hoy no hay partidos para el reto</small></span></button>`;
-  const m = resumenMesReto();
-  h += `<p class="dnota">Este mes: <b>${m.yo}</b> puntos tuyos contra <b>${m.app}</b> de la app · días ganados ${m.ganados}/${m.jugados}${m.racha ? ` · 🔥 racha ${m.racha}` : ""}</p>`;
-  const pronto = [["🛡️", "Supervivencia", "Cada jornada eliges un equipo que gane, sin repetir. Si falla, quedas fuera. Gana el último en pie."],
-    ["📋", "Porra semanal", "Los 10 partidos gordos de la semana. El que más acierte se lleva premio."],
-    ["👥", "Ligas con amigos", "Crea una liga, pásales el código y compite con tu grupo en todos los desafíos."],
-    ["🎁", "Ranking y premios", "Clasificación con toda la gente que juegue y premios cada mes: camisetas, balones…"]];
-  h += `<h2 class="sec">Próximamente</h2>` + pronto.map(([i, t, d]) => `<div class="dpronto"><span class="dpi">${i}</span><span><b>${t}</b><small>${d}</small></span><span class="dtag">Pronto</span></div>`).join("");
-  $("vista").innerHTML = h;
+  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div><div class="evs">`;
+  for (const ev of EVENTOS) {
+    let chip = `<span class="evchip">Próximamente</span>`, extra = "";
+    if (ev.id === "reto") {
+      const r = DATOS.dias.some(d => d.fecha === AHORA.fecha) ? retoDelDia(AHORA.fecha) : null;
+      if (r) {
+        const c = cuentaReto(r), pend = r.partidos.filter(x => !r.picks[claveReto(x)] && !estadoReto(x).empezado).length;
+        chip = `<span class="evchip on">Hoy · Tú ${c.yo} – ${c.app} App</span>`;
+        extra = `<small class="evx">${pend ? `Te quedan ${pend} partido${pend > 1 ? "s" : ""} por pronosticar` : c.elegidos ? "Ya has jugado hoy: mira cómo vas" : "El reto de hoy ya ha empezado"}</small>`;
+      } else chip = `<span class="evchip on">Jugar</span>`;
+    }
+    h += `<button class="ev ${ev.tema}" data-vista="${ev.id === "reto" ? "reto" : "evento"}" data-evento="${ev.id}">
+      <span class="evico">${ev.ico}</span><span class="evtx"><b>${ev.t}</b><small>${ev.d}</small>${extra}</span>${chip}</button>`;
+  }
+  $("vista").innerHTML = h + `</div>`;
+}
+// Eventos que aún no están: su pantalla con lo que será
+function pintarEvento() {
+  const ev = EVENTOS.find(e => e.id === est.evento) || EVENTOS[1];
+  $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span>${ev.ico}</span><span class="t">${ev.t}</span></h2></div>
+    <section class="ev ${ev.tema} evgrande"><span class="evico">${ev.ico}</span><span class="evtx"><b>${ev.t}</b><small>${ev.d}</small></span></section>
+    <div class="vacio">Este desafío llega pronto. Mientras tanto, juega a <b>Gánale a la app</b>: tus puntos de este mes contarán para el ranking.</div>
+    <button class="apbtn" data-vista="reto" style="max-width:340px;margin:0 auto;display:block">🤖 Jugar a Gánale a la app</button>`;
 }
 function pintarReto() {
   const r = retoDelDia(AHORA.fecha);
@@ -2821,6 +2851,7 @@ function pintarReto() {
       <p>Pronto: ranking con más gente y premios (camisetas, balones…).</p></details>`;
   $("vista").innerHTML = h;
 }
+document.addEventListener("click", e => { const b = e.target.closest("[data-evento]"); if (b) est.evento = b.dataset.evento; }, true);
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-retopick]"); if (!b) return;
   const r = RETO.dias[AHORA.fecha]; if (!r) return;
@@ -2923,7 +2954,7 @@ function pintarSelector() {
     const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
   }).join("");
-  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
+  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto", "evento"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
 }
 
 function pintarAjustes() { return; }
