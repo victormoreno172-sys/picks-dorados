@@ -2699,9 +2699,23 @@ function graficaMias() {
     <text x="${pl}" y="${H - 4}" font-size="10" fill="var(--muted)">${pts.length > 1 ? fd(dias[0]) : ""}</text>
     <text x="${W - pr}" y="${H - 4}" text-anchor="end" font-size="10" fill="var(--muted)">${fd(dias[dias.length - 1])}</text></svg>`;
 }
+// Selecciones sueltas: una sencilla es una; una combinada son sus patas, cada una con su deporte, su resultado
+// y una parte igual del dinero apostado y ganado
+function unidadesMias() {
+  const U = [];
+  for (const a of MIAS.apuestas) {
+    if (!a.piernas) { U.push({ dep: a.dep, cuota: a.cuota, ok: resuelta(a) ? a.ok : undefined, imp: a.importe, gan: resuelta(a) ? ganMia(a) : 0 }); continue; }
+    const n = a.piernas.length;
+    for (const pi of a.piernas) {
+      const ok = pi.ok === true || pi.ok === false ? pi.ok : a.ok === true ? true : a.ok === null && resuelta(a) ? null : undefined;
+      U.push({ dep: pi.dep, cuota: pi.cuota || 0, ok, imp: a.importe / n, gan: resuelta(a) ? ganMia(a) / n : 0 });
+    }
+  }
+  return U;
+}
 function tablaGrupos(titulo, grupos) {
   const filas = grupos.filter(g => g.l.length).map(g => {
-    const r = g.l.filter(a => resuelta(a) && a.ok !== null), gan = r.reduce((s, a) => s + ganMia(a), 0), ap = r.reduce((s, a) => s + a.importe, 0);
+    const r = g.l.filter(u => u.ok === true || u.ok === false), gan = r.reduce((s, u) => s + u.gan, 0), ap = r.reduce((s, u) => s + u.imp, 0);
     return `<tr><td>${g.n}</td><td>${r.filter(a => a.ok).length}/${r.length}</td><td>${r.length ? Math.round(r.filter(a => a.ok).length / r.length * 100) + " %" : "–"}</td><td class="${gan >= 0 ? "pos" : "neg"}">${sigM(gan)}</td><td>${ap ? (gan / ap * 100 >= 0 ? "+" : "") + (gan / ap * 100).toFixed(0) + " %" : "–"}</td></tr>`;
   }).join("");
   return filas ? `<h3 class="mst">${titulo}</h3><table class="mtab"><tr><th></th><th>Acert.</th><th>%</th><th>Ganancia</th><th>ROI</th></tr>${filas}</table>` : "";
@@ -2748,10 +2762,12 @@ function pintarMisApuestas() {
       <div><b>${c.racha ? (c.tipoR ? "🔥 " : "🧊 ") + c.racha : "–"}</b><span>${c.tipoR === false ? "falladas seguidas" : "acertadas seguidas"}</span></div>
     </div>${graficaMias()}</section>`;
   if (res.length) {
-    const dep = d => L.filter(a => (a.dep || "f") === d);
-    const rango = (lo, hi) => L.filter(a => a.cuota >= lo && a.cuota < hi);
+    // Cada selección cuenta por separado, también las de una combinada (con su parte del dinero)
+    const U = unidadesMias();
+    const dep = d => U.filter(u => (u.dep || "f") === d);
+    const rango = (lo, hi) => U.filter(u => u.cuota >= lo && u.cuota < hi);
     h += `<details class="mcard mdet"><summary>📈 Por deporte y por cuota</summary>` +
-      tablaGrupos("Por deporte", [{ n: "⚽ Fútbol", l: dep("f") }, { n: "🏀 Basket", l: dep("b") }, { n: "🎾 Tenis", l: dep("te") }, { n: "🎮 Esports", l: dep("e") }, { n: "🧩 Combinadas", l: dep("c") }]) +
+      tablaGrupos("Por deporte", [{ n: "⚽ Fútbol", l: dep("f") }, { n: "🏀 Basket", l: dep("b") }, { n: "🎾 Tenis", l: dep("te") }, { n: "🎮 Esports", l: dep("e") }]) +
       tablaGrupos("Por cuota", [{ n: "1,01–1,49", l: rango(1, 1.5) }, { n: "1,50–1,99", l: rango(1.5, 2) }, { n: "2,00–2,99", l: rango(2, 3) }, { n: "3,00 o más", l: rango(3, 1e9) }]) + `</details>`;
   }
   if (!L.length) h += `<div class="vacio">Aún no has apuntado ninguna apuesta. Abre un partido y, en <b>Probabilidades</b>, abajo del todo, pon el mercado, la cuota y lo que apuestas.</div>`;
@@ -2897,9 +2913,11 @@ document.addEventListener("click", e => {
   }
   if (b.dataset.apinicial) {
     if (b.dataset.apinicial === "editar") {
-      const t = prompt("¿Con cuánto dinero empezaste? (lo que tenías en la casa antes de la primera apuesta apuntada)", String(MIAS.inicial).replace(".", ","));
-      if (t === null) return; const v = numES(t); if (!(v >= 0)) return alert("No he entendido el número.");
-      MIAS.inicial = v; guardarMias(); pintarLista(); return;
+      // Lo más fácil: poner lo que pone ahora mismo la casa, y se recalcula el dinero con el que empezaste
+      const c0 = cuentas();
+      const t = prompt("¿Cuánto dinero tienes AHORA MISMO en tu casa de apuestas? (lo que pone el saldo, sin contar lo que tienes apostado en juego)", c0.disponible.toFixed(2).replace(".", ","));
+      if (t === null) return; const v = numES(t); if (!(v >= 0) || isNaN(v)) return alert("No he entendido el número.");
+      MIAS.inicial = Math.round((v - c0.ganado + c0.enJuego) * 100) / 100; guardarMias(); pintarLista(); return;
     }
     const v = numES($("miniV") && $("miniV").value); if (!(v >= 0) || isNaN(v)) return alert("Pon cuánto dinero tienes, por ejemplo 73,51.");
     MIAS.inicial = v; MIAS.desde = AHORA.fecha; guardarMias(); pintarLista(); return;
