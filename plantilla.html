@@ -1243,6 +1243,52 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .candado { width: 100%; display: flex; align-items: center; gap: 12px; margin: 12px 0 4px; padding: 12px; text-align: left; cursor: pointer; border-radius: 16px; border: 2px solid var(--line); background: var(--bar); color: var(--ink); font: inherit; }
 .candado .cdi { font-size: 30px; transition: transform .25s; } .candado b { display: block; font-size: 15px; } .candado small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
 .candado.abierto { border-color: #22c55e; background: rgba(34,197,94,.12); } .candado.abierto .cdi { transform: rotate(-12deg) scale(1.1); }
+
+/* ---- Evento HI-SCORE */
+.arcban { position: relative; width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; text-align: left; margin: 0 0 14px; padding: 14px; cursor: pointer; color: #fff; overflow: hidden;
+  border: 3px solid #000; box-shadow: 0 0 0 3px #ff77a8, 6px 6px 0 3px #000; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAwCAIAAABhdOiYAAACLElEQVR42mNkZ5VioCP48ZyXQ/Izw9ABjHQOoCEHmEaDYDSAcGZ2+gXQjzfnBokhxAMii0LqBBCHiNEgMYQ8UFPYhDOAxLjVGBgYaEFCbEUT//HmHJ1tJIZs6a/DJcvIziolxq326uutYUOmpcXMmrWEWqYxygo4PHq4Qk4+AmsCe3TnuZyK5DAoksn2CBMDAwOu0GFgYKBK6KSlxQx4AJHtEUZZAYfRxs5AtoMePVxBnxxEq67GaAoiogzikhklsZKPHq5gkuOSefTtySAhj1w6PVC2p6XFYIrLyUcwWkvFjOaj0c7qCAigI9d70EQ8YuhRvZCcxY5cOm2jZzqagnCCERU6tMpiVE/8FBp45NJpigLImfs78aRHjANBNTuWHIAUGSSZjIs8cun07/XbibEXF2mjZ0q2XsY61eC9Xzmdub+PklhJxjrV4BFSmjSemVpvkk1yLTZyAmi0oTgaQKMBNBpAowE07ADj//IV0lPaMCWe5lSNikMDaDSZ4EtBUtx6xAQkkQoo1D4IzR9NQSSmIOKjghbKBqG9TGiK4GyCCZUYZaS6knggPaUN2bV4lGF6Db9KNMWjWYzcLEZ5KiAv4dDHIuK1MBE0iPisROtsRWF2Iy/rMeEPGvI8Sc/QQfYwqcFETEiNlkHElUFUifNBYgh1ncFESVYa2GxF9eyGNesxUSVoqBLEA15y02S4Y/AkHBqF0WghTaWGIt0SDo1MJttYpmGWraie3QCzqhQs5YFcFwAAAABJRU5ErkJggg==") center / cover; image-rendering: pixelated; }
+.arcban::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,5,26,.9) 35%, rgba(7,5,26,.35)); z-index: 0; } .arcban > * { position: relative; z-index: 1; }
+.arcban .arcb1 { grid-column: 1 / -1; font: 8px "Press Start 2P", monospace; color: #ff77a8; } .arcban b { font: 18px "Press Start 2P", monospace; color: #ffec27; text-shadow: 3px 3px 0 #ff004d; }
+.arcban .arcb2 { grid-column: 1 / -1; font: 600 12px "Pixelify Sans", var(--body); color: #73eff7; } .arcban .arcb2 i { font-style: normal; color: #ff004d; letter-spacing: 1px; }
+.arcban .arcb3 { grid-row: 2; grid-column: 2; font: 7px "Press Start 2P", monospace; color: #fff; background: #ff004d; padding: 4px; border: 2px solid #000; animation: pxSalto .9s steps(2) infinite; }
+.archead { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 18px 12px 14px; margin-bottom: 14px; color: #fff; overflow: hidden;
+  border: 3px solid #000; box-shadow: 0 0 0 3px #ff77a8, 6px 6px 0 3px #000; background: linear-gradient(rgba(7,5,26,.55), rgba(7,5,26,.85)), url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAwCAIAAABhdOiYAAACLElEQVR42mNkZ5VioCP48ZyXQ/Izw9ABjHQOoCEHmEaDYDSAcGZ2+gXQjzfnBokhxAMii0LqBBCHiNEgMYQ8UFPYhDOAxLjVGBgYaEFCbEUT//HmHJ1tJIZs6a/DJcvIziolxq326uutYUOmpcXMmrWEWqYxygo4PHq4Qk4+AmsCe3TnuZyK5DAoksn2CBMDAwOu0GFgYKBK6KSlxQx4AJHtEUZZAYfRxs5AtoMePVxBnxxEq67GaAoiogzikhklsZKPHq5gkuOSefTtySAhj1w6PVC2p6XFYIrLyUcwWkvFjOaj0c7qCAigI9d70EQ8YuhRvZCcxY5cOm2jZzqagnCCERU6tMpiVE/8FBp45NJpigLImfs78aRHjANBNTuWHIAUGSSZjIs8cun07/XbibEXF2mjZ0q2XsY61eC9Xzmdub+PklhJxjrV4BFSmjSemVpvkk1yLTZyAmi0oTgaQKMBNBpAowE07ADj//IV0lPaMCWe5lSNikMDaDSZ4EtBUtx6xAQkkQoo1D4IzR9NQSSmIOKjghbKBqG9TGiK4GyCCZUYZaS6knggPaUN2bV4lGF6Db9KNMWjWYzcLEZ5KiAv4dDHIuK1MBE0iPisROtsRWF2Iy/rMeEPGvI8Sc/QQfYwqcFETEiNlkHElUFUifNBYgh1ncFESVYa2GxF9eyGNesxUSVoqBLEA15y02S4Y/AkHBqF0WghTaWGIt0SDo1MJttYpmGWraie3QCzqhQs5YFcFwAAAABJRU5ErkJggg==") center / cover; image-rendering: pixelated; }
+.archead .arcmar { font: 8px "Press Start 2P", monospace; color: #ff77a8; animation: arcParpa 1.2s steps(1) infinite; } @keyframes arcParpa { 50% { opacity: .35; } }
+.archead > b { font: 30px "Press Start 2P", monospace; color: #ffec27; text-shadow: 4px 4px 0 #ff004d, 8px 8px 0 #000; } .archead > small { font: 600 12px "Pixelify Sans", var(--body); color: #c2c3c7; }
+.archud { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin-top: 6px; } .archud div { background: #000; border: 2px solid #5f574f; padding: 7px 4px; display: flex; flex-direction: column; gap: 4px; }
+.archud small, .arccombo small, .arcvid small { font: 7px "Press Start 2P", monospace; color: #83769c; } .archud b { font: 14px "Press Start 2P", monospace; color: #73eff7; }
+.arccombo { width: 100%; display: flex; align-items: center; gap: 8px; background: #000; border: 2px solid #5f574f; padding: 7px; } .arcbar { flex: 1; display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; }
+.arcbar span { height: 12px; background: #1d2b53; } .arcbar span.on { background: hsl(calc(50 - var(--k) * 7), 100%, 55%); box-shadow: 0 0 6px hsl(calc(50 - var(--k) * 7), 100%, 55%); }
+.arccombo b { font: 14px "Press Start 2P", monospace; color: #ffec27; min-width: 44px; } .arccombo b.fuego { color: #ff004d; animation: pxSalto .5s steps(2) infinite; }
+.arcvid { width: 100%; display: flex; align-items: center; justify-content: space-between; background: #000; border: 2px solid #5f574f; padding: 7px; } .arcvid > div { display: flex; gap: 4px; }
+.arcvid span { filter: grayscale(1) brightness(.35); } .arcvid span.on { filter: none; animation: pxSalto 1.4s steps(2) infinite; }
+.tw-arc > h3 { background: #ff004d !important; } .tw-arcl > h3 { background: #29366f !important; } .tw-go > h3 { background: #000 !important; color: #ff004d !important; }
+.arslots { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.arsl { display: flex; align-items: center; gap: 10px; padding: 8px; background: #1a1c2c; border: 2px solid #000; box-shadow: inset 3px 3px 0 rgba(255,255,255,.06); }
+.arsl > b { width: 28px; height: 28px; display: grid; place-items: center; flex: none; font: 10px "Press Start 2P", monospace; background: #ffec27; color: #000; border: 2px solid #000; }
+.arsl > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; } .arsl small { font: 400 11px "Pixelify Sans", var(--body); color: #94b0c2; } .arsl em { font: 600 14px "Pixelify Sans", var(--body); font-style: normal; color: #fff; }
+.arsl i { font: 400 11px "Pixelify Sans", var(--body); font-style: normal; color: #ffcd75; }
+.arsl.vac { opacity: .6; border-style: dashed; border-color: #5f574f; } .arsl.vac > b { background: #333c57; color: #94b0c2; } .arsl.vac small { font: 8px "Press Start 2P", monospace; }
+.arsl.ok { background: #12301f; } .arsl.ok > b { background: #38b764; } .arsl.ok i { color: #a7f070; } .arsl.ko { background: #3b1020; } .arsl.ko > b { background: #ff004d; color: #fff; } .arsl.ko i { color: #ff77a8; }
+.arsl.vivo i { color: #ff004d; } .arsl.go { opacity: .5; }
+.arp { margin: 0 0 6px; background: #1a1c2c; border: 2px solid #000; } .arp.elegido { border-color: #ffec27; } .arp summary { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; list-style: none; } .arp summary::-webkit-details-marker { display: none; }
+.arp .arh { font: 9px "Press Start 2P", monospace; color: #ffcd75; min-width: 42px; } .arp .are { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.arp .are b { font: 600 13.5px "Pixelify Sans", var(--body); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .arp .are small { font: 400 10.5px "Pixelify Sans", var(--body); color: #83769c; }
+.arp .armk { color: #ffec27; font-size: 18px; } .arp.dep-b { box-shadow: inset 4px 0 0 #ffa300; } .arp.dep-f { box-shadow: inset 4px 0 0 #38b764; }
+.arq { padding: 4px 8px 8px; } .arq > small { display: block; font: 400 12px "Pixelify Sans", var(--body); color: #94b0c2; margin-bottom: 4px; }
+.arops { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; }
+.arop { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 3px; cursor: pointer; background: #262b44; color: #fff; border: 2px solid #000; box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.08); }
+.arop b { font: 600 12px "Pixelify Sans", var(--body); text-align: center; line-height: 1.1; } .arop span { font: 400 10.5px "Pixelify Sans", var(--body); color: #ffcd75; }
+.arop.yo { background: #ffec27; color: #000; box-shadow: 0 0 0 2px #ff004d; } .arop.yo span { color: #7e2553; } .arop:disabled { opacity: .45; cursor: default; }
+.arlog { display: flex; align-items: center; gap: 10px; padding: 7px 4px; border-top: 2px dashed #3a4466; } .arlog:first-of-type { border-top: 0; }
+.arlog > span:first-child { font: 8px "Press Start 2P", monospace; color: #83769c; min-width: 40px; } .arlog > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.arlog b { font: 600 13px "Pixelify Sans", var(--body); } .arlog small { font: 400 11px "Pixelify Sans", var(--body); color: #94b0c2; } .arlog i { font: 9px "Press Start 2P", monospace; font-style: normal; }
+.arlog.ok i { color: #a7f070; } .arlog.ko i { color: #ff004d; } .arlog.go i { color: #5f574f; }
+.tj.tj-hiscore { background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAwCAIAAABhdOiYAAADbklEQVR42u1ZP2gTURj/7qhYexzeUApJ62WpgSJkMLYIZgh0ye4S8Faz6CKUilIqitTBQpe61DVCNkezCBkyiJUOBSkElxzqgWQ4CbGBDDpcE1/uvbu89+5PL/o+wsfHL9/73vd+933fXS7SxQtpiFH6ljqb6sL0iBQzQVMnsqBAEOTZ7PER1O8cJSQIvVCOwnAImp2/npAgfLL14JknQQtKFgCYdN9Snfok2uiHsLZz5IqD+wfB8Tz983H0871tr/PKP3qtBSXLpM86YpAn2mNdM8i71uqZsisO7h8E7w/ylYrhH5/pvNIVrWi2a3qmTCww84ulL6dwEABgPqtrXdQGANNWodNyEMfZwb2Co54jfyp8uAsRd3L2isPUfTMA4MXOaCd60bWuiaVSqRgHB1X/Vay46YubtoquZSXFTRCndFom5QjcfLm16c07Eof1euD56Msp01aJeEKfg8x2jQDa5GcQL5xhO1vVtS5eMtyRA1QQOgt82idTBkgR8xu72pPi0OfjrpfxGcRTQfrcEpP26m3Xt+gqXesW0pdR7cI9+SXtO3GWua4HuiOTNtu1GX1uyfz1lUkDWEj2f+3m8SHW+eATZ+hvYYxYyGyyYBhnHAdiDgQbi0PMx7mTuHA9Uw5UQTQTIcQ4IQxE73zq1QYRl26lDY6dmt9/AoBTt7iNioP7x8H9+fDg+RDeB/ERFL80T3YLKxsoUjKK9Woj8hdmrAQ1jw8LudX/560I822ej52bn187xodrd8Oyp/iFWcko4iB6JFZbe/GGiNNXfSCC1pVTel0yihN96tVG82SXMqZTFP62/egOa56oLuRWudfK68rp+94lej14+47Gs7CygSIAQNTKmuFUBKWNatbM+bS0ffV2DJ3c+3j2a15ZM8KyWXN4+unVkxv3mO9i8RA0vSL+9hEECYIEQYKgBIv0+2FtcX8H/+Lb/ccCPyNIlIlfBaWVHA2RlA4BlycwvqggxgqivxRRuCVwX9nlNLInFiqNG2uW9LK4v4Nm6+OGH83f0+UsWoy3xYJXAV/hxLMR/RJ5YiD6Voq6rQK2G1/ryf7U8B0yTnbQA7PSRMOUmEF0MyiUa56QIOGmIQdppfNtq9Dbjdh6cijUhELxuU/uSF53JKdwIuJIDOmQHhRjK5yIInOHlf+xtgq93f4AjGiX6cEXCAEAAAAASUVORK5CYII=") center / cover; image-rendering: pixelated; }
+.tj.tj-hiscore::after { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(1.5px 1.5px, #fff 98%, transparent); background-size: 37px 23px; animation: arcParpa 1s steps(1) infinite; }
+.mr-arcade { background: repeating-conic-gradient(#ffec27 0 25%, #ff004d 0 50%) 0 0 / 8px 8px !important; animation: pxRgb 1.4s steps(5) infinite; }
+.av.mr-arcade, .av.mr-arcade .avi { border-radius: 0 !important; clip-path: polygon(0 14%, 7% 14%, 7% 7%, 14% 7%, 14% 0, 86% 0, 86% 7%, 93% 7%, 93% 14%, 100% 14%, 100% 86%, 93% 86%, 93% 93%, 86% 93%, 86% 100%, 14% 100%, 14% 93%, 7% 93%, 7% 86%, 0 86%); }
+@media (prefers-reduced-motion: reduce) { .arcban .arcb3, .archead .arcmar, .arcvid span.on, .arccombo b.fuego, .tj-hiscore::after, .mr-arcade { animation: none !important; } }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -1794,8 +1840,8 @@ function enVivo() {
 function pintarLista() {
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina", "temporada"].includes(est.vista);
-  if (est.vista !== "temporada") delete document.documentElement.dataset.vt;
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina", "temporada", "arcade"].includes(est.vista);
+  if (est.vista !== "temporada" && est.vista !== "arcade") delete document.documentElement.dataset.vt;
   if (est.vista === "buscar") return pintarBuscadorGeneral();
   if (est.vista === "reto") return pintarReto();
   if (est.vista === "desafios") return pintarDesafios();
@@ -1806,6 +1852,7 @@ function pintarLista() {
   if (est.vista === "guia") return pintarGuia();
   if (est.vista === "elegirvitrina") return pintarElegirVitrina();
   if (est.vista === "temporada") { document.documentElement.dataset.vt = "pixel"; return pintarTemporada(); }
+  if (est.vista === "arcade") { document.documentElement.dataset.vt = "pixel"; return pintarArcade(); }
   if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
@@ -3529,13 +3576,13 @@ function xpBots() {
   _XB = { t: Date.now() >> 14, v }; return v;
 }
 // Premio que se llevaría cada puesto si la semana o el mes terminasen ahora
-const PREMIOS_RANK = { semana: [[1000, 3000], [600, 3000], [400, 3000], [200, 1500]], mes: [[5000, 10000], [3000, 10000], [2000, 10000], [1000, 5000]],
+const PREMIOS_RANK = { arcade: [[3000, 5000], [2000, 5000], [1000, 5000], [500, 1000]], semana: [[1000, 3000], [600, 3000], [400, 3000], [200, 1500]], mes: [[5000, 10000], [3000, 10000], [2000, 10000], [1000, 5000]],
   temporada: [[10000, 20000], [6000, 20000], [4000, 20000]] };
 function premioDe(tipo, f) {
   if (!PREMIOS_RANK[tipo] || !f.pts || f.pos > 10) return null;
   if (tipo === "temporada") return f.pos <= 3 ? { mon: PREMIOS_RANK.temporada[f.pos - 1][0], xp: 20000, fis: "🏷️" } : null;
   const [mon, xp] = PREMIOS_RANK[tipo][Math.min(f.pos, 4) - 1];
-  return { mon, xp, fis: tipo === "mes" && f.pos <= 3 ? ["👕", "⚽", "🧣"][f.pos - 1] + "✨" : "" };
+  return { mon, xp, fis: tipo === "mes" && f.pos <= 3 ? ["👕", "⚽", "🧣"][f.pos - 1] + "✨" : tipo === "arcade" && f.pos <= 3 ? "🕹️" : "" };
 }
 const kXP = n => n >= 1000 ? (n / 1000).toLocaleString("es-ES") + "k" : String(n);
 // Clasificación de los desafíos: cada fila es una tarjeta (el fondo del jugador) de lado a lado,
@@ -3636,7 +3683,7 @@ const ARTE_EV = {
 };
 function pintarDesafios() {
   procesarRecompensas();
-  let h = `` + barraJugador() + bannerTemporada() + `<div class="evs">`;
+  let h = `` + barraJugador() + bannerTemporada() + bannerArcade() + `<div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
     if (ev.id === "premios") {
@@ -3662,7 +3709,7 @@ function pintarEvento() {
   const ev = EVENTOS.find(e => e.id === est.evento) || EVENTOS[1];
   if (ev.id === "premios") {
     const temp = est.rkp === "temporada", mes = AHORA.fecha.slice(0, 7), dias = temp ? diasTemporada() : Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
-    const filas = clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
+    const filas = temp ? clasificacionTemp(dias) : clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
     $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
       <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${temp ? "Temporada 0" : "Ranking de " + ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>${temp ? `1 oct – 31 dic · ${quedanTemp()}` : "Suma de Gánale a la app de todo el mes"}</small></span></section>
       <div class="rseg mtabs"><button data-rkp="mes" aria-pressed="${!temp}">Mes</button><button data-rkp="temporada" aria-pressed="${temp}">Temporada 0</button></div>
@@ -3804,7 +3851,13 @@ PREM_T0.forEach(([t, id, n, e, bg], k) => { const x = typeof e === "object" ? e 
 const regaloPrem = n => { const [t, id] = PREM_T0[n - 1], it = CAT[t].find(x => x.id === id); return { t, id, it, txt: it.n.replace(" ✨", "") }; };
 const tienePremium = () => !!(PERFIL.premium && PERFIL.premium.t0);
 // Avatares pixel de la temporada: dibujos de 16×16 (se ven nítidos a cualquier tamaño)
-const SPRITES = {"a29": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAgUlEQVR42q1SQQ6AIAzrDFfi1YPv4OE8w3fwj3kxOmEjTFnCZWuXlg6YXDwDw55Z+KEEAEANsaQ+Yz9evMVFBnBhuF5wkzlmcMytJ9kXSxbV17phtE8u+cpfhM7Q8m+mMK5CJEFq/taiRxnpx1MSi4i4ehrGJPdPXcGy53w/4O06AWYDOw5d+Xy6AAAAAElFTkSuQmCC", "a30": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfUlEQVR42mNgoBAw4pH7T4xaXAb8/8/gi6ZwM1b1THjd93E2QS/gN4A/lfZhQAj8x2IQCV4gAjBROx38J1UfsgH/48P9idK9cOVGuF4mZM3JORU4NS1Y+Y9hwcp/DAwMDAxQi/5jhMHcKR0khwELsQoTwpkIBuJ/KmZE4gEA7LEbZNjljEsAAAAASUVORK5CYII=", "pa1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNgoBAw4hD/T6x6bAb8///xBXbd/BIYepiI1czAwMAAlfuPywC8mnEZwoTLqVDnYuXj8wLJgAWPM3Hy8bug7QBu67DIMeILRJi/cYgz4vQCMU6nWiAy4UhtOKMTr4uREsh/tBSHT26AAQDRVS/CtWQ/lAAAAABJRU5ErkJggg==", "pa5": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mNgGPKAEY3/n1R9yAb8jw/3J0r3wpUb4XqZ0DUvmDUTp8YFK/8xMDAwMEDV/kc2AEUzNkNOhW1gSAhnYlgw9QaKOIoBCWnpKDQyMFsVwLDQgIkhIVsDtwHomheu3AjzL8TpF/5hGMxEREAxIhuCywAURcihTKQ8SjrAlxb+k5BWRgwAABEpMfGnfakpAAAAAElFTkSuQmCC", "pa3": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNgoBAwIrH/k6OXBVlEcy3EjJliJ3DqSn9lwXA9GGEvEyFr5k7pwCvPRGkYEDQgOacCrzwLLn9SzQWEAIYLrrm8xKtBa484YS8kpKVj1bxg1kziwgCbQpICEZsLcBlKfRegBxLNMxPFAADVLBpX653giAAAAABJRU5ErkJggg==", "pa2": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAc0lEQVR42mNgGGjAiEP8P7HqGbFp/M/gi0P3Zgx9yAb8h2v8OBtC86fiM4iRgYGBgQmnZnTwcTZcDqr2P7IBCACzFYftuMLgPy5/49YI8QYTLmcS8gaGC8hNBtjSwf//Z1ZhV20ShhH1TJSmRKYBT8oDDwBKIiJkRTf/9gAAAABJRU5ErkJggg==", "pa4": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaUlEQVR42mNgGPKAEUr/J1c/C4wVH+5Pks6FKzcyMDAwMLAgCy6YNZMozQlp6XA2E4ab+CUYGPklGIgVZ6I0EFnQBf5/fIFVIS5xFlx+I9sFDAwMDAtW/sMeeOFMxBmATSHNEtLQz0sMALsIE1VuS8+dAAAAAElFTkSuQmCC", "pa8": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAlElEQVR42sWSsRGEMAwEVz/kpATU4cJoha6owwEpFegDGCMby0DyfzMOPHfW6SzBvyHFXd9yVqS6raeiHyzvcp9LSztpXdXhAOiSMIYkkH6AGKqFEzcuCkiXqYpHT7gsgs4TOk9ujRovNgIA49KeW64rItzFaESQW2eLw91fFq+L00Sqf0QMdu5anJoGd2kaeKr7Eb7/bziKG7BUTwAAAABJRU5ErkJggg==", "pa7": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaElEQVR42sWSwQrAIAxD07Kf8qAf7w77rO5aaoNuCOYk1RcSKXBaQua2+l4ysN9PSrdaBs4bGAOJkQCAfoVdQgOAi0QcarA7ncQczlGaRFuJj+2f+FveQGLXVguyGduDaZUIb1nl83oBZ4snfcGA9hAAAAAASUVORK5CYII=", "pa10": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42rVT2w2AIBArzOAObkDihw7BmmyhH87gDu5QP3yE8DxI7B9cW64XDrhBtIMAoN/Tuu0UGvHhZgsUiNlDoLTLFJENESNBUawqJgCAZZ6yXI2fII4QCXmOnzD4NH6tLHbWRAbvXWjiz0Cp4YCzJtueswZqOLIDTb0s5lTz1bhs3Eh2bnCMCy+jes5nJ59uAAAAAElFTkSuQmCC", "pa11": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfUlEQVR42mNgoBAwovH/k6oP2YD/hw4fJ0q3na0lXC8LuqStbRuqwMfZKNzDl+6j8JkoDQOKDcDwArqTGfhTUfmHq6jrAnTw/9Dh4///f3yBwAy+cHzo8PH/6FHNRO2EhDc9IMc/PhcwQhUS1IzPCyiG4NJMVKCSkD8GCAAAvYAxIZJV4HkAAAAASUVORK5CYII=", "pa12": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAdElEQVR42mNggIL/DL7/GYgEuNT+J8EQrGqJdgE2tf9JMARFLROlLoAbcOjwcVy2YLgOWS0TIScS8iILMgfNFUQBFBfY2Voy2Nla4lSMTZ6JgUJAkhewybPgcy4xhrPg0hxrJYUhhs0QisOAkYxUiE0/+QAAslEx6daThW4AAAAASUVORK5CYII=", "pa13": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiUlEQVR42mNgoDH4D8U4ARM+zf8/vmD4//EFAz5DmPBphnPwGILPBQxae8QZtPaIM5DrBaIAIzFeYGBgYGDkl8CqnglHyOOLFbwG/P/P4ItHty+GIfjDgD8VgvEAFpyBwy8Biz6Y/4kKxP9I4v//L4ZyYhFi6PoY8abEN+oQRSI3CaklPy8MPAAAS1EtDIk7JKMAAAAASUVORK5CYII=", "pa14": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiElEQVR42mNgGGjAiEXsPyl60A34X/z+OwMDAwNDD9NHhpJ//Bi6ewU5UfQxoWvuYfrIwMDAgFUzAwMDg+ba/yiuZCTS2Ti9wwJjEXI6DGzbx8HAwMDAcD2YESMM4P4nUjMjehgwQgOIaM3oBuA0BJdmbAZgGIJPMy4DMAzBpZkY8J+CKB4qAABaWy4BQvrsLgAAAABJRU5ErkJggg==", "pa6": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfUlEQVR42mNgoDH4D8U4ARNhE3wZ8BnCiMNWfIARnwH/Dx0+jle3na0lij6sXkh/ZcGQ/soCJ5+oMLjm8hIvn2peYMGjCANgM5yFWIV0i0YUg+LD/RkYGBgYFq7ciFMtI4m2Y+hjxBUDtrZtKDoOH67CGhOMpEQhtmikGAAABP8t1jIt9T4AAAAASUVORK5CYII=", "pa9": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAe0lEQVR42mNgoBL4T64eJjIN+Y9dsD3wPwGDMNQwYShpD4TZgIkhciiAEYsN+B1fuR5FHxM2zf9Tr8EUwjX9T72G7kIMFxC2HYsrmEjWjOYKJhym47MZBbBgNR2XIVhcyQQPCyRN/z++gNPIbGxhQHE0MpKRLxgZBhUAAJgaPl+g2+paAAAAAElFTkSuQmCC"};
+const SPRITES = {"ficha": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42qWTwQ3AIAhFoXEEd2CWztkhnIUd3IEe1EYrWBu4GJH381EEcAYaedmtRw2UTDodeeJCDz9gYt1WPcfI0kTCVJUY4NQdrM5EMolcZa2tlNx7P9bAsbL6ldNb6IB2aRZsOvgTpgBGBsk0ONkW0ABLBKc52HjGKmbMwUnmIGnC7lF2fyZ33OjtT+PNzqzrAAAAAElFTkSuQmCC", "a29": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAgUlEQVR42q1SQQ6AIAzrDFfi1YPv4OE8w3fwj3kxOmEjTFnCZWuXlg6YXDwDw55Z+KEEAEANsaQ+Yz9evMVFBnBhuF5wkzlmcMytJ9kXSxbV17phtE8u+cpfhM7Q8m+mMK5CJEFq/taiRxnpx1MSi4i4ehrGJPdPXcGy53w/4O06AWYDOw5d+Xy6AAAAAElFTkSuQmCC", "a30": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfUlEQVR42mNgoBAw4pH7T4xaXAb8/8/gi6ZwM1b1THjd93E2QS/gN4A/lfZhQAj8x2IQCV4gAjBROx38J1UfsgH/48P9idK9cOVGuF4mZM3JORU4NS1Y+Y9hwcp/DAwMDAxQi/5jhMHcKR0khwELsQoTwpkIBuJ/KmZE4gEA7LEbZNjljEsAAAAASUVORK5CYII=", "pa1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNgoBAw4hD/T6x6bAb8///xBXbd/BIYepiI1czAwMAAlfuPywC8mnEZwoTLqVDnYuXj8wLJgAWPM3Hy8bug7QBu67DIMeILRJi/cYgz4vQCMU6nWiAy4UhtOKMTr4uREsh/tBSHT26AAQDRVS/CtWQ/lAAAAABJRU5ErkJggg==", "pa5": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mNgGPKAEY3/n1R9yAb8jw/3J0r3wpUb4XqZ0DUvmDUTp8YFK/8xMDAwMEDV/kc2AEUzNkNOhW1gSAhnYlgw9QaKOIoBCWnpKDQyMFsVwLDQgIkhIVsDtwHomheu3AjzL8TpF/5hGMxEREAxIhuCywAURcihTKQ8SjrAlxb+k5BWRgwAABEpMfGnfakpAAAAAElFTkSuQmCC", "pa3": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcElEQVR42mNgoBAwIrH/k6OXBVlEcy3EjJliJ3DqSn9lwXA9GGEvEyFr5k7pwCvPRGkYEDQgOacCrzwLLn9SzQWEAIYLrrm8xKtBa484YS8kpKVj1bxg1kziwgCbQpICEZsLcBlKfRegBxLNMxPFAADVLBpX653giAAAAABJRU5ErkJggg==", "pa2": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAc0lEQVR42mNgGGjAiEP8P7HqGbFp/M/gi0P3Zgx9yAb8h2v8OBtC86fiM4iRgYGBgQmnZnTwcTZcDqr2P7IBCACzFYftuMLgPy5/49YI8QYTLmcS8gaGC8hNBtjSwf//Z1ZhV20ShhH1TJSmRKYBT8oDDwBKIiJkRTf/9gAAAABJRU5ErkJggg==", "pa4": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaUlEQVR42mNgGPKAEUr/J1c/C4wVH+5Pks6FKzcyMDAwMLAgCy6YNZMozQlp6XA2E4ab+CUYGPklGIgVZ6I0EFnQBf5/fIFVIS5xFlx+I9sFDAwMDAtW/sMeeOFMxBmATSHNEtLQz0sMALsIE1VuS8+dAAAAAElFTkSuQmCC", "pa8": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAlElEQVR42sWSsRGEMAwEVz/kpATU4cJoha6owwEpFegDGCMby0DyfzMOPHfW6SzBvyHFXd9yVqS6raeiHyzvcp9LSztpXdXhAOiSMIYkkH6AGKqFEzcuCkiXqYpHT7gsgs4TOk9ujRovNgIA49KeW64rItzFaESQW2eLw91fFq+L00Sqf0QMdu5anJoGd2kaeKr7Eb7/bziKG7BUTwAAAABJRU5ErkJggg==", "pa7": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAaElEQVR42sWSwQrAIAxD07Kf8qAf7w77rO5aaoNuCOYk1RcSKXBaQua2+l4ysN9PSrdaBs4bGAOJkQCAfoVdQgOAi0QcarA7ncQczlGaRFuJj+2f+FveQGLXVguyGduDaZUIb1nl83oBZ4snfcGA9hAAAAAASUVORK5CYII=", "pa10": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42rVT2w2AIBArzOAObkDihw7BmmyhH87gDu5QP3yE8DxI7B9cW64XDrhBtIMAoN/Tuu0UGvHhZgsUiNlDoLTLFJENESNBUawqJgCAZZ6yXI2fII4QCXmOnzD4NH6tLHbWRAbvXWjiz0Cp4YCzJtueswZqOLIDTb0s5lTz1bhs3Eh2bnCMCy+jes5nJ59uAAAAAElFTkSuQmCC", "pa11": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfUlEQVR42mNgoBAwovH/k6oP2YD/hw4fJ0q3na0lXC8LuqStbRuqwMfZKNzDl+6j8JkoDQOKDcDwArqTGfhTUfmHq6jrAnTw/9Dh4///f3yBwAy+cHzo8PH/6FHNRO2EhDc9IMc/PhcwQhUS1IzPCyiG4NJMVKCSkD8GCAAAvYAxIZJV4HkAAAAASUVORK5CYII=", "pa12": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAdElEQVR42mNggIL/DL7/GYgEuNT+J8EQrGqJdgE2tf9JMARFLROlLoAbcOjwcVy2YLgOWS0TIScS8iILMgfNFUQBFBfY2Voy2Nla4lSMTZ6JgUJAkhewybPgcy4xhrPg0hxrJYUhhs0QisOAkYxUiE0/+QAAslEx6daThW4AAAAASUVORK5CYII=", "pa13": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiUlEQVR42mNgoDH4D8U4ARM+zf8/vmD4//EFAz5DmPBphnPwGILPBQxae8QZtPaIM5DrBaIAIzFeYGBgYGDkl8CqnglHyOOLFbwG/P/P4ItHty+GIfjDgD8VgvEAFpyBwy8Biz6Y/4kKxP9I4v//L4ZyYhFi6PoY8abEN+oQRSI3CaklPy8MPAAAS1EtDIk7JKMAAAAASUVORK5CYII=", "pa14": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiElEQVR42mNgGGjAiEXsPyl60A34X/z+OwMDAwNDD9NHhpJ//Bi6ewU5UfQxoWvuYfrIwMDAgFUzAwMDg+ba/yiuZCTS2Ti9wwJjEXI6DGzbx8HAwMDAcD2YESMM4P4nUjMjehgwQgOIaM3oBuA0BJdmbAZgGIJPMy4DMAzBpZkY8J+CKB4qAABaWy4BQvrsLgAAAABJRU5ErkJggg==", "pa6": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfUlEQVR42mNgoDH4D8U4ARNhE3wZ8BnCiMNWfIARnwH/Dx0+jle3na0lij6sXkh/ZcGQ/soCJ5+oMLjm8hIvn2peYMGjCANgM5yFWIV0i0YUg+LD/RkYGBgYFq7ciFMtI4m2Y+hjxBUDtrZtKDoOH67CGhOMpEQhtmikGAAABP8t1jIt9T4AAAAASUVORK5CYII=", "pa9": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAe0lEQVR42mNgoBL4T64eJjIN+Y9dsD3wPwGDMNQwYShpD4TZgIkhciiAEYsN+B1fuR5FHxM2zf9Tr8EUwjX9T72G7kIMFxC2HYsrmEjWjOYKJhym47MZBbBgNR2XIVhcyQQPCyRN/z++gNPIbGxhQHE0MpKRLxgZBhUAAJgaPl+g2+paAAAAAElFTkSuQmCC"};
+// Objetos del evento HI-SCORE (solo se ganan en el evento)
+CAT.avatar.push({ id: "ficha", e: "🪙", bg: "#7e2553", n: "Ficha arcade", evento: "arcade", como: "Combo ×8 en el evento HI-SCORE" });
+CAT.tarjeta.push({ id: "hiscore", n: "HI-SCORE ✨", evento: "arcade", anim: 1, como: "Top 3 del evento HI-SCORE" });
+CAT.marco.push({ id: "arcade", n: "Arcade ✨", evento: "arcade", anim: 1, como: "Top 3 del evento HI-SCORE" });
+CAT.titulo.push({ id: "hiscore", n: "HI-SCORE", evento: "arcade", como: "Top 3 del evento HI-SCORE" }, { id: "top10arc", n: "Top 10 Arcade", evento: "arcade", como: "Top 10 del evento HI-SCORE" },
+  { id: "combo6", n: "Combo ×6", evento: "arcade", como: "Combo ×6 en el evento HI-SCORE" });
 CAT.avatar.forEach(a => { if (SPRITES[a.id]) a.img = SPRITES[a.id]; });
 CAT.avatar.find(a => a.id === "a29").n = "Marciano";
 // Nombres de los avatares de siempre
@@ -3913,11 +3966,12 @@ function procesarRecompensas() {
   }
   // Temporada 1 (octubre–diciembre de 2026): el top 3 se lleva el tema Oro y negro
   if (AHORA.fecha > TEMP1.hasta && !PERFIL.cobrados["temp1"]) {
-    const ds = dias.filter(d => d >= TEMP1.desde && d <= TEMP1.hasta), yo = ds.length ? clasificacionReto(ds).find(f => f.yo) : null;
+    const ds = dias.filter(d => d >= TEMP1.desde && d <= TEMP1.hasta), yo = ds.length ? clasificacionTemp(ds).find(f => f.yo) : null;
     if (yo && yo.jug && yo.pos <= 3) { cobrar("temp1", `🏆 ${yo.pos}.º de la Temporada 0 · título Campeón T0`, 20000, [10000, 6000, 4000][yo.pos - 1], { pos: yo.pos }); PERFIL.comprados.push("titulo:campeont0"); }
     else PERFIL.cobrados["temp1"] = 1;
   }
   try { recompensasTemporada(); } catch (e) { console.warn(e); }
+  try { recompensasArc(); } catch (e) { console.warn(e); }
   // Subidas de nivel: monedas siempre y regalos cada 5 y 10 niveles
   const nv = nivelDe(totalXP()).n;
   while (PERFIL.nivelCobrado < nv) {
@@ -3945,7 +3999,7 @@ function avatarHTML(o, tam) {
 }
 const nombreYo = () => PERFIL.nombre || "Tú";
 const claseTitulo = id => { const t = CAT.titulo.find(x => x.id === id); if (!t || t.id === "rango") return "";
-  return t.pase || t.prem ? "tt-px" : t.evento || (t.nivel || 0) >= 100 ? "tt-oro" : t.precio || t.insignia || t.nivel ? "tt-tag" : ""; };
+  return t.pase || t.prem || t.evento === "arcade" ? "tt-px" : t.evento || (t.nivel || 0) >= 100 ? "tt-oro" : t.precio || t.insignia || t.nivel ? "tt-tag" : ""; };
 const tituloHTML = (id, txt) => `<span class="ptit ${claseTitulo(id === undefined ? PERFIL.titulo : id)}">${esc(txt || tituloYo())}</span>`;
 const tituloYo = () => { const t = CAT.titulo.find(x => x.id === PERFIL.titulo); return !t || t.id === "rango" ? rangoDe(nivelDe(totalXP()).n) : t.n; };
 // XP que llegará cuando empiecen los partidos que ya has pronosticado hoy (el pronóstico se cobra al empezar,
@@ -4271,8 +4325,16 @@ const BASES_EVENTO = {
     ["Clasificaciones", "Hay clasificación del día, de cada semana (de lunes a domingo; cada semana cuenta para el mes en el que cae su jueves) y del mes, con los puntos sumados en ese periodo."],
     ["Desempates", "A igualdad de puntos gana quien tenga más aciertos y, si sigue el empate, quien tenga más aciertos en los que la app falló. Si persiste, se comparte el puesto: los premios virtuales se dan completos a cada uno y un premio físico se sortearía entre los empatados."],
     ["Premios de cada semana", "1.º 1.000 monedas, 2.º 600 y 3.º 400, más 3.000 XP cada uno. Del 4.º al 10.º, 200 monedas y 1.500 XP. Se cobran solos cuando acaba la semana."],
-    ["Temporada 0", "Del 1 de octubre al 31 de diciembre de 2026 se suman los puntos de todos los días. El top 3 se lleva el tema exclusivo Oro y negro (no se puede comprar), además de 10.000, 6.000 y 4.000 monedas y 20.000 XP."],
+    ["Temporada 0", "Del 1 de octubre al 31 de diciembre de 2026 se suman los puntos de todos los días y los de los eventos de temporada (como HI-SCORE). El top 3 se lleva el título exclusivo Campeón T0 (no se puede comprar), además de 10.000, 6.000 y 4.000 monedas y 20.000 XP."],
     ["Premios de cada mes", "1.º 5.000 monedas, 2.º 3.000 y 3.º 2.000, más 10.000 XP cada uno. Los tres se llevan además el set animado exclusivo «Vencedor de la máquina» (tarjeta, marco Circuito y avatar Robot campeón), que no se puede comprar. Del 4.º al 10.º, 1.000 monedas y 5.000 XP. Con ranking online: 1.º camiseta, 2.º balón y 3.º bufanda."],
+  ],
+  arcade: [
+    ["Fechas", "Del 21 de octubre al 20 de noviembre de 2026. Es el primer evento de la Temporada 0."],
+    ["Mecánica", "Cada día puedes elegir 3 respuestas de los partidos del día que salen en el evento (una por partido), hasta que empieza cada partido. Puedes cambiarlas o quitarlas antes de que empiecen."],
+    ["Combo", "Cada acierto seguido sube tu combo: ×1, ×2, ×3… hasta ×8. Los puntos de un acierto son 10 ÷ la probabilidad de esa respuesta, multiplicados por el combo que tenías. Un fallo devuelve el combo a ×1. El combo continúa de un día a otro y se cuenta en el orden de los partidos."],
+    ["Vidas", "Tienes 3 vidas cada semana (de lunes a domingo) y cada fallo quita una. Sin vidas, tus jugadas de esa semana no puntúan (GAME OVER) hasta el lunes. Una vez por semana puedes «continuar» gastando una Segunda oportunidad para recuperar una vida."],
+    ["Clasificación", "Gana quien más puntos sume en todo el evento. Desempate: mayor combo conseguido y después más aciertos. Los puntos del evento suman también a la clasificación de la Temporada 0."],
+    ["Premios", "1.º, 2.º y 3.º: set exclusivo animado (tarjeta HI-SCORE, marco Arcade y título HI-SCORE), 3.000, 2.000 y 1.000 monedas y 5.000 XP. Del 4.º al 10.º: título Top 10 Arcade, 500 monedas y 1.000 XP. Hitos: combo ×4, 150 monedas; combo ×6, título Combo ×6; combo ×8, avatar Ficha arcade. Cada acierto da 1 estrella del pase de temporada."],
   ],
   superv: [["Mecánica (borrador)", "Cada jornada se elige un equipo que crees que va a ganar, sin poder repetir equipo en todo el evento. Si empata o pierde, quedas eliminado. Gana el último que siga vivo; si caen todos a la vez, ganan los que llegaron más lejos."]],
   porra: [["Mecánica (borrador)", "Cada semana se publican 10 partidos destacados y hay que acertar el resultado exacto o el 1-X-2 antes de que empiecen. Gana quien más puntos sume en la semana."]],
@@ -4423,11 +4485,12 @@ function bannerTemporada() {
 const ARTE_PIXEL = `<img class="tbart" src="${SPRITES.a29}" alt="" style="image-rendering:pixelated;object-fit:contain">`;
 // ---- Pantalla de la temporada
 // Sprites pixel (cada letra es un color de la paleta)
-const PX_PAL = { o: "#000", y: "#ffcd75", d: "#ef7d57", w: "#fff", g: "#38b764", l: "#a7f070", b: "#8b5a2b", n: "#5d3a1a", p: "#b13e53" };
+const PX_PAL = { o: "#000", p: "#ff004d", y: "#ffcd75", d: "#ef7d57", w: "#fff", g: "#38b764", l: "#a7f070", b: "#8b5a2b", n: "#5d3a1a", p: "#b13e53" };
 const PX_SPR = {
   moneda: ["..oooo..", ".oyyyyo.", "oywyyydo", "oywyyydo", "oyyyyydo", "oyyyyydo", ".oddddo.", "..oooo.."],
   estrella: ["....o....", "...oyo...", "oooyyyooo", "oyyyyyyyo", ".oyyyyyo.", "..oyyyo..", ".oyyoyyo.", ".oyo.oyo.", ".oo...oo."],
   cofre: ["..oooooo..", ".obbbbbbo.", "obbbbbbbbo", "oooooyoooo", "onnnyyynno", "onnnnynnno", "onnnnnnnno", "oooooooooo"],
+  corazon: [".oo.oo.", "oppoppo", "opppppo", "opppppo", ".opppo.", "..opo..", "...o..."],
   ok: ["......oo", ".....olo", "o...olo.", "olo.olo.", ".ololo..", "..olo...", "...o...."],
 };
 function px(nombre, tam = 18) {
@@ -4439,7 +4502,7 @@ const pxCom = (id, g) => `<span class="pxcom ${id === "doble" ? "c2" : "c3"} ${g
 function pintarTemporada() {
   procesarRecompensas();
   const est = totalEst(), nE = escalonDe(est), dentro = est - nE * EST_ESCALON, lg = estadoLogin();
-  const dsT = diasTemporada(), filas = clasificacionReto(dsT), yo = filas.find(f => f.yo);
+  const dsT = diasTemporada(), filas = clasificacionTemp(dsT), yo = filas.find(f => f.yo);
   const icoRegalo = g => g.t === "mon" ? px("moneda", 22) : g.t === "xp" ? `<span class="pxxp">XP</span>` : g.t === "comodin" ? pxCom(g.id)
     : `<span class="pxobj">${g.t === "skin" ? "🎨" : g.t === "tarjeta" ? "🪪" : g.t === "marco" ? "🖼️" : g.t === "titulo" ? "🏷️" : g.t === "avatar" ? avE(g.it) : g.it.e}</span>`;
   const prem = tienePremium();
@@ -4473,6 +4536,7 @@ function pintarTemporada() {
       : `<div class="ppromo"><span><b>💎 PREMIUM</b><small>50 objetos exclusivos + sin anuncios</small></span><button class="pxbtn ppbtn" disabled>3,99 € · PRONTO</button></div>`}
     <div class="pmapa" id="prail">${mapa}</div>
     <p class="apnota">★ +1 por acierto, +1 por día completo, +2 por ganarle el día a la app, y más con el regalo diario y las misiones.</p></section>
+  ${bannerArcade()}
   <section class="mcard t0 tw-mis"><h3>📜 MISIONES</h3>
     <div class="pxtabs">${[["dia", "Diarias"], ["sem", "Semana"], ["esp", "Especiales"]].map(([k, n]) => `<button data-mt="${k}" aria-pressed="${mt === k}">${n}<small>${hechas(mis[k])}</small></button>`).join("")}</div>
     ${mis[mt].map(barra).join("")}<p class="apnota">${notaMis}</p></section>
@@ -4484,6 +4548,64 @@ function pintarTemporada() {
   if (sg) { const c = sg.closest(".pcol"); tr.scrollLeft = c.offsetLeft - tr.offsetLeft - (tr.clientWidth - c.offsetWidth) / 2; }
   else if (tr && nE >= ESCALONES) tr.scrollLeft = tr.scrollWidth;
 }
+// ---- Rectángulo del evento en la Arena y en la pantalla de la temporada
+function bannerArcade() {
+  if (AHORA.fecha < ARC.desde) return "";
+  const y = estadoYoArc(), fin = AHORA.fecha > ARC.hasta;
+  const vid = "♥".repeat(y.vidas) + "♡".repeat(Math.max(0, ARC.vidas - y.vidas));
+  return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b>
+    <span class="arcb2">${fin ? "Evento terminado · mira tu puesto" : `SCORE ${String(y.pts).padStart(5, "0")} · COMBO ×${y.combo} · <i>${vid}</i>`}</span><span class="arcb3">${quedanArc()}</span></button>`;
+}
+// ---- Pantalla del evento
+function pintarArcade() {
+  procesarRecompensas();
+  const hoy = AHORA.fecha, r = enArc(hoy) && DATOS.dias.some(d => d.fecha === hoy) ? poolArc(hoy) : null, y = estadoYoArc();
+  const filas = clasificacionArc(), yo = filas.find(f => f.yo), fin = hoy > ARC.hasta;
+  const go = y.vidas <= 0 && !fin, picks = r ? r.picks : [];
+  const corazones = [...Array(ARC.vidas + (ARCD.cont[y.sem] ? 1 : 0))].map((_, k) => `<span class="${k < y.vidas ? "on" : ""}">${px("corazon", 18)}</span>`).join("");
+  const barraCombo = [...Array(ARC.maxCombo)].map((_, k) => `<span class="${k < y.combo ? "on" : ""}" style="--k:${k}"></span>`).join("");
+  const nomC = t => t.length > 12 ? t.slice(0, 11) + "…" : t;
+  const ranura = k => { const pk = picks[k]; if (!pk) return `<div class="arsl vac"><b>${k + 1}</b><small>ELIGE</small></div>`;
+    const x = xArc(r, pk.i, pk.t), o = x.ops.find(z => z.m === pk.m), s = estadoReto(x), l = y.log.find(z => z.d === hoy && z.x.i === pk.i && z.x.tipo === pk.t);
+    const st = l && l.go ? "go" : s.final && s.gana ? (s.gana === pk.m ? "ok" : "ko") : s.empezado ? "vivo" : "";
+    return `<div class="arsl ${st}"><b>${k + 1}</b><span><small>${esc(nomC(x.local))} – ${esc(nomC(x.visitante))}</small><em>${esc(o.n || o.m)}</em>
+      <i>${st === "ok" ? `✓ +${l.g} (×${l.mult})` : st === "ko" ? "✗ −♥" : st === "go" ? "GAME OVER" : st === "vivo" ? "● en juego" : `+${ptsReto(o.p)} × combo`}</i></span></div>`; };
+  let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
+  <section class="archead"><span class="arcmar">EVENTO DE LA TEMPORADA 0</span><b>HI-SCORE</b><small>COMBO ARCADE · ${fCorta(ARC.desde)} – ${fCorta(ARC.hasta)} · ${quedanArc()}</small>
+    <div class="archud"><div><small>SCORE</small><b>${String(y.pts).padStart(6, "0")}</b></div><div><small>PUESTO</small><b>${yo.pts ? yo.pos + "º" : "–"}</b></div><div><small>RÉCORD</small><b>×${Math.max(1, Math.min(ARC.maxCombo, y.mejor))}</b></div></div>
+    <div class="arccombo"><small>COMBO</small><div class="arcbar">${barraCombo}</div><b class="${y.combo >= 4 ? "fuego" : ""}">×${y.combo}</b></div>
+    <div class="arcvid"><small>VIDAS DE LA SEMANA</small><div>${corazones}</div></div></section>`;
+  if (fin) h += `<section class="mcard t0 tw-arc"><h3>🏁 EVENTO TERMINADO</h3><p class="apnota" style="text-align:center">Has quedado <b>${yo.pts ? yo.pos + ".º" : "sin puntuar"}</b>. Los premios se cobran solos.</p></section>`;
+  else if (go) h += `<section class="mcard t0 tw-go"><h3>💀 GAME OVER</h3><p class="apnota" style="text-align:center">Te has quedado sin vidas esta semana. El lunes vuelves con ${ARC.vidas}.</p>
+    ${!ARCD.cont[y.sem] && PERFIL.comodines.segunda > 0 ? `<button class="apbtn pxbtn" data-arccont="1">▶ CONTINUAR · usa 1 🔄 Segunda oportunidad (tienes ${PERFIL.comodines.segunda})</button>` : `<p class="apnota" style="text-align:center">${ARCD.cont[y.sem] ? "Ya has usado tu continuar de esta semana." : "Con una Segunda oportunidad podrías continuar."}</p>`}</section>`;
+  if (r && !fin) {
+    h += `<section class="mcard t0 tw-arc"><h3>🎯 TUS ${ARC.picks} DE HOY</h3><div class="arslots">${[0, 1, 2].map(ranura).join("")}</div>
+      <p class="apnota">Elige ${ARC.picks} respuestas de cualquier partido de hoy (una por partido). Los puntos de cada acierto se multiplican por tu combo cuando se resuelve.</p></section>
+    <section class="mcard t0 tw-arcl"><h3>🕹️ PARTIDOS DE HOY</h3>${r.pool.map((pa, i) => {
+      const s0 = estadoReto({ ...pa, ops: (pa.qs[0] || {}).ops || [] }), mio = picks.find(pk => pk.i === i), cerrado = s0.empezado || go;
+      const preg = pa.qs.map(q => `<div class="arq"><small>${esc(q.q)}</small><div class="arops">${q.ops.map(o => { const yoEs = mio && mio.t === q.tipo && mio.m === o.m;
+        return `<button class="arop ${yoEs ? "yo" : ""}" ${cerrado || (!yoEs && !mio && picks.length >= ARC.picks) ? "disabled" : `data-arcpick="${i}|${q.tipo}|${esc(o.m)}"`}><b>${esc(o.n || o.m)}</b><span>${Math.round(o.p * 100)}% · +${ptsReto(o.p)}</span></button>`; }).join("")}</div></div>`).join("");
+      return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" ${mio ? "open" : ""}><summary><span class="arh">${s0.empezado ? "●" : esc(pa.hora || "")}</span><span class="are"><b>${esc(pa.local)}</b><b>${esc(pa.visitante)}</b><small>${esc(ligaBase(pa.liga))}</small></span>${mio ? '<span class="armk">★</span>' : ""}</summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
+    }).join("")}</section>`;
+  } else if (!fin) h += `<div class="vacio">Hoy no hay partidos para el evento. Vuelve mañana.</div>`;
+  const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
+  if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
+    return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span><b>${esc(o.n || o.m)}</b><small>${esc(nomC(z.x.local))} – ${esc(nomC(z.x.visitante))}</small></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
+  h += `<section class="mcard t0 tw-rank"><h3>🏆 TABLA HI-SCORE</h3>${tablaRanking(filas, false, "arcade")}
+    <details class="rprem"><summary>🎁 Premios del evento</summary><div class="rprl"><p>🥇🥈🥉 <b>Set exclusivo animado</b>: tarjeta HI-SCORE, marco Arcade y título HI-SCORE + 3.000 / 2.000 / 1.000 🪙 y 5.000 XP</p>
+      <p>4.º–10.º: título «Top 10 Arcade», 500 🪙 y 1.000 XP</p><p>Hitos: combo ×4 → 150 🪙 · combo ×6 → título «Combo ×6» · combo ×8 → avatar Ficha arcade</p><p>Cada acierto: +1 ⭐ del pase. Tus puntos también suman a la clasificación de la Temporada 0.</p></div></details></section>` + htmlReglas("arcade");
+  $("vista").innerHTML = h;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-arcpick],[data-arccont]"); if (!b) return;
+  if (b.dataset.arccont) { const sem = lunesDe(AHORA.fecha); if (!ARCD.cont[sem] && PERFIL.comodines.segunda > 0) { PERFIL.comodines.segunda--; ARCD.cont[sem] = 1; guardarArc(); guardarPerfil(); } pintarLista(); return; }
+  const [i, t, m] = b.dataset.arcpick.split("|"), r = ARCD.dias[AHORA.fecha]; if (!r) return;
+  const idx = r.picks.findIndex(pk => pk.i === +i);
+  if (idx >= 0 && r.picks[idx].t === t && r.picks[idx].m === m) r.picks.splice(idx, 1);   // tocar otra vez la misma: se quita
+  else if (idx >= 0) r.picks[idx] = { i: +i, t, m };
+  else if (r.picks.length < ARC.picks) r.picks.push({ i: +i, t, m });
+  guardarArc(); const y = window.scrollY; pintarLista(); window.scrollTo(0, y);
+});
 // ---- Ventana con la vista previa de un premio del pase
 const DESC_PREMIO = { avatar: "Avatar: tu imagen en el perfil, en la Arena y en todas las clasificaciones.", marco: "Marco: el borde de tu avatar. Lo ve todo el mundo en el ranking.",
   tarjeta: "Tarjeta: el fondo de tu ficha en el perfil, en la Arena y en tu fila de la clasificación.", color: "Color de nombre: así sale tu nombre en todas partes.",
@@ -4501,6 +4623,110 @@ function movilTema(id) {
     <h2 class="sec">Competiciones</h2><div class="comps">${comp("🇪🇸", "España", "LaLiga", 4)}${comp("🏴", "Inglaterra", "Premier League", 5)}${comp("🇪🇺", "Europa", "Euroliga", 3)}</div>
   </div></div>`;
 }
+// ================================================================ Evento de temporada: HI-SCORE · Combo Arcade
+// Cada día eliges 3 pronósticos de los partidos que quieras. Cada acierto seguido sube el combo (×1 … ×8) y
+// multiplica los puntos; un fallo lo devuelve a ×1 y quita una vida (3 por semana). Sin vidas, GAME OVER hasta
+// el lunes (o «continuar» gastando una Segunda oportunidad). El combo sigue de un día a otro.
+// Tiene su clasificación y premios, y sus puntos suman también a la clasificación de la Temporada 0.
+const ARC = { nombre: "HI-SCORE", desde: "2026-10-21", hasta: "2026-11-20", picks: 3, vidas: 3, maxCombo: 8 };
+const ARC_K = "arcadeV1";
+let ARCD = (() => { try { const r = JSON.parse(localStorage.getItem(ARC_K) || "null"); if (r && r.dias) return r; } catch (e) {} return { dias: {}, cont: {} }; })();
+ARCD.cont ||= {};
+const guardarArc = () => { try { localStorage.setItem(ARC_K, JSON.stringify(ARCD)); } catch (e) {} };
+const enArc = d => d >= ARC.desde && d <= ARC.hasta;
+const multiArc = racha => Math.min(ARC.maxCombo, 1 + racha);
+const diasArc = () => Object.keys(ARCD.dias).filter(enArc).sort();
+const quedanArc = () => { const n = Math.ceil((new Date(ARC.hasta + "T23:59:59") - new Date(AHORA.fecha + "T12:00:00")) / 864e5); return n > 0 ? `quedan ${n} día${n === 1 ? "" : "s"}` : "terminado"; };
+// Los partidos del día para el evento (hasta 12, de las competiciones más importantes); se quedan fijos todo el día
+function poolArc(fecha) {
+  const ya = ARCD.dias[fecha]; if (ya && ya.pool) return ya;
+  const dia = DATOS.dias.find(d => d.fecha === fecha); if (!dia) return null;
+  const cand = dia.partidos.filter(p => ["f", "b"].includes(p.dep || "f") && !/Pretemporada/i.test(p.liga) && opcionesReto(p))
+    .sort((a, b) => ordenLiga(ligaBase(a.liga)) - ordenLiga(ligaBase(b.liga)) || (a.hora || "").localeCompare(b.hora || ""));
+  const porLiga = {}, el = [];
+  for (const p of cand) { const l = ligaBase(p.liga); if ((porLiga[l] || 0) >= 3) continue; porLiga[l] = (porLiga[l] || 0) + 1; el.push(p); if (el.length >= 12) break; }
+  if (!el.length) return null;
+  el.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+  ARCD.dias[fecha] = { pool: el.map(p => ({ local: p.local, visitante: p.visitante, liga: p.liga, hora: p.hora, dep: p.dep || "f", fecha,
+    qs: preguntasReto(p).map(q => ({ tipo: q.tipo, q: q.q, ops: q.ops })) })), picks: [] };
+  guardarArc(); return ARCD.dias[fecha];
+}
+// Una pregunta de un partido del día lista para resolverse (con su resultado guardado si ya acabó)
+const xArc = (r, i, t) => { const pa = r.pool[i], q = pa && pa.qs.find(z => z.tipo === t); return q ? { ...pa, q: q.q, ops: q.ops, fin: q.fin, src: q, tipo: t, i } : null; };
+function picksBotArc(b, d, r) {
+  const orden = r.pool.map((_, i) => i).sort((a, c) => azar(b.n + d + a) - azar(b.n + d + c)), out = [];
+  for (const i of orden) { if (out.length >= ARC.picks) break; const pa = r.pool[i]; if (!pa.qs.length) continue;
+    const q = pa.qs[Math.floor(azar(b.n + d + i + "q") * pa.qs.length)], x = xArc(r, i, q.tipo), m = eligeBot(b, x); if (m) out.push({ x, m }); }
+  return out;
+}
+function picksAppArc(r) {   // la app: las 3 respuestas más probables del día (de partidos distintos)
+  return r.pool.map((pa, i) => pa.qs.map(q => ({ i, t: q.tipo, o: q.ops.reduce((a, b) => b.p > a.p ? b : a) })).sort((a, b) => b.o.p - a.o.p)[0]).filter(Boolean)
+    .sort((a, b) => b.o.p - a.o.p).slice(0, ARC.picks).map(z => ({ x: xArc(r, z.i, z.t), m: z.o.m }));
+}
+// Partida completa de un jugador: puntos, combo, vidas por semana y la lista de jugadas
+let _arcSucio = false;
+function partidaArc(dias, elige, cont) {
+  let pts = 0, ok = 0, jug = 0, racha = 0, mejor = 0; const fallos = {}, log = [];
+  for (const d of dias) {
+    const r = ARCD.dias[d]; if (!r || !r.pool) continue;
+    const sem = lunesDe(d), lista = elige(d, r).filter(z => z.x).sort((a, b) => (a.x.hora || "").localeCompare(b.x.hora || "") || a.x.i - b.x.i);
+    for (const z of lista) {
+      const s = estadoReto(z.x);
+      if (s.final && s.gana && !z.x.src.fin) { z.x.src.fin = s.gana; _arcSucio = true; }
+      const vivas = ARC.vidas + (cont[sem] ? 1 : 0) - (fallos[sem] || 0);
+      if (vivas <= 0) { log.push({ ...z, d, s, go: true }); continue; }
+      if (!s.final || !s.gana) { log.push({ ...z, d, s, mult: multiArc(racha) }); continue; }
+      jug++;
+      const mult = multiArc(racha), base = ptsReto(z.x.ops.find(o => o.m === z.m).p);
+      if (z.m === s.gana) { ok++; const g = base * mult; pts += g; racha++; mejor = Math.max(mejor, racha); log.push({ ...z, d, s, ok: true, g, mult, base }); }
+      else { racha = 0; fallos[sem] = (fallos[sem] || 0) + 1; log.push({ ...z, d, s, ok: false, mult, base }); }
+    }
+  }
+  return { pts, ok, jug, racha, mejor, fallos, log };
+}
+const picksYoArc = (d, r) => (r.picks || []).map(pk => ({ x: xArc(r, pk.i, pk.t), m: pk.m }));
+function clasificacionArc(dias) {
+  dias = dias || diasArc();
+  const xb = xpBots(), filas = [];
+  filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...partidaArc(dias, picksYoArc, ARCD.cont) });
+  filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...partidaArc(dias, (d, r) => picksAppArc(r), {}) });
+  BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...partidaArc(dias, (d, r) => picksBotArc(b, d, r), {}) }));
+  if (_arcSucio) { _arcSucio = false; guardarArc(); }
+  filas.sort((a, b) => b.pts - a.pts || b.mejor - a.mejor || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
+  let pos = 0, ant = null;
+  filas.forEach((f, i) => { const k = f.pts + "|" + f.mejor + "|" + f.ok; if (k !== ant) { pos = i + 1; ant = k; } f.pos = pos; f.e = f.yo || f.app ? f.e : `Récord ×${Math.max(1, f.mejor)}`; });
+  return filas;
+}
+// Clasificación de la temporada: Gánale a la app + los eventos de temporada
+function clasificacionTemp(dias) {
+  const base = clasificacionReto(dias), arc = clasificacionArc(diasArc().filter(d => d >= TEMP1.desde && d <= TEMP1.hasta));
+  for (const f of base) { const a = arc.find(x => x.n === f.n && !!x.yo === !!f.yo); if (a) { f.pts += a.pts; f.ok += a.ok; f.jug += a.jug; } }
+  base.sort((a, b) => b.pts - a.pts || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
+  let pos = 0, ant = null; base.forEach((f, i) => { const k = f.pts + "|" + f.ok; if (k !== ant) { pos = i + 1; ant = k; } f.pos = pos; });
+  return base;
+}
+// Estado de tu semana: vidas que te quedan y si ya has usado el «continuar»
+function estadoYoArc() {
+  const yo = partidaArc(diasArc(), picksYoArc, ARCD.cont), sem = lunesDe(AHORA.fecha);
+  const vidas = Math.max(0, ARC.vidas + (ARCD.cont[sem] ? 1 : 0) - (yo.fallos[sem] || 0));
+  return { ...yo, vidas, sem, combo: multiArc(yo.racha) };
+}
+// Premios: estrellas y XP por acierto, hitos de combo y el podio al acabar
+function recompensasArc() {
+  if (AHORA.fecha < ARC.desde) return;
+  const yo = partidaArc(diasArc(), picksYoArc, ARCD.cont);
+  for (const z of yo.log) if (z.ok) cobrar(`arc:${z.d}:${z.x.i}:${z.x.tipo}`, `🕹️ HI-SCORE · acierto ×${z.mult} (+${z.g})`, 50 + z.g * 5, 0, enTemp(z.d) ? { est: 1 } : null);
+  const hitos = [[4, 150, 3, null, "Combo ×4"], [6, 300, 5, ["titulo", "combo6"], "Combo ×6 · título Combo ×6"], [8, 600, 8, ["avatar", "ficha"], "Combo ×8 · avatar Ficha arcade"]];
+  for (const [rr, mon, es, obj, txt] of hitos) if (yo.mejor >= rr && cobrar(`arch${rr}`, `🕹️ HI-SCORE · ${txt}`, 0, mon, { est: es }) && obj) { const k = obj[0] + ":" + obj[1]; if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k); }
+  if (AHORA.fecha > ARC.hasta && !PERFIL.cobrados["arcfin"]) {
+    const f = clasificacionArc().find(x => x.yo);
+    if (f && f.pts && f.pos <= 10) {
+      const [mon, xp] = PREMIOS_RANK.arcade[Math.min(f.pos, 4) - 1];
+      if (cobrar("arcfin", `🕹️ ${f.pos}.º en HI-SCORE`, xp, mon, { pos: f.pos }))
+        for (const k of f.pos <= 3 ? ["tarjeta:hiscore", "marco:arcade", "titulo:hiscore"] : ["titulo:top10arc"]) if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
+    } else PERFIL.cobrados["arcfin"] = 1;
+  }
+}
 function previewObjeto(t, id, extra) {
   const yo = { ...PERFIL }, it = CAT[t] && CAT[t].find(x => x.id === id);
   const ficha = (o, tid, txt) => `<div class="pcab tj tj-${o.tarjeta || "clasica"} pxpc">${avatarHTML(o, 72)}<b class="pnom nc-${o.color || "normal"}">${esc(nombreYo())}</b>${tituloHTML(tid, txt)}</div>`;
@@ -4508,7 +4734,7 @@ function previewObjeto(t, id, extra) {
     : t === "tarjeta" ? ficha({ ...yo, tarjeta: id }) : t === "color" ? ficha({ ...yo, color: id }) : t === "titulo" ? ficha(yo, id, id === "rango" ? rangoDe(nivelDe(totalXP()).n) : it.n)
     : t === "skin" ? (id ? movilTema(id) : `<span class="skmini sk-normal" style="width:200px;height:120px"></span>`) : "";
 }
-const origenItem = it => it.perfil ? "Regalo por crear tu perfil" : it.pase ? `Pase de la Temporada 0 · nivel ${it.pase}` : it.prem ? `Pase Premium T0 · nivel ${it.prem}`
+const origenItem = it => it.como ? it.como : it.perfil ? "Regalo por crear tu perfil" : it.pase ? `Pase de la Temporada 0 · nivel ${it.pase}` : it.prem ? `Pase Premium T0 · nivel ${it.prem}`
   : it.evento === "temporada" ? "Top 3 de la Temporada 0" : it.evento ? "Top 3 del mes en Gánale a la app" : it.nivel ? `Al llegar al nivel ${it.nivel}` : it.precio ? `Tienda · ${fmtN(it.precio)} 🪙`
   : it.insignia ? "Con la insignia " + ((INSIGNIAS.find(x => x[0] === it.insignia) || [])[2] || "") : "De serie";
 function abrirModal(html, clase) {
