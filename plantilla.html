@@ -530,6 +530,50 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .reglas ol { margin: 6px 0 4px; padding-left: 20px; font-size: 12.5px; line-height: 1.5; color: var(--ink); } .reglas li { margin-bottom: 6px; }
 .reglas h4, .guia h4 { margin: 12px 0 4px; font-size: 13px; }
 .guia p, .guia ul { font-size: 13px; line-height: 1.5; margin: 6px 0; } .guia ul { padding-left: 18px; } .guia .mtab { margin: 8px 0; }
+/* ---------- Tarjetas (fondo de la ficha del jugador) ---------- */
+.tj:not(.tj-clasica) { color: #fff; border-color: transparent !important; position: relative; overflow: hidden; isolation: isolate; }
+.tj:not(.tj-clasica) small, .tj:not(.tj-clasica) .ptit, .tj:not(.tj-clasica) .pniv, .tj:not(.tj-clasica) .pniv b { color: rgba(255,255,255,.85) !important; }
+.tj:not(.tj-clasica) b:not([class*="nc-"]), .tj:not(.tj-clasica) .pyt b.nc-normal, .tj:not(.tj-clasica) .pnom.nc-normal { color: #fff; }
+.tj:not(.tj-clasica) .pxp { background: rgba(255,255,255,.22); }
+.tj:not(.tj-clasica) .apbtn.ap2 { background: rgba(255,255,255,.16); color: #fff; border-color: rgba(255,255,255,.25); }
+.tj:not(.tj-clasica) .psig { color: #fde68a; }
+.rjug.tj { border-radius: 12px; padding: 4px 8px 4px 4px; margin: -2px 0; }
+.tjmini { display: block; width: 100%; height: 42px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.tj.tj-noche { background: linear-gradient(135deg, #0f172a, #1e3a8a); }
+.tj.tj-cesped { background: repeating-linear-gradient(90deg, #15803d 0 26px, #16a34a 26px 52px); }
+.tj.tj-atardecer { background: linear-gradient(135deg, #f97316, #db2777); }
+.tj.tj-oceano { background: linear-gradient(135deg, #0e7490, #1d4ed8); }
+.tj.tj-pizarra { background-color: #1f3a2e; background-image: linear-gradient(90deg, transparent 49.6%, rgba(255,255,255,.2) 50%, transparent 50.4%), radial-gradient(circle at 50% 50%, transparent 28px, rgba(255,255,255,.2) 29px, transparent 31px); }
+.tj.tj-estadio { background: radial-gradient(ellipse at 15% 0, rgba(255,255,255,.45), transparent 40%), radial-gradient(ellipse at 85% 0, rgba(255,255,255,.45), transparent 40%), linear-gradient(180deg, #0b1220, #14532d); }
+.tj.tj-oro { background: linear-gradient(135deg, #78350f, #ca8a04, #78350f); }
+.tj.tj-grada { background: repeating-linear-gradient(135deg, #b91c1c 0 14px, #f8fafc 14px 28px); }
+.tj.tj-grada * { text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.tj.tj-neonu { background: linear-gradient(135deg, #111827, #312e81); box-shadow: inset 0 0 0 2px #22d3ee, 0 0 14px rgba(217, 70, 239, .5) !important; }
+.tj.tj-marmol { background: linear-gradient(115deg, #e5e7eb 0%, #9ca3af 18%, #f3f4f6 30%, #6b7280 52%, #e5e7eb 70%, #9ca3af 100%); }
+.tj.tj-marmol * { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.tj.tj-carbono { background: repeating-linear-gradient(45deg, #111 0 6px, #262626 6px 12px); }
+.tj.tj-pasion { background: linear-gradient(135deg, #7f1d1d, #dc2626); }
+.tj.tj-retro { background: linear-gradient(135deg, #7c3aed, #ec4899 50%, #06b6d4); }
+.tj.tj-retro::after { content: ""; position: absolute; inset: 0; z-index: -1; background: repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 2px, transparent 2px 6px); }
+@keyframes tjMueve { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes tjBrillo { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(320%) skewX(-20deg); } }
+@keyframes tjEstrellas { from { background-position: 0 0, 0 0; } to { background-position: 200px 100px, -150px 80px; } }
+.tj.tj-leyenda { background: linear-gradient(135deg, #78350f, #eab308, #fef08a, #ca8a04, #78350f); background-size: 300% 300%; animation: tjMueve 6s ease infinite; }
+.tj.tj-leyenda::after, .tj.tj-vencedor::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 30%; z-index: -1; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: tjBrillo 3s ease-in-out infinite; }
+.tj.tj-leyenda * { text-shadow: 0 1px 3px rgba(0,0,0,.55); }
+.tj.tj-infinito { background: linear-gradient(120deg, #000, #4c1d95, #000, #0e7490, #000); background-size: 400% 400%; animation: tjMueve 8s ease infinite; }
+.tj.tj-aurora { background: linear-gradient(120deg, #064e3b, #10b981, #6366f1, #a855f7, #064e3b); background-size: 400% 400%; animation: tjMueve 7s ease infinite; }
+.tj.tj-lava { background: linear-gradient(120deg, #450a0a, #dc2626, #f97316, #facc15, #b91c1c, #450a0a); background-size: 400% 400%; animation: tjMueve 5s ease infinite; }
+.tj.tj-galaxia { background-color: #0b0420; background-image: radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 120px 70px, #c4b5fd, transparent), radial-gradient(ellipse at 70% 40%, rgba(147, 51, 234, .55), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(59, 130, 246, .45), transparent 55%);
+  background-size: 200px 100px, 150px 80px, 100% 100%, 100% 100%; animation: tjEstrellas 12s linear infinite; }
+.tj.tj-vencedor { background: linear-gradient(135deg, #1e1b4b, #4f46e5, #0ea5e9, #4f46e5, #1e1b4b); background-size: 300% 300%; animation: tjMueve 5s ease infinite; box-shadow: inset 0 0 0 2px rgba(250, 204, 21, .8) !important; }
+.tj.tj-vencedor::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,.12) 1px, transparent 1px); background-size: 18px 18px; }
+/* Marco y avatar animados del evento */
+.mr-circuito { background: conic-gradient(#22d3ee, #4f46e5, #facc15, #22d3ee); animation: girar 2.5s linear infinite; box-shadow: 0 0 12px rgba(34, 211, 238, .8); }
+.mr-circuito .avi { animation: girar 2.5s linear infinite reverse; }
+@keyframes avaRobot { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-8%) rotate(-8deg); } 75% { transform: translateY(-8%) rotate(8deg); } }
+.ava-robot { display: inline-block; animation: avaRobot 2.2s ease-in-out infinite; filter: drop-shadow(0 0 6px rgba(250, 204, 21, .9)); }
+@media (prefers-reduced-motion: reduce) { .tj, .tj::after, .ava-robot, .mr-circuito, .mr-circuito .avi { animation: none !important; } }
 /* ---------- Perfil, avatares, tienda ---------- */
 .av { --s: 40px; position: relative; display: inline-grid; place-items: center; width: var(--s); height: var(--s); border-radius: 50%; flex: none; }
 .av .avi { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-size: calc(var(--s) * .55); overflow: hidden; line-height: 1; }
@@ -564,7 +608,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .pmov div > span:first-child { display: flex; flex-direction: column; min-width: 0; } .pmov small { color: var(--muted); font-size: 11px; }
 .pmov div > span:last-child { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; font-family: var(--mono); font-size: 12px; }
 .pmov .xp { color: #6d28d9; } .pmov .mon { color: #b45309; } .pmov .gasto { color: var(--red); }
-.pgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .pgrid.color, .pgrid.titulo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .pgrid.color, .pgrid.titulo, .pgrid.tarjeta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pit { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 70px; padding: 8px 4px; border-radius: 14px; border: 2px solid transparent; background: var(--bar); cursor: pointer; color: var(--ink); font: inherit; }
 .pit b { font-size: 11.5px; } .pit small { font-size: 10px; color: var(--muted); } .pit.on { border-color: #4f46e5; background: rgba(79, 70, 229, .1); } .pit.lock { opacity: .55; }
 .tcab { display: flex; flex-direction: column; align-items: center; gap: 2px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; border-radius: 22px; padding: 18px; margin-bottom: 8px; text-align: center; }
@@ -2954,14 +2998,14 @@ const PREMIOS_RANK = { semana: [[1000, 3000], [600, 3000], [400, 3000], [200, 15
 function premioDe(tipo, f) {
   if (!PREMIOS_RANK[tipo] || !f.pts || f.pos > 10) return null;
   const [mon, xp] = PREMIOS_RANK[tipo][Math.min(f.pos, 4) - 1];
-  return { mon, xp, fis: tipo === "mes" && f.pos <= 3 ? ["👕", "⚽", "🧣"][f.pos - 1] : "" };
+  return { mon, xp, fis: tipo === "mes" && f.pos <= 3 ? ["👕", "⚽", "🧣"][f.pos - 1] + "✨" : "" };
 }
 const kXP = n => n >= 1000 ? (n / 1000).toLocaleString("es-ES") + "k" : String(n);
 function tablaClasif(filas, todas, tipo) {
   const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10);
   const prem = f => { const x = premioDe(tipo, f); return PREMIOS_RANK[tipo] ? `<td class="rpr">${x ? `<span class="rprc">${x.fis ? x.fis + " " : ""}${fmtN(x.mon)} 🪙<small>+${kXP(x.xp)} XP</small></span>` : ""}</td>` : ""; };
   const av = f => f.app ? `<span class="av" style="--s:30px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(f.perfil, 30);
-  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td>${prem(f)}<td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
+  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug${f.perfil && f.perfil.tarjeta && f.perfil.tarjeta !== "clasica" ? " tj tj-" + f.perfil.tarjeta : ""}">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td>${prem(f)}<td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
   const nc = PREMIOS_RANK[tipo] ? 5 : 4;
   return `<table class="rtab"><tr><th>#</th><th>Jugador</th>${PREMIOS_RANK[tipo] ? "<th>Premio</th>" : ""}<th>Aciertos</th><th>Pts</th></tr>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<tr class="sep"><td colspan="${nc}">···</td></tr>` + fila(yo) : ""}</table>`;
 }
@@ -2972,7 +3016,7 @@ function seccionClasif() {
   const ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : vista === "semana" ? Object.keys(RETO.dias).filter(d => w.dias.includes(d)) : dias;
   const filas = clasificacionReto(ds), yo = filas.find(f => f.yo);
   const premios = vista === "semana" ? `<p class="rprem">🎁 Premios de la semana: 🥇 1.000 🪙 · 🥈 600 · 🥉 400 (+3.000 XP) · 4.º–10.º 200 🪙 (+1.500 XP)</p>`
-    : vista === "mes" ? `<p class="rprem">🎁 Premios del mes: 🥇 5.000 🪙 · 🥈 3.000 · 🥉 2.000 (+10.000 XP) · 4.º–10.º 1.000 🪙 (+5.000 XP)</p>` : "";
+    : vista === "mes" ? `<p class="rprem">🎁 Premios del mes: 🥇 5.000 🪙 · 🥈 3.000 · 🥉 2.000 (+10.000 XP) y el set animado «Vencedor de la máquina» (tarjeta, marco y avatar) · 4.º–10.º 1.000 🪙 (+5.000 XP)</p>` : "";
   return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
     ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
     <p>${filas.some(f => f.pts) ? `Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.` : "Aún no hay puntos: llegan cuando acaben los partidos."}</p>
@@ -3142,7 +3186,7 @@ document.addEventListener("click", e => {
 // desafíos: cada recompensa tiene su clave y se cobra una sola vez (queda en el historial).
 const PERFIL_K = "perfilV1";
 let PERFIL = (() => { try { const p = JSON.parse(localStorage.getItem(PERFIL_K) || "null"); if (p && p.mov) return p; } catch (e) {} return null; })()
-  || { nombre: "", avatar: "a1", marco: "ninguno", color: "normal", titulo: "rango", comprados: [], comodines: { doble: 0, segunda: 0 }, mov: [], cobrados: {}, nivelCobrado: 1, foto: null };
+  || { nombre: "", avatar: "a1", marco: "ninguno", color: "normal", titulo: "rango", tarjeta: "clasica", comprados: [], comodines: { doble: 0, segunda: 0 }, mov: [], cobrados: {}, nivelCobrado: 1, foto: null };
 function guardarPerfil() { try { localStorage.setItem(PERFIL_K, JSON.stringify(PERFIL)); } catch (e) { if (PERFIL.foto) { alert("No cabe la foto en el móvil: prueba con otra más pequeña."); } } }
 const fmtN = n => Math.round(n).toLocaleString("es-ES");
 // ---- Niveles: del N al N+1 hacen falta 200 + 40·N de XP (nivel 10 en ~3 días, 100 en ~6 meses, 200 en ~2 años)
@@ -3161,12 +3205,22 @@ const CAT = {
     ["a17", "🏆", "#b45309", { nivel: 15 }], ["a18", "🎯", "#be123c", { nivel: 30 }], ["a19", "🚀", "#1d4ed8", { nivel: 45 }], ["a20", "💎", "#0891b2", { nivel: 60 }],
     ["a21", "🌋", "#9a3412", { nivel: 75 }], ["a22", "⚡", "#4338ca", { nivel: 90 }], ["a23", "🌟", "#a16207", { nivel: 110 }], ["a24", "🛡️", "#334155", { nivel: 130 }],
     ["a25", "🐲", "#047857", { nivel: 150 }], ["a26", "🔱", "#0f172a", { nivel: 175 }], ["a27", "♾️", "#000000", { nivel: 200 }],
+    ["a28", "🤖", "#1e1b4b", { evento: "reto", anim: "robot", n: "Robot campeón" }],
   ].map(([id, e, bg, x]) => ({ id, e, bg, ...(x || {}) })),
   marco: [["ninguno", "Sin marco"], ["bronce", "Bronce", { nivel: 10 }], ["plata", "Plata", { nivel: 20 }], ["oro", "Oro", { nivel: 40 }], ["neon", "Neón", { precio: 2000 }],
     ["esmeralda", "Esmeralda", { nivel: 60 }], ["fuego", "Fuego", { precio: 3000 }], ["rubi", "Rubí", { nivel: 80 }], ["arcoiris", "Arcoíris", { precio: 4000 }],
-    ["diamante", "Diamante", { nivel: 100 }], ["legendario", "Legendario", { nivel: 150 }], ["inmortal", "Inmortal", { nivel: 200 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+    ["diamante", "Diamante", { nivel: 100 }], ["legendario", "Legendario", { nivel: 150 }], ["inmortal", "Inmortal", { nivel: 200 }],
+    ["circuito", "Circuito", { evento: "reto" }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   color: [["normal", "Normal"], ["dorado", "Dorado", { nivel: 5 }], ["cian", "Cian", { precio: 1000 }], ["rosa", "Rosa", { precio: 1000 }], ["neonv", "Verde neón", { nivel: 25 }],
     ["fuegoc", "Fuego", { precio: 2500 }], ["arcoirisc", "Arcoíris", { nivel: 120 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+  // Tarjetas: el fondo de tu ficha (barra de Desafíos, perfil y tu fila en la clasificación)
+  tarjeta: [["clasica", "Clásica"], ["noche", "Noche"], ["cesped", "Césped"],
+    ["atardecer", "Atardecer", { nivel: 3 }], ["oceano", "Océano", { nivel: 8 }], ["pizarra", "Pizarra táctica", { nivel: 12 }], ["estadio", "Estadio", { nivel: 18 }],
+    ["oro", "Oro viejo", { nivel: 28 }], ["grada", "Grada", { nivel: 40 }], ["neonu", "Neón urbano", { nivel: 55 }], ["marmol", "Mármol", { nivel: 75 }],
+    ["leyenda", "Leyenda ✨", { nivel: 100, anim: 1 }], ["infinito", "Infinito ✨", { nivel: 150, anim: 1 }],
+    ["carbono", "Carbono", { precio: 1500 }], ["pasion", "Rojo pasión", { precio: 1200 }], ["retro", "Retro 90", { precio: 2000 }],
+    ["aurora", "Aurora ✨", { precio: 6000, anim: 1 }], ["lava", "Lava ✨", { precio: 7000, anim: 1 }], ["galaxia", "Galaxia ✨", { precio: 8000, anim: 1 }],
+    ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   titulo: [["rango", "Tu rango"], ["profeta", "El Profeta", { precio: 2000 }], ["empates", "Rey del Empate", { precio: 2000 }], ["matematico", "Matemático", { precio: 1500 }],
     ["cazagigantes", "Cazagigantes", { insignia: "giganta" }], ["visionario", "Visionario", { nivel: 35 }], ["barrio", "Leyenda del barrio", { nivel: 70 }],
     ["elegido", "El Elegido", { nivel: 140 }], ["inmortalt", "Inmortal", { nivel: 200 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
@@ -3185,6 +3239,7 @@ const INSIGNIAS = [
   ["nv10", "⭐", "Nivel 10", "Llega al nivel 10"], ["nv50", "🌟", "Nivel 50", "Llega al nivel 50"], ["nv100", "💫", "Nivel 100", "Llega al nivel 100"],
 ];
 function tieneItem(tipo, it) {
+  if (it.evento) return PERFIL.comprados.includes(tipo + ":" + it.id);   // solo para el podio del evento
   if (!it.precio && !it.nivel && !it.insignia) return true;
   if (it.nivel) return nivelDe(totalXP()).n >= it.nivel;
   if (it.insignia) return datosJugador().insignias.includes(it.insignia);
@@ -3263,7 +3318,9 @@ function procesarRecompensas() {
     const yo = clasificacionReto(dias.filter(d => d.startsWith(mes))).find(f => f.yo);
     if (!yo.jug) { PERFIL.cobrados["mes:" + mes] = 1; continue; }
     const pos = yo.pos, mon = [5000, 3000, 2000][pos - 1] || (pos <= 10 ? 1000 : 0), xp = pos <= 3 ? 10000 : pos <= 10 ? 5000 : 0;
-    if (mon) cobrar("mes:" + mes, `${pos}.º del mes (${mes.slice(5)}/${mes.slice(0, 4)})`, xp, mon, { pos }); else PERFIL.cobrados["mes:" + mes] = 1;
+    if (mon && cobrar("mes:" + mes, `${pos}.º del mes (${mes.slice(5)}/${mes.slice(0, 4)})${pos <= 3 ? " · set animado de Gánale a la app" : ""}`, xp, mon, { pos }) && pos <= 3)
+      for (const k of ["tarjeta:vencedor", "marco:circuito", "avatar:a28"]) if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
+    if (!mon) PERFIL.cobrados["mes:" + mes] = 1;
   }
   // Subidas de nivel: monedas siempre y regalos cada 5 y 10 niveles
   const nv = nivelDe(totalXP()).n;
@@ -3287,7 +3344,7 @@ function brindis(html) {
 // ---- Pintar avatar, nombre y tarjeta de jugador
 function avatarHTML(o, tam) {
   o = o || PERFIL; const a = avatarDe(o.avatar);
-  const dentro = o.avatar === "foto" && o.foto ? `<img src="${o.foto}" alt="">` : a.e;
+  const dentro = o.avatar === "foto" && o.foto ? `<img src="${o.foto}" alt="">` : a.anim ? `<span class="ava-${a.anim}">${a.e}</span>` : a.e;
   return `<span class="av mr-${o.marco || "ninguno"}" style="--s:${tam || 40}px"><span class="avi" style="background:${o.avatar === "foto" ? "#000" : a.bg}">${dentro}</span></span>`;
 }
 const nombreYo = () => PERFIL.nombre || "Tú";
@@ -3300,7 +3357,7 @@ function xpEnCamino() {
 }
 function barraJugador() {
   const xp = totalXP(), nv = nivelDe(xp);
-  return `<div class="pbar"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 46)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>Nv ${nv.n} · ${esc(tituloYo())}${xpEnCamino() ? ` · <span class="pcam">+${xpEnCamino()} XP en camino</span>` : ""}</small>
+  return `<div class="pbar tj tj-${PERFIL.tarjeta || "clasica"}"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 46)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>Nv ${nv.n} · ${esc(tituloYo())}${xpEnCamino() ? ` · <span class="pcam">+${xpEnCamino()} XP en camino</span>` : ""}</small>
       <span class="pxp"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span></span></button>
     <button class="pmon" data-vista="tienda">🪙 ${fmtN(totalMon())}</button></div>`;
 }
@@ -3310,7 +3367,7 @@ function pintarPerfil() {
   const xp = totalXP(), nv = nivelDe(xp), dj = datosJugador();
   const sig = CAT.avatar.concat(CAT.marco, CAT.color, CAT.titulo).filter(i => i.nivel > nv.n).sort((a, b) => a.nivel - b.nivel)[0];
   let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">Perfil</span></h2></div>
-  <section class="pcab">${avatarHTML(PERFIL, 96)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
+  <section class="pcab tj tj-${PERFIL.tarjeta || "clasica"}">${avatarHTML(PERFIL, 96)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
     <div class="pniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}</span></div>
     <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
     ${xpEnCamino() ? `<small class="psig">⏳ +${xpEnCamino()} XP en camino: se suman cuando empiecen los partidos que has pronosticado. Las monedas llegan al acertar.</small>` : ""}
@@ -3331,14 +3388,15 @@ function pintarPerfil() {
 function pintarPersonalizar() {
   const sec = (tipo, titulo, pinta) => `<section class="mcard"><h3>${titulo}</h3><div class="pgrid ${tipo}">${CAT[tipo].map(it => {
     const ok = tieneItem(tipo, it), puesto = PERFIL[tipo] === it.id;
-    const cand = it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
+    const cand = it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
     return `<button class="pit ${puesto ? "on" : ""} ${ok ? "" : "lock"}" ${ok ? `data-poner="${tipo}" data-id="${it.id}"` : `data-vista="tienda"`}>${pinta(it)}${ok ? "" : `<small>🔒 ${cand}</small>`}</button>`;
   }).join("")}</div></section>`;
   let h = `<div class="lbar"><button class="ico" data-vista="perfil" aria-label="Volver">‹</button><h2><span class="t">Personalizar</span></h2></div>
-  <section class="pcab">${avatarHTML(PERFIL, 80)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
+  <section class="pcab tj tj-${PERFIL.tarjeta || "clasica"}">${avatarHTML(PERFIL, 80)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
     <div class="pacc"><button class="apbtn ap2" data-pnombre="1">✏️ Cambiar nombre</button><label class="apbtn ap2 pfoto">📷 Usar mi foto<input type="file" accept="image/*" id="pfotoIn" hidden></label></div></section>`;
   h += sec("avatar", "Avatar", it => `<span class="av" style="--s:44px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`);
   h += sec("marco", "Marco", it => `<span class="av mr-${it.id}" style="--s:44px"><span class="avi" style="background:${avatarDe(PERFIL.avatar).bg}">${PERFIL.avatar === "foto" && PERFIL.foto ? `<img src="${PERFIL.foto}" alt="">` : avatarDe(PERFIL.avatar).e}</span></span><b>${esc(it.n)}</b>`);
+  h += sec("tarjeta", "Tarjeta", it => `<span class="tjmini tj tj-${it.id}"></span><b>${esc(it.n)}</b>`);
   h += sec("color", "Color del nombre", it => `<b class="nc-${it.id}" style="font-size:15px">${esc(nombreYo())}</b><small>${esc(it.n)}</small>`);
   h += sec("titulo", "Título", it => `<b>${esc(it.id === "rango" ? rangoDe(nivelDe(totalXP()).n) : it.n)}</b>`);
   $("vista").innerHTML = h;
@@ -3358,6 +3416,9 @@ function pintarTienda() {
   <div class="tit"><span class="tico">🔄</span><span class="tin"><b>Segunda oportunidad</b><small>Cambia un pronóstico en los primeros 15 minutos. Tienes ${PERFIL.comodines.segunda}.</small></span><button class="tbtn" ${mon >= 1500 ? "" : "disabled"} data-comprar="comodin" data-id="segunda">1.500 🪙</button></div>
   <h2 class="sec">🧑 Avatares</h2>${CAT.avatar.filter(i => i.precio).map(it => fila("avatar", it, `<span class="av" style="--s:44px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`)).join("")}
   <h2 class="sec">🖼️ Marcos</h2>${CAT.marco.filter(i => i.precio).map(it => fila("marco", it, `<span class="av mr-${it.id}" style="--s:44px"><span class="avi" style="background:${avatarDe(PERFIL.avatar).bg}">${avatarDe(PERFIL.avatar).e}</span></span>`)).join("")}
+  <h2 class="sec">🪪 Tarjetas</h2>${CAT.tarjeta.filter(i => i.precio).map(it => fila("tarjeta", it, `<span class="tjmini tj tj-${it.id}" style="width:64px;height:44px;flex:none"></span>`)).join("")}
+  <h2 class="sec">🏆 Exclusivos de eventos (animados)</h2>
+  <div class="tit"><span class="av mr-circuito" style="--s:40px"><span class="avi" style="background:#1e1b4b"><span class="ava-robot">🤖</span></span></span><span class="tin"><b>Set «Vencedor de la máquina»</b><small>Tarjeta, marco Circuito y avatar Robot campeón, todos animados. Solo para los 3 primeros del mes en Gánale a la app.</small></span><span class="tjmini tj tj-vencedor" style="width:54px;height:40px;flex:none"></span></div>
   <h2 class="sec">🎨 Colores y títulos</h2>${CAT.color.filter(i => i.precio).map(it => fila("color", it, `<span class="tico"><b class="nc-${it.id}">Aa</b></span>`)).join("")}${CAT.titulo.filter(i => i.precio).map(it => fila("titulo", it, `<span class="tico">🏷️</span>`)).join("")}
   <h2 class="sec">🎁 Premios físicos</h2>
   ${[["🧣", "Bufanda", 15000], ["⚽", "Balón", 25000], ["👕", "Camiseta", 30000]].map(([i, n, p]) => `<div class="tit"><span class="tico">${i}</span><span class="tin"><b>${n}</b><small>${fmtN(p)} 🪙 · disponible cuando haya ranking online</small></span><button class="tbtn" disabled>Pronto</button></div>`).join("")}`;
@@ -3416,7 +3477,8 @@ const minutoDe = e => { const m = /(\d+)/.exec(String((e && e.det) || "")); retu
 function perfilBot(b, i) {
   const libres = CAT.avatar.filter(a => !a.nivel), a = libres[i % libres.length];
   const marcos = ["ninguno", "ninguno", "bronce", "plata", "ninguno", "oro", "neon", "fuego"];
-  return { avatar: a.id, marco: marcos[i % marcos.length], color: "normal" };
+  const tarjetas = ["clasica", "clasica", "noche", "clasica", "cesped", "atardecer", "clasica", "oceano", "carbono", "clasica", "pasion", "clasica"];
+  return { avatar: a.id, marco: marcos[i % marcos.length], color: "normal", tarjeta: tarjetas[i % tarjetas.length] };
 }
 // ================================================================ Semanas del mes (para el ranking semanal)
 // Semanas completas de lunes a domingo. Cada semana es del mes en el que cae su jueves (como en el calendario
@@ -3456,7 +3518,7 @@ const BASES_EVENTO = {
     ["Clasificaciones", "Hay clasificación del día, de cada semana (de lunes a domingo; cada semana cuenta para el mes en el que cae su jueves) y del mes, con los puntos sumados en ese periodo."],
     ["Desempates", "A igualdad de puntos gana quien tenga más aciertos y, si sigue el empate, quien tenga más aciertos en los que la app falló. Si persiste, se comparte el puesto: los premios virtuales se dan completos a cada uno y un premio físico se sortearía entre los empatados."],
     ["Premios de cada semana", "1.º 1.000 monedas, 2.º 600 y 3.º 400, más 3.000 XP cada uno. Del 4.º al 10.º, 200 monedas y 1.500 XP. Se cobran solos cuando acaba la semana."],
-    ["Premios de cada mes", "1.º 5.000 monedas, 2.º 3.000 y 3.º 2.000, más 10.000 XP cada uno. Del 4.º al 10.º, 1.000 monedas y 5.000 XP. Con ranking online: 1.º camiseta, 2.º balón y 3.º bufanda."],
+    ["Premios de cada mes", "1.º 5.000 monedas, 2.º 3.000 y 3.º 2.000, más 10.000 XP cada uno. Los tres se llevan además el set animado exclusivo «Vencedor de la máquina» (tarjeta, marco Circuito y avatar Robot campeón), que no se puede comprar. Del 4.º al 10.º, 1.000 monedas y 5.000 XP. Con ranking online: 1.º camiseta, 2.º balón y 3.º bufanda."],
   ],
   superv: [["Mecánica (borrador)", "Cada jornada se elige un equipo que crees que va a ganar, sin poder repetir equipo en todo el evento. Si empata o pierde, quedas eliminado. Gana el último que siga vivo; si caen todos a la vez, ganan los que llegaron más lejos."]],
   porra: [["Mecánica (borrador)", "Cada semana se publican 10 partidos destacados y hay que acertar el resultado exacto o el 1-X-2 antes de que empiecen. Gana quien más puntos sume en la semana."]],
@@ -3480,19 +3542,20 @@ function pintarGuia() {
     ${t(["Cómo se gana XP", "XP"], [["Pronosticar un partido", "50"], ["Acertar", "puntos × 10 (140–600)"], ["Completar el día (todos pronosticados)", "200"], ["Ganarle el día a la app", "500"], ["Racha de 3 / 7 / 30 días jugando", "300 / 1.000 / 5.000"], ["Top 10 / podio de la semana", "1.500 / 3.000"], ["Top 10 / podio del mes", "5.000 / 10.000"]])}
     <h4>Rangos</h4><p>Novato (1–9) · Aficionado (10–24) · Promesa (25–49) · Experto (50–79) · Crack (80–109) · Estrella (110–139) · Leyenda (140–169) · Mito (170–199) · <b>Inmortal (200)</b>.</p>
     <h4>Regalos por subir de nivel</h4><ul><li>Cada nivel: <b>20 + el nivel</b> en monedas.</li><li>Cada 5 niveles: un comodín ×2.</li><li>Cada 10: comodines (y cada 20, también una Segunda oportunidad).</li>
-    <li>Objetos: color dorado (nv 5), marco de bronce (10), avatar 🏆 (15), plata (20), verde neón (25), avatar 🎯 (30), título Visionario (35), oro (40)… hasta el marco Inmortal y el avatar ♾️ en el 200.</li>
+    <li>Objetos: tarjeta Atardecer (nv 3), color dorado (nv 5), tarjeta Océano (nv 8), marco de bronce (10), avatar 🏆 (15), plata (20), verde neón (25), avatar 🎯 (30), título Visionario (35), oro (40)… hasta el marco Inmortal y el avatar ♾️ en el 200.</li>
     <li>Nivel 100: <b>camiseta</b>. Nivel 200: <b>premio Inmortal</b> (cuando haya ranking online).</li></ul></section>
   <section class="mcard guia"><h3>🪙 Monedas</h3><p>Se ganan con lo mismo que la XP pero <b>se gastan</b>. No caducan. <b>No se pueden comprar con dinero</b> ni cambiar por dinero.</p>
     ${t(["Cómo se ganan monedas", "🪙"], [["Acertar", "los puntos del acierto (14–60)"], ["Completar el día", "20"], ["Ganarle el día a la app", "50"], ["Racha de 3 / 7 / 30 días", "50 / 200 / 1.000"], ["Podio de la semana", "1.000 / 600 / 400"], ["4.º–10.º de la semana", "200"], ["Podio del mes", "5.000 / 3.000 / 2.000"], ["4.º–10.º del mes", "1.000"], ["Subir de nivel", "20 + nivel"]])}
     <p>Jugando cada día se hacen unas <b>4.000–5.000 monedas al mes</b>, y más si quedas arriba en los rankings.</p></section>
   <section class="mcard guia"><h3>🛍️ La tienda</h3><ul>
     <li><b>Comodín ×2</b> (800 🪙): un acierto vale el doble. Uno al día.</li><li><b>Segunda oportunidad</b> (1.500 🪙): cambias un pronóstico en los primeros 15 minutos.</li>
-    <li><b>Avatares</b> (500–1.500 🪙), <b>marcos</b> (2.000–4.000 🪙), <b>colores de nombre</b> (1.000–2.500 🪙) y <b>títulos</b> (1.500–2.000 🪙). Lo que compras es tuyo para siempre y lo pones en Perfil → Personalizar.</li>
+    <li><b>Avatares</b> (500–1.500 🪙), <b>marcos</b> (2.000–4.000 🪙), <b>colores de nombre</b> (1.000–2.500 🪙), <b>títulos</b> (1.500–2.000 🪙) y <b>tarjetas</b> (el fondo de tu ficha: 1.200–2.000 🪙, y las animadas Aurora, Lava y Galaxia de 6.000 a 8.000 🪙). Lo que compras es tuyo para siempre y lo pones en Perfil → Personalizar.</li>
     <li><b>Premios físicos</b>: bufanda (15.000 🪙), balón (25.000 🪙) y camiseta (30.000 🪙), con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online.</li></ul>
     <p>Otras cosas no se compran: se ganan con nivel o con insignias (por ejemplo, el título Cazagigantes).</p></section>
   <section class="mcard guia"><h3>🏆 Eventos</h3><ul>
     <li><b>Gánale a la app</b> (ya disponible): 6 partidos al día contra la máquina, con ranking diario, semanal y mensual.</li>
     <li><b>Próximamente</b>: Supervivencia, Porra semanal, Ligas con amigos y más eventos especiales (Clásico, finales, Mundial…).</li>
+    <li><b>Objetos animados exclusivos</b>: cada evento tiene su set (tarjeta, marco y avatar animados) que solo se llevan los 3 primeros del mes y no se puede comprar. El de Gánale a la app es «Vencedor de la máquina».</li>
     <li>Cada evento tiene sus propias reglas y premios: siempre monedas y XP para los mejores, y en los eventos grandes también premios físicos (camisetas, balones, bufandas…).</li>
     <li>Las reglas de cada evento están abajo del todo en su pantalla.</li></ul></section>
   <section class="mcard guia"><h3>❓ Preguntas rápidas</h3><ul>
