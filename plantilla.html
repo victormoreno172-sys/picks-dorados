@@ -1351,6 +1351,19 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .av.mr-arcade::before { background: radial-gradient(circle, #ffec27 0 30%, transparent 36%) 0 0 / 8px 8px, radial-gradient(circle, #ff004d 0 30%, transparent 36%) 4px 4px / 8px 8px; animation: mrBombillas .8s steps(2) infinite; }
 @keyframes mrBombillas { to { background-position: 4px 4px, 0 0; } }
 @media (prefers-reduced-motion: reduce) { .av[class*="mr-p"]::before, .av[class*="mr-p"]::after, .av.mr-arcade::before, .av.mr-pixelrgb { animation: none !important; } }
+
+/* Ficha del perfil: avatar más pequeño, recompensas en un botón y botones compactos */
+.pcarr { width: 100%; margin-top: 6px; } .pcarr summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 99px; background: rgba(0,0,0,.35); color: #fff; font: 700 12px var(--body); }
+.pcarr summary::-webkit-details-marker { display: none; } .pcarr summary::after { content: "▾"; font-size: 11px; } .pcarr[open] summary::after { content: "▴"; }
+.pcab:not(.tj-clasica) .pcarr summary { backdrop-filter: blur(4px); } .tj-clasica .pcarr summary { background: var(--bar); color: var(--ink); }
+.pacc.pacc-p { margin-top: 10px; } .pacc.pacc-p .apbtn { padding: 8px 10px; font-size: 13px; border-radius: calc(12px * var(--rad)); }
+/* Tarjetas de dibujo: en la ficha se ve el dibujo entero; en las filas de la clasificación, la parte importante */
+:is(.pcab, .pbar).tj:is(.tj-pixel, .tj-hiscore, .tj-pxatardecer, .tj-pxoceano, .tj-pxbosque, .tj-pxnieve, .tj-pxciudad, .tj-pxlava, .tj-pxcastillo, .tj-pxglitch) { background-size: 100% 100% !important; }
+:is(.pcab, .pbar).tj.tj-arcade8 { background-size: 40px 30px, 100% 100% !important; } :is(.pcab, .pbar).tj.tj-pxmatrix { background-size: 3px 66px, 100% 100% !important; }
+:is(.pcab, .pbar).tj.tj-pxespacio { background-size: 23px 17px, 53px 31px, 100% 100% !important; }
+.rrow.tj:not(.tj-arcade8):not(.tj-pxmatrix):not(.tj-pxespacio):not(.tj-pxglitch) { background-position: center var(--tjy, 50%) !important; }
+.tj-hiscore { --tjy: 14%; } .tj-pxcastillo { --tjy: 55%; } .tj-pxatardecer, .tj-pxoceano { --tjy: 62%; } .tj-pixel { --tjy: 55%; } .tj-noche, .tj-atardecer { --tjy: 70%; } .tj-leyenda { --tjy: 45%; }
+.rrow.tj { background-color: #111; } .rrow.tj .rjug b, .rrow.tj .rjug small, .rrow.tj .rac, .rrow.tj .rpt b, .rrow.tj .rpos { text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.6); }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -4120,12 +4133,12 @@ function pintarPerfil() {
   const xp = totalXP(), nv = nivelDe(xp), dj = datosJugador();
   const sig = CAT.avatar.concat(CAT.marco, CAT.color, CAT.titulo).filter(i => i.nivel > nv.n).sort((a, b) => a.nivel - b.nivel)[0];
   let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
-  <section class="pcab tj tj-${PERFIL.tarjeta || "clasica"}">${avatarHTML(PERFIL, 96)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b>${tituloHTML()}
+  <section class="pcab tj tj-${PERFIL.tarjeta || "clasica"}">${avatarHTML(PERFIL, 64)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b>${tituloHTML()}
     <div class="pniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}</span></div>
     <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
     ${xpEnCamino() ? `<small class="psig">⏳ +${xpEnCamino()} XP en camino</small>` : ""}
-    ${carrilRecompensas(nv.n)}
-    <div class="pacc"><button class="apbtn" data-vista="personalizar">✏️ Personalizar</button><button class="apbtn ap2" data-vista="tienda">🪙 ${fmtN(totalMon())} · Tienda</button></div></section>
+    <details class="pcarr"${est.carrilAb ? " open" : ""}><summary>🎁 Recompensas de nivel</summary>${carrilRecompensas(nv.n)}</details>
+    <div class="pacc pacc-p"><button class="apbtn" data-vista="personalizar">✏️ Personalizar</button><button class="apbtn ap2" data-vista="tienda">🪙 ${fmtN(totalMon())} · Tienda</button></div></section>
   <section class="mcard"><h3>📊 Tus números</h3><div class="mkpis">
     <div><b>${fmtN(dj.pron)}</b><span>pronósticos</span></div><div><b>${dj.jug ? Math.round(dj.aciertos / dj.jug * 100) + " %" : "–"}</b><span>acierto</span></div>
     <div><b>${dj.vsApp}</b><span>aciertos contra la app</span></div><div><b>${dj.ganadosApp}</b><span>días ganados a la app</span></div>
@@ -4138,6 +4151,7 @@ function pintarPerfil() {
   `;
   $("vista").innerHTML = h;
   centrarCarril();
+  const dc = document.querySelector(".pcarr"); if (dc) dc.addEventListener("toggle", () => { est.carrilAb = dc.open; if (dc.open) centrarCarril(); });
 }
 // ---- Carril de recompensas por nivel (se desliza de lado; arriba de cada una, el nivel)
 function recompensasNivel() {
