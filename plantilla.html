@@ -726,8 +726,8 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .rop .rp, .rop .rpt { font-size: 9.5px !important; display: inline; } .rop .rp::after { content: " · "; } .rop .rapp { font-size: 10px; top: 2px; right: 3px; }
 .rres { font-size: 11px !important; padding: 3px !important; margin-top: 4px !important; } .rcom { margin-top: 4px !important; }
 
-.rclt { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.rseg { display: flex; background: var(--bar); border-radius: 999px; padding: 3px; } .rseg button { border: 0; background: none; padding: 5px 10px; border-radius: 999px; font: 600 12px var(--body); color: var(--muted); cursor: pointer; }
+.rclt { display: flex; flex-direction: column; align-items: stretch; gap: 8px; } .rclt h3 { margin: 0; text-align: center; }
+.rseg { display: flex; background: var(--bar); border-radius: 999px; padding: 3px; } .rseg button { flex: 1; border: 0; background: none; padding: 7px 10px; border-radius: 999px; font: 600 12px var(--body); color: var(--muted); cursor: pointer; }
 .rseg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .rtab { display: grid; gap: 6px; margin-top: 6px; }
 .rrow { display: grid; grid-template-columns: 30px minmax(0, 1fr) 46px 34px; gap: 6px; align-items: center; padding: 8px 10px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); font-size: 13px; }
@@ -3488,6 +3488,7 @@ function tablaRanking(filas, todas, tipo) {
 function seccionClasif() {
   const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
   const sems = semanasMes(mesDeSemana(AHORA.fecha)), actual = (sems.find(w => w.dias.includes(AHORA.fecha)) || sems[0]).i;
+  if (est.clasR === "temporada") est.clasR = "hoy";   // la de la temporada está en la pantalla de la Temporada
   const vista = est.clasR || "hoy", w = sems.find(x => x.i === (est.semR || actual)) || sems[0];
   const ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : vista === "semana" ? Object.keys(RETO.dias).filter(d => w.dias.includes(d))
     : vista === "temporada" ? diasTemporada() : dias;
@@ -3496,7 +3497,7 @@ function seccionClasif() {
   const premios = vista === "semana" ? `<details class="rprem"><summary>🎁 Premios de la semana</summary><div class="rprl">${lp("🥇", "1.000 🪙 · 3.000 XP")}${lp("🥈", "600 🪙 · 3.000 XP")}${lp("🥉", "400 🪙 · 3.000 XP")}${lp("4.º–10.º", "200 🪙 · 1.500 XP")}</div></details>`
     : vista === "mes" ? `<details class="rprem"><summary>🎁 Premios del mes</summary><div class="rprl">${lp("🥇", "👕✨ 5.000 🪙 · 10.000 XP")}${lp("🥈", "⚽✨ 3.000 🪙 · 10.000 XP")}${lp("🥉", "🧣✨ 2.000 🪙 · 10.000 XP")}${lp("4.º–10.º", "1.000 🪙 · 5.000 XP")}</div><small>✨ Los 3 primeros: set animado «Vencedor de la máquina» (tarjeta, marco y avatar). 👕⚽🧣 cuando haya ranking online.</small></details>`
     : vista === "temporada" ? `<p class="rtemp">🗓️ <b>Temporada 0</b> · 1 oct – 31 dic · ${quedanTemp()}</p><details class="rprem"><summary>🎁 Premios de la temporada</summary><div class="rprl">${lp("🥇", "🏷️ Campeón T0 · 10.000 🪙 · 20.000 XP")}${lp("🥈", "🏷️ Campeón T0 · 6.000 🪙 · 20.000 XP")}${lp("🥉", "🏷️ Campeón T0 · 4.000 🪙 · 20.000 XP")}</div><small>El título Campeón T0 solo se consigue aquí.</small></details>` : "";
-  return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button><button data-clasr="temporada" aria-pressed="${vista === "temporada"}">Temp.</button></div></div>
+  return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
     ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
     ${filas.some(f => f.pts) ? `<p>Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.</p>` : ""}
     ${premios}${tablaRanking(filas, false, vista)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" data-rkp="${vista === "temporada" ? "temporada" : "mes"}" style="margin-top:10px">Ver la clasificación completa ${vista === "temporada" ? "de la temporada" : "del mes"}</button>
