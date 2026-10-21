@@ -1367,6 +1367,17 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .rkmodo { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 0 10px; } .rkmodo .rseg { width: 100%; } .rkmodo small { font-size: 11.5px; color: var(--muted); text-align: center; }
 .ronl { font-style: normal; color: #22c55e; font-size: 9px; vertical-align: middle; }
 .mcard.t0 .rkmodo small { font-family: "Pixelify Sans", var(--body); color: #94b0c2; }
+/* Bienvenida a la Arena */
+.bv { max-width: 420px; margin: 8px auto 20px; display: flex; flex-direction: column; gap: 12px; }
+.bvhero { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 26px 18px; border-radius: calc(22px * var(--rad)); color: #fff; background: linear-gradient(135deg, var(--hero1), var(--hero2)); box-shadow: var(--sombra); }
+.bvhero .bvico { font-size: 52px; } .bvhero b { font: 800 24px var(--display); } .bvhero small { font-size: 14px; opacity: .92; line-height: 1.4; }
+.bvl { display: flex; flex-direction: column; gap: 6px; font: 600 13px var(--body); color: var(--muted); }
+.bvl input { font: 500 16px var(--body); padding: 12px 14px; border-radius: calc(12px * var(--rad)); border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.bvb { font-size: 16px; padding: 14px; } .bvn { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+.bvsep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; } .bvsep::before, .bvsep::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.bvem { background: var(--surface); border: 1px solid var(--line); border-radius: calc(16px * var(--rad)); padding: 12px; } .bvem summary { cursor: pointer; font-weight: 700; list-style: none; text-align: center; }
+.bvem summary::-webkit-details-marker { display: none; } .bvem[open] summary { margin-bottom: 10px; } .bvem .bvl { margin-bottom: 10px; } .bvem .lnk { display: block; margin: 10px auto 0; }
+.bvmsg { margin: 0; min-height: 18px; text-align: center; font-weight: 600; color: var(--red); }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -3009,7 +3020,7 @@ function pintarPantallaAjustes() {
     [...todas[k]].sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b)).map(l => { const inf = infoLiga(l);
       return `<label class="ajliga"><span>${inf.flag}</span><span class="nl">${esc(inf.nombre)}<small style="color:var(--muted)"> ${esc(inf.pais)}</small></span><input type="checkbox" data-ajliga="${esc(l)}" ${AJ.ocultas.includes(l) ? "" : "checked"}></label>`; }).join("") + `</details>`).join("");
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
-  $("vista").innerHTML = `<div class="aj" style="margin-top:12px">
+  $("vista").innerHTML = `<div class="aj" style="margin-top:12px">${htmlCuenta()}
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
     ${/^negraco/i.test(PERFIL.nombre || "") ? `<section class="ajb"><h3>🧪 Negraco · pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
       <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div>
@@ -3636,7 +3647,7 @@ async function subirOnline() {
 }
 const subirPronto = () => { clearTimeout(_subTimer); _subTimer = setTimeout(subirOnline, 2500); };
 async function bajarOnline() {
-  if (!fbOn()) return; const tok = await fbToken(); if (!tok) return;
+  if (!fbOn() || !arenaVista()) return; const tok = await fbToken(); if (!tok) return;
   try {
     let docs = [], pt = "";
     do {
@@ -3667,7 +3678,82 @@ function chipModo() {
   return `<div class="rkmodo"><div class="rseg"><button data-rkmodo="online" aria-pressed="${on}">🌐 Online</button><button data-rkmodo="bots" aria-pressed="${!on}">🤖 De prueba</button></div>${on ? `<small>${estado}</small>` : `<small>40 jugadores de prueba</small>`}</div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-rkmodo]"); if (!b) return; est.rkModo = b.dataset.rkmodo; try { localStorage.setItem("rkModo", est.rkModo); } catch (er) {} _XB = null; pintarLista(); if (est.rkModo === "online") syncOnline(true); });
-if (fbOn()) { setTimeout(() => syncOnline(true), 1500); setInterval(() => { if (document.visibilityState === "visible") syncOnline(true); }, 120000); }
+if (fbOn()) { setTimeout(() => { if (arenaVista()) syncOnline(true); }, 1500); setInterval(() => { if (arenaVista() && document.visibilityState === "visible") syncOnline(true); }, 120000); }
+// ---- Cuenta: la primera vez que entras en la Arena eliges invitado o cuenta con email (los que solo miran partidos no hacen nada)
+let CUENTA = (() => { try { return JSON.parse(localStorage.getItem("cuentaV1") || "null"); } catch (e) { return null; } })();
+if (!CUENTA) try { const pf = JSON.parse(localStorage.getItem("perfilV1") || "null"); if ((pf && pf.nombre) || localStorage.getItem("arenaVista") || localStorage.getItem(RETO_K)) CUENTA = { modo: "invitado" }; } catch (e) {}   // quien ya jugaba antes
+const guardarCuenta = () => { try { localStorage.setItem("cuentaV1", JSON.stringify(CUENTA)); } catch (e) {} };
+const ERR_FB = { EMAIL_EXISTS: "Ese email ya tiene cuenta. Toca «Ya tengo cuenta» para entrar.", INVALID_LOGIN_CREDENTIALS: "Email o contraseña incorrectos.", INVALID_PASSWORD: "Contraseña incorrecta.",
+  EMAIL_NOT_FOUND: "No hay ninguna cuenta con ese email.", INVALID_EMAIL: "Ese email no es válido.", WEAK_PASSWORD: "La contraseña tiene que tener al menos 6 caracteres.",
+  OPERATION_NOT_ALLOWED: "Las cuentas con email aún no están activadas. Entra como invitado de momento.", TOO_MANY_ATTEMPTS_TRY_LATER: "Demasiados intentos. Prueba en un rato.", CREDENTIAL_TOO_OLD_LOGIN_AGAIN: "Vuelve a iniciar sesión." };
+const errFB = m => { const k = Object.keys(ERR_FB).find(x => String(m).includes(x)); return k ? ERR_FB[k] : "No se ha podido: " + m; };
+async function fbAuth(ruta, cuerpo) {
+  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:${ruta}?key=${FB.apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...cuerpo, returnSecureToken: true }) });
+  const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
+  FBA = { uid: j.localId, id: j.idToken, rt: j.refreshToken, exp: Date.now() + (+j.expiresIn || 3600) * 1000 };
+  try { localStorage.setItem("fbAuthV1", JSON.stringify(FBA)); } catch (e) {}
+  return j;
+}
+async function entrarArena(modo, nombre, email, clave, yaTengo) {
+  const msg = document.getElementById("bvmsg"), say = t => { if (msg) msg.textContent = t; };
+  try {
+    if (modo === "email") {
+      if (!fbOn()) return say("Las cuentas aún no están disponibles. Entra como invitado.");
+      say("Un momento…");
+      if (yaTengo) { await fbAuth("signInWithPassword", { email, password: clave });
+        try { const tok = await fbToken(); const r = await fetch(`${FS()}/jugadores/${FBA.uid}`, { headers: { Authorization: "Bearer " + tok } }); if (r.ok) { const d = fsDec({ mapValue: { fields: (await r.json()).fields || {} } }); if (d.n && !/^Jugador /.test(d.n)) PERFIL.nombre = d.n; } } catch (e) {}
+      } else if (FBA && FBA.rt && est.mejorar) await fbAuth("update", { idToken: await fbToken(), email, password: clave });   // de invitado a cuenta: se queda tu ficha
+      else await fbAuth("signUp", { email, password: clave });
+      CUENTA = { modo: "email", email };
+    } else CUENTA = { modo: "invitado" };
+    if (nombre && nombre.length >= 3) {
+      if (otrosOnline().some(o => o.nl === nombre.toLowerCase())) return say("Ese nombre ya lo tiene otro jugador. Elige otro.");
+      PERFIL.nombre = nombre.slice(0, 16);
+    }
+    est.mejorar = false; guardarCuenta(); guardarPerfil(); try { localStorage.setItem("arenaVista", "1"); } catch (e) {}
+    _subH = ""; est.vista = "desafios"; pintarLista(); syncOnline(true);
+  } catch (e) { say(errFB(e.message || e)); }
+}
+function pintarBienvenidaArena() {
+  $("vista").innerHTML = (est.mejorar ? `<div class="volv"><button class="ico" data-bvvolver="1" aria-label="Volver">‹</button></div>` : "") + `<section class="bv">
+    <div class="bvhero"><span class="bvico">🏟️</span><b>Bienvenido a la Arena</b><small>Juega gratis a pronosticar partidos, sube de nivel, consigue objetos y compite en el ranking con gente de verdad.</small></div>
+    <label class="bvl">Tu nombre en el ranking<input id="bvnom" maxlength="16" placeholder="3 a 16 letras" value="${esc(PERFIL.nombre || "")}" autocomplete="nickname"></label>
+    <button class="apbtn bvb" data-bv="invitado">🎮 Entrar como invitado</button>
+    <p class="bvn">Sin registrarte. Tu progreso se guarda en este móvil.</p>
+    ${fbOn() ? `<div class="bvsep"><span>o</span></div>
+    <details class="bvem" ${est.bvEmail ? "open" : ""}><summary>✉️ Crear cuenta con email</summary>
+      <label class="bvl">Email<input id="bvmail" type="email" autocomplete="email" inputmode="email"></label>
+      <label class="bvl">Contraseña<input id="bvpass" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></label>
+      <button class="apbtn ap2 bvb" data-bv="email">Crear cuenta</button><button class="lnk" data-bv="login">Ya tengo cuenta: iniciar sesión</button>
+      <p class="bvn">Con cuenta no pierdes tu sitio en el ranking si cambias de móvil.</p></details>` : ""}
+    <p class="bvmsg" id="bvmsg"></p><p class="bvn">Para ver partidos, resultados y probabilidades no hace falta nada de esto.</p></section>`;
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-bvvolver]")) { est.mejorar = false; est.vista = "ajustes"; pintarLista(); return; }
+  const b = e.target.closest("[data-bv]"); if (!b) return;
+  if (b.dataset.bv === "invitado" && est.mejorar) { est.mejorar = false; pintarLista(); return; }
+  const v = id => ((document.getElementById(id) || {}).value || "").trim(), nom = v("bvnom");
+  if (nom && nom.length < 3) { document.getElementById("bvmsg").textContent = "El nombre tiene que tener al menos 3 letras."; return; }
+  if (b.dataset.bv === "invitado") return entrarArena("invitado", nom);
+  const mail = v("bvmail"), pass = v("bvpass");
+  if (!mail || !pass) { document.getElementById("bvmsg").textContent = "Escribe tu email y una contraseña."; return; }
+  entrarArena("email", nom, mail, pass, b.dataset.bv === "login");
+});
+// Cuenta en Ajustes
+function htmlCuenta() {
+  if (!CUENTA) return `<section class="ajb"><h3>👤 Cuenta</h3><p>Aún no has entrado en la Arena. Al entrar podrás jugar como invitado o crear una cuenta.</p></section>`;
+  return `<section class="ajb"><h3>👤 Cuenta</h3><p>${CUENTA.modo === "email" ? `Cuenta con email: <b>${esc(CUENTA.email || "")}</b>` : "Juegas como <b>invitado</b>: tu progreso está en este móvil."}${PERFIL.nombre ? ` · Nombre: <b>${esc(PERFIL.nombre)}</b>` : ""}</p>
+    ${CUENTA.modo === "invitado" && fbOn() ? `<button class="apbtn" data-cuenta="mejorar">✉️ Crear cuenta con email (mantienes tu ficha)</button>` : ""}
+    ${CUENTA.modo === "email" ? `<button class="apbtn ap2" data-cuenta="salir">Cerrar sesión</button>` : ""}</section>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-cuenta]"); if (!b) return;
+  if (b.dataset.cuenta === "mejorar") { est.bvEmail = 1; est.mejorar = true; est.vista = "desafios"; pintarLista(); return; }
+  if (b.dataset.cuenta === "salir" && confirm("¿Cerrar sesión? En este móvil volverás a entrar como al principio.")) {
+    FBA = null; CUENTA = null; try { localStorage.removeItem("fbAuthV1"); localStorage.removeItem("cuentaV1"); localStorage.removeItem("arenaVista"); } catch (er) {}
+    pintarLista();
+  }
+});
 // ---- Jugadores de prueba (40 bots con estilos distintos) para ver cómo queda la clasificación.
 // Cada uno decide antes de los partidos, siempre igual para el mismo partido (semilla por nombre y partido).
 const ESTILOS = {
@@ -3848,6 +3934,7 @@ const ARTE_EV = {
     <g class="a-confeti"><rect x="60" y="0" width="5" height="9" fill="#f472b6"/><rect x="84" y="-20" width="5" height="9" fill="#60a5fa"/><rect x="40" y="-40" width="5" height="9" fill="#fff"/></g></svg>`,
 };
 function pintarDesafios() {
+  if (!CUENTA || est.mejorar) return pintarBienvenidaArena();
   procesarRecompensas();
   if (!arenaVista()) { try { localStorage.setItem("arenaVista", "1"); } catch (e) {} }
   try { syncOnline(false); } catch (e) {}
