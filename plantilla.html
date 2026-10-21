@@ -3837,7 +3837,7 @@ function pintarTienda() {
     <div class="texcl r-leg"><span class="tcp" style="display:flex;gap:8px;align-items:center"><span class="av mr-circuito" style="--s:46px"><span class="avi" style="background:#1e1b4b"><span class="ava-robot">🤖</span></span></span><span class="tjmini tj tj-vencedor" style="width:70px;height:46px"></span></span><span><b>Set «Vencedor de la máquina»</b><small>Tarjeta, marco y avatar animados · top 3 del mes en Gánale a la app</small></span><span class="tlock">${PERFIL.comprados.includes("tarjeta:vencedor") ? "✓ Tuyo" : "🔒"}</span></div>`;
   } else if (cat === "fis") {
     h += `<p class="tnota">Premios de verdad con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online con cuentas verificadas.</p>` +
-      rejilla([["🧣", "Bufanda", 20000], ["⚽", "Balón", 35000], ["👕", "Camiseta", 45000]].map(([e, n, p]) => `<div class="tcard r-leg fis"><span class="tcr">Premio real</span><span class="tcp"><span style="font-size:54px">${e}</span></span><b class="tcn">${n}</b><button class="tcbtn" disabled>🪙 ${fmtN(p)} · Pronto</button></div>`));
+      rejilla([["🧣", "Bufanda", 13000], ["⚽", "Balón", 20000], ["👕", "Camiseta", 26000]].map(([e, n, p]) => `<div class="tcard r-leg fis"><span class="tcr">Premio real</span><span class="tcp"><span style="font-size:54px">${e}</span></span><b class="tcn">${n}</b><button class="tcbtn" disabled>🪙 ${fmtN(p)} · Pronto</button></div>`));
   } else {
     const v = venta.find(x => x[0] === cat);
     h += rejilla(v[2].sort((a, b) => a.precio - b.precio).map(i => cartaTienda(cat, i, mon)));
@@ -3985,7 +3985,7 @@ function pintarGuia() {
   <section class="mcard guia"><h3>🛍️ La tienda</h3><ul>
     <li><b>Comodín ×2</b> (800 🪙): un acierto vale el doble. Uno al día.</li><li><b>Segunda oportunidad</b> (1.500 🪙): cambias un pronóstico ya empezado (fútbol: hasta el minuto 15; baloncesto: durante el 1.er cuarto).</li>
     <li><b>Avatares</b> (500–1.500 🪙), <b>marcos</b> (2.000–4.000 🪙), <b>colores de nombre</b> (1.000–2.500 🪙), <b>títulos</b> (1.500–2.000 🪙) y <b>tarjetas</b> (el fondo de tu ficha: 1.200–2.000 🪙, y las animadas Aurora, Lava y Galaxia de 6.000 a 8.000 🪙). Lo que compras es tuyo para siempre y lo pones en Perfil → Personalizar.</li>
-    <li><b>Premios físicos</b>: bufanda (20.000 🪙), balón (35.000 🪙) y camiseta (45.000 🪙), con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online.</li></ul>
+    <li><b>Premios físicos</b>: bufanda (13.000 🪙), balón (20.000 🪙) y camiseta (26.000 🪙), con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online.</li></ul>
     <p>Otras cosas no se compran: se ganan con nivel o con insignias (por ejemplo, el título Cazagigantes).</p></section>
   <section class="mcard guia"><h3>🏆 Eventos</h3><ul>
     <li><b>Gánale a la app</b> (ya disponible): 6 partidos al día contra la máquina, con ranking diario, semanal y mensual.</li>
