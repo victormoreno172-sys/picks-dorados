@@ -6,14 +6,6 @@ on:
     paths-ignore: ["app/**", ".github/workflows/app.yml"]
   schedule:
     - cron: "15 4-22/2 * * *"
-    # Apuestas del día siguiente (23:30 de Madrid). GitHub a veces se salta o retrasa una ejecución
-    # programada, así que hay varias: la que llegue primero las saca y las demás no hacen nada.
-    - cron: "28 21 * * *"      # 23:28 en verano
-    - cron: "45 21 * * *"
-    - cron: "5 22 * * *"
-    - cron: "35 22 * * *"      # 23:35 en invierno (y 00:35 en verano: si no habían salido, salen entonces)
-    - cron: "55 22 * * *"
-    - cron: "15 23 * * *"
   workflow_dispatch:         # botón "Run workflow" para lanzarlo a mano
 
 permissions:

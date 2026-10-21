@@ -102,13 +102,5 @@ except Exception as e:
     print(f"aviso: ligas no disponibles: {e}")
     traceback.print_exc()
 
-# Apuestas del día por Telegram (pasadas las 00:00) y banca simulada
-try:
-    import apuestas
-    import bot_web
-    bot_web.escribir(apuestas.actualizar(por_dia))
-except Exception as e:
-    import traceback
-    print(f"aviso: apuestas no disponibles: {e}")
-    traceback.print_exc()
+# (21/10) El bot de apuestas se ha quitado: ahora cada uno apunta sus apuestas en la app (Estadísticas).
 

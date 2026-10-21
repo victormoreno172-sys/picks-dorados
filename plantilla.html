@@ -519,6 +519,39 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
   font: 700 12px/22px var(--mono); font-style: normal; border: 2px solid var(--bg); }
 .abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+/* ---------- Estadísticas (tus apuestas) y formulario para apuntarlas ---------- */
+.mcard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--sombra); padding: 14px; margin-bottom: 12px; }
+.mcard h3 { margin: 0 0 6px; font-size: 16px; } .mcard p { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.mdet summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.mhero { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--sombra); padding: 16px 14px 10px; margin-bottom: 14px; text-align: center; }
+.mlab { font: 600 11px var(--mono); color: var(--muted); letter-spacing: .06em; }
+.mnum { font: 800 36px/1.15 var(--mono); margin: 4px 0 2px; }
+.mvar { font-size: 13px; color: var(--muted); display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mini-ed { border: 0; background: var(--bar); border-radius: 999px; padding: 3px 8px; cursor: pointer; font-size: 12px; }
+.mkpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; margin: 14px 0 8px; }
+.mkpis div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mkpis b { font: 700 13.5px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mkpis span { font-size: 10.5px; color: var(--muted); line-height: 1.2; }
+.mgraf { width: 100%; height: auto; margin-top: 4px; }
+.mhero .pos, .mtab .pos, .apinfo .pos, .mkpis .pos { color: #16a34a; } .mhero .neg, .mtab .neg, .apinfo .neg, .mkpis .neg { color: var(--red); }
+.mst { font-size: 13px; margin: 12px 0 6px; color: var(--muted); }
+.mtab { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.mtab th { font: 600 10.5px var(--mono); color: var(--muted); text-align: right; padding: 4px; } .mtab th:first-child { text-align: left; }
+.mtab td { padding: 6px 4px; border-top: 1px solid var(--line); text-align: right; font-family: var(--mono); } .mtab td:first-child { text-align: left; font-family: var(--body); }
+.macc { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; margin-top: 8px; }
+.macc button, .apya button { border: 1px solid var(--line); background: var(--bar); color: var(--ink); border-radius: 999px; padding: 5px 10px; font: 600 12px var(--body); cursor: pointer; }
+.apform { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 18px; box-shadow: var(--sombra); padding: 14px; margin: 14px 0 20px; }
+.apform h3 { margin: 0 0 10px; font-size: 16px; }
+.aplab { display: flex; flex-direction: column; gap: 4px; font: 600 12px var(--body); color: var(--muted); margin-bottom: 10px; flex: 1; min-width: 0; }
+.apform select, .apin, #miniV { width: 100%; box-sizing: border-box; font: 500 15px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 11px; }
+.apin { margin-bottom: 10px; } .aplab .apin { margin-bottom: 0; }
+.apfila { display: flex; gap: 10px; align-items: flex-end; }
+.apinfo { font-size: 13px; line-height: 1.4; margin: 0 0 10px; min-height: 1px; }
+.apbtn { width: 100%; border: 0; border-radius: 14px; padding: 12px; font: 700 15px var(--body); background: var(--gold); color: #1a1200; cursor: pointer; }
+.apfila .apbtn { width: auto; padding: 11px 16px; }
+.apya { margin-top: 12px; display: grid; gap: 6px; } .apya div { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+.apnota { font-size: 11.5px; color: var(--muted); margin: 10px 0 0; }
+.fila[data-apm] { cursor: pointer; }
 /* ---------- pantalla Mis apuestas ---------- */
 .mtarj { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 18px; box-shadow: var(--sombra); padding: 12px; margin-bottom: 12px; }
 .mtarj.bien { border-left-color: #16a34a; } .mtarj.mal { border-left-color: var(--red); }
@@ -742,9 +775,8 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
   <button data-nav="comps" aria-pressed="true"><span>◎</span>Partidos</button>
   <button data-nav="favs" aria-pressed="false"><span>☆</span>Favoritos</button>
   <button data-nav="ligas" aria-pressed="false"><span>🏆</span>Ligas</button>
-  <button data-nav="misap" aria-pressed="false" class="central" aria-label="Mis apuestas"><span class="bola">🎟️<i id="nMisAp" hidden></i></span>Mis apuestas</button>
+  <button data-nav="misap" aria-pressed="false" class="central" aria-label="Estadísticas"><span class="bola">📊<i id="nMisAp" hidden></i></span>Estadísticas</button>
   <button data-nav="buscar" aria-pressed="false"><span>⌕</span>Buscar</button>
-  <a href="bot/"><span>⚡</span>Bot</a>
   <button data-nav="ajustes" aria-pressed="false"><span>⚙️</span>Ajustes</button>
 </nav>
 
@@ -885,15 +917,6 @@ function pintarFiltros() {
     ligas.map(l => `<button class="chip" data-f="liga" data-l="${esc(l)}" aria-pressed="${est.liga === l}">${esc(l)}</button>`).join("");
 }
 
-// ¿Has apostado este mercado de este partido? (Mis apuestas, sin las quitadas)
-function mercadosApostados() {
-  if (!MIS.datos) return new Set();
-  if (MIS._set && MIS._t === MIS.t) return MIS._set;
-  const s = new Set();
-  for (const a of misApuestasActivasTodas()) for (const pi of a.piernas) s.add(`${pi.local}|${pi.visitante}|${pi.mercado}`);
-  MIS._set = s; MIS._t = MIS.t; return s;
-}
-const partidoApostado = p => { const s = mercadosApostados(); for (const k of s) if (k.startsWith(`${p.local}|${p.visitante}|`)) return true; return false; };
 function filaMercado(k, p) {
   const mia = p && mercadosApostados().has(`${p.local}|${p.visitante}|${k.m}`);
   const valor = (esRojo(k) ? '<span class="rojo-tag">ROJO</span>' : "") + (k.v ? '<span class="val">VALOR</span>' : "");
@@ -901,7 +924,7 @@ function filaMercado(k, p) {
   const cuota = k.c
     ? `<span class="${veredicto(k)}">${k.e ? "≈" : ""}${k.c.toFixed(2)}</span><small>app ${justa}</small>`
     : `<span>–</span><small>app ${justa}</small>`;
-  return `<div class="fila ${mia ? "mia" : esRojo(k) ? "r" : k.d ? "d" : ""}"><div class="n">${esc(k.m)}${valor}${mia ? '<span class="tuap">🎟️ TU APUESTA</span>' : ""}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
+  return `<div class="fila ${mia ? "mia" : esRojo(k) ? "r" : k.d ? "d" : ""}" data-apm="${esc(k.m)}"><div class="n">${esc(k.m)}${valor}${mia ? '<span class="tuap">🎟️ TU APUESTA</span>' : ""}<span class="bar"><i style="width:${(k.p * 100).toFixed(1)}%"></i></span></div>` +
          `<div class="pc">${pct(k.p)}</div><div class="cu">${cuota}</div></div>`;
 }
 
@@ -1539,7 +1562,7 @@ function pintarFicha() {
   } else if (est.tab === "prob") {
     const total = p.gl + p.gv || 1;
     cont = `<div class="fesp"><div><b>${num(p.gl)}</b><span>${basket ? "puntos" : p.dep === "te" ? "sets" : p.dep === "e" ? "mapas" : "goles"} esperados</span><b>${num(p.gv)}</b></div>
-      <div class="xgbar"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div></div>` + detalle(p);
+      <div class="xgbar"><i style="width:${(p.gl / total * 100).toFixed(1)}%"></i><i style="flex:1"></i></div></div>` + detalle(p) + formApuesta(p, dia);
   } else if (est.tab === "alin") {
     const al = fi.alin;
     if (!al && fi.id && fi.slug) {  // ¿ya han salido? (desde una hora y media antes)
@@ -2166,11 +2189,8 @@ function temasDeseados() {
   for (const l of est.ligasFav) ents.push("l:" + l);
   for (const j of est.juegosFav) ents.push("j:" + j);
   for (const e of ents) for (const tp of tipos) t.add(tp + "_" + hashTema(e));
-  if (AJ.pushAp && MIS.datos) {
-    let OVb = {}; try { OVb = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); } catch (e) {}
-    for (const a of MIS.datos.apuestas || []) if (a.fecha >= hoy && !("ok" in a) && OVb[claveApBot(a)] !== "x") t.add("ab_" + hashTema("a:" + claveApBot(a)));
-  }
-  if (AJ.pushBot) t.add("bot");
+  // Partidos en los que tienes una apuesta en juego: avisos de empieza, goles y final
+  if (AJ.pushAp) for (const a of MIAS.apuestas) if (a.fecha >= hoy && !("ok" in a)) for (const tp of tipos) t.add(tp + "_" + hashTema("p:" + a.local + "|" + a.visitante));
   return t;
 }
 async function syncPush() {
@@ -2254,8 +2274,7 @@ function pintarPantallaAjustes() {
       <div class="ajfila"><span>Empieza el partido</span>${seg("pushI", [["true", "Sí"], ["false", "No"]])}</div>
       <div class="ajfila"><span>Goles, sets y mapas</span>${seg("pushG", [["true", "Sí"], ["false", "No"]])}</div>
       <div class="ajfila"><span>Resultado final</span>${seg("pushF", [["true", "Sí"], ["false", "No"]])}</div>
-      <div class="ajfila"><span>Mis apuestas (empieza, se cae, ganada…)</span>${seg("pushAp", [["true", "Sí"], ["false", "No"]])}</div>
-      <div class="ajfila"><span>Apuestas del día del bot</span>${seg("pushBot", [["true", "Sí"], ["false", "No"]])}</div>
+      <div class="ajfila"><span>Partidos de tus apuestas (empieza, goles, final)</span>${seg("pushAp", [["true", "Sí"], ["false", "No"]])}</div>
       <p style="margin:8px 0 0">${esc(PUSH.estado || "Preparando…")}</p></section>` : ""}
     <section class="ajb"><h3>Mis datos</h3><button class="ajbtn peligro" data-ajborrar="favs">Borrar favoritos (${favs})</button>
       ${ES_APP ? `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar mis datos de la web</button>` : `<button class="ajbtn" data-ajdatos="pegar">📥 Pegar datos</button>`}
@@ -2274,28 +2293,23 @@ function pintarPantallaAjustes() {
   </div>`;
 }
 
-// ---------------------------------------------------------------- Mis apuestas (las del bot que has hecho)
-// Los datos salen de la app del bot; lo que marcaste allí (🚫 no la hice, 💶 cuota real) se lee de este móvil
-const MIS = { datos: null, cargando: false, t: 0 };
-const claveApBot = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
-function cargarMisApuestas(forzar) {
-  if (MIS.cargando || (!forzar && MIS.datos && Date.now() - MIS.t < 120000)) return;
-  MIS.cargando = true;
-  fetch("bot/datos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json())
-    .then(d => { MIS.datos = d; MIS.t = Date.now(); }).catch(() => { MIS.datos = MIS.datos || { apuestas: [], error: true }; })
-    .finally(() => { MIS.cargando = false; contarMisApuestas(); syncPush(); if (est.vista === "misap") pintarLista(); });
+// ---------------------------------------------------------------- Estadísticas: tus apuestas (se guardan en este móvil)
+// Las apuntas en la pestaña Probabilidades de cada partido. Se resuelven solas al acabar el partido
+// (si el mercado es uno de los de la app); las demás, con ✅ / ❌.
+const MIAS_K = "misApuestasV1";
+function leerMias() {
+  try { const d = JSON.parse(localStorage.getItem(MIAS_K) || "null"); if (d && Array.isArray(d.apuestas)) return d; } catch (e) {}
+  return { inicial: null, apuestas: [] };
 }
-function misApuestasActivasTodas() {
-  // Para pintar mercados: todas las que no has quitado de los últimos días
-  if (!MIS.datos) return [];
-  let OVb = {}; try { OVb = JSON.parse(localStorage.getItem("ajustesBot") || "{}"); } catch (e) {}
-  const desde = fechaMenos(AHORA.fecha, 2);
-  return (MIS.datos.apuestas || []).filter(a => a.fecha >= desde && OVb[claveApBot(a)] !== "x");
-}
-// ---- Cálculo de las apuestas del bot con lo que marcaste en ESTE móvil (igual en la app del bot y en Partidos)
-// 🚫 no la hice, ✅/❌ a mano, 💶 cuota real. Los importes se recalculan (su % de lo que queda tras las
-// anteriores) y se quedan FIJOS en cuanto empieza el partido, porque para entonces ya la has hecho.
-// El mercado con el nombre del equipo, tal como lo buscarías en Winamax
+let MIAS = leerMias();
+function guardarMias() { try { localStorage.setItem(MIAS_K, JSON.stringify(MIAS)); } catch (e) {} MIAS_SET = null; }
+let MIAS_SET = null;
+const ganMia = a => a.ok === true ? a.importe * (a.cuota - 1) : a.ok === false ? -a.importe : 0;
+const resuelta = a => "ok" in a;
+const eurosM = x => (x < 0 ? "−" : "") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
+const sigM = x => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
+const numES = s => parseFloat(String(s || "").replace(",", ".").replace(/[^\d.]/g, ""));
+// El mercado con el nombre del equipo, tal como lo buscarías en la casa de apuestas
 function textoMercado(p) {
   const n = x => String(x).replace(".", ",");
   let m = /^Hándicap (local|visitante) ([+-])([\d.]+)$/.exec(p.mercado);
@@ -2303,113 +2317,16 @@ function textoMercado(p) {
     const eq = m[1] === "local" ? p.local : p.visitante, l = +m[3];
     return m[2] === "+" ? `${eq} +${n(l)} (gana, o pierde por ${Math.floor(l)} o menos)` : `${eq} −${n(l)} (gana por ${Math.ceil(l)} o más)`;
   }
-  if (p.mercado === "Gana local") return `Gana ${p.local}`;
-  if (p.mercado === "Gana visitante") return `Gana ${p.visitante}`;
+  if (p.mercado === "Gana local" || p.mercado === "Gana local (1)") return `Gana ${p.local}`;
+  if (p.mercado === "Gana visitante" || p.mercado === "Gana visitante (2)") return `Gana ${p.visitante}`;
+  if (p.mercado === "Empate (X)") return "Empate";
   if (/^Local o empate/.test(p.mercado)) return `${p.local} o empate (1X)`;
   if (/^Visitante o empate/.test(p.mercado)) return `${p.visitante} o empate (X2)`;
   if (/^No hay empate/.test(p.mercado)) return `Gana uno de los dos, no empate (12)`;
+  if (p.mercado === "Local marca") return `Marca ${p.local}`;
+  if (p.mercado === "Visitante marca") return `Marca ${p.visitante}`;
   return p.mercado;
 }
-// Si la casa no tiene esa línea exacta de hándicap, cuál vale igual
-function pistaLinea(p) {
-  const m = /^Hándicap (local|visitante) ([+-])([\d.]+)$/.exec(p.mercado);
-  if (!m) return "";
-  const eq = m[1] === "local" ? p.local : p.visitante, l = String(m[3]).replace(".", ",");
-  return m[2] === "+" ? `Si no está ${eq} +${l}: vale una con más puntos (+${String(+m[3] + 1).replace(".", ",")}…) a esta cuota o más. Con menos puntos, no. Si ${eq} sale como favorito en Winamax, no la hagas.`
-    : `Si no está ${eq} −${l}: vale una con menos puntos (−${String(Math.max(0.5, +m[3] - 1)).replace(".", ",")}…) a esta cuota o más. Con más puntos, no.`;
-}
-const HECHAS_DESDE = "2026-10-20";
-// Desde ese día cuenta tu dinero de verdad: lo que tenías en Winamax y solo las apuestas que marcas como hechas
-const INICIO_REAL = 72.54;   // 68,51 € en la cuenta + 4,03 € de la de Uchijima ya metidos
-const ajusteReal = () => { try { const j = JSON.parse(localStorage.getItem("ajusteSaldoBot") || "null"); return j && j.r ? (j.v || 0) : 0; } catch (e) { return 0; } };
-function calcularApuestasBot(D, ahora) {
-  const claveAp = a => [a.fecha, a.tipo, a.piernas.map(p => p.local + ">" + p.mercado).join("+")].join("|");
-  const leer = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } };
-  const OV = leer("ajustesBot"), CR = leer("cuotasReales"), IM = leer("importesBot"), AU = leer("autoBot");
-  const gan = a => a.ok === true ? a.importe * (a.cuota_final - 1) : a.ok === false ? -a.importe : 0;
-  const ganBanca = a => a.previa ? (a.ok === true ? a.importe * a.cuota_final : a.ok === null ? a.importe : 0) : gan(a);
-  const empezada = a => a.piernas.some(p => (p.fecha + " " + (p.hora || "00:00")) <= ahora);
-  const todas = D.apuestas.map(x => Object.assign({}, x, { piernas: x.piernas.map(p => Object.assign({}, p)) }));
-  todas.forEach(a => {
-    a.key = claveAp(a);
-    if (CR[a.key]) {
-      a.cuota_bot = a.cuota; a.cuota = CR[a.key];
-      if (a.ok === true && a.piernas.every(p => p.ok !== null)) a.cuota_final = a.cuota;
-    }
-    const o = OV[a.key] || (a.hecha ? "h" : undefined);   // "hecha": apuntada como hecha desde el servidor
-    a.marcada = o === "h";   // ya la has metido en Winamax: su importe no se mueve
-    if (o === "x") a.excluida = true;
-    else if (o === "g") { a.ok = true; a.cuota_final = a.cuota; a.manual = true; }
-    else if (o === "p") { a.ok = false; a.manual = true; }
-    // Sin corregir aún en el servidor: el resultado que vio la app de Partidos con los marcadores
-    else if (!("ok" in a) && AU[a.key] === "g") { a.ok = true; a.cuota_final = a.cuota; a.auto = true; }
-    else if (!("ok" in a) && AU[a.key] === "p") { a.ok = false; a.auto = true; }
-    // Desde el 20/10 solo cuentan las que marcas con ✋: poner la cuota real es solo para ver el semáforo y decidir
-    if (!a.excluida && !a.previa && a.fecha >= HECHAS_DESDE && !["h", "g", "p"].includes(o)) { a.excluida = true; a.sinHacer = true; }
-  });
-  const ap = todas.filter(a => !a.excluida);
-  const cand = todas.filter(a => !a.excluida || a.sinHacer);   // las propuestas también llevan su importe sugerido
-  const dias = [...new Set(cand.map(a => a.fecha))].sort();
-  let cambios = false, banca = D.inicial;   // banca al empezar cada día (lo que de verdad tenías)
-  let real = false;
-  for (const d of dias) {
-    if (d >= HECHAS_DESDE && !real) { banca = INICIO_REAL + ajusteReal(); real = true; }   // las de antes eran del bot, no tuyas
-    const del = cand.filter(a => a.fecha === d);
-    const otras = ap.filter(a => a.fecha !== d && (!real || a.fecha >= HECHAS_DESDE) && !("ok" in a) && !a.previa).reduce((s, a) => s + a.importe, 0);
-    let disp = banca - otras;
-    const recalc = [];
-    for (const a of del) {
-      if (a.hecha) { /* importe real apuntado en el servidor */ }
-      else if (IM[a.key] && (a.marcada || empezada(a) || "ok" in a)) a.importe = IM[a.key];           // ya hecha: fija
-      else if ("ok" in a) { /* resuelta sin importe guardado: la del servidor */ }
-      else if (d >= ahora.slice(0, 10)) { a.importe = Math.max(0.1, Math.round(disp * (a.pct || 0.05) * 100) / 100); recalc.push(a); }
-      disp -= a.importe;
-    }
-    // Entre todas las de un día, como mucho el 30 % de la banca (se reducen por igual las que aún no has hecho)
-    const totalDia = del.reduce((s, a) => s + a.importe, 0), fijo = totalDia - recalc.reduce((s, a) => s + a.importe, 0);
-    const libre = Math.max(0, 0.30 * banca - fijo), enRecalc = totalDia - fijo;
-    if (recalc.length && enRecalc > libre) recalc.forEach(a => { a.importe = Math.max(0.1, Math.round(a.importe * libre / enRecalc * 100) / 100); });
-    for (const a of del) if (!("ok" in a) && IM[a.key] !== a.importe) { IM[a.key] = a.importe; cambios = true; }
-    banca += ap.filter(a => a.fecha === d && "ok" in a).reduce((s, a) => s + ganBanca(a), 0);
-  }
-  if (cambios) try { localStorage.setItem("importesBot", JSON.stringify(IM)); } catch (e) {}
-  return { todas, ap, OV, CR };
-}
-
-// Resultado automático: cuando todos los partidos de una apuesta han terminado y la app ve que se
-// acertó (o que alguno falló), se apunta como ganada/perdida aquí y en la app del bot (mismo móvil),
-// sin esperar a la corrección del servidor ni tener que marcarla a mano.
-function resultadosAutoBot() {
-  if (!MIS.datos) return;
-  let AU = {}; try { AU = JSON.parse(localStorage.getItem("autoBot") || "{}") || {}; } catch (e) {}
-  let cambio = false;
-  for (const a of MIS.datos.apuestas || []) {
-    if ("ok" in a) continue;
-    let mal = false, todas = true;
-    for (const pi of a.piernas) {
-      let v = pi.ok === true ? true : pi.ok === false ? false : null;
-      if (v === null && !("ok" in pi)) {
-        const x = partidoDePierna(pi), e = x ? estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]) : null;
-        if (e && e.st === "post") v = acierta(pi.mercado, e.m, pi.local, pi.visitante);
-      } else if (pi.ok === null && "ok" in pi) v = true;  // anulada: no cuenta
-      if (v === false) mal = true;
-      if (v !== true) todas = false;
-    }
-    const k = claveApBot(a), nuevo = mal ? "p" : todas ? "g" : null;
-    if (nuevo && AU[k] !== nuevo) { AU[k] = nuevo; cambio = true; }
-  }
-  if (cambio) try { localStorage.setItem("autoBot", JSON.stringify(AU)); } catch (e) {}
-}
-function misApuestasActivas() {
-  if (!MIS.datos) return [];
-  resultadosAutoBot();
-  const r = calcularApuestasBot(MIS.datos, AHORA.fecha + " " + AHORA.hora);
-  const ayer = fechaMenos(AHORA.fecha, 1);
-  return r.ap.map(a => Object.assign(a, { cuotaReal: a.cuota_bot ? a.cuota : null }))
-    .filter(a => a.fecha >= AHORA.fecha ||
-      (a.fecha === ayer && !("ok" in a) && a.piernas.some(p => (p.hora || "") >= "21:30" || (p.hora || "99") < "06:00")));
-}
-// Busca el partido de una selección en los datos de la app -> [día, índice]
 function partidoDePierna(pi) {
   for (let d = 0; d < DATOS.dias.length; d++) {
     if (Math.abs(new Date(DATOS.dias[d].fecha) - new Date(pi.fecha)) > 864e5) continue;
@@ -2419,80 +2336,236 @@ function partidoDePierna(pi) {
   return null;
 }
 function estadoEnDia(d, p) { const antes = est.dia; est.dia = d; const e = estado(p); est.dia = antes; return e; }
+// Al acabar el partido, la apuesta se marca sola como ganada o perdida
+function resolverMias() {
+  let cambio = false;
+  for (const a of MIAS.apuestas) {
+    if (resuelta(a) || !a.m || a.manual) continue;
+    const x = partidoDePierna(a); if (!x) continue;
+    const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]);
+    if (!e || e.st !== "post") continue;
+    const v = acierta(a.m, e.m, a.local, a.visitante);
+    if (v === true || v === false) { a.ok = v; a.auto = true; a.res = e.m; cambio = true; }
+  }
+  if (cambio) guardarMias();
+}
+function mercadosApostados() {
+  if (MIAS_SET) return MIAS_SET;
+  const s = new Set(), desde = fechaMenos(AHORA.fecha, 2);
+  for (const a of MIAS.apuestas) if (a.fecha >= desde && a.m) s.add(`${a.local}|${a.visitante}|${a.m}`);
+  return (MIAS_SET = s);
+}
+const partidoApostado = p => MIAS.apuestas.some(a => a.local === p.local && a.visitante === p.visitante && a.fecha >= fechaMenos(AHORA.fecha, 1));
 function contarMisApuestas() {
+  resolverMias();
   const el = $("nMisAp"); if (!el) return;
-  const l = misApuestasActivas().filter(a => !("ok" in a));
+  const l = MIAS.apuestas.filter(a => !resuelta(a));
   el.hidden = !l.length; el.textContent = l.length;
-  const vivo = l.some(a => a.piernas.some(pi => { const x = partidoDePierna(pi); if (!x) return false; const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]); return e && e.st === "in"; }));
+  const vivo = l.some(a => { const x = partidoDePierna(a); if (!x) return false; const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]); return e && e.st === "in"; });
   document.querySelector(".abajo .central").classList.toggle("envivo", vivo);
 }
+function cuentas() {
+  const ini = MIAS.inicial || 0, L = MIAS.apuestas;
+  const res = L.filter(resuelta), pend = L.filter(a => !resuelta(a));
+  const ganado = res.reduce((s, a) => s + ganMia(a), 0), enJuego = pend.reduce((s, a) => s + a.importe, 0);
+  const apostado = res.filter(a => a.ok !== null).reduce((s, a) => s + a.importe, 0);
+  const g = res.filter(a => a.ok === true).length, p = res.filter(a => a.ok === false).length;
+  let racha = 0, tipoR = null;
+  for (const a of res.filter(a => a.ok !== null).sort((x, y) => (y.fecha + (y.hora || "")).localeCompare(x.fecha + (x.hora || "")))) {
+    if (tipoR === null) tipoR = a.ok; if (a.ok !== tipoR) break; racha++;
+  }
+  return { ini, ganado, enJuego, apostado, g, p, racha, tipoR, disponible: ini + ganado - enJuego, total: ini + ganado,
+    siTodas: ini + ganado - enJuego + pend.reduce((s, a) => s + a.importe * a.cuota, 0) };
+}
+// Una tarjeta por apuesta, con el partido en directo
+function tarjetaMia(a) {
+  const x = partidoDePierna(a), p = x ? DATOS.dias[x[0]].partidos[x[1]] : null;
+  const e = p ? estadoEnDia(x[0], p) : null;
+  const marc = (e && /^(\d+)-(\d+)$/.exec(e.m || "")) || (a.res && /^(\d+)-(\d+)$/.exec(a.res));
+  const va = resuelta(a) ? a.ok : (a.m && e && e.m ? acierta(a.m, e.m, a.local, a.visitante) : null);
+  const hora = !e ? esc(a.hora || "--:--") : e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(e.det))}</span>` : e.st === "post" ? `<span class="fin">FIN</span>` : esc(a.hora || "");
+  const tag = x ? "button" : "div", attrs = x ? ` data-abrirdia="${x[0]}" data-abrirp="${x[1]}" data-desde="misap"` : "";
+  const estadoAp = a.ok === true ? `<span class="mest bien">Ganada ${sigM(ganMia(a))}</span>` : a.ok === false ? `<span class="mest mal">Perdida ${sigM(ganMia(a))}</span>`
+    : a.ok === null && resuelta(a) ? `<span class="mest">Anulada</span>`
+    : e && e.st === "in" ? (va === true ? `<span class="mest bien">Va ganando</span>` : va === false ? `<span class="mest mal">Va perdiendo</span>` : `<span class="mest">En directo</span>`)
+    : e && e.st === "post" ? `<span class="mest">Falta marcarla</span>` : `<span class="mest">En juego</span>`;
+  const cls = a.ok === true ? "bien" : a.ok === false ? "mal" : "";
+  const acc = resuelta(a)
+    ? `<button data-apres="${a.id}" data-v="">↺ Deshacer</button>`
+    : `<button data-apres="${a.id}" data-v="g">✅ Ganada</button><button data-apres="${a.id}" data-v="p">❌ Perdida</button><button data-apres="${a.id}" data-v="n">Anulada</button>`;
+  return `<article class="mtarj ${cls}">
+    <div class="mcab"><div><b>${esc(a.texto)}</b> · cuota ${a.cuota.toFixed(2).replace(".", ",")}</div>${estadoAp}</div>
+    <div class="mdin"><span>Apostado <b>${eurosM(a.importe)}</b></span><span>${a.ok === true ? "Cobrado" : "Si gana"} <b>${eurosM(a.importe * a.cuota)}</b></span></div>
+    <${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
+      <span class="mh">${hora}</span>
+      <span class="me"><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[0] : "", a.local)}<span>${esc(a.local)}</span></b><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[1] : "", a.visitante)}<span>${esc(a.visitante)}</span></b><small>${esc(a.liga || "")}</small></span>
+      <span class="mm">${marc ? `<span>${marc[1]}</span><span>${marc[2]}</span>` : ""}</span>
+      <span class="ms">${va === true ? "✅" : va === false ? "❌" : ""}</span></${tag}>
+    <div class="macc">${acc}<button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div></article>`;
+}
+function graficaMias() {
+  const res = MIAS.apuestas.filter(a => resuelta(a));
+  const dias = [...new Set(res.map(a => a.fecha))].sort();
+  if (dias.length < 1) return "";
+  let s = MIAS.inicial; const pts = [{ d: "inicio", s }];
+  for (const d of dias) { s += res.filter(a => a.fecha === d).reduce((t, a) => t + ganMia(a), 0); pts.push({ d, s }); }
+  const W = 320, H = 120, pl = 34, pr = 8, pt = 10, pb = 18;
+  const vals = pts.map(p => p.s), mn = Math.min(...vals), mx = Math.max(...vals), rg = (mx - mn) || 1;
+  const xx = i => pl + i * (W - pl - pr) / Math.max(1, pts.length - 1), yy = v => pt + (mx - v) / rg * (H - pt - pb);
+  const ult = pts[pts.length - 1], color = ult.s >= MIAS.inicial ? "var(--ok-ink, #16a34a)" : "var(--red)";
+  const fd = d => { const f = new Date(d + "T12:00:00"); return `${f.getDate()}/${f.getMonth() + 1}`; };
+  return `<svg viewBox="0 0 ${W} ${H}" class="mgraf" role="img" aria-label="Evolución de tu dinero">
+    <line x1="${pl}" x2="${W - pr}" y1="${yy(MIAS.inicial)}" y2="${yy(MIAS.inicial)}" stroke="var(--line)" stroke-dasharray="4 4"/>
+    <text x="${pl - 5}" y="${yy(mx) + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${Math.round(mx)}</text>
+    <text x="${pl - 5}" y="${yy(mn) + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${Math.round(mn)}</text>
+    <polyline fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" points="${pts.map((p, i) => `${xx(i)},${yy(p.s)}`).join(" ")}"/>
+    ${pts.map((p, i) => `<circle cx="${xx(i)}" cy="${yy(p.s)}" r="3" fill="${color}"/>`).join("")}
+    <text x="${pl}" y="${H - 4}" font-size="10" fill="var(--muted)">${pts.length > 1 ? fd(dias[0]) : ""}</text>
+    <text x="${W - pr}" y="${H - 4}" text-anchor="end" font-size="10" fill="var(--muted)">${fd(dias[dias.length - 1])}</text></svg>`;
+}
+function tablaGrupos(titulo, grupos) {
+  const filas = grupos.filter(g => g.l.length).map(g => {
+    const r = g.l.filter(a => resuelta(a) && a.ok !== null), gan = r.reduce((s, a) => s + ganMia(a), 0), ap = r.reduce((s, a) => s + a.importe, 0);
+    return `<tr><td>${g.n}</td><td>${r.filter(a => a.ok).length}/${r.length}</td><td>${r.length ? Math.round(r.filter(a => a.ok).length / r.length * 100) + " %" : "–"}</td><td class="${gan >= 0 ? "pos" : "neg"}">${sigM(gan)}</td><td>${ap ? (gan / ap * 100 >= 0 ? "+" : "") + (gan / ap * 100).toFixed(0) + " %" : "–"}</td></tr>`;
+  }).join("");
+  return filas ? `<h3 class="mst">${titulo}</h3><table class="mtab"><tr><th></th><th>Acert.</th><th>%</th><th>Ganancia</th><th>ROI</th></tr>${filas}</table>` : "";
+}
 function pintarMisApuestas() {
-  cargarMisApuestas();
-  if (!MIS.vivoT || Date.now() - MIS.vivoT > 50000) { MIS.vivoT = Date.now(); enDirecto(); }
-  let h = `<div class="lbar"><h2><span>🎟️</span><span class="t">Mis apuestas</span></h2><button class="ico" data-misrefrescar="1" aria-label="Actualizar">↻</button></div>`;
-  if (!MIS.datos) { $("vista").innerHTML = h + `<div class="vacio">Cargando tus apuestas…</div>`; return; }
-  const l = misApuestasActivas();
-  // Días anteriores: todas las del bot que no quitaste, agrupadas por día (de más reciente a más antiguo)
-  const activas = new Set(l.map(a => a.key));
-  const anteriores = calcularApuestasBot(MIS.datos, AHORA.fecha + " " + AHORA.hora).ap
-    .map(a => Object.assign(a, { cuotaReal: a.cuota_bot ? a.cuota : null }))
-    .filter(a => !activas.has(a.key) && a.fecha < AHORA.fecha);
-  const hora = a => a.fecha + (a.piernas.map(p => p.hora || "99").sort()[0]);
-  const enJuego = l.filter(a => !("ok" in a)).sort((x, y) => hora(x).localeCompare(hora(y)));
-  const hechas = l.filter(a => "ok" in a);
-  const euros = x => x.toFixed(2).replace(".", ",") + " €";
-  const tarjeta = a => {
-    const cuota = a.cuotaReal || a.cuota;
-    let vivoOk = true, alguna = false, falla = false;
-    const piernas = a.piernas.map(pi => {
-      const x = partidoDePierna(pi), p = x ? DATOS.dias[x[0]].partidos[x[1]] : null;
-      const e = p ? estadoEnDia(x[0], p) : null;
-      const mar = (e && /^(\d+)-(\d+)$/.exec(e.m || "")) || (pi.res ? [0, pi.res[0], pi.res[1]] : null);
-      let va = pi.ok === true ? true : pi.ok === false ? false : mar && e ? acierta(pi.mercado, e.m, pi.local, pi.visitante) : null;
-      if (va !== null) alguna = true;
-      if (va === false) falla = true;
-      if (va !== true) vivoOk = false;
-      const sem = va === true ? (e && e.st === "in" ? "✅ va bien" : "✅") : va === false ? (e && e.st === "in" ? "❌ va mal" : "❌") : "";
-      const hora = !e ? esc(pi.hora || "--:--") : e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(e.det))}</span>` : e.st === "post" ? `<span class="fin">FIN</span>` : esc(pi.hora || "");
-      const tag = x ? "button" : "div", attrs = x ? ` data-abrirdia="${x[0]}" data-abrirp="${x[1]}" data-desde="misap"` : "";
-      return `<${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
-        <span class="mh">${hora}</span>
-        <span class="me"><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[0] : "", pi.local)}<span>${esc(pi.local)}</span></b><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[1] : "", pi.visitante)}<span>${esc(pi.visitante)}</span></b><small>${esc(textoMercado(pi))} · ${pi.minima ? "pide ≥ " : pi.estimada ? "≈" : ""}${(+pi.cuota).toFixed(2)}</small></span>
-        <span class="mm">${mar ? `<span>${mar[1]}</span><span>${mar[2]}</span>` : ""}</span>
-        <span class="ms">${sem}</span></${tag}>`;
-    }).join("");
-    const estadoAp = a.ok === true ? `<span class="mest bien">Ganada +${euros(a.importe * ((a.cuota_final || cuota) - 1))}</span>`
-      : a.ok === false ? `<span class="mest mal">Perdida −${euros(a.importe)}</span>`
-      : falla ? `<span class="mest mal">Se ha caído una</span>` : alguna && vivoOk ? `<span class="mest bien">Va ganando</span>`
-      : a.fecha < AHORA.fecha ? `<span class="mest">Esperando resultado</span>` : `<span class="mest">En juego</span>`;
-    return `<article class="mtarj ${a.ok === true ? "bien" : a.ok === false || falla ? "mal" : ""}">
-      <div class="mcab"><div><b>${esc(a.tipo)}</b> · cuota ${cuota.toFixed(2).replace(".", ",")}${a.cuotaReal ? " 💶" : ""}</div>${estadoAp}</div>
-      <div class="mdin"><span>Apostado <b>${euros(a.importe)}</b></span><span>Si gana <b>${euros(a.importe * cuota)}</b></span></div>
-      ${piernas}</article>`;
-  };
-  if (!l.length) h += `<div class="vacio">No tienes apuestas en juego. Las que hagas del bot (las que no marques con 🚫) saldrán aquí con sus partidos en directo.</div>`;
-  let previas = "";
-  if (anteriores.length) {
-    const dias = [...new Set(anteriores.map(a => a.fecha))].sort().reverse();
-    if (!est.misDias) est.misDias = new Set([dias[0]]);   // el último día, abierto
-    const totalG = anteriores.reduce((s2, a) => s2 + (a.ok === true ? a.importe * ((a.cuota_final || a.cuota) - 1) : a.ok === false ? -a.importe : 0), 0);
-    previas = `<h2 class="sec">Días anteriores · ${totalG >= 0 ? "+" : "−"}${euros(Math.abs(totalG))}</h2>` + dias.map(d => {
-      const del = anteriores.filter(a => a.fecha === d), abierto = est.misDias.has(d);
-      const g = del.reduce((s2, a) => s2 + (a.ok === true ? a.importe * ((a.cuota_final || a.cuota) - 1) : a.ok === false ? -a.importe : 0), 0);
-      const ap2 = del.reduce((s2, a) => s2 + a.importe, 0), gan = del.filter(a => a.ok === true).length, per = del.filter(a => a.ok === false).length;
-      const pend = del.length - gan - per, fd = new Date(d + "T12:00:00");
+  resolverMias();
+  if (!MIAS.vivoT || Date.now() - MIAS.vivoT > 50000) { MIAS.vivoT = Date.now(); enDirecto(); }
+  let h = `<div class="lbar"><h2><span>📊</span><span class="t">Estadísticas</span></h2></div>`;
+  if (MIAS.inicial === null || MIAS.inicial === undefined) {
+    $("vista").innerHTML = h + `<section class="mcard"><h3>¿Con cuánto dinero empiezas?</h3>
+      <p>Pon lo que tienes ahora en tu casa de apuestas. Desde aquí se irá midiendo lo que ganas y pierdes con las apuestas que apuntes en cada partido (pestaña Probabilidades, abajo del todo).</p>
+      <div class="apfila"><input id="miniV" inputmode="decimal" placeholder="Por ejemplo 73,51" value="${esc(est.miniV || "")}"><button class="apbtn" data-apinicial="1">Empezar</button></div></section>`;
+    return;
+  }
+  const c = cuentas(), L = MIAS.apuestas;
+  const hora = a => a.fecha + (a.hora || "99");
+  const pend = L.filter(a => !resuelta(a)).sort((x, y) => hora(x).localeCompare(hora(y)));
+  const res = L.filter(resuelta);
+  h += `<section class="mhero">
+    <div class="mlab">TU DINERO AHORA</div><div class="mnum">${eurosM(c.disponible)}</div>
+    <div class="mvar"><span class="${c.total >= c.ini ? "pos" : "neg"}">${sigM(c.total - c.ini)} (${c.ini ? ((c.total / c.ini - 1) * 100 >= 0 ? "+" : "") + ((c.total / c.ini - 1) * 100).toFixed(1).replace(".", ",") + " %" : "–"})</span> desde ${eurosM(c.ini)} <button class="mini-ed" data-apinicial="editar">✏️</button></div>
+    <div class="mkpis">
+      <div><b>${eurosM(c.enJuego)}</b><span>en juego</span></div>
+      <div><b>${eurosM(c.siTodas)}</b><span>si aciertas todas</span></div>
+      <div><b>${c.g}/${c.g + c.p}</b><span>acertadas</span></div>
+      <div><b>${c.g + c.p ? Math.round(c.g / (c.g + c.p) * 100) + " %" : "–"}</b><span>acierto</span></div>
+      <div><b>${eurosM(c.apostado)}</b><span>apostado</span></div>
+      <div><b class="${c.ganado >= 0 ? "pos" : "neg"}">${sigM(c.ganado)}</b><span>beneficio</span></div>
+      <div><b>${c.apostado ? (c.ganado / c.apostado * 100 >= 0 ? "+" : "") + (c.ganado / c.apostado * 100).toFixed(1).replace(".", ",") + " %" : "–"}</b><span>rentabilidad</span></div>
+      <div><b>${c.racha ? (c.tipoR ? "🔥 " : "🧊 ") + c.racha : "–"}</b><span>${c.tipoR === false ? "falladas seguidas" : "acertadas seguidas"}</span></div>
+    </div>${graficaMias()}</section>`;
+  if (res.length) {
+    const dep = d => L.filter(a => (a.dep || "f") === d);
+    const rango = (lo, hi) => L.filter(a => a.cuota >= lo && a.cuota < hi);
+    h += `<details class="mcard mdet"><summary>📈 Por deporte y por cuota</summary>` +
+      tablaGrupos("Por deporte", [{ n: "⚽ Fútbol", l: dep("f") }, { n: "🏀 Basket", l: dep("b") }, { n: "🎾 Tenis", l: dep("te") }, { n: "🎮 Esports", l: dep("e") }]) +
+      tablaGrupos("Por cuota", [{ n: "1,01–1,49", l: rango(1, 1.5) }, { n: "1,50–1,99", l: rango(1.5, 2) }, { n: "2,00–2,99", l: rango(2, 3) }, { n: "3,00 o más", l: rango(3, 1e9) }]) + `</details>`;
+  }
+  if (!L.length) h += `<div class="vacio">Aún no has apuntado ninguna apuesta. Abre un partido y, en <b>Probabilidades</b>, abajo del todo, pon el mercado, la cuota y lo que apuestas.</div>`;
+  if (pend.length) h += `<h2 class="sec">En juego · ${pend.length}</h2>` + pend.map(tarjetaMia).join("");
+  if (res.length) {
+    const dias = [...new Set(res.map(a => a.fecha))].sort().reverse();
+    if (!est.misDias) est.misDias = new Set([dias[0]]);
+    h += `<h2 class="sec">Terminadas</h2>` + dias.map(d => {
+      const del = res.filter(a => a.fecha === d), abierto = est.misDias.has(d);
+      const g = del.reduce((s, a) => s + ganMia(a), 0), ap2 = del.reduce((s, a) => s + a.importe, 0);
+      const gan = del.filter(a => a.ok === true).length, per = del.filter(a => a.ok === false).length, fd = new Date(d + "T12:00:00");
+      const nom = d === AHORA.fecha ? "Hoy" : d === fechaMenos(AHORA.fecha, 1) ? "Ayer" : DIAS_L[fd.getDay()];
       return `<button class="mdia ${g > 0 ? "bien" : g < 0 ? "mal" : ""}" data-misdia="${d}" aria-expanded="${abierto}">
-          <span class="mdf"><b>${d === fechaMenos(AHORA.fecha, 1) ? "Ayer" : DIAS_L[fd.getDay()]} ${fd.getDate()} ${MESES[fd.getMonth()]}</b><small>${del.length} apuesta${del.length > 1 ? "s" : ""} · ✅ ${gan} · ❌ ${per}${pend ? ` · ⏳ ${pend}` : ""} · apostado ${euros(ap2)}</small></span>
-          <span class="mdg">${g >= 0 ? "+" : "−"}${euros(Math.abs(g))}</span><span class="mdx">${abierto ? "▴" : "▾"}</span></button>` +
-        (abierto ? del.map(tarjeta).join("") : "");
+          <span class="mdf"><b>${nom} ${fd.getDate()} ${MESES[fd.getMonth()]}</b><small>${del.length} apuesta${del.length > 1 ? "s" : ""} · ✅ ${gan} · ❌ ${per} · apostado ${eurosM(ap2)}</small></span>
+          <span class="mdg">${sigM(g)}</span><span class="mdx">${abierto ? "▴" : "▾"}</span></button>` + (abierto ? del.map(tarjetaMia).join("") : "");
     }).join("");
   }
-  h += (enJuego.length ? `<h2 class="sec">En juego · ${enJuego.length}</h2>` + enJuego.map(tarjeta).join("") : "") +
-       (hechas.length ? `<h2 class="sec">Terminadas hoy</h2>` + hechas.map(tarjeta).join("") : "") + previas +
-       `<p class="nota" style="text-align:center;color:var(--muted);font-size:12px">Se actualiza solo cada minuto. Si en la app del bot marcas una con 🚫, deja de salir aquí.</p>`;
+  h += `<p class="nota" style="text-align:center;color:var(--muted);font-size:12px">Tus apuestas se guardan en este móvil. Se marcan solas al acabar el partido; si alguna no se marca, usa ✅ o ❌.</p>`;
   $("vista").innerHTML = h;
 }
-setInterval(() => { if (!document.hidden) { if (est.vista === "misap") { cargarMisApuestas(); pintarLista(); } contarMisApuestas(); } }, 60000);
+// Formulario de la pestaña Probabilidades: apuntar una apuesta de este partido
+function formApuesta(p, dia) {
+  const f = est.apf && est.apf.k === p.local + "|" + p.visitante ? est.apf : (est.apf = { k: p.local + "|" + p.visitante, m: "", c: "", i: "", otro: "" });
+  const ops = p.picks.slice().sort((a, b) => b.p - a.p);
+  const sel = ops.find(k => k.m === f.m);
+  const cuota = numES(f.c), imp = numES(f.i);
+  let info = "";
+  if (cuota > 1 && imp > 0) {
+    info = `Si gana cobras <b>${eurosM(imp * cuota)}</b> (${sigM(imp * (cuota - 1))}).`;
+    if (sel) { const v = sel.p * cuota - 1; info += ` Según la app acierta el ${pct(sel.p)}: ${v >= 0 ? `<span class="pos">a la larga ganarías ${Math.round(v * 100)} %</span>` : `<span class="neg">a la larga perderías ${Math.round(-v * 100)} %</span>`}.`; }
+    if (MIAS.inicial !== null && MIAS.inicial !== undefined) { const c = cuentas(); if (imp > c.disponible) info += ` <span class="neg">Es más de lo que tienes (${eurosM(c.disponible)}).</span>`; else info += ` Es el ${(imp / c.disponible * 100).toFixed(1).replace(".", ",")} % de tu dinero.`; }
+  }
+  const ya = MIAS.apuestas.filter(a => a.local === p.local && a.visitante === p.visitante && a.fecha === dia.fecha);
+  return `<section class="apform" id="apform"><h3>🎟️ Apuntar una apuesta</h3>
+    <label class="aplab">Mercado<select id="apM"><option value="">Elige el mercado…</option>${ops.map(k => `<option value="${esc(k.m)}"${k.m === f.m ? " selected" : ""}>${esc(textoMercado({ mercado: k.m, local: p.local, visitante: p.visitante }))} · ${pct(k.p)}</option>`).join("")}<option value="__otro"${f.m === "__otro" ? " selected" : ""}>Otro (escríbelo)</option></select></label>
+    ${f.m === "__otro" ? `<input id="apOtro" class="apin" placeholder="Por ejemplo: Mbappé marca" value="${esc(f.otro)}">` : ""}
+    <div class="apfila"><label class="aplab">Cuota<input id="apC" class="apin" inputmode="decimal" placeholder="1,85" value="${esc(f.c)}"></label>
+      <label class="aplab">Apostado (€)<input id="apI" class="apin" inputmode="decimal" placeholder="2,00" value="${esc(f.i)}"></label></div>
+    <div class="apinfo" id="apInfo">${info}</div>
+    <button class="apbtn" data-apguardar="1">Guardar apuesta</button>
+    ${ya.length ? `<div class="apya">${ya.map(a => `<div><span>${esc(a.texto)} · ${a.cuota.toFixed(2).replace(".", ",")} · ${eurosM(a.importe)}${resuelta(a) ? (a.ok === true ? " · ✅" : a.ok === false ? " · ❌" : " · anulada") : ""}</span><button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div>`).join("")}</div>` : ""}
+    <p class="apnota">Se guarda en <b>Estadísticas</b>. Si es un mercado de la lista, se marca sola como ganada o perdida al acabar.</p></section>`;
+}
+document.addEventListener("input", e => {
+  if (e.target.id === "miniV") { est.miniV = e.target.value; return; }
+  if (!est.apf || !["apC", "apI", "apOtro"].includes(e.target.id)) return;
+  est.apf[{ apC: "c", apI: "i", apOtro: "otro" }[e.target.id]] = e.target.value;
+  const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel];
+  if (p && $("apInfo")) { const tmp = document.createElement("div"); tmp.innerHTML = formApuesta(p, dia); $("apInfo").innerHTML = tmp.querySelector("#apInfo").innerHTML; }
+});
+document.addEventListener("change", e => {
+  if (e.target.id !== "apM" || !est.apf) return;
+  est.apf.m = e.target.value;
+  const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel], k = p && p.picks.find(x => x.m === est.apf.m);
+  if (k && k.c && !k.e && !est.apf.c) est.apf.c = k.c.toFixed(2).replace(".", ",");
+  pintarLista();
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-apguardar],[data-apborrar],[data-apres],[data-apinicial],[data-apm]");
+  if (!b) return;
+  if (b.dataset.apm !== undefined) {   // tocar un mercado de la lista lo elige en el formulario
+    const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel]; if (!p) return;
+    est.apf = { k: p.local + "|" + p.visitante, m: b.dataset.apm, c: "", i: (est.apf && est.apf.i) || "", otro: "" };
+    const k = p.picks.find(x => x.m === b.dataset.apm); if (k && k.c && !k.e) est.apf.c = k.c.toFixed(2).replace(".", ",");
+    pintarLista(); const f = $("apform"); if (f) f.scrollIntoView({ behavior: "smooth", block: "center" }); return;
+  }
+  if (b.dataset.apinicial) {
+    if (b.dataset.apinicial === "editar") {
+      const t = prompt("¿Con cuánto dinero empezaste? (lo que tenías en la casa antes de la primera apuesta apuntada)", String(MIAS.inicial).replace(".", ","));
+      if (t === null) return; const v = numES(t); if (!(v >= 0)) return alert("No he entendido el número.");
+      MIAS.inicial = v; guardarMias(); pintarLista(); return;
+    }
+    const v = numES($("miniV") && $("miniV").value); if (!(v >= 0) || isNaN(v)) return alert("Pon cuánto dinero tienes, por ejemplo 73,51.");
+    MIAS.inicial = v; MIAS.desde = AHORA.fecha; guardarMias(); pintarLista(); return;
+  }
+  if (b.dataset.apguardar) {
+    const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel], f = est.apf; if (!p || !f) return;
+    const cuota = numES(f.c), imp = numES(f.i);
+    const otro = f.m === "__otro" ? (f.otro || "").trim() : "";
+    if (!f.m || (f.m === "__otro" && !otro)) return alert("Elige el mercado (o escríbelo en «Otro»).");
+    if (!(cuota > 1)) return alert("Pon la cuota, por ejemplo 1,85.");
+    if (!(imp > 0)) return alert("Pon lo que has apostado, por ejemplo 2,00.");
+    const m = f.m === "__otro" ? null : f.m;
+    MIAS.apuestas.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), fecha: dia.fecha, hora: p.hora, dep: p.dep || "f", liga: p.liga,
+      local: p.local, visitante: p.visitante, m, texto: m ? textoMercado({ mercado: m, local: p.local, visitante: p.visitante }) : otro,
+      cuota: Math.round(cuota * 100) / 100, importe: Math.round(imp * 100) / 100, prob: m ? (p.picks.find(k => k.m === m) || {}).p || null : null, creada: AHORA.fecha + " " + AHORA.hora });
+    est.apf = { k: f.k, m: "", c: "", i: "", otro: "" };
+    guardarMias(); contarMisApuestas(); syncPush(); pintarLista();
+    if (MIAS.inicial === null || MIAS.inicial === undefined) setTimeout(() => alert("Guardada. Ve a Estadísticas y pon con cuánto dinero empiezas para que se calcule tu saldo."), 50);
+    return;
+  }
+  if (b.dataset.apborrar) {
+    if (!confirm("¿Borrar esta apuesta?")) return;
+    MIAS.apuestas = MIAS.apuestas.filter(a => a.id !== b.dataset.apborrar); guardarMias(); contarMisApuestas(); syncPush(); pintarLista(); return;
+  }
+  if (b.dataset.apres !== undefined) {
+    const a = MIAS.apuestas.find(x => x.id === b.dataset.apres); if (!a) return;
+    const v = b.dataset.v;
+    if (v === "") { delete a.ok; delete a.auto; delete a.res; a.manual = true; }   // vuelve a "en juego" y ya no se marca sola
+    else { a.ok = v === "g" ? true : v === "p" ? false : null; a.manual = true; delete a.auto; }
+    guardarMias(); contarMisApuestas(); pintarLista(); return;
+  }
+});
+setInterval(() => { if (!document.hidden) { if (est.vista === "misap") pintarLista(); contarMisApuestas(); } }, 60000);
 
 // ---------------------------------------------------------------- buscador general (botón Buscar de abajo)
 // Busca en todo: partidos de todos los días y deportes, competiciones y equipos/jugadores
@@ -2765,7 +2838,6 @@ document.addEventListener("click", e => {
   if (b.dataset.equipoir !== undefined) { est.vista = "clasif"; est.lid = b.dataset.lid; est.ltab = "eq"; est.jor = null; est.equipo = b.dataset.equipoir; est.compEq = null; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligaglobal !== undefined) { est.dep = b.dataset.ligadep || est.dep; est.vista = "liga"; est.liga = b.dataset.ligaglobal; window.scrollTo({ top: 0 }); pintar(); return; }
   if (b.dataset.buscarpartidos !== undefined) { est.buscaG = b.dataset.buscarpartidos; const i = $("buscaG"); if (i) i.value = est.buscaG; resultadosGenerales(); return; }
-  if (b.dataset.misrefrescar) { cargarMisApuestas(true); enDirecto(); return; }
   if (b.dataset.color) { AJ[b.dataset.color] = b.dataset.v; guardarAjustes(); aplicarColores(); pintarLista(); return; }
   if (b.dataset.aj) { AJ[b.dataset.aj] = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v; guardarAjustes(); if (b.dataset.aj === "tema") aplicarTema(); if (/^push/.test(b.dataset.aj)) syncPush(); pintarLista(); return; }
   if (b.dataset.pushprueba) { probarPush(); return; }
@@ -3289,7 +3361,7 @@ async function directoOtros(fechas) {
 }
 enDirecto();
 setInterval(enDirecto, 60000);
-cargarMisApuestas();
+contarMisApuestas();
 setInterval(() => { if (!document.hidden && est.vista === "partido" && (est.tab === "resumen" || est.tab === "alin")) pintarLista(); }, 60000);
 
 // Cada minuto: si algún partido ha empezado, se quita de la lista y del Top
