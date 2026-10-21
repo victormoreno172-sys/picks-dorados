@@ -1364,6 +1364,9 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .rrow.tj:not(.tj-arcade8):not(.tj-pxmatrix):not(.tj-pxespacio):not(.tj-pxglitch) { background-position: center var(--tjy, 50%) !important; }
 .tj-hiscore { --tjy: 14%; } .tj-pxcastillo { --tjy: 55%; } .tj-pxatardecer, .tj-pxoceano { --tjy: 62%; } .tj-pixel { --tjy: 55%; } .tj-noche, .tj-atardecer { --tjy: 70%; } .tj-leyenda { --tjy: 45%; }
 .rrow.tj { background-color: #111; } .rrow.tj .rjug b, .rrow.tj .rjug small, .rrow.tj .rac, .rrow.tj .rpt b, .rrow.tj .rpos { text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.6); }
+.rkmodo { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 0 10px; } .rkmodo .rseg { width: 100%; } .rkmodo small { font-size: 11.5px; color: var(--muted); text-align: center; }
+.ronl { font-style: normal; color: #22c55e; font-size: 9px; vertical-align: middle; }
+.mcard.t0 .rkmodo small { font-family: "Pixelify Sans", var(--body); color: #94b0c2; }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -3478,7 +3481,7 @@ setInterval(() => { if (!document.hidden) { if (est.vista === "misap") pintarLis
 // Solo cuentan los partidos que pronosticas (para ti y para la app). De momento se guarda en este móvil.
 const RETO_K = "retoV1";
 let RETO = (() => { try { const r = JSON.parse(localStorage.getItem(RETO_K) || "null"); if (r && r.dias) return r; } catch (e) {} return { dias: {} }; })();
-function guardarReto() { try { localStorage.setItem(RETO_K, JSON.stringify(RETO)); } catch (e) {} }
+function guardarReto() { try { localStorage.setItem(RETO_K, JSON.stringify(RETO)); } catch (e) {} try { subirPronto(); } catch (e) {} }
 const N_RETO = 6, BONUS_RETO = 10;
 const ptsReto = p => Math.max(1, Math.round(10 / Math.max(p, 0.02)));
 // Cada partido trae una pregunta distinta: quién gana, goles, si marcan los dos, puntos…
@@ -3570,6 +3573,96 @@ function cuentaReto(r) {
   if (cambio) guardarReto();
   return { yo, app, vivos, jugados, ganadas, okYo, okApp, elegidos: Object.keys(r.picks).length };
 }
+// ================================================================ Online (bloque 2): ranking con gente de verdad
+// Sesión anónima de Firebase (sin registrarse) + una ficha por jugador en Firestore con sus puntos de cada día.
+// La configuración pública la mete GitHub al generar la app; si no hay, todo sigue como antes (bots de prueba).
+const FB = __FIREBASE__;
+const fbOn = () => !!(FB && FB.apiKey && FB.projectId);
+const ONL = { lista: [], t: 0, err: "" };
+try { const c = JSON.parse(localStorage.getItem("onlineV1") || "null"); if (c) { ONL.lista = c.lista || []; ONL.t = c.t || 0; } } catch (e) {}
+let FBA = (() => { try { return JSON.parse(localStorage.getItem("fbAuthV1") || "null"); } catch (e) { return null; } })();
+async function fbToken(reintento) {
+  if (!fbOn()) return null;
+  if (FBA && FBA.id && FBA.exp > Date.now() + 60000) return FBA.id;
+  try {
+    let r, j;
+    if (FBA && FBA.rt) {
+      r = await fetch(`https://securetoken.googleapis.com/v1/token?key=${FB.apiKey}`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(FBA.rt) });
+      j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
+      FBA = { uid: j.user_id, id: j.id_token, rt: j.refresh_token, exp: Date.now() + (+j.expires_in) * 1000 };
+    } else {
+      r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB.apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ returnSecureToken: true }) });
+      j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
+      FBA = { uid: j.localId, id: j.idToken, rt: j.refreshToken, exp: Date.now() + (+j.expiresIn) * 1000 };
+    }
+    try { localStorage.setItem("fbAuthV1", JSON.stringify(FBA)); } catch (e) {}
+    ONL.err = ""; return FBA.id;
+  } catch (e) {
+    ONL.err = String(e.message || e);
+    if (!reintento && FBA && /TOKEN|USER_NOT_FOUND|USER_DISABLED/i.test(ONL.err)) { FBA = null; return fbToken(true); }
+    return null;
+  }
+}
+const fsEnc = v => v === null || v === undefined ? { nullValue: null } : typeof v === "boolean" ? { booleanValue: v } : typeof v === "number" ? (Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v })
+  : typeof v === "string" ? { stringValue: v } : Array.isArray(v) ? { arrayValue: { values: v.map(fsEnc) } } : { mapValue: { fields: Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fsEnc(x)])) } };
+const fsDec = f => !f ? null : "nullValue" in f ? null : "booleanValue" in f ? f.booleanValue : "integerValue" in f ? +f.integerValue : "doubleValue" in f ? f.doubleValue : "stringValue" in f ? f.stringValue
+  : "arrayValue" in f ? (f.arrayValue.values || []).map(fsDec) : "mapValue" in f ? Object.fromEntries(Object.entries(f.mapValue.fields || {}).map(([k, x]) => [k, fsDec(x)])) : null;
+const FS = () => `https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents`;
+// Tu ficha: nombre, aspecto y los puntos de cada día (Gánale a la app y HI-SCORE)
+function fichaOnline() {
+  const reto = {};
+  for (const d of Object.keys(RETO.dias)) { const r = RETO.dias[d]; if (!r.partidos || !Object.keys(r.picks || {}).length) continue;
+    const c = puntosDia(r, x => r.picks[claveReto(x)], r.dobles); reto[d] = [c.pts, c.ok, c.jug, c.vsApp]; }
+  const arc = {}, y = partidaArc(diasArc(), picksYoArc, ARCD.cont);
+  for (const z of y.log) { if (z.go || z.ok === undefined) continue; const a = arc[z.d] ||= [0, 0, 0]; a[0] += z.g || 0; a[1] += z.ok ? 1 : 0; a[2]++; }
+  return { n: nombreYo(), nl: nombreYo().toLowerCase(), nv: nivelDe(totalXP()).n, t: Date.now(), reto, arc: { d: arc, mejor: y.mejor },
+    p: { avatar: PERFIL.avatar === "foto" ? "a1" : PERFIL.avatar || "a1", marco: PERFIL.marco || "ninguno", tarjeta: PERFIL.tarjeta || "clasica", color: PERFIL.color || "normal", tt: tituloYo() } };
+}
+let _subH = "", _subTimer = 0;
+async function subirOnline() {
+  if (!fbOn() || !PERFIL.nombre || PERFIL.nombre.length < 3) return;
+  const f = fichaOnline(), h = JSON.stringify({ ...f, t: 0 }); if (h === _subH) return;
+  const tok = await fbToken(); if (!tok) return;
+  try {
+    const r = await fetch(`${FS()}/jugadores/${FBA.uid}`, { method: "PATCH", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json" }, body: JSON.stringify({ fields: fsEnc(f).mapValue.fields }) });
+    if (!r.ok) { ONL.err = "No se pudo subir tu ficha (" + r.status + ")"; return; }
+    _subH = h; ONL.err = "";
+  } catch (e) { ONL.err = "Sin conexión"; }
+}
+const subirPronto = () => { clearTimeout(_subTimer); _subTimer = setTimeout(subirOnline, 2500); };
+async function bajarOnline() {
+  if (!fbOn()) return; const tok = await fbToken(); if (!tok) return;
+  try {
+    let docs = [], pt = "";
+    do {
+      const r = await fetch(`${FS()}/jugadores?pageSize=300${pt ? "&pageToken=" + encodeURIComponent(pt) : ""}`, { headers: { Authorization: "Bearer " + tok } }), j = await r.json();
+      if (!r.ok) { ONL.err = "No se pudo leer el ranking (" + r.status + ")"; return; }
+      docs = docs.concat(j.documents || []); pt = j.nextPageToken || "";
+    } while (pt && docs.length < 3000);
+    ONL.lista = docs.map(d => ({ uid: d.name.split("/").pop(), ...fsDec({ mapValue: { fields: d.fields || {} } }) })).filter(x => x.n);
+    ONL.t = Date.now(); ONL.err = "";
+    try { localStorage.setItem("onlineV1", JSON.stringify({ lista: ONL.lista, t: ONL.t })); } catch (e) {}
+  } catch (e) { ONL.err = "Sin conexión"; }
+}
+async function syncOnline(repintar) {
+  if (!fbOn()) return;
+  await subirOnline(); await bajarOnline();
+  if (repintar && !document.getElementById("pxmodal") && ["reto", "temporada", "arcade", "evento", "desafios"].includes(est.vista)) { const y = window.scrollY; pintarLista(); window.scrollTo(0, y); }
+}
+const rkOnline = () => { if (!fbOn()) return false; let m = est.rkModo; if (!m) try { m = localStorage.getItem("rkModo"); } catch (e) {} return (m || "online") === "online"; };
+const otrosOnline = () => ONL.lista.filter(x => !FBA || x.uid !== FBA.uid);
+function sumaOnline(m, dias) { const t = { pts: 0, ok: 0, jug: 0, vsApp: 0 }; for (const d of dias) { const v = (m || {})[d]; if (v) { t.pts += v[0] || 0; t.ok += v[1] || 0; t.jug += v[2] || 0; t.vsApp += v[3] || 0; } } return t; }
+const filaOnline = (o, extra) => ({ n: o.n, uid: o.uid, online: true, perfil: o.p || {}, nv: o.nv, e: (o.p && o.p.tt) || "", ...extra });
+// Selector Online / De prueba y estado de la conexión (encima de cada clasificación)
+function chipModo() {
+  if (!fbOn()) return "";
+  const on = rkOnline(), n = otrosOnline().length, hace = ONL.t ? Math.round((Date.now() - ONL.t) / 60000) : null;
+  const estado = !PERFIL.nombre || PERFIL.nombre.length < 3 ? `Ponte un nombre (3 letras o más) para salir en el ranking online. <button class="lnk" data-pnombre="1">Elegir nombre</button>`
+    : ONL.err ? `⚠️ ${esc(ONL.err)}` : !ONL.t ? "Conectando…" : n ? `${n + 1} jugadores · actualizado ${hace ? "hace " + hace + " min" : "ahora"}` : "De momento solo estás tú: pásale la app a alguien 😉";
+  return `<div class="rkmodo"><div class="rseg"><button data-rkmodo="online" aria-pressed="${on}">🌐 Online</button><button data-rkmodo="bots" aria-pressed="${!on}">🤖 De prueba</button></div>${on ? `<small>${estado}</small>` : `<small>40 jugadores de prueba</small>`}</div>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-rkmodo]"); if (!b) return; est.rkModo = b.dataset.rkmodo; try { localStorage.setItem("rkModo", est.rkModo); } catch (er) {} _XB = null; pintarLista(); if (est.rkModo === "online") syncOnline(true); });
+if (fbOn()) { setTimeout(() => syncOnline(true), 1500); setInterval(() => { if (document.visibilityState === "visible") syncOnline(true); }, 120000); }
 // ---- Jugadores de prueba (40 bots con estilos distintos) para ver cómo queda la clasificación.
 // Cada uno decide antes de los partidos, siempre igual para el mismo partido (semilla por nombre y partido).
 const ESTILOS = {
@@ -3625,7 +3718,8 @@ function clasificacionReto(dias) {
   const xb = xpBots();
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...suma((x, r) => r.picks[claveReto(x)], true) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
-  BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
+  if (rkOnline()) otrosOnline().forEach(o => filas.push(filaOnline(o, sumaOnline(o.reto, dias))));
+  else BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
   // Desempate: más aciertos y luego más aciertos en los que falló la app; si sigue igual, comparten puesto
   filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || b.vsApp - a.vsApp || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null;
@@ -3660,7 +3754,7 @@ function tablaRanking(filas, todas, tipo) {
   const av = f => f.app ? `<span class="av" style="--s:28px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(f.perfil, 28);
   const tj = f => f.perfil && f.perfil.tarjeta && f.perfil.tarjeta !== "clasica" ? " tj tj-" + f.perfil.tarjeta : "";
   const fila = f => `<div class="rrow${conPrem ? " cp" : ""} ${f.yo ? "yo" : f.app ? "app" : ""}${tj(f)}"><span class="rpos">${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</span>
-    <span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span>${prem(f)}<span class="rac">${f.ok}/${f.jug}</span><span class="rpt"><b>${f.pts}</b></span></div>`;
+    <span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : f.online ? "nc-" + (f.perfil.color || "normal") : ""}">${esc(f.n)}${f.online ? ' <i class="ronl">●</i>' : ""}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span>${prem(f)}<span class="rac">${f.ok}/${f.jug}</span><span class="rpt"><b>${f.pts}</b></span></div>`;
   return `<div class="rtab"><div class="rrow rhead${conPrem ? " cp" : ""}"><span>#</span><span>Jugador</span>${conPrem ? "<span>Premio</span>" : ""}<span>Acier.</span><span>Pts</span></div>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<div class="rsep">···</div>` + fila(yo) : ""}</div>`;
 }
 function seccionClasif() {
@@ -3675,11 +3769,11 @@ function seccionClasif() {
   const premios = vista === "semana" ? `<details class="rprem"><summary>🎁 Premios de la semana</summary><div class="rprl">${lp("🥇", "1.000 🪙 · 3.000 XP")}${lp("🥈", "600 🪙 · 3.000 XP")}${lp("🥉", "400 🪙 · 3.000 XP")}${lp("4.º–10.º", "200 🪙 · 1.500 XP")}</div></details>`
     : vista === "mes" ? `<details class="rprem"><summary>🎁 Premios del mes</summary><div class="rprl">${lp("🥇", "👕✨ 5.000 🪙 · 10.000 XP")}${lp("🥈", "⚽✨ 3.000 🪙 · 10.000 XP")}${lp("🥉", "🧣✨ 2.000 🪙 · 10.000 XP")}${lp("4.º–10.º", "1.000 🪙 · 5.000 XP")}</div><small>✨ Los 3 primeros: set animado «Vencedor de la máquina» (tarjeta, marco y avatar). 👕⚽🧣 cuando haya ranking online.</small></details>`
     : vista === "temporada" ? `<p class="rtemp">🗓️ <b>Temporada 0</b> · 1 oct – 31 dic · ${quedanTemp()}</p><details class="rprem"><summary>🎁 Premios de la temporada</summary><div class="rprl">${lp("🥇", "🏷️ Campeón T0 · 10.000 🪙 · 20.000 XP")}${lp("🥈", "🏷️ Campeón T0 · 6.000 🪙 · 20.000 XP")}${lp("🥉", "🏷️ Campeón T0 · 4.000 🪙 · 20.000 XP")}</div><small>El título Campeón T0 solo se consigue aquí.</small></details>` : "";
-  return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
+  return `<section class="mcard rclas">${chipModo()}<div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
     ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
     ${filas.some(f => f.pts) ? `<p>Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.</p>` : ""}
     ${premios}${tablaRanking(filas, false, vista)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" data-rkp="${vista === "temporada" ? "temporada" : "mes"}" style="margin-top:10px">Ver la clasificación completa ${vista === "temporada" ? "de la temporada" : "del mes"}</button>
-    <p class="apnota">De momento son 40 jugadores de prueba con estilos distintos, para ver cómo funciona. Cuando haya ranking online, serán personas de verdad.</p></section>`;
+    <p class="apnota">${rkOnline() ? "🌐 Ranking online: personas de verdad (en pruebas). Los premios de momento son solo dentro de la app." : "🤖 Modo de prueba: 40 jugadores inventados con estilos distintos, para ver cómo funciona."}</p></section>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-guia]"); if (!b) return; est.volverGuia = b.dataset.guia; est.vista = "guia"; window.scrollTo({ top: 0 }); pintarLista(); });
 document.addEventListener("change", e => { if (e.target.id === "semSel") { est.semR = +e.target.value; pintarLista(); } });
@@ -3780,7 +3874,7 @@ function pintarEvento() {
     $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
       <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${temp ? "Temporada 0" : "Ranking de " + ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>${temp ? `1 oct – 31 dic · ${quedanTemp()}` : "Suma de Gánale a la app de todo el mes"}</small></span></section>
       <div class="rseg mtabs"><button data-rkp="mes" aria-pressed="${!temp}">Mes</button><button data-rkp="temporada" aria-pressed="${temp}">Temporada 0</button></div>
-      <section class="mcard">${tablaRanking(filas, true, temp ? "temporada" : "mes")}<p class="apnota">${temp ? "Top 3 de la temporada: título Campeón T0 + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP." : "Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda."} De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
+      <section class="mcard">${chipModo()}${tablaRanking(filas, true, temp ? "temporada" : "mes")}<p class="apnota">${temp ? "Top 3 de la temporada: título Campeón T0 + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP." : "Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda."}</p></section>` + htmlReglas("reto");
     return;
   }
   $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
@@ -4296,8 +4390,11 @@ document.addEventListener("click", e => {
 
   if (b.dataset.poner) { PERFIL[b.dataset.poner] = b.dataset.id; guardarPerfil(); if (b.dataset.poner === "skin") aplicarTema(); pintarLista(); return; }
   if (b.dataset.pnombre) {
-    const t = prompt("¿Qué nombre quieres que salga en la clasificación? (máx. 16 letras)", PERFIL.nombre || ""); if (t === null) return;
-    PERFIL.nombre = t.trim().slice(0, 16); guardarPerfil(); pintarLista(); return;
+    const t = prompt("¿Qué nombre quieres que salga en la clasificación? (3 a 16 letras)", PERFIL.nombre || ""); if (t === null) return;
+    const nn = t.trim().slice(0, 16);
+    if (nn.length < 3) { alert("El nombre tiene que tener al menos 3 letras."); return; }
+    if (otrosOnline().some(o => o.nl === nn.toLowerCase())) { alert("Ese nombre ya lo tiene otro jugador. Elige otro."); return; }
+    PERFIL.nombre = nn; guardarPerfil(); pintarLista(); subirPronto(); return;
   }
   if (b.dataset.comprar) {
     const tipo = b.dataset.comprar, id = b.dataset.id;
@@ -4608,7 +4705,7 @@ function pintarTemporada() {
   <section class="mcard t0 tw-mis"><h3>📜 MISIONES</h3>
     <div class="pxtabs">${[["dia", "Diarias"], ["sem", "Semana"], ["esp", "Especiales"]].map(([k, n]) => `<button data-mt="${k}" aria-pressed="${mt === k}">${n}<small>${hechas(mis[k])}</small></button>`).join("")}</div>
     ${mis[mt].map(barra).join("")}<p class="apnota">${notaMis}</p></section>
-  <section class="mcard t0 tw-rank"><h3>🏆 CLASIFICACIÓN</h3>${tablaRanking(filas, false, "temporada")}
+  <section class="mcard t0 tw-rank"><h3>🏆 CLASIFICACIÓN</h3>${chipModo()}${tablaRanking(filas, false, "temporada")}
     <button class="apbtn ap2 pxbtn" data-vista="evento" data-evento="premios" data-rkp="temporada" style="margin-top:10px">VER COMPLETA</button>
     <p class="apnota">Top 3: título «Campeón T0» + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP.</p></section>`;
   $("vista").innerHTML = h;
@@ -4674,7 +4771,7 @@ function pintarArcade() {
   const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
   if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
     return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span><b>${esc(o.n || o.m)}</b><small>${esc(nomC(z.x.local))} – ${esc(nomC(z.x.visitante))}</small></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
-  h += `<section class="mcard t0 tw-rank"><h3>🏆 TABLA HI-SCORE</h3>${tablaRanking(filas, false, "arcade")}
+  h += `<section class="mcard t0 tw-rank"><h3>🏆 TABLA HI-SCORE</h3>${chipModo()}${tablaRanking(filas, false, "arcade")}
 </section>` + htmlReglas("arcade");
   $("vista").innerHTML = h;
 }
@@ -4717,7 +4814,7 @@ ARCD.cont ||= {};
 // Reinicio: lo jugado antes de que empiece el evento no cuenta (se borra)
 for (const d of Object.keys(ARCD.dias)) if (d < ARC.desde) delete ARCD.dias[d];
 for (const k of Object.keys(ARCD.cont)) if (k < "2026-10-19") delete ARCD.cont[k];
-const guardarArc = () => { try { localStorage.setItem(ARC_K, JSON.stringify(ARCD)); } catch (e) {} };
+const guardarArc = () => { try { localStorage.setItem(ARC_K, JSON.stringify(ARCD)); } catch (e) {} try { subirPronto(); } catch (e) {} };
 const enArc = d => d >= ARC.desde && d <= ARC.hasta;
 const multiArc = racha => Math.min(ARC.maxCombo, 1 + racha);
 const diasArc = () => Object.keys(ARCD.dias).filter(enArc).sort();
@@ -4775,17 +4872,18 @@ function clasificacionArc(dias) {
   const xb = xpBots(), filas = [];
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...partidaArc(dias, picksYoArc, ARCD.cont) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...partidaArc(dias, (d, r) => picksAppArc(r), {}) });
-  BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...partidaArc(dias, (d, r) => picksBotArc(b, d, r), {}) }));
+  if (rkOnline()) otrosOnline().forEach(o => { const a = (o.arc && o.arc.d) || {}, t = sumaOnline(a, dias); filas.push(filaOnline(o, { ...t, mejor: (o.arc && o.arc.mejor) || 0 })); });
+  else BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...partidaArc(dias, (d, r) => picksBotArc(b, d, r), {}) }));
   if (_arcSucio) { _arcSucio = false; guardarArc(); }
   filas.sort((a, b) => b.pts - a.pts || b.mejor - a.mejor || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null;
-  filas.forEach((f, i) => { const k = f.pts + "|" + f.mejor + "|" + f.ok; if (k !== ant) { pos = i + 1; ant = k; } f.pos = pos; f.e = f.yo || f.app ? f.e : `Récord ×${Math.max(1, f.mejor)}`; });
+  filas.forEach((f, i) => { const k = f.pts + "|" + f.mejor + "|" + f.ok; if (k !== ant) { pos = i + 1; ant = k; } f.pos = pos; f.e = f.yo || f.app ? f.e : `Récord ×${Math.max(1, Math.min(ARC.maxCombo, f.mejor || 0))}`; });
   return filas;
 }
 // Clasificación de la temporada: Gánale a la app + los eventos de temporada
 function clasificacionTemp(dias) {
   const base = clasificacionReto(dias), arc = clasificacionArc(diasArc().filter(d => d >= TEMP1.desde && d <= TEMP1.hasta));
-  for (const f of base) { const a = arc.find(x => x.n === f.n && !!x.yo === !!f.yo); if (a) { f.pts += a.pts; f.ok += a.ok; f.jug += a.jug; } }
+  for (const f of base) { const a = arc.find(x => f.uid ? x.uid === f.uid : x.n === f.n && !!x.yo === !!f.yo); if (a) { f.pts += a.pts; f.ok += a.ok; f.jug += a.jug; } }
   base.sort((a, b) => b.pts - a.pts || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null; base.forEach((f, i) => { const k = f.pts + "|" + f.ok; if (k !== ant) { pos = i + 1; ant = k; } f.pos = pos; });
   return base;

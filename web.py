@@ -114,6 +114,12 @@ def html(datos: dict, documento_completo: bool = True) -> str:
         cuerpo = f.read()
     # json seguro dentro de <script>
     js = json.dumps(datos, ensure_ascii=False).replace("</", "<\\/")
+    try:
+        import online
+        fb = online.config_app()
+    except Exception:  # noqa: BLE001
+        fb = None
+    cuerpo = cuerpo.replace("__FIREBASE__", json.dumps(fb) if fb else "null")
     cuerpo = cuerpo.replace("__DATOS__", js).replace('href="bot/"', f'href="bot/?v={VERSION}"') + AUTO_RECARGA
     return (CABECERA.replace("#0b1711", "#f5f7fb").replace("Picks Dorados", "Partidos") + cuerpo + "\n</body>\n</html>\n") if documento_completo else cuerpo
 
