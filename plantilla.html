@@ -2678,7 +2678,7 @@ function tarjetaMia(a) {
     <div class="mcab"><div><b>${titulo}</b> · cuota ${a.cuota.toFixed(2).replace(".", ",")}</div>${estadoAp}</div>
     <div class="mdin"><span>Apostado <b>${eurosM(a.importe)}</b></span><span>${a.ok === true ? "Cobrado" : "Si gana"} <b>${eurosM(a.importe * a.cuota)}</b></span></div>
     ${filas.map(f => f.html).join("")}
-    <div class="macc">${acc}<button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div></article>`;
+    <div class="macc">${acc}<button data-apedit="${a.id}">✏️ Editar</button><button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div></article>`;
 }
 function graficaMias() {
   const res = MIAS.apuestas.filter(a => resuelta(a));
@@ -2881,8 +2881,17 @@ document.addEventListener("change", e => {
   pintarLista();
 });
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-apguardar],[data-apborrar],[data-apres],[data-apinicial],[data-apm],[data-apcombi],[data-bolquitar],[data-bolguardar],[data-bolvaciar]");
+  const b = e.target.closest("[data-apguardar],[data-apborrar],[data-apres],[data-apinicial],[data-apm],[data-apcombi],[data-bolquitar],[data-bolguardar],[data-bolvaciar],[data-apedit]");
   if (!b) return;
+  if (b.dataset.apedit) {   // corregir lo apostado o la cuota de una apuesta ya guardada
+    const a = MIAS.apuestas.find(x => x.id === b.dataset.apedit); if (!a) return;
+    const t1 = prompt("¿Cuánto apostaste? (€)", a.importe.toFixed(2).replace(".", ",")); if (t1 === null) return;
+    const imp = numES(t1); if (!(imp > 0)) return alert("No he entendido el importe.");
+    const t2 = prompt("¿A qué cuota?", a.cuota.toFixed(2).replace(".", ",")); if (t2 === null) return;
+    const cu = numES(t2); if (!(cu > 1)) return alert("No he entendido la cuota.");
+    a.importe = Math.round(imp * 100) / 100; a.cuota = Math.round(cu * 100) / 100;
+    guardarMias(); pintarLista(); return;
+  }
   if (b.dataset.apcombi) {
     const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel], f = est.apf; if (!p || !f) return;
     const otro = f.m === "__otro" ? (f.otro || "").trim() : "", cuota = numES(f.c);
