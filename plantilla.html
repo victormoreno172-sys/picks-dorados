@@ -519,6 +519,29 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
   font: 700 12px/22px var(--mono); font-style: normal; border: 2px solid var(--bg); }
 .abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+/* ---------- Juego "Gánale a la app" ---------- */
+.retoban { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; border: 0; border-radius: 16px; padding: 12px 14px; margin: 0 0 10px; cursor: pointer;
+  background: linear-gradient(120deg, #1d4ed8, #7c3aed); color: #fff; box-shadow: 0 6px 18px rgba(79, 70, 229, .3); }
+.retoban .rbi { font-size: 26px; } .retoban .rbt { flex: 1; display: flex; flex-direction: column; min-width: 0; } .retoban .rbt b { font-size: 15px; } .retoban .rbt small { font-size: 12px; opacity: .85; }
+.retoban .rbm { font: 600 12px var(--mono); white-space: nowrap; background: rgba(255,255,255,.16); padding: 6px 9px; border-radius: 10px; } .retoban .rbm b { font-size: 15px; }
+.rmarc { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; background: linear-gradient(120deg, #1d4ed8, #7c3aed); color: #fff; border-radius: 20px; padding: 14px; margin-bottom: 14px; box-shadow: 0 6px 18px rgba(79, 70, 229, .3); }
+.rlado { text-align: center; display: flex; flex-direction: column; } .rlado small { font-size: 12px; opacity: .85; } .rlado b { font: 800 34px var(--mono); }
+.rvs { text-align: center; font-weight: 700; font-size: 14px; display: flex; flex-direction: column; gap: 2px; } .rvs small { font-weight: 500; font-size: 11px; opacity: .85; }
+.rpart { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--sombra); padding: 10px 12px 12px; margin-bottom: 10px; }
+.rcab { width: 100%; display: grid; grid-template-columns: 52px minmax(0, 1fr) 26px; gap: 8px; align-items: center; border: 0; background: none; text-align: left; color: var(--ink); padding: 0 0 8px; cursor: pointer; font: inherit; }
+.rcab .rh { font: 600 12px var(--mono); color: var(--muted); text-align: center; } .rcab .req { font-weight: 600; font-size: 14px; line-height: 1.35; } .rcab .rmk { font: 700 14px/1.35 var(--mono); text-align: center; }
+.rcab small { grid-column: 2 / 4; font-size: 11px; color: var(--muted); }
+.rops { display: grid; gap: 6px; } .rops.n3 { grid-template-columns: repeat(3, 1fr); } .rops.n2 { grid-template-columns: repeat(2, 1fr); }
+.rop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 4px 7px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); cursor: pointer; font: inherit; min-width: 0; }
+.rop .rc { font: 800 13px var(--mono); color: var(--muted); } .rop .rn { font-size: 12px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rop .rp { font: 600 11px var(--mono); color: var(--muted); } .rop .rpt { font: 700 12px var(--mono); color: #4f46e5; } .rop .rpt i { font-style: normal; color: #db2777; margin-left: 3px; font-size: 10px; }
+.rop .rapp { position: absolute; top: 3px; right: 5px; font-size: 12px; }
+.rop.yo { border-color: #4f46e5; background: rgba(79, 70, 229, .12); box-shadow: inset 0 0 0 1px #4f46e5; }
+.rop.ok { border-color: #16a34a; background: var(--ok-soft); } .rop.ko { border-color: var(--red); background: var(--red-soft); }
+.rop:disabled { cursor: default; opacity: .9; }
+.rres { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; border-radius: 10px; padding: 6px; }
+.rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
+.rmes p { margin: 6px 0 0; }
 /* ---------- Estadísticas (tus apuestas) y formulario para apuntarlas ---------- */
 .mcard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--sombra); padding: 14px; margin-bottom: 12px; }
 .mcard h3 { margin: 0 0 6px; font-size: 16px; } .mcard p { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.4; }
@@ -1172,8 +1195,9 @@ function enVivo() {
 function pintarLista() {
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar"].includes(est.vista);
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto"].includes(est.vista);
   if (est.vista === "buscar") return pintarBuscadorGeneral();
+  if (est.vista === "reto") return pintarReto();
   if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
@@ -1193,6 +1217,7 @@ function pintarLista() {
         <button class="lfav" data-ligafav="${esc(l)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>`; };
     const favs = ligas.filter(l => est.ligasFav.has(l)), resto = ligas.filter(l => !est.ligasFav.has(l));
     const nVivo = enVivo().length;
+    if (DATOS.dias[est.dia] && DATOS.dias[est.dia].fecha === AHORA.fecha) try { h += bannerReto(); } catch (e) {}
     h += `<button class="todos endirecto ${nVivo ? "hay" : ""}" data-endirecto="1"><span class="punto"></span><b>En directo</b><span class="cnt vivo-c">${nVivo}</span></button>`;
     h += `<button class="todos" data-vista="todos"><span class="lst">☰</span><b>Todos los partidos</b><span class="cnt rojo">${vis.length}</span></button>`;
     if (favs.length) h += `<h2 class="sec">Competiciones favoritas</h2><div class="comps">${favs.map(fila).join("")}</div>`;
@@ -2647,6 +2672,142 @@ document.addEventListener("click", e => {
   }
 });
 setInterval(() => { if (!document.hidden) { if (est.vista === "misap") pintarLista(); contarMisApuestas(); } }, 60000);
+
+// ---------------------------------------------------------------- Juego: "Gánale a la app"
+// Cada día, 6 partidos. Eliges 1-X-2 (o ganador en basket) antes de que empiecen. La app elige siempre lo más
+// probable. Acertar da 10 ÷ probabilidad (lo difícil vale más) y +10 si aciertas donde la app falla.
+// Solo cuentan los partidos que pronosticas (para ti y para la app). De momento se guarda en este móvil.
+const RETO_K = "retoV1";
+let RETO = (() => { try { const r = JSON.parse(localStorage.getItem(RETO_K) || "null"); if (r && r.dias) return r; } catch (e) {} return { dias: {} }; })();
+function guardarReto() { try { localStorage.setItem(RETO_K, JSON.stringify(RETO)); } catch (e) {} }
+const N_RETO = 6, BONUS_RETO = 10;
+const ptsReto = p => Math.max(1, Math.round(10 / Math.max(p, 0.02)));
+function opcionesReto(p) {
+  const pk = m => (p.picks.find(k => k.m === m) || {}).p;
+  let ops;
+  if ((p.dep || "f") === "f") ops = [["Gana local (1)", "1"], ["Empate (X)", "X"], ["Gana visitante (2)", "2"]].map(([m, c]) => ({ m, c, p: pk(m) }));
+  else if (p.dep === "b") ops = [["Gana local", "1"], ["Gana visitante", "2"]].map(([m, c]) => ({ m, c, p: pk(m) }));
+  else return null;
+  if (ops.some(o => !o.p)) return null;
+  const s = ops.reduce((t, o) => t + o.p, 0);
+  ops.forEach(o => { o.p = Math.round(o.p / s * 1000) / 1000; });
+  return ops;
+}
+// Los 6 partidos del día: los de las competiciones más importantes (como mucho 2 por competición), y se
+// quedan fijos para todo el día (con sus porcentajes) la primera vez que abres el juego
+function retoDelDia(fecha) {
+  if (RETO.dias[fecha]) return RETO.dias[fecha];
+  const dia = DATOS.dias.find(d => d.fecha === fecha); if (!dia) return null;
+  const ahoraMin = fecha === AHORA.fecha ? AHORA.hora : "00:00";
+  const cand = dia.partidos.filter(p => ["f", "b"].includes(p.dep || "f") && !/Pretemporada/i.test(p.liga) && (p.hora || "99") > ahoraMin && opcionesReto(p))
+    .sort((a, b) => ((a.dep || "f") !== "f") - ((b.dep || "f") !== "f") || ordenLiga(ligaBase(a.liga)) - ordenLiga(ligaBase(b.liga)) || (a.hora || "").localeCompare(b.hora || ""));
+  const porLiga = {}, elegidos = [];
+  let basket = 0;   // sobre todo fútbol: como mucho 2 de baloncesto
+  for (const p of cand) {
+    const l = ligaBase(p.liga); if ((porLiga[l] || 0) >= 2 || (p.dep === "b" && basket >= 2)) continue;
+    porLiga[l] = (porLiga[l] || 0) + 1; if (p.dep === "b") basket++; elegidos.push(p); if (elegidos.length >= N_RETO) break;
+  }
+  if (!elegidos.length) return null;
+  elegidos.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+  RETO.dias[fecha] = { partidos: elegidos.map(p => ({ local: p.local, visitante: p.visitante, liga: p.liga, hora: p.hora, dep: p.dep || "f", fecha, ops: opcionesReto(p) })), picks: {} };
+  guardarReto();
+  return RETO.dias[fecha];
+}
+const claveReto = x => x.local + "|" + x.visitante;
+function estadoReto(x) {
+  const pos = partidoDePierna(x), p = pos ? DATOS.dias[pos[0]].partidos[pos[1]] : null;
+  const e = p ? estadoEnDia(pos[0], p) : null;
+  const empezado = !!e || (x.fecha + " " + (x.hora || "99")) <= (AHORA.fecha + " " + AHORA.hora);
+  let gana = null;   // mercado que va ganando / ha ganado
+  if (e && /^(\d+)-(\d+)$/.test(e.m || "")) gana = x.ops.find(o => acierta(o.m, e.m, x.local, x.visitante) === true);
+  if (x.fin) gana = x.ops.find(o => o.m === x.fin);
+  return { pos, p, e, empezado, final: !!x.fin || (e && e.st === "post"), gana: gana ? gana.m : null };
+}
+// Puntos de un día: los tuyos y los de la app, solo en los partidos que has pronosticado y ya han acabado
+function cuentaReto(r) {
+  let yo = 0, app = 0, vivos = 0, jugados = 0, ganadas = 0;
+  let cambio = false;
+  for (const x of r.partidos) {
+    const mio = r.picks[claveReto(x)]; if (!mio) continue;
+    const s = estadoReto(x);
+    if (s.final && s.gana && !x.fin) { x.fin = s.gana; cambio = true; }
+    if (!s.final || !s.gana) { if (s.empezado) vivos++; continue; }
+    jugados++;
+    const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
+    const yoOk = mio === s.gana, appOk = top.m === s.gana;
+    if (yoOk) yo += ptsReto(x.ops.find(o => o.m === mio).p) + (appOk ? 0 : BONUS_RETO);
+    if (appOk) app += ptsReto(top.p);
+    if (yoOk && !appOk) ganadas++;
+  }
+  if (cambio) guardarReto();
+  return { yo, app, vivos, jugados, ganadas, elegidos: Object.keys(r.picks).length };
+}
+function resumenMesReto() {
+  const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
+  let yo = 0, app = 0, ganados = 0, jugados = 0, aciertosVsApp = 0;
+  for (const d of dias) {
+    const c = cuentaReto(RETO.dias[d]); yo += c.yo; app += c.app; aciertosVsApp += c.ganadas;
+    const terminado = c.jugados && c.jugados === c.elegidos;
+    if (terminado) { jugados++; if (c.yo > c.app) ganados++; }
+  }
+  let racha = 0;
+  for (const d of Object.keys(RETO.dias).sort().reverse()) {
+    const c = cuentaReto(RETO.dias[d]);
+    if (!c.elegidos || c.jugados < c.elegidos) continue;
+    if (c.yo > c.app) racha++; else break;
+  }
+  return { yo, app, ganados, jugados, racha, aciertosVsApp };
+}
+function bannerReto() {
+  const r = DATOS.dias.some(d => d.fecha === AHORA.fecha) ? retoDelDia(AHORA.fecha) : null;
+  if (!r) return "";
+  const c = cuentaReto(r), pend = r.partidos.filter(x => !r.picks[claveReto(x)] && !estadoReto(x).empezado).length;
+  return `<button class="retoban" data-vista="reto"><span class="rbi">🎯</span><span class="rbt"><b>Gánale a la app</b><small>${pend ? `Te quedan ${pend} partido${pend > 1 ? "s" : ""} por pronosticar hoy` : c.elegidos ? "Hoy ya has jugado: mira cómo vas" : "El reto de hoy ya ha empezado"}</small></span><span class="rbm">Tú <b>${c.yo}</b> – <b>${c.app}</b> App</span></button>`;
+}
+function pintarReto() {
+  const r = retoDelDia(AHORA.fecha);
+  let h = `<div class="lbar"><button class="ico" data-vista="comps" aria-label="Volver">‹</button><h2><span>🎯</span><span class="t">Gánale a la app</span></h2></div>`;
+  if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
+  const c = cuentaReto(r), m = resumenMesReto();
+  const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
+  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
+  h += r.partidos.map(x => {
+    const s = estadoReto(x), mio = r.picks[claveReto(x)], k = claveReto(x);
+    const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
+    const hora = s.e && s.e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(s.e.det))}</span>` : s.final ? `<span class="fin">FIN</span>` : esc(x.hora || "");
+    const marc = s.e && /^(\d+)-(\d+)$/.exec(s.e.m || "");
+    const etiqueta = o => o.c === "1" ? nom(x.local) : o.c === "2" ? nom(x.visitante) : "Empate";
+    const botones = x.ops.map(o => {
+      const yo = mio === o.m, va = s.gana === o.m;
+      return `<button class="rop ${yo ? "yo" : ""} ${s.final && va ? "ok" : ""} ${s.final && yo && !va ? "ko" : ""}" ${s.empezado ? "disabled" : `data-retopick="${esc(k)}" data-m="${esc(o.m)}"`}>
+        <span class="rc">${o.c}</span><span class="rn">${esc(etiqueta(o))}</span><span class="rp">${Math.round(o.p * 100)} %</span><span class="rpt">+${ptsReto(o.p)}${o.m !== top.m ? `<i>+${BONUS_RETO}</i>` : ""}</span>${o.m === top.m ? '<span class="rapp">🤖</span>' : ""}</button>`;
+    }).join("");
+    let res = "";
+    if (mio && s.final && s.gana) {
+      const yoOk = mio === s.gana, appOk = top.m === s.gana;
+      res = yoOk && !appOk ? `<p class="rres bien">🏆 ¡Le has ganado a la app! +${ptsReto(x.ops.find(o => o.m === mio).p) + BONUS_RETO}</p>` : yoOk ? `<p class="rres bien">✅ Acertado +${ptsReto(x.ops.find(o => o.m === mio).p)} (la app también)</p>`
+        : appOk ? `<p class="rres mal">❌ Fallado · la app acierta +${ptsReto(top.p)}</p>` : `<p class="rres">❌ Falláis los dos</p>`;
+    } else if (!mio && s.empezado) res = `<p class="rres">No lo pronosticaste</p>`;
+    const attrs = s.pos ? ` data-abrirdia="${s.pos[0]}" data-abrirp="${s.pos[1]}" data-desde="reto"` : "";
+    return `<article class="rpart"><button class="rcab"${attrs}><span class="rh">${hora}</span><span class="req">${esc(x.local)}<br>${esc(x.visitante)}</span><span class="rmk">${marc ? `${marc[1]}<br>${marc[2]}` : ""}</span><small>${esc(ligaBase(x.liga))}</small></button>
+      <div class="rops n${x.ops.length}">${botones}</div>${res}</article>`;
+  }).join("");
+  h += `<section class="mcard rmes"><h3>📅 Este mes</h3><div class="mkpis">
+      <div><b>${m.yo}</b><span>tus puntos</span></div><div><b>${m.app}</b><span>puntos de la app</span></div>
+      <div><b>${m.ganados}/${m.jugados}</b><span>días ganados</span></div><div><b>${m.racha ? "🔥 " + m.racha : "–"}</b><span>racha de días</span></div></div>
+      <p>Has acertado <b>${m.aciertosVsApp}</b> partido${m.aciertosVsApp === 1 ? "" : "s"} en los que la app falló.</p></section>
+    <details class="mcard"><summary><b>¿Cómo se juega?</b></summary><p>Cada día hay ${N_RETO} partidos. Elige quién gana (o empate) antes de que empiece cada uno. La app 🤖 elige siempre lo más probable.</p>
+      <p><b>Puntos:</b> acertar vale 10 ÷ la probabilidad: un favorito al 70 % da +14; un empate al 25 %, +40. Si aciertas uno en el que la app falla, <b>+${BONUS_RETO} extra</b>. Solo cuentan los partidos que pronostiques, para ti y para la app.</p>
+      <p>Pronto: ranking con más gente y premios (camisetas, balones…).</p></details>`;
+  $("vista").innerHTML = h;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-retopick]"); if (!b) return;
+  const r = RETO.dias[AHORA.fecha]; if (!r) return;
+  const x = r.partidos.find(y => claveReto(y) === b.dataset.retopick); if (!x || estadoReto(x).empezado) return pintarLista();
+  if (r.picks[b.dataset.retopick] === b.dataset.m) delete r.picks[b.dataset.retopick]; else r.picks[b.dataset.retopick] = b.dataset.m;
+  guardarReto(); pintarLista();
+});
 
 // ---------------------------------------------------------------- buscador general (botón Buscar de abajo)
 // Busca en todo: partidos de todos los días y deportes, competiciones y equipos/jugadores
