@@ -542,6 +542,16 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rres { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; border-radius: 10px; padding: 6px; }
 .rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
 .rmes p { margin: 6px 0 0; }
+.rclt { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rseg { display: flex; background: var(--bar); border-radius: 999px; padding: 3px; } .rseg button { border: 0; background: none; padding: 5px 12px; border-radius: 999px; font: 600 12px var(--body); color: var(--muted); cursor: pointer; }
+.rseg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.rtab { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+.rtab th { font: 600 10.5px var(--mono); color: var(--muted); text-align: left; padding: 4px 6px; } .rtab th:nth-child(n+3) { text-align: right; }
+.rtab td { padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: middle; } .rtab td:first-child { width: 28px; text-align: center; font: 700 12px var(--mono); }
+.rtab td:nth-child(n+3) { text-align: right; font-family: var(--mono); white-space: nowrap; }
+.rtab td small { display: block; font-size: 10.5px; color: var(--muted); }
+.rtab tr.yo td { background: rgba(79, 70, 229, .12); } .rtab tr.yo td:first-child { border-radius: 10px 0 0 10px; } .rtab tr.yo td:last-child { border-radius: 0 10px 10px 0; }
+.rtab tr.app td { background: var(--bar); } .rtab tr.sep td { text-align: center; color: var(--muted); border: 0; padding: 2px; }
 .rq { margin: 0 0 7px; font-size: 13px; font-weight: 700; color: #4f46e5; }
 .evs { display: grid; gap: 14px; }
 .ev { position: relative; overflow: hidden; width: 100%; height: 132px; display: flex; align-items: flex-end; text-align: left; border: 0; border-radius: 22px; padding: 16px; color: #fff; cursor: pointer; font: inherit; box-shadow: 0 10px 24px rgba(15, 23, 42, .22); isolation: isolate; }
@@ -2789,9 +2799,9 @@ function cuentaReto(r) {
   let yo = 0, app = 0, vivos = 0, jugados = 0, ganadas = 0;
   let cambio = false;
   for (const x of r.partidos) {
-    const mio = r.picks[claveReto(x)]; if (!mio) continue;
     const s = estadoReto(x);
-    if (s.final && s.gana && !x.fin) { x.fin = s.gana; cambio = true; }
+    if (s.final && s.gana && !x.fin) { x.fin = s.gana; cambio = true; }   // se guarda el resultado de todos (lo usan los demás jugadores)
+    const mio = r.picks[claveReto(x)]; if (!mio) continue;
     if (!s.final || !s.gana) { if (s.empezado) vivos++; continue; }
     jugados++;
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
@@ -2803,6 +2813,81 @@ function cuentaReto(r) {
   if (cambio) guardarReto();
   return { yo, app, vivos, jugados, ganadas, elegidos: Object.keys(r.picks).length };
 }
+// ---- Jugadores de prueba (40 bots con estilos distintos) para ver cómo queda la clasificación.
+// Cada uno decide antes de los partidos, siempre igual para el mismo partido (semilla por nombre y partido).
+const ESTILOS = {
+  fav: "Va con el favorito", sorpresa: "Busca la sorpresa", muestreo: "Sigue los porcentajes", local: "Siempre con el de casa",
+  visit: "Le tira el de fuera", empates: "Loco de los empates", caos: "A lo loco", mixto: "Favorito casi siempre", goles: "Quiere goles",
+};
+const BOTS_RETO = [
+  ["Javi_10", "mixto", .7], ["LaPulga88", "muestreo"], ["Ruben_Bet", "sorpresa"], ["Mari_ultra", "local"], ["ElCholo", "empates"], ["Pichichi", "goles"],
+  ["Sergi_FCB", "mixto", .55], ["Dani_Madrid", "fav"], ["Lucia_7", "muestreo"], ["Nacho_Atleti", "empates"], ["Paco_Pronos", "mixto", .8], ["Carla_gol", "goles"],
+  ["Toni_Zaragoza", "caos"], ["Manu_9", "visit"], ["Iker_Txuri", "local"], ["Alba_BCN", "muestreo"], ["Hugo_Crack", "sorpresa"], ["Raul_Sevilla", "mixto", .65],
+  ["Ana_Betis", "local"], ["Marcos_92", "caos"], ["Laura_VLC", "muestreo"], ["Pablo_Tifo", "mixto", .6], ["Edu_Stats", "fav"], ["Nerea_Gol", "goles"],
+  ["Diego_10", "sorpresa"], ["Sara_Porra", "mixto", .75], ["Alex_Quiniela", "empates"], ["Iván_Fiera", "visit"], ["Bea_Ultra", "muestreo"], ["Guille_Mago", "mixto", .5],
+  ["Kike_Vigo", "local"], ["Jorge_99", "caos"], ["Elena_Fut", "muestreo"], ["Tomás_Real", "fav"], ["Nico_Ole", "sorpresa"], ["Irene_X", "empates"],
+  ["Fer_Bilbao", "mixto", .7], ["Óscar_Pro", "muestreo"], ["Marta_Gol", "goles"], ["Leo_Rayo", "visit"],
+].map(([n, e, q], i) => ({ n, e, q: q || .7, part: .65 + ((i * 37) % 35) / 100 }));   // part: qué parte de los partidos juega
+function azar(texto) {   // número entre 0 y 1, siempre el mismo para el mismo texto
+  let h = 2166136261; for (let i = 0; i < texto.length; i++) { h ^= texto.charCodeAt(i); h = Math.imul(h, 16777619); }
+  h += h << 13; h ^= h >>> 7; h += h << 3; h ^= h >>> 17; h += h << 5; return ((h >>> 0) % 100000) / 100000;
+}
+function eligeBot(bot, x) {
+  const s = bot.n + "|" + x.fecha + "|" + claveReto(x), r1 = azar(s), r2 = azar(s + "b");
+  if (azar(s + "p") > bot.part) return null;   // ese partido no lo juega
+  const ops = x.ops, top = ops.reduce((a, b) => b.p > a.p ? b : a), min = ops.reduce((a, b) => b.p < a.p ? b : a);
+  const sortea = () => { let t = 0; for (const o of ops) { t += o.p; if (r2 <= t) return o.m; } return ops[ops.length - 1].m; };
+  const porC = c => (ops.find(o => o.c === c) || {}).m;
+  switch (bot.e) {
+    case "fav": return top.m;
+    case "sorpresa": return r1 < .6 ? min.m : sortea();
+    case "muestreo": return sortea();
+    case "local": return r1 < .7 ? (porC("1") || porC("+") || porC("Sí") || sortea()) : sortea();
+    case "visit": return r1 < .6 ? (porC("2") || porC("−") || porC("No") || sortea()) : sortea();
+    case "empates": return r1 < .45 && porC("X") ? porC("X") : sortea();
+    case "goles": return r1 < .75 && (porC("+") || porC("Sí")) ? (porC("+") || porC("Sí")) : sortea();
+    case "caos": return ops[Math.floor(r2 * ops.length)].m;
+    default: return r1 < bot.q ? top.m : sortea();   // mixto
+  }
+}
+// Puntos de cualquier jugador en un día (picks: {clave: mercado})
+function puntosDia(r, elige) {
+  let pts = 0, ok = 0, jug = 0, vsApp = 0;
+  for (const x of r.partidos) {
+    const m = elige(x); if (!m) continue;
+    const s = estadoReto(x); if (!s.final || !s.gana) continue;
+    jug++;
+    const top = x.ops.reduce((a, b) => b.p > a.p ? b : a), appOk = top.m === s.gana;
+    if (m === s.gana) { ok++; pts += ptsReto(x.ops.find(o => o.m === m).p) + (appOk ? 0 : BONUS_RETO); if (!appOk) vsApp++; }
+  }
+  return { pts, ok, jug, vsApp };
+}
+function clasificacionReto(dias) {
+  const filas = [];
+  const suma = elige => dias.reduce((t, d) => { const r = RETO.dias[d], c = puntosDia(r, x => elige(x, r)); return { pts: t.pts + c.pts, ok: t.ok + c.ok, jug: t.jug + c.jug, vsApp: t.vsApp + c.vsApp }; }, { pts: 0, ok: 0, jug: 0, vsApp: 0 });
+  filas.push({ n: "Tú", yo: true, ...suma((x, r) => r.picks[claveReto(x)]) });
+  filas.push({ n: "🤖 La App", app: true, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
+  for (const b of BOTS_RETO) filas.push({ n: b.n, e: ESTILOS[b.e], ...suma(x => eligeBot(b, x)) });
+  filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
+  let pos = 0, ant = null;
+  filas.forEach((f, i) => { if (f.pts !== ant) { pos = i + 1; ant = f.pts; } f.pos = pos; });
+  return filas;
+}
+function tablaClasif(filas, todas) {
+  const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10);
+  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><b>${esc(f.n)}</b>${f.e ? `<small>${esc(f.e)}</small>` : ""}</td><td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
+  return `<table class="rtab"><tr><th>#</th><th>Jugador</th><th>Aciertos</th><th>Pts</th></tr>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<tr class="sep"><td colspan="4">···</td></tr>` + fila(yo) : ""}</table>`;
+}
+function seccionClasif() {
+  const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
+  const vista = est.clasR || "hoy", ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : dias;
+  const filas = clasificacionReto(ds), yo = filas.find(f => f.yo);
+  return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
+    <p>Vas <b>${yo.pos}.º de ${filas.length}</b>${yo.pts ? ` con ${yo.pts} puntos` : ""}. ${filas.some(f => f.jug) ? "" : "Los puntos llegan cuando acaben los partidos."}</p>
+    ${tablaClasif(filas)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa</button>
+    <p class="apnota">De momento son 40 jugadores de prueba con estilos distintos, para ver cómo funciona. Cuando haya ranking online, serán personas de verdad.</p></section>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-clasr]"); if (!b) return; est.clasR = b.dataset.clasr; pintarLista(); });
 function resumenMesReto() {
   const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
   let yo = 0, app = 0, ganados = 0, jugados = 0, aciertosVsApp = 0;
@@ -2831,7 +2916,7 @@ const EVENTOS = [
   { id: "superv", t: "Supervivencia", d: "Cada jornada, un equipo que gane y sin repetir. Si falla, fuera. Gana el último en pie.", tema: "ev-sup" },
   { id: "porra", t: "Porra semanal", d: "Los 10 partidos gordos de la semana. El que más acierte se lleva premio.", tema: "ev-porra" },
   { id: "amigos", t: "Ligas con amigos", d: "Crea una liga, pásales el código y compite con tu grupo en todos los desafíos.", tema: "ev-amigos" },
-  { id: "premios", t: "Ranking y premios", d: "Clasificación con toda la gente que juegue y premios cada mes: camisetas, balones…", tema: "ev-premios" },
+  { id: "premios", t: "Ranking y premios", d: "Clasificación con toda la gente que juegue y premios cada mes: camisetas, balones…", tema: "ev-premios", activo: true },
 ];
 // Dibujo animado de fondo de cada evento (SVG propio)
 const ARTE_EV = {
@@ -2864,6 +2949,11 @@ function pintarDesafios() {
   let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div><div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
+    if (ev.id === "premios") {
+      on = true;
+      const mes = AHORA.fecha.slice(0, 7), ds = Object.keys(RETO.dias).filter(d => d.startsWith(mes));
+      const yo = clasificacionReto(ds).find(f => f.yo); estado = `Vas ${yo.pos}.º de ${BOTS_RETO.length + 2}`;
+    }
     if (ev.id === "reto") {
       on = true;
       const r = DATOS.dias.some(d => d.fecha === AHORA.fecha) ? retoDelDia(AHORA.fecha) : null;
@@ -2880,6 +2970,14 @@ function pintarDesafios() {
 // Eventos que aún no están: su pantalla con lo que será
 function pintarEvento() {
   const ev = EVENTOS.find(e => e.id === est.evento) || EVENTOS[1];
+  if (ev.id === "premios") {
+    const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
+    const filas = clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
+    $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
+      <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>Ranking de ${["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>Suma de Gánale a la app de todo el mes</small></span></section>
+      <section class="mcard">${tablaClasif(filas, true)}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>`;
+    return;
+  }
   $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
     <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${ev.t}</b><small>${ev.d}</small></span></section>
     <div class="vacio">Este desafío llega pronto. Mientras tanto, juega a <b>Gánale a la app</b>: tus puntos de este mes contarán para el ranking.</div>
@@ -2913,6 +3011,7 @@ function pintarReto() {
     return `<article class="rpart"><button class="rcab"${attrs}><span class="rh">${hora}</span><span class="req">${esc(x.local)}<br>${esc(x.visitante)}</span><span class="rmk">${marc ? `${marc[1]}<br>${marc[2]}` : ""}</span><small>${esc(ligaBase(x.liga))}</small></button>
       <p class="rq">${esc(x.q || "¿Quién gana?")}</p><div class="rops n${x.ops.length}">${botones}</div>${res}</article>`;
   }).join("");
+  h += seccionClasif();
   h += `<section class="mcard rmes"><h3>📅 Este mes</h3><div class="mkpis">
       <div><b>${m.yo}</b><span>tus puntos</span></div><div><b>${m.app}</b><span>puntos de la app</span></div>
       <div><b>${m.ganados}/${m.jugados}</b><span>días ganados</span></div><div><b>${m.racha ? "🔥 " + m.racha : "–"}</b><span>racha de días</span></div></div>
