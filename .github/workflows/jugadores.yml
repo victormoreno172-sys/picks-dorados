@@ -1,0 +1,21 @@
+name: Jugadores
+# A mano: lista las cuentas del ranking online o borra las que se indiquen (uids separados por espacios)
+on:
+  workflow_dispatch:
+    inputs:
+      borrar:
+        description: "UIDs a borrar (vacío = solo listar)"
+        required: false
+        default: ""
+jobs:
+  jugadores:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests google-auth
+      - env:
+          FIREBASE_CUENTA: ${{ secrets.FIREBASE_CUENTA }}
+          BORRAR: ${{ inputs.borrar }}
+        run: python jugadores.py $BORRAR
