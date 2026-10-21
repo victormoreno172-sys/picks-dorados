@@ -3837,7 +3837,7 @@ function pintarTienda() {
     <div class="texcl r-leg"><span class="tcp" style="display:flex;gap:8px;align-items:center"><span class="av mr-circuito" style="--s:46px"><span class="avi" style="background:#1e1b4b"><span class="ava-robot">🤖</span></span></span><span class="tjmini tj tj-vencedor" style="width:70px;height:46px"></span></span><span><b>Set «Vencedor de la máquina»</b><small>Tarjeta, marco y avatar animados · top 3 del mes en Gánale a la app</small></span><span class="tlock">${PERFIL.comprados.includes("tarjeta:vencedor") ? "✓ Tuyo" : "🔒"}</span></div>`;
   } else if (cat === "fis") {
     h += `<p class="tnota">Premios de verdad con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online con cuentas verificadas.</p>` +
-      rejilla([["🧣", "Bufanda", 15000], ["⚽", "Balón", 25000], ["👕", "Camiseta", 30000]].map(([e, n, p]) => `<div class="tcard r-leg fis"><span class="tcr">Premio real</span><span class="tcp"><span style="font-size:54px">${e}</span></span><b class="tcn">${n}</b><button class="tcbtn" disabled>🪙 ${fmtN(p)} · Pronto</button></div>`));
+      rejilla([["🧣", "Bufanda", 20000], ["⚽", "Balón", 35000], ["👕", "Camiseta", 45000]].map(([e, n, p]) => `<div class="tcard r-leg fis"><span class="tcr">Premio real</span><span class="tcp"><span style="font-size:54px">${e}</span></span><b class="tcn">${n}</b><button class="tcbtn" disabled>🪙 ${fmtN(p)} · Pronto</button></div>`));
   } else {
     const v = venta.find(x => x[0] === cat);
     h += rejilla(v[2].sort((a, b) => a.precio - b.precio).map(i => cartaTienda(cat, i, mon)));
@@ -3980,11 +3980,12 @@ function pintarGuia() {
     <li>Nivel 100: <b>camiseta</b>. Nivel 200: <b>premio Inmortal</b> (cuando haya ranking online).</li></ul></section>
   <section class="mcard guia"><h3>🪙 Monedas</h3><p>Se ganan con lo mismo que la XP pero <b>se gastan</b>. No caducan. <b>No se pueden comprar con dinero</b> ni cambiar por dinero.</p>
     ${t(["Cómo se ganan monedas", "🪙"], [["Acertar", "los puntos del acierto (14–60)"], ["Completar el día", "20"], ["Ganarle el día a la app", "50"], ["Racha de 3 / 7 / 30 días", "50 / 200 / 1.000"], ["Podio de la semana", "1.000 / 600 / 400"], ["4.º–10.º de la semana", "200"], ["Podio del mes", "5.000 / 3.000 / 2.000"], ["4.º–10.º del mes", "1.000"], ["Subir de nivel", "20 + nivel"]])}
-    <p>Jugando cada día se hacen unas <b>4.000–5.000 monedas al mes</b>, y más si quedas arriba en los rankings.</p></section>
+    ${t(["Temporada 0 (extra)", "🪙"], [["Regalo diario (7 días)", "10 / 15 / 20 / 25 / 30 / comodín ×2 / cofre 75"], ["Desafíos de la semana", "40 / 60 / 80"], ["Desafíos especiales", "150–300"], ["Pase (niveles impares)", "15 + nivel"], ["Podio de la temporada", "10.000 / 6.000 / 4.000"]])}
+    <p>Jugando cada día se hacen unas <b>4.000–5.000 monedas al mes</b>, y con la temporada unas <b>6.000–7.000</b>; más si quedas arriba en los rankings.</p></section>
   <section class="mcard guia"><h3>🛍️ La tienda</h3><ul>
     <li><b>Comodín ×2</b> (800 🪙): un acierto vale el doble. Uno al día.</li><li><b>Segunda oportunidad</b> (1.500 🪙): cambias un pronóstico ya empezado (fútbol: hasta el minuto 15; baloncesto: durante el 1.er cuarto).</li>
     <li><b>Avatares</b> (500–1.500 🪙), <b>marcos</b> (2.000–4.000 🪙), <b>colores de nombre</b> (1.000–2.500 🪙), <b>títulos</b> (1.500–2.000 🪙) y <b>tarjetas</b> (el fondo de tu ficha: 1.200–2.000 🪙, y las animadas Aurora, Lava y Galaxia de 6.000 a 8.000 🪙). Lo que compras es tuyo para siempre y lo pones en Perfil → Personalizar.</li>
-    <li><b>Premios físicos</b>: bufanda (15.000 🪙), balón (25.000 🪙) y camiseta (30.000 🪙), con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online.</li></ul>
+    <li><b>Premios físicos</b>: bufanda (20.000 🪙), balón (35.000 🪙) y camiseta (45.000 🪙), con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online.</li></ul>
     <p>Otras cosas no se compran: se ganan con nivel o con insignias (por ejemplo, el título Cazagigantes).</p></section>
   <section class="mcard guia"><h3>🏆 Eventos</h3><ul>
     <li><b>Gánale a la app</b> (ya disponible): 6 partidos al día contra la máquina, con ranking diario, semanal y mensual.</li>
@@ -4011,13 +4012,14 @@ const PASE_OBJ = { 10: ["avatar", "a29"], 15: ["tarjeta", "pixel"], 20: ["marco"
   35: ["avatar", "a30"], 40: ["tarjeta", "arcade8"], 45: ["marco", "pixelrgb"], 50: ["skin", "pixel"] };
 function regaloPase(n) {
   if (PASE_OBJ[n]) { const [t, id] = PASE_OBJ[n], it = CAT[t].find(x => x.id === id); return { t, id, it, txt: (it.n || "Avatar " + it.e).replace(" ✨", "") }; }
-  if (n === 5 || n % 10 === 3) return { t: "comodin", id: "doble", txt: "Comodín ×2" };
-  if (n % 10 === 8) return { t: "comodin", id: "segunda", txt: "Segunda oportunidad" };
+  // Comodines contados (valen 800 y 1.500 🪙 en la tienda); el resto, XP (pares) y monedas (impares)
+  if ([5, 23, 43].includes(n)) return { t: "comodin", id: "doble", txt: "Comodín ×2" };
+  if ([18, 38].includes(n)) return { t: "comodin", id: "segunda", txt: "Segunda oportunidad" };
   if (n % 2 === 0) return { t: "xp", xp: 100 + 10 * n, txt: `${100 + 10 * n} XP` };
-  return { t: "mon", mon: 50 + 5 * n, txt: `${50 + 5 * n} monedas` };
+  return { t: "mon", mon: 15 + n, txt: `${15 + n} monedas` };
 }
 // Regalo diario: 7 días seguidos; si fallas uno, vuelves al día 1
-const LOGIN = [{ mon: 50, est: 1 }, { mon: 75, est: 1 }, { com: "doble", est: 1 }, { mon: 100, est: 1 }, { mon: 150, est: 1 }, { com: "segunda", est: 1 }, { mon: 300, est: 3, cofre: 1 }];
+const LOGIN = [{ mon: 10, est: 1 }, { mon: 15, est: 1 }, { mon: 20, est: 1 }, { mon: 25, est: 1 }, { mon: 30, est: 1 }, { com: "doble", est: 1 }, { mon: 75, est: 3, cofre: 1 }];
 function estadoLogin() {
   const l = PERFIL.login || {}, ayer = fechaMenos(AHORA.fecha, 1);
   if (l.ult === AHORA.fecha) return { hecho: true, dia: l.dia };
@@ -4053,12 +4055,12 @@ function desafiosSemana() {
   const lun = lunesDe(AHORA.fecha), h = Math.floor(new Date(lun + "T12:00:00") / 6048e5);
   const orden = DESAFIOS.map((d, i) => [d, azar("sem" + h + d.id)]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(x => x[0]);
   const dias = [...Array(7)].map((_, k) => sumaDias(lun, k)).filter(d => d <= AHORA.fecha), st = statsDias(dias);
-  return orden.map((d, k) => { const n = d.n[k]; return { key: `ds:${lun}:${d.id}`, t: d.t.replace("{n}", n), n, v: Math.min(n, st[d.id]), est: 3 + k, mon: 100 + 50 * k }; });
+  return orden.map((d, k) => { const n = d.n[k]; return { key: `ds:${lun}:${d.id}`, t: d.t.replace("{n}", n), n, v: Math.min(n, st[d.id]), est: 3 + k, mon: 40 + 20 * k }; });
 }
 function desafiosEspeciales() {
   const st = statsDias(diasTemporada());
-  return [{ id: "vsapp", t: "Acierta 10 partidos en los que falle la app", n: 10, est: 10, mon: 1000 }, { id: "dias", t: "Juega 30 días en la temporada", n: 30, est: 10, mon: 1000 },
-    { id: "aciertos", t: "Consigue 60 aciertos", n: 60, est: 8, mon: 800 }, { id: "perfecto", t: "Haz un día perfecto (todo acertado, mínimo 4)", n: 1, est: 5, mon: 500 }]
+  return [{ id: "vsapp", t: "Acierta 10 partidos en los que falle la app", n: 10, est: 10, mon: 300 }, { id: "dias", t: "Juega 30 días en la temporada", n: 30, est: 10, mon: 300 },
+    { id: "aciertos", t: "Consigue 60 aciertos", n: 60, est: 8, mon: 250 }, { id: "perfecto", t: "Haz un día perfecto (todo acertado, mínimo 4)", n: 1, est: 5, mon: 150 }]
     .map(d => ({ ...d, key: `de0:${d.id}`, v: Math.min(d.n, st[d.id]) }));
 }
 // Se cobra solo lo conseguido (lo llama procesarRecompensas)
