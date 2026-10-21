@@ -1289,6 +1289,22 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .mr-arcade { background: repeating-conic-gradient(#ffec27 0 25%, #ff004d 0 50%) 0 0 / 8px 8px !important; animation: pxRgb 1.4s steps(5) infinite; }
 .av.mr-arcade, .av.mr-arcade .avi { border-radius: 0 !important; clip-path: polygon(0 14%, 7% 14%, 7% 7%, 14% 7%, 14% 0, 86% 0, 86% 7%, 93% 7%, 93% 14%, 100% 14%, 100% 86%, 93% 86%, 93% 93%, 86% 93%, 86% 100%, 14% 100%, 14% 93%, 7% 93%, 7% 86%, 0 86%); }
 @media (prefers-reduced-motion: reduce) { .arcban .arcb3, .archead .arcmar, .arcvid span.on, .arccombo b.fuego, .tj-hiscore::after, .mr-arcade { animation: none !important; } }
+
+.arcprem { width: 100%; background: #000; border: 2px solid #ffec27; text-align: left; }
+.arcprem summary { list-style: none; cursor: pointer; padding: 9px; display: flex; align-items: center; justify-content: space-between; font: 10px "Press Start 2P", monospace; color: #ffec27; }
+.arcprem summary::-webkit-details-marker { display: none; } .arcprem summary small { font: 400 11px "Pixelify Sans", var(--body); color: #83769c; } .arcprem[open] summary small { visibility: hidden; }
+.arcprem summary::after { content: "▼"; font-size: 8px; margin-left: 6px; } .arcprem[open] summary::after { content: "▲"; }
+.apbl { padding: 8px 9px 10px; border-top: 2px dashed #3a4466; } .apbl h4 { margin: 0 0 8px; font: 7px "Press Start 2P", monospace; color: #ff77a8; }
+.apobjs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.apo { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; background: #1a1c2c; border: 2px solid #000; cursor: pointer; color: #fff; min-width: 0; }
+.apo .apd { width: 100%; min-height: 50px; display: grid; place-items: center; } .apo small { font: 600 11px "Pixelify Sans", var(--body); color: #c2c3c7; } .apo.tuyo { border-color: #38b764; }
+.apo .tjmini.pzfi { height: 46px; padding: 0 5px; border-radius: 0; border: 2px solid #000; } .apo .tjmini.pzfi b { font-size: 10px; }
+.apo .ptit.tt-px { font-size: 6.5px !important; padding: 4px 5px; }
+.apmons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.apm { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 2px; background: #1a1c2c; border: 2px solid #000; } .apm b { font: 9px "Press Start 2P", monospace; color: #ffec27; } .apm i { font: 400 10px "Pixelify Sans", var(--body); font-style: normal; color: #fff; }
+.apn { display: block; font: 400 11px "Pixelify Sans", var(--body); color: #83769c; text-align: center; margin: 4px 0 0; } p.apn { padding: 0 9px 10px; }
+.aphitos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .aphitos > div { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.aphitos > div > b { font: 11px "Press Start 2P", monospace; color: #ff004d; text-align: center; } .aphitos .apm { flex: 1; justify-content: center; } .aphitos .apo { flex: 1; }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -4556,6 +4572,21 @@ function bannerArcade() {
   return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b>
     <span class="arcb2">${fin ? "Evento terminado · mira tu puesto" : `SCORE ${String(y.pts).padStart(5, "0")} · COMBO ×${y.combo} · <i>${vid}</i>`}</span><span class="arcb3">${quedanArc()}</span></button>`;
 }
+// Premios del evento con su vista previa (toca cualquiera para verlo en grande)
+function premiosArc() {
+  const obj = (t, id, cap) => { const it = CAT[t].find(x => x.id === id), tuyo = tieneItem(t, it);
+    const dib = t === "tarjeta" ? `<span class="tjmini tj tj-${id} pzfi">${avatarHTML(PERFIL, 24)}<b class="nc-${PERFIL.color || "normal"}">${esc(nombreYo())}</b></span>`
+      : t === "marco" ? avatarHTML({ ...PERFIL, marco: id }, 44) : t === "avatar" ? `<span class="av" style="--s:46px"><span class="avi" style="background:${it.bg}">${avE(it)}</span></span>` : tituloHTML(id, it.n);
+    return `<button class="apo ${t} ${tuyo ? "tuyo" : ""}" data-pzver="${t}:${id}"><span class="apd">${dib}</span><small>${esc(cap || it.n.replace(" ✨", ""))}${tuyo ? " ✓" : ""}</small></button>`; };
+  const mon = (n, xp) => `<span class="apm">${px("moneda", 16)} <b>${fmtN(n)}</b>${xp ? `<i>+${fmtN(xp)} XP</i>` : ""}</span>`;
+  return `<details class="arcprem"><summary>🎁 PREMIOS <small>toca para ver</small></summary>
+    <div class="apbl"><h4>🥇🥈🥉 TOP 3 · SET EXCLUSIVO ANIMADO</h4><div class="apobjs">${obj("tarjeta", "hiscore", "Tarjeta")}${obj("marco", "arcade", "Marco")}${obj("titulo", "hiscore", "Título")}</div>
+      <div class="apmons">${mon(3000, 5000)}${mon(2000, 5000)}${mon(1000, 5000)}</div><small class="apn">1.º · 2.º · 3.º</small></div>
+    <div class="apbl"><h4>4.º – 10.º</h4><div class="apobjs">${obj("titulo", "top10arc", "Título")}</div><div class="apmons">${mon(500, 1000)}</div></div>
+    <div class="apbl"><h4>HITOS DE COMBO</h4><div class="aphitos">
+      <div><b>×4</b>${mon(150)}</div><div><b>×6</b>${obj("titulo", "combo6", "Título")}</div><div><b>×8</b>${obj("avatar", "ficha", "Avatar")}</div></div></div>
+    <p class="apn">Cada acierto: +1 ⭐ del pase. Tus puntos también suman a la clasificación de la Temporada 0.</p></details>`;
+}
 // ---- Pantalla del evento
 function pintarArcade() {
   procesarRecompensas();
@@ -4574,7 +4605,7 @@ function pintarArcade() {
   <section class="archead"><span class="arcmar">EVENTO DE LA TEMPORADA 0</span><b>HI-SCORE</b><small>COMBO ARCADE · ${fCorta(ARC.desde)} – ${fCorta(ARC.hasta)} · ${quedanArc()}</small>
     <div class="archud"><div><small>SCORE</small><b>${String(y.pts).padStart(6, "0")}</b></div><div><small>PUESTO</small><b>${yo.pts ? yo.pos + "º" : "–"}</b></div><div><small>RÉCORD</small><b>×${Math.max(1, Math.min(ARC.maxCombo, y.mejor))}</b></div></div>
     <div class="arccombo"><small>COMBO</small><div class="arcbar">${barraCombo}</div><b class="${y.combo >= 4 ? "fuego" : ""}">×${y.combo}</b></div>
-    <div class="arcvid"><small>VIDAS DE LA SEMANA</small><div>${corazones}</div></div></section>`;
+    <div class="arcvid"><small>VIDAS DE LA SEMANA</small><div>${corazones}</div></div>${premiosArc()}</section>`;
   if (fin) h += `<section class="mcard t0 tw-arc"><h3>🏁 EVENTO TERMINADO</h3><p class="apnota" style="text-align:center">Has quedado <b>${yo.pts ? yo.pos + ".º" : "sin puntuar"}</b>. Los premios se cobran solos.</p></section>`;
   else if (go) h += `<section class="mcard t0 tw-go"><h3>💀 GAME OVER</h3><p class="apnota" style="text-align:center">Te has quedado sin vidas esta semana. El lunes vuelves con ${ARC.vidas}.</p>
     ${!ARCD.cont[y.sem] && PERFIL.comodines.segunda > 0 ? `<button class="apbtn pxbtn" data-arccont="1">▶ CONTINUAR · usa 1 🔄 Segunda oportunidad (tienes ${PERFIL.comodines.segunda})</button>` : `<p class="apnota" style="text-align:center">${ARCD.cont[y.sem] ? "Ya has usado tu continuar de esta semana." : "Con una Segunda oportunidad podrías continuar."}</p>`}</section>`;
@@ -4592,8 +4623,7 @@ function pintarArcade() {
   if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
     return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span><b>${esc(o.n || o.m)}</b><small>${esc(nomC(z.x.local))} – ${esc(nomC(z.x.visitante))}</small></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
   h += `<section class="mcard t0 tw-rank"><h3>🏆 TABLA HI-SCORE</h3>${tablaRanking(filas, false, "arcade")}
-    <details class="rprem"><summary>🎁 Premios del evento</summary><div class="rprl"><p>🥇🥈🥉 <b>Set exclusivo animado</b>: tarjeta HI-SCORE, marco Arcade y título HI-SCORE + 3.000 / 2.000 / 1.000 🪙 y 5.000 XP</p>
-      <p>4.º–10.º: título «Top 10 Arcade», 500 🪙 y 1.000 XP</p><p>Hitos: combo ×4 → 150 🪙 · combo ×6 → título «Combo ×6» · combo ×8 → avatar Ficha arcade</p><p>Cada acierto: +1 ⭐ del pase. Tus puntos también suman a la clasificación de la Temporada 0.</p></div></details></section>` + htmlReglas("arcade");
+</section>` + htmlReglas("arcade");
   $("vista").innerHTML = h;
 }
 document.addEventListener("click", e => {
@@ -4743,9 +4773,9 @@ function abrirModal(html, clase) {
 }
 function verObjeto(t, id) {
   const it = CAT[t].find(x => x.id === id); if (!it) return;
-  const ok = tieneItem(t, it), t0 = it.pase || it.prem, nombre = t === "titulo" && id === "rango" ? "Tu rango" : (it.n || "Avatar " + it.e).replace(" ✨", "");
-  const ir = it.precio ? `<button class="apbtn ${t0 ? "pxbtn" : ""}" data-vista="tienda" data-pxcerrar>🛍️ Ir a la tienda</button>` : t0 ? `<button class="apbtn pxbtn" data-vista="temporada" data-pxcerrar>▶ VER EL PASE</button>` : "";
-  abrirModal(`<button class="pxx" data-pxcerrar aria-label="Cerrar">✕</button><small class="pxtag">${t0 ? (it.prem ? "💎 PREMIUM T0" : "TEMPORADA 0") : TIPO_PREMIO[t].toUpperCase()}</small>
+  const ok = tieneItem(t, it), t0 = it.pase || it.prem || it.evento === "arcade", nombre = t === "titulo" && id === "rango" ? "Tu rango" : (it.n || "Avatar " + it.e).replace(" ✨", "");
+  const ir = it.precio ? `<button class="apbtn ${t0 ? "pxbtn" : ""}" data-vista="tienda" data-pxcerrar>🛍️ Ir a la tienda</button>` : it.evento === "arcade" ? (est.vista === "arcade" ? "" : `<button class="apbtn pxbtn" data-vista="arcade" data-pxcerrar>▶ IR AL EVENTO</button>`) : t0 ? `<button class="apbtn pxbtn" data-vista="temporada" data-pxcerrar>▶ VER EL PASE</button>` : "";
+  abrirModal(`<button class="pxx" data-pxcerrar aria-label="Cerrar">✕</button><small class="pxtag">${t0 ? (it.prem ? "💎 PREMIUM T0" : it.evento === "arcade" ? "🕹️ EVENTO HI-SCORE" : "TEMPORADA 0") : TIPO_PREMIO[t].toUpperCase()}</small>
     <div class="pxprev">${previewObjeto(t, id)}</div><b class="pxnom">${esc(nombre)}</b>
     <span class="pxtipo">${TIPO_PREMIO[t]}${it.anim ? " · ✨ Animado" : ""}${t0 ? " · Exclusivo T0" : ""}</span><p>${DESC_PREMIO[t]}</p>
     <div class="pxest ${ok ? "ok" : ""}">${ok ? "✓ YA ES TUYO" : "🔒 " + esc(origenItem(it))}</div>
