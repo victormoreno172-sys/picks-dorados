@@ -3136,14 +3136,14 @@ function pintarReto() {
   if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
   const c = cuentaReto(r), m = resumenMesReto();
   const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
-  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}${xpEnCamino() ? ` · +${xpEnCamino()} XP al empezar` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
+  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
   h += r.partidos.map(x => {
     const s = estadoReto(x), mio = r.picks[claveReto(x)], k = claveReto(x);
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
     const hora = s.e && s.e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(s.e.det))}</span>` : s.final ? `<span class="fin">FIN</span>` : esc(x.hora || "");
     const marc = s.e && /^(\d+)-(\d+)$/.exec(s.e.m || "");
     const etiqueta = o => o.n || (o.c === "1" ? nom(x.local) : o.c === "2" ? nom(x.visitante) : "Empate");
-    const segunda = r.segunda && r.segunda[k] === "activa" && s.empezado && !s.final && minutoDe(s.e) <= 15;
+    const segunda = x.dep !== "b" && r.segunda && r.segunda[k] === "activa" && s.empezado && !s.final && minutoDe(s.e) <= 15;
     const bloqueado = s.empezado && !segunda;
     const botones = x.ops.map(o => {
       const yo = mio === o.m, va = s.gana === o.m;
@@ -3159,8 +3159,8 @@ function pintarReto() {
     const attrs = s.pos ? ` data-abrirdia="${s.pos[0]}" data-abrirp="${s.pos[1]}" data-desde="reto"` : "";
     return `<article class="rpart"><button class="rcab"${attrs}><span class="rh">${hora}</span><span class="req">${esc(x.local)}<br>${esc(x.visitante)}</span><span class="rmk">${marc ? `${marc[1]}<br>${marc[2]}` : ""}</span><small>${esc(ligaBase(x.liga))}</small></button>
       <p class="rq">${esc(x.q || "¿Quién gana?")}${r.dobles && r.dobles[k] ? ' <span class="rx2">×2</span>' : ""}</p><div class="rops n${x.ops.length}">${botones}</div>${res}
-      ${mio && !s.empezado ? `<div class="rcom"><button data-comodin="doble" data-k="${esc(k)}" class="${r.dobles && r.dobles[k] ? "on" : ""}">🃏 ×2 ${r.dobles && r.dobles[k] ? "(quitar)" : `· te quedan ${PERFIL.comodines.doble}`}</button></div>` : ""}
-      ${mio && s.empezado && !s.final && minutoDe(s.e) <= 15 && !(r.segunda && r.segunda[k]) ? `<div class="rcom"><button data-comodin="segunda" data-k="${esc(k)}">🔄 Segunda oportunidad · te quedan ${PERFIL.comodines.segunda}</button></div>` : ""}
+      ${mio && !s.empezado && (PERFIL.comodines.doble > 0 || (r.dobles && r.dobles[k])) ? `<div class="rcom"><button data-comodin="doble" data-k="${esc(k)}" class="${r.dobles && r.dobles[k] ? "on" : ""}">🃏 ×2 ${r.dobles && r.dobles[k] ? "(quitar)" : `· te quedan ${PERFIL.comodines.doble}`}</button></div>` : ""}
+      ${mio && x.dep !== "b" && PERFIL.comodines.segunda > 0 && s.empezado && !s.final && minutoDe(s.e) <= 15 && !(r.segunda && r.segunda[k]) ? `<div class="rcom"><button data-comodin="segunda" data-k="${esc(k)}">🔄 Segunda oportunidad · te quedan ${PERFIL.comodines.segunda}</button></div>` : ""}
       ${segunda ? `<p class="rres">🔄 Puedes cambiar tu pronóstico hasta el minuto 15</p>` : ""}</article>`;
   }).join("");
   h += seccionClasif();
