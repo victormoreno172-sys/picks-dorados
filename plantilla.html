@@ -3041,7 +3041,7 @@ const ARTE_EV = {
 };
 function pintarDesafios() {
   procesarRecompensas();
-  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div>` + barraJugador() + `<button class="gbtn" data-guia="desafios">📘 Cómo funciona: XP, monedas, tienda y eventos ›</button><div class="evs">`;
+  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div>` + barraJugador() + `<div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
     if (ev.id === "premios") {
