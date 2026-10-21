@@ -4209,7 +4209,7 @@ const INSIGNIAS = [
   ["nv10", "⭐", "Nivel 10", "Llega al nivel 10"], ["nv50", "🌟", "Nivel 50", "Llega al nivel 50"], ["nv100", "💫", "Nivel 100", "Llega al nivel 100"],
 ];
 // Probadores: tienen la sección de pruebas en Ajustes (candado, temas y premium de prueba)
-const esProbador = () => /^(negraco|maxibonn)/i.test(PERFIL.nombre || "");
+const esProbador = () => /^(negraco|max)/i.test((PERFIL.nombre || "").trim());   // cualquier perfil que empiece por "max" (el colega, aunque reinstale y cambie el nombre)
 const modoTodo = () => !!(PERFIL.prueba && PERFIL.prueba.on && esProbador());
 function tieneItem(tipo, it) {
   if (modoTodo()) return true;   // candado abierto (pruebas): todo desbloqueado
