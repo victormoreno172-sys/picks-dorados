@@ -75,7 +75,7 @@ def candidatos(datos: dict, ahora: datetime) -> dict:
             except ValueError:
                 continue
             # esports: las series largas (Bo5) y los retrasos alargan mucho los partidos
-            if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=8 if dep == "e" else 5):
+            if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=12 if dep == "e" else 5):
                 out[dep].append({"clave": f"{dia['fecha']}|{p['local']}|{p['visitante']}", "local": p["local"],
                                  "visitante": p["visitante"], "liga": p.get("liga") or ""})
     return out
@@ -278,6 +278,75 @@ def mapas_d2(h: dict) -> dict:
 _VLR = {"t": 0, "lista": []}
 
 
+_VLRR = {"t": 0, "lista": []}
+_VLR_FIN: dict = {}
+
+
+def _vlr_bloques(t: str) -> list:
+    """Partidos de un listado de vlr.gg: url, equipos, marcador y estado (LIVE, Completed, Upcoming)."""
+    lista = []
+    for bloque in re.split(r'<a href="(?=/\d+/)', t)[1:]:
+        if "match-item" not in bloque[:300]:
+            continue
+        url = bloque.split('"', 1)[0]
+        eq = [_limpio(x) for x in re.findall(r'match-item-vs-team-name">(.*?)</div>\s*</div>', bloque, re.S)]
+        sc = re.findall(r'match-item-vs-team-score[^"]*">\s*([^<\s]*)\s*<', bloque)
+        st = re.search(r'ml-status">\s*([^<]+?)\s*<', bloque)
+        if len(eq) >= 2:
+            lista.append({"url": url, "n1": eq[0], "n2": eq[1], "st": (st.group(1) if st else "").upper(),
+                          "s1": sc[0] if sc else "", "s2": sc[1] if len(sc) > 1 else ""})
+    return lista
+
+
+def _vlr_resultados() -> list:
+    if time.time() - _VLRR["t"] > 300:
+        try:
+            t = requests.get("https://www.vlr.gg/matches/results", headers={**UA, "Accept": "text/html"}, timeout=25).text
+            _VLRR["lista"], _VLRR["t"] = [x for x in _vlr_bloques(t) if x["st"].startswith("COMPLETED")], time.time()
+        except requests.RequestException:
+            pass
+    return _VLRR["lista"]
+
+
+def vlr_valorant(cand: list) -> dict:
+    """Valorant: en directo y terminados desde vlr.gg (bo3.gg solo tiene Counter-Strike)."""
+    res = {}
+    val = [p for p in cand if "VAL" in (p.get("liga") or "") or "Valorant" in (p.get("liga") or "")]
+    if not val:
+        return res
+    for x in _vlr_resultados():
+        b = buscar(val, x["n1"], x["n2"])
+        if not b or b[0]["clave"] in res or not (x["s1"].isdigit() and x["s2"].isdigit()):
+            continue
+        a, c = int(x["s1"]), int(x["s2"])
+        if b[1]:
+            a, c = c, a
+        r = {"st": "post", "m": f"{a}-{c}", "det": "Final", "fuente": "vlr.gg"}
+        try:
+            v = _VLR_FIN.get(x["url"]) or vlr(b[0]["local"], b[0]["visitante"], url=x["url"], giro=b[1])
+            if v:
+                _VLR_FIN[x["url"]] = v
+                r["mapas"] = v["mapas"]
+        except Exception:  # noqa: BLE001
+            pass
+        res[b[0]["clave"]] = r
+    for x in _vlr_lista():
+        b = buscar(val, x["n1"], x["n2"])
+        if not b or b[0]["clave"] in res:
+            continue
+        try:
+            v = vlr(b[0]["local"], b[0]["visitante"], url=x["url"], giro=b[1])
+        except Exception:  # noqa: BLE001
+            v = None
+        if v:
+            r = {"st": "in", "m": v["m"], "mapas": v["mapas"], "det": f"Mapa {sum(int(z) for z in v['m'].split('-')) + 1}", "fuente": "vlr.gg"}
+            if v["envivo"]:
+                e = v["envivo"]
+                r["envivo"], r["det"] = e, f"Mapa {e['n']} · {e['mapa']} {e['a']}-{e['b']}".replace("  ", " ")
+            res[b[0]["clave"]] = r
+    return res
+
+
 def _vlr_lista() -> list:
     if time.time() - _VLR["t"] > 120:
         try:
@@ -298,10 +367,10 @@ def _limpio(html: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
 
 
-def vlr(local: str, visitante: str) -> dict | None:
+def vlr(local: str, visitante: str, url: str | None = None, giro: bool = False) -> dict | None:
     """Mapas y rondas desde vlr.gg, desde el punto de vista del local."""
-    m = None
-    for x in _vlr_lista():
+    m = {"url": url} if url else None
+    for x in ([] if url else _vlr_lista()):
         d = parecido(x["n1"], local) + parecido(x["n2"], visitante)
         r = parecido(x["n1"], visitante) + parecido(x["n2"], local)
         if max(d, r) >= 1.5:
@@ -409,7 +478,10 @@ def esports(cand: list) -> dict:
         except (requests.RequestException, ValueError):
             continue
         for m in j.get("results") or []:
-            x = buscar(cand, (m.get("team1") or {}).get("name", ""), (m.get("team2") or {}).get("name", ""))
+            # bo3.gg es de Counter-Strike (discipline 1): solo para partidos de CS2 (si no, un "Wolves" de CS2
+            # se colaba en un "Wolves" de Valorant)
+            cs2 = [p for p in cand if "CS2" in (p.get("liga") or "")]
+            x = buscar(cs2, (m.get("team1") or {}).get("name", ""), (m.get("team2") or {}).get("name", ""))
             if not x or x[0]["clave"] in res:
                 continue
             a, b = int(m.get("team1_score") or 0), int(m.get("team2_score") or 0)
@@ -539,7 +611,7 @@ def candidatos_todos(datos: dict, ahora: datetime) -> list[dict]:
                 ini = datetime.fromisoformat(f"{dia['fecha']}T{p.get('hora') or '00:00'}").replace(tzinfo=TZ)
             except ValueError:
                 continue
-            if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=8 if dep == "e" else 5):
+            if ini - timedelta(minutes=10) <= ahora <= ini + timedelta(hours=12 if dep == "e" else 5):
                 fi = p.get("fi") or {}
                 out.append({"clave": f"{dia['fecha']}|{p['local']}|{p['visitante']}", "fecha": dia["fecha"],
                             "local": p["local"], "visitante": p["visitante"], "liga": p.get("liga") or "", "dep": dep,
@@ -740,6 +812,10 @@ def main():
             res.update(basket(cand["b"], ahora))
         if cand["e"]:
             res.update(esports(cand["e"]))
+            try:  # Valorant (vlr.gg), que bo3.gg no tiene
+                res.update(vlr_valorant(cand["e"]))
+            except Exception as e:  # noqa: BLE001
+                print("aviso vlr:", e)
         limite = (ahora - timedelta(days=1)).date().isoformat()
         finales = {k: v for k, v in finales.items() if k[:10] >= limite}
         finales.update({k: v for k, v in res.items() if v.get("st") == "post"})
