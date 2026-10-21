@@ -1270,6 +1270,17 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .arsl.vac { opacity: .6; border-style: dashed; border-color: #5f574f; } .arsl.vac > b { background: #333c57; color: #94b0c2; } .arsl.vac small { font: 8px "Press Start 2P", monospace; }
 .arsl.ok { background: #12301f; } .arsl.ok > b { background: #38b764; } .arsl.ok i { color: #a7f070; } .arsl.ko { background: #3b1020; } .arsl.ko > b { background: #ff004d; color: #fff; } .arsl.ko i { color: #ff77a8; }
 .arsl.vivo i { color: #ff004d; } .arsl.go { opacity: .5; }
+.arsl > span.arsc { flex: 1; gap: 4px; }
+.armc { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; width: 100%; min-width: 0; }
+.armc .armt { display: flex; align-items: center; gap: 5px; min-width: 0; } .armc .armt.v { justify-content: flex-end; text-align: right; }
+.armc .armt b { font: 600 12.5px/1.15 "Pixelify Sans", var(--body); color: #fff; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.armc .mini { width: 22px; height: 22px; flex: none; object-fit: contain; image-rendering: auto; background: #fff; border: 2px solid #000; padding: 1px; box-sizing: border-box; }
+.armc .mini.ini { display: grid; place-items: center; font: 7px "Press Start 2P", monospace; color: #000; background: #c2c3c7; }
+.armc .arms { display: flex; flex-direction: column; align-items: center; min-width: 52px; padding: 3px 5px; background: #000; border: 2px solid #5f574f; }
+.armc .arms b { font: 12px "Press Start 2P", monospace; color: #fff; letter-spacing: .02em; white-space: nowrap; } .armc .arms small { font: 7px "Press Start 2P", monospace; color: #83769c; margin-top: 3px; white-space: nowrap; }
+.armc .arms.vivo { border-color: #ff004d; } .armc .arms.vivo b { color: #ffec27; } .armc .arms.vivo small { color: #ff004d; } .armc .arms.fin small { color: #a7f070; }
+.arp summary .armc { flex: 1; } .arp .arlg { display: block; font: 400 10.5px "Pixelify Sans", var(--body); color: #83769c; text-align: center; margin-top: 3px; }
+.arlog .armc .armt b { font-size: 11.5px; }
 .arp { margin: 0 0 6px; background: #1a1c2c; border: 2px solid #000; } .arp.elegido { border-color: #ffec27; } .arp summary { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; list-style: none; } .arp summary::-webkit-details-marker { display: none; }
 .arp .arh { font: 9px "Press Start 2P", monospace; color: #ffcd75; min-width: 42px; } .arp .are { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .arp .are b { font: 600 13.5px "Pixelify Sans", var(--body); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .arp .are small { font: 400 10.5px "Pixelify Sans", var(--body); color: #83769c; }
@@ -4920,6 +4931,17 @@ function premiosArc() {
       <div><b>×4</b>${mon(150)}</div><div><b>×6</b>${obj("titulo", "combo6", "Título")}</div><div><b>×8</b>${obj("avatar", "ficha", "Avatar")}</div></div></div>
     <p class="apn">Cada acierto: +1 ⭐ del pase. Tus puntos también suman a la clasificación de la Temporada 0.</p></details>`;
 }
+// Mini marcador pixel de un partido del evento: escudos, nombres y resultado (o la hora si no ha empezado)
+function marcArc(x, s) {
+  s = s || estadoReto(x);
+  const escu = (s.p && s.p.fi && s.p.fi.esc) || [], e = s.e;
+  let m = e && /^(\d+)-(\d+)$/.exec(e.m || "");
+  const rg = !m && (DATOS.resultados || {})[`${x.fecha}|${x.local}|${x.visitante}`]; if (rg) m = /^(\d+)-(\d+)$/.exec(rg);
+  const vivo = e && e.st === "in", fin = s.final || (e && e.st === "post");
+  const centro = m ? `<b>${m[1]}-${m[2]}</b><small>${vivo ? "● " + esc(minutoTxt(e.det) === "Vivo" ? "VIVO" : minutoTxt(e.det)) : fin ? "FIN" : ""}</small>`
+    : `<b>${esc(x.hora || "--:--")}</b><small>${s.empezado ? "● VIVO" : "HOY"}</small>`;
+  return `<span class="armc"><span class="armt">${miniEsc(escu[0] || "", x.local)}<b>${esc(x.local)}</b></span><span class="arms ${vivo || (s.empezado && !fin) ? "vivo" : fin ? "fin" : ""}">${centro}</span><span class="armt v"><b>${esc(x.visitante)}</b>${miniEsc(escu[1] || "", x.visitante)}</span></span>`;
+}
 // ---- Pantalla del evento
 function pintarArcade() {
   procesarRecompensas();
@@ -4932,7 +4954,7 @@ function pintarArcade() {
   const ranura = k => { const pk = picks[k]; if (!pk) return `<div class="arsl vac"><b>${k + 1}</b><small>ELIGE</small></div>`;
     const x = xArc(r, pk.i, pk.t), o = x.ops.find(z => z.m === pk.m), s = estadoReto(x), l = y.log.find(z => z.d === hoy && z.x.i === pk.i && z.x.tipo === pk.t);
     const st = l && l.go ? "go" : s.final && s.gana ? (s.gana === pk.m ? "ok" : "ko") : s.empezado ? "vivo" : "";
-    return `<div class="arsl ${st}"><b>${k + 1}</b><span><small>${esc(nomC(x.local))} – ${esc(nomC(x.visitante))}</small><em>${esc(o.n || o.m)}</em>
+    return `<div class="arsl ${st}"><b>${k + 1}</b><span class="arsc">${marcArc(x, s)}<em>${esc(o.n || o.m)}</em>
       <i>${st === "ok" ? `✓ +${l.g} (×${l.mult})` : st === "ko" ? "✗ −♥" : st === "go" ? "GAME OVER" : st === "vivo" ? "● en juego" : `+${ptsReto(o.p)} × combo`}</i></span></div>`; };
   let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
   <section class="archead"><span class="arcmar">EVENTO DE LA TEMPORADA 0</span><b>HI-SCORE</b><small>COMBO ARCADE · ${fCorta(ARC.desde)} – ${fCorta(ARC.hasta)} · ${quedanArc()}</small>
@@ -4949,12 +4971,12 @@ function pintarArcade() {
       const s0 = estadoReto({ ...pa, ops: (pa.qs[0] || {}).ops || [] }), mio = picks.find(pk => pk.i === i), cerrado = s0.empezado || go;
       const preg = pa.qs.map(q => `<div class="arq"><small>${esc(q.q)}</small><div class="arops">${q.ops.map(o => { const yoEs = mio && mio.t === q.tipo && mio.m === o.m;
         return `<button class="arop ${yoEs ? "yo" : ""}" ${cerrado || (!yoEs && !mio && picks.length >= ARC.picks) ? "disabled" : `data-arcpick="${i}|${q.tipo}|${esc(o.m)}"`}><b>${esc(o.n || o.m)}</b><span>${Math.round(o.p * 100)}% · +${ptsReto(o.p)}</span></button>`; }).join("")}</div></div>`).join("");
-      return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" ${mio ? "open" : ""}><summary><span class="arh">${s0.empezado ? "●" : esc(pa.hora || "")}</span><span class="are"><b>${esc(pa.local)}</b><b>${esc(pa.visitante)}</b><small>${esc(ligaBase(pa.liga))}</small></span>${mio ? '<span class="armk">★</span>' : ""}</summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
+      return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" ${mio ? "open" : ""}><summary><span class="are">${marcArc({ ...pa, ops: (pa.qs[0] || {}).ops || [] }, s0)}<small class="arlg">${esc(ligaBase(pa.liga))}</small></span>${mio ? '<span class="armk">★</span>' : ""}</summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
     }).join("")}</section>`;
   } else if (!fin) h += `<div class="vacio">${hoy < ARC.desde ? `El evento empieza el ${fCorta(ARC.desde)}. Sus partidos salen la noche antes, a las 23:30: ahí podrás elegir tus 3 primeros pronósticos.` : "Hoy no hay partidos para el evento. A las 23:30 salen los de mañana."}</div>`;
   const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
   if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
-    return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span><b>${esc(o.n || o.m)}</b><small>${esc(nomC(z.x.local))} – ${esc(nomC(z.x.visitante))}</small></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
+    return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span>${marcArc(z.x)}<b>${esc(o.n || o.m)}</b></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
   h += `<section class="mcard t0 tw-rank"><h3>🏆 TABLA HI-SCORE</h3>${chipModo()}${tablaRanking(filas, false, "arcade")}
 </section>` + htmlReglas("arcade");
   $("vista").innerHTML = h;
