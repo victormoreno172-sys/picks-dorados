@@ -3745,7 +3745,7 @@ async function entrarArena(modo, nombre, email, clave, yaTengo) {
     } else CUENTA = { modo: "invitado" };
     if (nombre && nombre.length >= 3) {
       if (fbOn()) { say("Un momento…"); await bajarOnline(true); }
-      if (otrosOnline().some(o => claveNom(o.n) === claveNom(nombre) && Date.now() - (o.t || 0) < 3600e3)) return say("Ese nombre ya lo tiene otro jugador. Elige otro.");
+      if (otrosOnline().some(o => claveNom(o.n) === claveNom(nombre))) return say("Ese nombre ya lo tiene otro jugador. Elige otro.");
       PERFIL.nombre = nombre.slice(0, 16);
     }
     est.mejorar = false; guardarCuenta(); guardarPerfil(); try { localStorage.setItem("arenaVista", "1"); } catch (e) {}
@@ -4569,7 +4569,7 @@ document.addEventListener("click", e => {
     const t = prompt("¿Qué nombre quieres que salga en la clasificación? (3 a 16 letras)", PERFIL.nombre || ""); if (t === null) return;
     const nn = t.trim().slice(0, 16);
     if (nn.length < 3) { alert("El nombre tiene que tener al menos 3 letras."); return; }
-    if (otrosOnline().some(o => claveNom(o.n) === claveNom(nn) && Date.now() - (o.t || 0) < 3600e3)) { alert("Ese nombre ya lo tiene otro jugador. Elige otro."); return; }
+    if (otrosOnline().some(o => claveNom(o.n) === claveNom(nn))) { alert("Ese nombre ya lo tiene otro jugador. Elige otro."); return; }
     PERFIL.nombre = nn; guardarPerfil(); pintarLista(); subirPronto(); return;
   }
   if (b.dataset.comprar) {
