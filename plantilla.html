@@ -519,6 +519,13 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
   font: 700 12px/22px var(--mono); font-style: normal; border: 2px solid var(--bg); }
 .abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+.gbtn { width: 100%; text-align: left; border: 1px dashed var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 10px 14px; margin: 0 0 12px; font: 600 13px var(--body); cursor: pointer; }
+.lnk { border: 0; background: none; padding: 0; color: #4f46e5; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
+.rsem { width: 100%; margin: 8px 0 2px; font: 600 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; }
+.rprem { font-size: 12px; color: #92400e; background: var(--gold-soft); border-radius: 10px; padding: 7px 9px; margin: 6px 0 4px; line-height: 1.4; }
+.reglas ol { margin: 6px 0 4px; padding-left: 20px; font-size: 12.5px; line-height: 1.5; color: var(--ink); } .reglas li { margin-bottom: 6px; }
+.reglas h4, .guia h4 { margin: 12px 0 4px; font-size: 13px; }
+.guia p, .guia ul { font-size: 13px; line-height: 1.5; margin: 6px 0; } .guia ul { padding-left: 18px; } .guia .mtab { margin: 8px 0; }
 /* ---------- Perfil, avatares, tienda ---------- */
 .av { --s: 40px; position: relative; display: inline-grid; place-items: center; width: var(--s); height: var(--s); border-radius: 50%; flex: none; }
 .av .avi { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-size: calc(var(--s) * .55); overflow: hidden; line-height: 1; }
@@ -1290,7 +1297,7 @@ function enVivo() {
 function pintarLista() {
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda"].includes(est.vista);
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda", "guia"].includes(est.vista);
   if (est.vista === "buscar") return pintarBuscadorGeneral();
   if (est.vista === "reto") return pintarReto();
   if (est.vista === "desafios") return pintarDesafios();
@@ -1298,6 +1305,7 @@ function pintarLista() {
   if (est.vista === "perfil") return pintarPerfil();
   if (est.vista === "personalizar") return pintarPersonalizar();
   if (est.vista === "tienda") return pintarTienda();
+  if (est.vista === "guia") return pintarGuia();
   if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
@@ -2921,9 +2929,10 @@ function clasificacionReto(dias) {
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...suma((x, r) => r.picks[claveReto(x)], true) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
   BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
-  filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
+  // Desempate: más aciertos y luego más aciertos en los que falló la app; si sigue igual, comparten puesto
+  filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || b.vsApp - a.vsApp || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null;
-  filas.forEach((f, i) => { if (f.pts !== ant) { pos = i + 1; ant = f.pts; } f.pos = pos; });
+  filas.forEach((f, i) => { const k = f.pts + "|" + f.ok + "|" + f.vsApp; if (k !== ant) { pos = i + 1; ant = k; } f.pos = pos; });
   return filas;
 }
 // XP de los jugadores de prueba (lo mismo que tú: 50 por pronóstico y puntos × 10), con todos los días jugados
@@ -2939,18 +2948,25 @@ function xpBots() {
 function tablaClasif(filas, todas) {
   const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10);
   const av = f => f.app ? `<span class="av" style="--s:30px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(f.perfil, 30);
-  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td><td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
+  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td><td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
   return `<table class="rtab"><tr><th>#</th><th>Jugador</th><th>Aciertos</th><th>Pts</th></tr>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<tr class="sep"><td colspan="4">···</td></tr>` + fila(yo) : ""}</table>`;
 }
 function seccionClasif() {
   const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
-  const vista = est.clasR || "hoy", ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : dias;
+  const sems = semanasMes(mesDeSemana(AHORA.fecha)), actual = (sems.find(w => w.dias.includes(AHORA.fecha)) || sems[0]).i;
+  const vista = est.clasR || "hoy", w = sems.find(x => x.i === (est.semR || actual)) || sems[0];
+  const ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : vista === "semana" ? Object.keys(RETO.dias).filter(d => w.dias.includes(d)) : dias;
   const filas = clasificacionReto(ds), yo = filas.find(f => f.yo);
-  return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
-    <p>Vas <b>${yo.pos}.º de ${filas.length}</b>${yo.pts ? ` con ${yo.pts} puntos` : ""}. ${filas.some(f => f.jug) ? "" : "Los puntos llegan cuando acaben los partidos."}</p>
-    ${tablaClasif(filas)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa</button>
+  const premios = vista === "semana" ? `<p class="rprem">🎁 Premios de la semana: 🥇 1.000 🪙 · 🥈 600 · 🥉 400 (+3.000 XP) · 4.º–10.º 200 🪙 (+1.500 XP)</p>`
+    : vista === "mes" ? `<p class="rprem">🎁 Premios del mes: 🥇 5.000 🪙 · 🥈 3.000 · 🥉 2.000 (+10.000 XP) · 4.º–10.º 1.000 🪙 (+5.000 XP)</p>` : "";
+  return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
+    ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
+    <p>${filas.some(f => f.pts) ? `Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.` : "Aún no hay puntos: llegan cuando acaben los partidos."}</p>
+    ${premios}${tablaClasif(filas)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa del mes</button>
     <p class="apnota">De momento son 40 jugadores de prueba con estilos distintos, para ver cómo funciona. Cuando haya ranking online, serán personas de verdad.</p></section>`;
 }
+document.addEventListener("click", e => { const b = e.target.closest("[data-guia]"); if (!b) return; est.volverGuia = b.dataset.guia; est.vista = "guia"; window.scrollTo({ top: 0 }); pintarLista(); });
+document.addEventListener("change", e => { if (e.target.id === "semSel") { est.semR = +e.target.value; pintarLista(); } });
 document.addEventListener("click", e => { const b = e.target.closest("[data-clasr]"); if (!b) return; est.clasR = b.dataset.clasr; pintarLista(); });
 function resumenMesReto() {
   const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
@@ -3011,7 +3027,7 @@ const ARTE_EV = {
 };
 function pintarDesafios() {
   procesarRecompensas();
-  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div>` + barraJugador() + `<div class="evs">`;
+  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div>` + barraJugador() + `<button class="gbtn" data-guia="desafios">📘 Cómo funciona: XP, monedas, tienda y eventos ›</button><div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
     if (ev.id === "premios") {
@@ -3040,13 +3056,13 @@ function pintarEvento() {
     const filas = clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
     $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
       <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>Ranking de ${["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>Suma de Gánale a la app de todo el mes</small></span></section>
-      <section class="mcard">${tablaClasif(filas, true)}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>`;
+      <section class="mcard">${tablaClasif(filas, true)}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
     return;
   }
   $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
     <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${ev.t}</b><small>${ev.d}</small></span></section>
     <div class="vacio">Este desafío llega pronto. Mientras tanto, juega a <b>Gánale a la app</b>: tus puntos de este mes contarán para el ranking.</div>
-    <button class="apbtn" data-vista="reto" style="max-width:340px;margin:0 auto;display:block">🤖 Jugar a Gánale a la app</button>`;
+    <button class="apbtn" data-vista="reto" style="max-width:340px;margin:0 auto 14px;display:block">🤖 Jugar a Gánale a la app</button>` + htmlReglas(ev.id);
 }
 function pintarReto() {
   procesarRecompensas();
@@ -3090,7 +3106,7 @@ function pintarReto() {
     <details class="mcard"><summary><b>¿Cómo se juega?</b></summary><p>Cada día hay ${N_RETO} partidos. Responde la pregunta de cada uno antes de que empiece. La app 🤖 elige siempre lo más probable.</p>
       <p>Cada partido trae una pregunta distinta: quién gana, cuántos goles habrá, si marcan los dos, los puntos en baloncesto…</p>
       <p><b>Puntos:</b> acertar vale 10 ÷ la probabilidad: un favorito al 70 % da +14; un empate al 25 %, +40. Si aciertas uno en el que la app falla, <b>+${BONUS_RETO} extra</b>. Solo cuentan los partidos que pronostiques, para ti y para la app.</p>
-      <p>Pronto: ranking con más gente y premios (camisetas, balones…).</p></details>`;
+      <p>Más detalles en <button class="lnk" data-guia="reto">📘 Cómo funcionan la XP, las monedas y la tienda</button>.</p></details>` + htmlReglas("reto");
   $("vista").innerHTML = h;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-evento]"); if (b) est.evento = b.dataset.evento; }, true);
@@ -3220,15 +3236,13 @@ function procesarRecompensas() {
     racha = ant && fechaMenos(d, 1) === ant ? racha + 1 : 1; ant = d;
     for (const [nr, xp, mon] of [[3, 300, 50], [7, 1000, 200], [30, 5000, 1000]]) if (racha === nr) cobrar(`racha${nr}:${d}`, `Racha de ${nr} días jugando 🔥`, xp, mon);
   }
-  // Semanas y meses terminados: puesto en la clasificación
-  const semanas = [...new Set(dias.map(semanaDe))];
-  for (const w of semanas) {
-    const fin = new Date(w + "T12:00:00"); fin.setDate(fin.getDate() + 6);
-    const finS = fin.toISOString().slice(0, 10); if (finS >= AHORA.fecha || PERFIL.cobrados["sem:" + w]) continue;
-    const ds = dias.filter(d => semanaDe(d) === w), yo = clasificacionReto(ds).find(f => f.yo);
-    if (!yo.jug) { PERFIL.cobrados["sem:" + w] = 1; continue; }
+  // Semanas (de lunes a domingo dentro del mes) y meses terminados: puesto en la clasificación
+  for (const mes of [...new Set(dias.map(mesDeSemana))]) for (const w of semanasMes(mes)) {
+    const k = `sem:${mes}:${w.i}`; if (w.hasta >= AHORA.fecha || PERFIL.cobrados[k]) continue;
+    const ds = dias.filter(d => w.dias.includes(d)); if (!ds.length) { PERFIL.cobrados[k] = 1; continue; }
+    const yo = clasificacionReto(ds).find(f => f.yo); if (!yo.jug) { PERFIL.cobrados[k] = 1; continue; }
     const pos = yo.pos, mon = pos === 1 ? 1000 : pos === 2 ? 600 : pos === 3 ? 400 : pos <= 10 ? 200 : 0, xp = pos <= 3 ? 3000 : pos <= 10 ? 1500 : 0;
-    if (mon) cobrar("sem:" + w, `${pos}.º de la semana del ${w.slice(8)}/${w.slice(5, 7)}`, xp, mon, { pos }); else PERFIL.cobrados["sem:" + w] = 1;
+    if (mon) cobrar(k, `${pos}.º de la semana ${w.i} (${fCorta(w.desde)}–${fCorta(w.hasta)})`, xp, mon, { pos }); else PERFIL.cobrados[k] = 1;
   }
   for (const mes of [...new Set(dias.map(d => d.slice(0, 7)))]) {
     if (mes >= AHORA.fecha.slice(0, 7) || PERFIL.cobrados["mes:" + mes]) continue;
@@ -3288,6 +3302,7 @@ function pintarPerfil() {
     <div><b>${fmtN(xp)}</b><span>XP total</span></div><div><b>×2: ${PERFIL.comodines.doble} · 🔄 ${PERFIL.comodines.segunda}</b><span>comodines</span></div></div></section>
   <section class="mcard"><h3>🎖️ Insignias · ${dj.insignias.length}/${INSIGNIAS.length}</h3><div class="pins">${INSIGNIAS.map(([id, i, n, d]) => `<div class="pin ${dj.insignias.includes(id) ? "si" : ""}"><span>${i}</span><b>${n}</b><small>${d}</small></div>`).join("")}</div></section>
   <details class="mcard"><summary><b>🧾 Historial de XP y monedas</b></summary><div class="pmov">${PERFIL.mov.slice().reverse().slice(0, 80).map(m => `<div><span>${esc(m.txt)}<small>${m.f.slice(8)}/${m.f.slice(5, 7)}</small></span><span>${m.xp ? `<b class="xp">+${fmtN(m.xp)} XP</b>` : ""}${m.mon ? `<b class="${m.mon > 0 ? "mon" : "gasto"}">${m.mon > 0 ? "+" : "−"}${fmtN(Math.abs(m.mon))} 🪙</b>` : ""}</span></div>`).join("") || `<p class="apnota">Aún nada. Juega a Gánale a la app para empezar a ganar.</p>`}</div></details>
+  <button class="gbtn" data-guia="perfil">📘 Guía completa: XP, niveles, monedas, tienda y eventos ›</button>
   <details class="mcard"><summary><b>❓ Cómo se gana XP y monedas</b></summary><table class="mtab"><tr><th>Acción</th><th>XP</th><th>🪙</th></tr>
     <tr><td>Pronosticar un partido</td><td>50</td><td>–</td></tr><tr><td>Acertar</td><td>puntos × 10</td><td>puntos</td></tr>
     <tr><td>Completar el día</td><td>200</td><td>20</td></tr><tr><td>Ganarle el día a la app</td><td>500</td><td>50</td></tr>
@@ -3323,7 +3338,7 @@ function pintarTienda() {
     return `<div class="tit">${dibujo}<span class="tin"><b>${esc(it.n || "Avatar " + it.e)}</b><small>${ya ? "Ya es tuyo" : `${fmtN(it.precio)} 🪙`}</small></span>${ya ? `<button class="tbtn ok" data-vista="personalizar">Ponerlo</button>` : `<button class="tbtn" ${mon >= it.precio ? "" : "disabled"} data-comprar="${tipo}" data-id="${it.id}">Comprar</button>`}</div>`;
   };
   let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">Tienda</span></h2></div>
-  <section class="tcab"><span>Tienes</span><b>🪙 ${fmtN(mon)}</b><small>Las monedas se ganan jugando a los desafíos y subiendo de nivel. No se pueden comprar con dinero.</small></section>
+  <section class="tcab"><span>Tienes</span><b>🪙 ${fmtN(mon)}</b><small>Las monedas se ganan jugando a los desafíos y subiendo de nivel. No se pueden comprar con dinero.</small></section><button class="gbtn" data-guia="tienda">📘 Cómo se ganan monedas ›</button>
   <h2 class="sec">🃏 Comodines</h2>
   <div class="tit"><span class="tico">×2</span><span class="tin"><b>Doble</b><small>Un acierto vale el doble (1 al día). Tienes ${PERFIL.comodines.doble}.</small></span><button class="tbtn" ${mon >= 800 ? "" : "disabled"} data-comprar="comodin" data-id="doble">800 🪙</button></div>
   <div class="tit"><span class="tico">🔄</span><span class="tin"><b>Segunda oportunidad</b><small>Cambia un pronóstico en los primeros 15 minutos. Tienes ${PERFIL.comodines.segunda}.</small></span><button class="tbtn" ${mon >= 1500 ? "" : "disabled"} data-comprar="comodin" data-id="segunda">1.500 🪙</button></div>
@@ -3387,6 +3402,89 @@ function perfilBot(b, i) {
   const libres = CAT.avatar.filter(a => !a.nivel), a = libres[i % libres.length];
   const marcos = ["ninguno", "ninguno", "bronce", "plata", "ninguno", "oro", "neon", "fuego"];
   return { avatar: a.id, marco: marcos[i % marcos.length], color: "normal" };
+}
+// ================================================================ Semanas del mes (para el ranking semanal)
+// Semanas completas de lunes a domingo. Cada semana es del mes en el que cae su jueves (como en el calendario
+// ISO), así cada mes tiene 4 o 5 semanas y ninguna queda partida en trozos de 1 o 2 días.
+const sumaDias = (f, n) => { const d = new Date(f + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const lunesDe = f => sumaDias(f, -((new Date(f + "T12:00:00").getDay() + 6) % 7));
+const mesDeSemana = f => sumaDias(lunesDe(f), 3).slice(0, 7);
+function semanasMes(mes) {
+  let lun = lunesDe(mes + "-01"); if (sumaDias(lun, 3).slice(0, 7) !== mes) lun = sumaDias(lun, 7);
+  const out = [];
+  while (sumaDias(lun, 3).slice(0, 7) === mes) { const dias = [...Array(7)].map((_, k) => sumaDias(lun, k)); out.push({ i: out.length + 1, desde: dias[0], hasta: dias[6], dias }); lun = sumaDias(lun, 7); }
+  return out;
+}
+const fCorta = f => `${+f.slice(8)}/${+f.slice(5, 7)}`;
+// ================================================================ Reglas (bases legales) de cada evento
+const BASES_GENERALES = [
+  ["Organizador", "La organiza el titular de la app «Picks Dorados» (nombre provisional). Antes de entregar premios físicos se publicarán aquí su nombre o razón social, NIF, domicilio y un correo de contacto."],
+  ["Participación gratuita", "Participar es totalmente gratis. No hace falta comprar nada ni pagar nada. Las monedas de la app no se pueden comprar con dinero ni cambiar por dinero."],
+  ["Quién puede participar", "Personas mayores de 18 años residentes en España. Una sola cuenta por persona: cuando haya ranking online se verificará el teléfono o el correo para optar a premios. No pueden optar a premios físicos el organizador ni quienes hayan colaborado en la app."],
+  ["No es una apuesta", "Es un concurso de habilidad basado en pronósticos deportivos. No se arriesga dinero ni nada de valor y nada depende de una casa de apuestas."],
+  ["Resultados válidos", "Cuenta el resultado final oficial del partido según la fuente de datos de la app. En fútbol cuentan la prórroga si la hay, pero no las tandas de penaltis. Si un partido se aplaza, se suspende o se cancela y no se juega ese mismo día, su pronóstico no puntúa para nadie."],
+  ["Premios virtuales", "La XP, las monedas, los comodines y los objetos de la tienda son virtuales: no tienen valor económico, no se pueden cambiar por dinero ni pasar a otra persona."],
+  ["Premios físicos", "Solo se entregarán cuando el ranking sea online con personas reales, y en cada evento se anunciará cuáles son. El ganador tiene 30 días para dar sus datos de envío; si no lo hace o no se le puede contactar, el premio pasa al siguiente de la clasificación. No se pueden cambiar por dinero."],
+  ["Impuestos", "Si algún premio supera los 300 €, el organizador hará la retención o el ingreso a cuenta que marque la ley del IRPF."],
+  ["Juego limpio", "Está prohibido usar varias cuentas, programas automáticos o cualquier truco para conseguir ventaja. Quien lo haga queda descalificado y pierde su XP, monedas y premios."],
+  ["Protección de datos", "Solo se usan el nombre de usuario, el avatar y los puntos para gestionar el concurso y mostrar la clasificación. Los datos de envío de un premio se usan solo para enviarlo. Se puede pedir acceso, corrección o borrado de los datos en el correo de contacto."],
+  ["Plataformas", "Google y Apple no patrocinan, avalan ni gestionan estos concursos."],
+  ["Cambios", "El organizador puede cambiar o cancelar un evento por causas justificadas avisándolo en la app, sin perjudicar lo que ya se haya ganado."],
+  ["Fase de pruebas", "Ahora mismo la app está en pruebas: las clasificaciones incluyen jugadores de prueba y solo hay premios virtuales."],
+  ["Aceptación", "Participar supone aceptar estas bases."],
+];
+const BASES_EVENTO = {
+  reto: [
+    ["Mecánica", "Cada día la app elige 6 partidos de fútbol y baloncesto, con una pregunta por partido (quién gana, goles, si marcan los dos, puntos…). Se puede responder o cambiar la respuesta hasta que empieza el partido."],
+    ["Puntos", "Acertar da 10 ÷ la probabilidad que daba la app a esa respuesta (redondeado), y 10 puntos extra si la app falla ese partido. Fallar no resta. La app juega siempre la respuesta más probable."],
+    ["Comodines", "El comodín ×2 duplica los puntos de un partido (uno al día). La Segunda oportunidad permite cambiar la respuesta de un partido ya empezado hasta el minuto 15. Se consiguen subiendo de nivel o en la tienda con monedas."],
+    ["Clasificaciones", "Hay clasificación del día, de cada semana (de lunes a domingo; cada semana cuenta para el mes en el que cae su jueves) y del mes, con los puntos sumados en ese periodo."],
+    ["Desempates", "A igualdad de puntos gana quien tenga más aciertos y, si sigue el empate, quien tenga más aciertos en los que la app falló. Si persiste, se comparte el puesto: los premios virtuales se dan completos a cada uno y un premio físico se sortearía entre los empatados."],
+    ["Premios de cada semana", "1.º 1.000 monedas, 2.º 600 y 3.º 400, más 3.000 XP cada uno. Del 4.º al 10.º, 200 monedas y 1.500 XP. Se cobran solos cuando acaba la semana."],
+    ["Premios de cada mes", "1.º 5.000 monedas, 2.º 3.000 y 3.º 2.000, más 10.000 XP cada uno. Del 4.º al 10.º, 1.000 monedas y 5.000 XP. Con ranking online: 1.º camiseta, 2.º balón y 3.º bufanda."],
+  ],
+  superv: [["Mecánica (borrador)", "Cada jornada se elige un equipo que crees que va a ganar, sin poder repetir equipo en todo el evento. Si empata o pierde, quedas eliminado. Gana el último que siga vivo; si caen todos a la vez, ganan los que llegaron más lejos."]],
+  porra: [["Mecánica (borrador)", "Cada semana se publican 10 partidos destacados y hay que acertar el resultado exacto o el 1-X-2 antes de que empiecen. Gana quien más puntos sume en la semana."]],
+  amigos: [["Mecánica (borrador)", "Cualquiera puede crear una liga privada y compartir su código. Dentro de la liga se compite con los mismos desafíos y puntos que en el ranking general."]],
+  premios: [["Mecánica", "Es la clasificación mensual de Gánale a la app. Los premios de cada evento se anuncian en su pantalla."]],
+};
+function htmlReglas(id) {
+  const esp = BASES_EVENTO[id] || [];
+  const lista = arr => arr.map(([t, d], i) => `<li><b>${esc(t)}.</b> ${esc(d)}</li>`).join("");
+  return `<details class="mcard reglas"><summary><b>📜 Reglas y bases legales</b></summary>
+    ${esp.length ? `<h4>De este desafío</h4><ol>${lista(esp)}</ol>` : ""}<h4>Comunes a todos los desafíos</h4><ol>${lista(BASES_GENERALES)}</ol>
+    <p class="apnota">Borrador en pruebas. Antes de dar premios físicos, estas bases las revisará un profesional y se completarán los datos del organizador.</p></details>`;
+}
+// ================================================================ Guía: XP, niveles, monedas, tienda y eventos
+function pintarGuia() {
+  const t = (cab, filas) => `<table class="mtab"><tr>${cab.map(c => `<th>${c}</th>`).join("")}</tr>${filas.map(f => `<tr>${f.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
+  $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="${est.volverGuia || "desafios"}" aria-label="Volver">‹</button><h2><span>📘</span><span class="t">Cómo funciona</span></h2></div>
+  <section class="mcard guia"><h3>🎯 La idea</h3><p>En <b>Desafíos</b> juegas gratis a pronosticar partidos. Con lo que aciertas ganas <b>XP</b> (sube tu nivel) y <b>monedas</b> (se gastan en la tienda). Hay rankings del día, de la semana y del mes, y eventos con premios.</p></section>
+  <section class="mcard guia"><h3>⭐ XP y niveles</h3>
+    <p>La XP <b>nunca baja</b>: aunque gastes monedas, tu nivel se queda. Hay <b>200 niveles</b>. Al principio se sube rápido (el 10 en unos 3 días) y luego cuesta más (el 100 en unos 6 meses jugando a diario; el 200, unos 2 años). Del nivel N al siguiente hacen falta 200 + 40 × N de XP.</p>
+    ${t(["Cómo se gana XP", "XP"], [["Pronosticar un partido", "50"], ["Acertar", "puntos × 10 (140–600)"], ["Completar el día (todos pronosticados)", "200"], ["Ganarle el día a la app", "500"], ["Racha de 3 / 7 / 30 días jugando", "300 / 1.000 / 5.000"], ["Top 10 / podio de la semana", "1.500 / 3.000"], ["Top 10 / podio del mes", "5.000 / 10.000"]])}
+    <h4>Rangos</h4><p>Novato (1–9) · Aficionado (10–24) · Promesa (25–49) · Experto (50–79) · Crack (80–109) · Estrella (110–139) · Leyenda (140–169) · Mito (170–199) · <b>Inmortal (200)</b>.</p>
+    <h4>Regalos por subir de nivel</h4><ul><li>Cada nivel: <b>20 + el nivel</b> en monedas.</li><li>Cada 5 niveles: un comodín ×2.</li><li>Cada 10: comodines (y cada 20, también una Segunda oportunidad).</li>
+    <li>Objetos: color dorado (nv 5), marco de bronce (10), avatar 🏆 (15), plata (20), verde neón (25), avatar 🎯 (30), título Visionario (35), oro (40)… hasta el marco Inmortal y el avatar ♾️ en el 200.</li>
+    <li>Nivel 100: <b>camiseta</b>. Nivel 200: <b>premio Inmortal</b> (cuando haya ranking online).</li></ul></section>
+  <section class="mcard guia"><h3>🪙 Monedas</h3><p>Se ganan con lo mismo que la XP pero <b>se gastan</b>. No caducan. <b>No se pueden comprar con dinero</b> ni cambiar por dinero.</p>
+    ${t(["Cómo se ganan monedas", "🪙"], [["Acertar", "los puntos del acierto (14–60)"], ["Completar el día", "20"], ["Ganarle el día a la app", "50"], ["Racha de 3 / 7 / 30 días", "50 / 200 / 1.000"], ["Podio de la semana", "1.000 / 600 / 400"], ["4.º–10.º de la semana", "200"], ["Podio del mes", "5.000 / 3.000 / 2.000"], ["4.º–10.º del mes", "1.000"], ["Subir de nivel", "20 + nivel"]])}
+    <p>Jugando cada día se hacen unas <b>4.000–5.000 monedas al mes</b>, y más si quedas arriba en los rankings.</p></section>
+  <section class="mcard guia"><h3>🛍️ La tienda</h3><ul>
+    <li><b>Comodín ×2</b> (800 🪙): un acierto vale el doble. Uno al día.</li><li><b>Segunda oportunidad</b> (1.500 🪙): cambias un pronóstico en los primeros 15 minutos.</li>
+    <li><b>Avatares</b> (500–1.500 🪙), <b>marcos</b> (2.000–4.000 🪙), <b>colores de nombre</b> (1.000–2.500 🪙) y <b>títulos</b> (1.500–2.000 🪙). Lo que compras es tuyo para siempre y lo pones en Perfil → Personalizar.</li>
+    <li><b>Premios físicos</b>: bufanda (15.000 🪙), balón (25.000 🪙) y camiseta (30.000 🪙), con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online.</li></ul>
+    <p>Otras cosas no se compran: se ganan con nivel o con insignias (por ejemplo, el título Cazagigantes).</p></section>
+  <section class="mcard guia"><h3>🏆 Eventos</h3><ul>
+    <li><b>Gánale a la app</b> (ya disponible): 6 partidos al día contra la máquina, con ranking diario, semanal y mensual.</li>
+    <li><b>Próximamente</b>: Supervivencia, Porra semanal, Ligas con amigos y más eventos especiales (Clásico, finales, Mundial…).</li>
+    <li>Cada evento tiene sus propias reglas y premios: siempre monedas y XP para los mejores, y en los eventos grandes también premios físicos (camisetas, balones, bufandas…).</li>
+    <li>Las reglas de cada evento están abajo del todo en su pantalla.</li></ul></section>
+  <section class="mcard guia"><h3>❓ Preguntas rápidas</h3><ul>
+    <li><b>¿Pierdo nivel si gasto monedas?</b> No. El nivel va por XP y la XP nunca baja.</li>
+    <li><b>¿Fallar resta?</b> No. Solo sumas al acertar.</li>
+    <li><b>¿Dónde se guarda todo?</b> De momento en tu móvil. Cuando haya cuentas online, se guardará en tu cuenta.</li>
+    <li><b>¿Cuesta algo?</b> No. Todo es gratis.</li></ul></section>`;
 }
 // ---------------------------------------------------------------- buscador general (botón Buscar de abajo)
 // Busca en todo: partidos de todos los días y deportes, competiciones y equipos/jugadores
@@ -3482,7 +3580,7 @@ function pintarSelector() {
     const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
   }).join("");
-  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto", "evento", "perfil", "personalizar", "tienda"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
+  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto", "evento", "perfil", "personalizar", "tienda", "guia"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
 }
 
 function pintarAjustes() { return; }
