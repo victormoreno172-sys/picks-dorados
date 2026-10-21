@@ -4094,6 +4094,12 @@ document.addEventListener("click", e => {
 const PERFIL_K = "perfilV1";
 let PERFIL = (() => { try { const p = JSON.parse(localStorage.getItem(PERFIL_K) || "null"); if (p && p.mov) return p; } catch (e) {} return null; })()
   || { nombre: "", avatar: "a1", marco: "ninguno", color: "normal", titulo: "rango", tarjeta: "clasica", comprados: [], comodines: { doble: 0, segunda: 0 }, mov: [], cobrados: {}, nivelCobrado: 1, foto: null };
+// Reinicio general (22/10/2026): niveles, XP, monedas, estrellas, objetos, comodines y premios a cero. Se quedan el nombre y la foto.
+try { if (!localStorage.getItem("reinicio1")) {
+  PERFIL = { nombre: PERFIL.nombre || "", foto: PERFIL.foto || null, avatar: PERFIL.avatar === "foto" ? "foto" : "a1", marco: "ninguno", color: "normal", titulo: "rango", tarjeta: "clasica", skin: "",
+    comprados: [], comodines: { doble: 0, segunda: 0 }, mov: [], cobrados: {}, nivelCobrado: 1, vitrina: [] };
+  localStorage.setItem(PERFIL_K, JSON.stringify(PERFIL)); localStorage.setItem("reinicio1", "1"); aplicarTema();
+} } catch (e) {}
 function guardarPerfil() { try { localStorage.setItem(PERFIL_K, JSON.stringify(PERFIL)); } catch (e) { if (PERFIL.foto) { alert("No cabe la foto en el móvil: prueba con otra más pequeña."); } } }
 const fmtN = n => Math.round(n).toLocaleString("es-ES");
 // ---- Niveles: del N al N+1 hacen falta 200 + 40·N de XP (nivel 10 en ~3 días, 100 en ~6 meses, 200 en ~2 años)
