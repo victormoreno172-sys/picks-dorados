@@ -24,8 +24,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create, update: if request.auth != null && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['n', 'nl', 'p', 'reto', 'arc', 'nv', 't'])
-        && request.resource.data.n is string && request.resource.data.n.size() >= 3 && request.resource.data.n.size() <= 16
-        && request.resource.size() < 200000;
+        && request.resource.data.n is string && request.resource.data.n.size() >= 3 && request.resource.data.n.size() <= 16;
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
   }
