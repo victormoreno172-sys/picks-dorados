@@ -536,7 +536,9 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .gbtn { width: 100%; text-align: left; border: 1px dashed var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 10px 14px; margin: 0 0 12px; font: 600 13px var(--body); cursor: pointer; }
 .lnk { border: 0; background: none; padding: 0; color: #4f46e5; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
 .rsem { width: 100%; margin: 8px 0 2px; font: 600 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; }
-.rprem { font-size: 12px; color: #92400e; background: var(--gold-soft); border-radius: 10px; padding: 7px 9px; margin: 6px 0 4px; line-height: 1.4; }
+.rprem { margin: 8px 0 4px; } .rprem summary { display: inline-block; list-style: none; cursor: pointer; font: 700 12px var(--body); color: #92400e; background: var(--gold-soft); border-radius: 999px; padding: 5px 11px; }
+.rprem summary::-webkit-details-marker { display: none; } .rprem[open] summary { margin-bottom: 6px; }
+.rprl { display: grid; gap: 2px; font-size: 11.5px; } .rprl div { display: flex; gap: 8px; } .rprl div span:first-child { width: 58px; font-weight: 700; } .rprem small { font-size: 10.5px; color: var(--muted); }
 .reglas ol { margin: 6px 0 4px; padding-left: 20px; font-size: 12.5px; line-height: 1.5; color: var(--ink); } .reglas li { margin-bottom: 6px; }
 .reglas h4, .guia h4 { margin: 12px 0 4px; font-size: 13px; }
 .guia p, .guia ul { font-size: 13px; line-height: 1.5; margin: 6px 0; } .guia ul { padding-left: 18px; } .guia .mtab { margin: 8px 0; }
@@ -3032,11 +3034,12 @@ function seccionClasif() {
   const vista = est.clasR || "hoy", w = sems.find(x => x.i === (est.semR || actual)) || sems[0];
   const ds = vista === "hoy" ? dias.filter(d => d === AHORA.fecha) : vista === "semana" ? Object.keys(RETO.dias).filter(d => w.dias.includes(d)) : dias;
   const filas = clasificacionReto(ds), yo = filas.find(f => f.yo);
-  const premios = vista === "semana" ? `<p class="rprem">🎁 Premios de la semana: 🥇 1.000 🪙 · 🥈 600 · 🥉 400 (+3.000 XP) · 4.º–10.º 200 🪙 (+1.500 XP)</p>`
-    : vista === "mes" ? `<p class="rprem">🎁 Premios del mes: 🥇 5.000 🪙 · 🥈 3.000 · 🥉 2.000 (+10.000 XP) y el set animado «Vencedor de la máquina» (tarjeta, marco y avatar) · 4.º–10.º 1.000 🪙 (+5.000 XP)</p>` : "";
+  const lp = (pos, txt) => `<div><span>${pos}</span><span>${txt}</span></div>`;
+  const premios = vista === "semana" ? `<details class="rprem"><summary>🎁 Premios de la semana</summary><div class="rprl">${lp("🥇", "1.000 🪙 · 3.000 XP")}${lp("🥈", "600 🪙 · 3.000 XP")}${lp("🥉", "400 🪙 · 3.000 XP")}${lp("4.º–10.º", "200 🪙 · 1.500 XP")}</div></details>`
+    : vista === "mes" ? `<details class="rprem"><summary>🎁 Premios del mes</summary><div class="rprl">${lp("🥇", "👕✨ 5.000 🪙 · 10.000 XP")}${lp("🥈", "⚽✨ 3.000 🪙 · 10.000 XP")}${lp("🥉", "🧣✨ 2.000 🪙 · 10.000 XP")}${lp("4.º–10.º", "1.000 🪙 · 5.000 XP")}</div><small>✨ Los 3 primeros: set animado «Vencedor de la máquina» (tarjeta, marco y avatar). 👕⚽🧣 cuando haya ranking online.</small></details>` : "";
   return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
     ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
-    <p>${filas.some(f => f.pts) ? `Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.` : "Aún no hay puntos: llegan cuando acaben los partidos."}</p>
+    ${filas.some(f => f.pts) ? `<p>Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.</p>` : ""}
     ${premios}${tablaRanking(filas, false, vista)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa del mes</button>
     <p class="apnota">De momento son 40 jugadores de prueba con estilos distintos, para ver cómo funciona. Cuando haya ranking online, serán personas de verdad.</p></section>`;
 }
