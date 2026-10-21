@@ -1169,6 +1169,66 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .mcard.t0 .dsb i { background: repeating-linear-gradient(90deg, #38b764 0 6px, #a7f070 6px 12px); }
 .mcard.t0 .dsp { font: 400 12px "Pixelify Sans", var(--body); color: #94b0c2; } .mcard.t0 .dsf.ok .dsp { color: #a7f070; }
 .mcard.t0 .dsf.ok .dst { text-decoration: none; opacity: .8; }
+/* ---- Pase Premium T0: fila de abajo de cada nivel */
+.pmapa .pesc .pprem { align-self: stretch; margin: 4px -2px -5px; padding: 4px 2px 5px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative;
+  background: linear-gradient(#7b3fbf, #4b1f7a); border-top: 3px solid #000; }
+.pmapa .pesc .pprem small { font: 600 8.5px/1.1 "Pixelify Sans", var(--body) !important; color: #f3e8ff !important; min-height: 19px; text-align: center; }
+.pmapa .pesc .pprem .ppi { height: 28px; display: grid; place-items: center; }
+.pmapa .pesc .pprem.lock .ppi, .pmapa .pesc .pprem.lock small { opacity: .55; } .pmapa .pesc .pprem em { position: absolute; top: 2px; right: 2px; font-size: 9px; font-style: normal; }
+.pmapa .pesc .pprem.ok { background: linear-gradient(#2f7a52, #1e4d3a); } .pmapa .pesc .pprem.anim .ppi { animation: pxSalto 1.2s steps(2) infinite; }
+.pmapa .pesc.ok .pprem .ppi, .pmapa .pesc.ok .pprem small { opacity: 1; }
+.ppav { width: 26px; height: 26px; display: grid; place-items: center; font-size: 15px; border: 2px solid #000; }
+.ppsw { display: block; width: 34px; height: 22px; border: 2px solid #000; border-radius: 0 !important; overflow: hidden; }
+.ppsw.ppmr { width: 26px; height: 26px; display: grid; place-items: center; } .ppsw.ppmr b { width: 12px; height: 12px; background: #1a1c2c; border: 1px solid #000; }
+.ppaa { font: 13px "Press Start 2P", monospace; } .ppti { font-size: 18px; }
+.ppromo { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; padding: 10px; background: linear-gradient(135deg, #4b1f7a, #7b3fbf); border: 3px solid #000; box-shadow: 3px 3px 0 #000; }
+.ppromo b { display: block; font: 10px "Press Start 2P", monospace; color: #ffcd75; text-shadow: 2px 2px 0 #000; } .ppromo small { display: block; font: 400 12px/1.3 "Pixelify Sans", var(--body); color: #f3e8ff; margin-top: 4px; }
+.ppromo.on { display: block; background: linear-gradient(135deg, #1e4d3a, #38b764); } .ppbtn { flex: none; width: auto !important; background: #ffcd75 !important; color: #1a1c2c !important; text-shadow: none !important; font-size: 9px !important; padding: 10px 8px !important; }
+.ppbtn:disabled { opacity: .85; }
+/* Tarjetas pixel premium */
+.tj.tj-pxatardecer { background: linear-gradient(0deg, #1a1c2c 0 16%, transparent 16%), linear-gradient(180deg, #29366f 0 20%, #5d275d 20% 40%, #b13e53 40% 60%, #ef7d57 60% 78%, #ffcd75 78%); }
+.tj.tj-pxoceano { background: linear-gradient(0deg, #29366f 0 14%, transparent 14%), repeating-linear-gradient(90deg, transparent 0 12px, rgba(255,255,255,.14) 12px 16px), linear-gradient(180deg, #73eff7 0 32%, #41a6f6 32% 64%, #3b5dc9 64%); }
+.tj.tj-pxbosque { background: linear-gradient(0deg, #5d3a1a 0 12%, #38b764 12% 20%, transparent 20%), repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 10px, transparent 10px 22px), linear-gradient(180deg, #a7f070 0 28%, #38b764 28% 55%, #257179 55%); }
+.tj.tj-pxnieve { background: linear-gradient(0deg, #f4f4f4 0 18%, transparent 18%), radial-gradient(2px 2px, #fff 98%, transparent) 0 0 / 14px 12px, linear-gradient(180deg, #94b0c2, #566c86); }
+.tj.tj-pxmatrix { background-color: #000; background-image: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 10px), repeating-linear-gradient(180deg, #a7f070 0 3px, #0b3d1e 3px 12px); animation: pxLluvia 1.5s steps(8) infinite; }
+@keyframes pxLluvia { to { background-position: 0 0, 0 48px; } }
+.tj.tj-pxciudad { background: linear-gradient(0deg, #000 0 8%, transparent 8%), repeating-linear-gradient(90deg, #333c57 0 16px, #262b44 16px 28px, transparent 28px 36px) 0 100% / 100% 62% no-repeat, radial-gradient(2px 2px, #ffcd75 98%, transparent) 0 0 / 18px 14px, linear-gradient(180deg, #1a1c2c, #5d275d); }
+.tj.tj-pxlava { background: linear-gradient(0deg, #ef7d57 0 14%, #b13e53 14% 20%, transparent 20%), repeating-linear-gradient(90deg, #333c57 0 15px, #262b44 15px 16px), linear-gradient(#1a1c2c, #1a1c2c); }
+.tj.tj-pxcastillo { background: linear-gradient(0deg, #38b764 0 10%, transparent 10%), repeating-linear-gradient(90deg, #94b0c2 0 10px, transparent 10px 20px) 0 38% / 100% 8% no-repeat, linear-gradient(0deg, #94b0c2 0 62%, transparent 62%) 50% 100% / 60% 100% no-repeat, linear-gradient(180deg, #41a6f6, #73eff7); }
+.tj.tj-pxglitch { background-color: #1a1c2c; background-image: repeating-linear-gradient(180deg, #ff004d 0 3px, transparent 3px 9px, #29adff 9px 11px, transparent 11px 20px); animation: pxGlitch 1.2s steps(4) infinite; }
+@keyframes pxGlitch { 25% { background-position: 6px 0; filter: hue-rotate(60deg); } 50% { background-position: -4px 3px; } 75% { background-position: 10px -2px; filter: hue-rotate(-60deg); } }
+.tj.tj-pxespacio { background-color: #000; background-image: radial-gradient(1px 1px, #fff 98%, transparent), radial-gradient(2px 2px, #73eff7 98%, transparent), radial-gradient(2px 2px, #ffcd75 98%, transparent);
+  background-size: 20px 14px, 50px 30px, 90px 50px; animation: pxHiper 2s steps(20) infinite; }
+@keyframes pxHiper { to { background-position: -40px 0, -100px 0, -180px 0; } }
+/* Marcos pixel premium */
+.mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss { border-radius: 4px !important; }
+:is(.mr-pxmadera, .mr-pxhielo, .mr-pxlava, .mr-pxmenta, .mr-pxoro, .mr-pxneon, .mr-pxglitch, .mr-pxboss) .avi { border-radius: 2px !important; }
+.mr-pxmadera { background: repeating-conic-gradient(#8b5a2b 0 25%, #5d3a1a 0 50%) 0 0 / 8px 8px !important; }
+.mr-pxhielo { background: repeating-conic-gradient(#73eff7 0 25%, #f4f4f4 0 50%) 0 0 / 8px 8px !important; }
+.mr-pxlava { background: repeating-conic-gradient(#ef7d57 0 25%, #b13e53 0 50%) 0 0 / 8px 8px !important; }
+.mr-pxmenta { background: repeating-conic-gradient(#a7f070 0 25%, #38b764 0 50%) 0 0 / 8px 8px !important; }
+.mr-pxoro { background: repeating-conic-gradient(#ffcd75 0 25%, #ef7d57 0 50%) 0 0 / 8px 8px !important; box-shadow: 0 0 0 2px #000; }
+.mr-pxneon { background: repeating-conic-gradient(#ff2bd6 0 25%, #22d3ee 0 50%) 0 0 / 8px 8px !important; animation: pxRgb 1.6s steps(8) infinite; box-shadow: 0 0 10px #ff2bd6; }
+.mr-pxglitch { background: repeating-conic-gradient(#ff004d 0 25%, #000 0 50%, #29adff 0 75%, #000 0) 0 0 / 8px 8px !important; animation: pxTiembla 1s steps(3) infinite; }
+@keyframes pxTiembla { 33% { transform: translate(1px, -1px); } 66% { transform: translate(-1px, 1px); } }
+.mr-pxboss { background: repeating-conic-gradient(#b13e53 0 25%, #000 0 50%) 0 0 / 8px 8px !important; animation: pxBoss 1s steps(2) infinite; }
+@keyframes pxBoss { 50% { box-shadow: 0 0 0 3px #ff004d, 0 0 14px #ff004d; } }
+/* Colores de nombre pixel */
+.nc-pxverde { color: #38b764 !important; text-shadow: 0 0 6px rgba(56,183,100,.6); } .nc-pxambar { color: #ffb000 !important; text-shadow: 0 0 6px rgba(255,176,0,.55); }
+.nc-pxcian { color: #73eff7 !important; text-shadow: 2px 2px 0 #29366f; } .nc-pxrosa { color: #ff77a8 !important; text-shadow: 2px 2px 0 #5d275d; }
+.nc-pxoro { background: linear-gradient(180deg, #fff3c4 0 35%, #ffcd75 35% 70%, #ef7d57 70%); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.nc-pxarcoiris { background: linear-gradient(90deg, #ff004d 0 16%, #ffa300 16% 33%, #ffec27 33% 50%, #00e436 50% 66%, #29adff 66% 83%, #ff77a8 83%) 0 0 / 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent !important; animation: pxArco 2s steps(6) infinite; }
+@keyframes pxArco { to { background-position: 200% 0; } }
+/* Tema Consola portátil */
+.sk-pxconsola { background: linear-gradient(#0f380f 0 18%, #9bbc0f 18% 70%, #306230 70%); border: 3px solid #0f380f; border-radius: 4px; }
+:root[data-skin="pxconsola"] { --bg: #0f380f; --surface: #1f4a1f; --ink: #d8f0a0; --muted: #8bac0f; --line: #306230; --bar: #245024; --gold: #9bbc0f; --gold-soft: #1f3f12; --gold-ink: #e0f8d0; --grad: linear-gradient(135deg, #9bbc0f, #8bac0f); --display: "Press Start 2P", monospace; }
+:root[data-skin="pxconsola"] body { background: #0f380f; font-family: "Pixelify Sans", var(--body); }
+:root[data-skin="pxconsola"] body::before { mask-image: none; background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 2px, transparent 2px 4px); }
+:root[data-skin="pxconsola"] .mcard, :root[data-skin="pxconsola"] .partido, :root[data-skin="pxconsola"] .rpart, :root[data-skin="pxconsola"] .comps, :root[data-skin="pxconsola"] .ajb, :root[data-skin="pxconsola"] .pcab, :root[data-skin="pxconsola"] .pbar {
+  border-radius: 4px !important; border: 2px solid #0f380f !important; box-shadow: 4px 4px 0 #0a260a !important; }
+:root[data-skin="pxconsola"] .sec, :root[data-skin="pxconsola"] h3 { font-family: "Press Start 2P", monospace !important; font-size: 11px !important; line-height: 1.5; }
+:root[data-skin="pxconsola"] header, :root[data-skin="pxconsola"] .abajo { background: #0f380f; border-color: #0a260a; }
+@media (prefers-reduced-motion: reduce) { .tj-pxmatrix, .tj-pxglitch, .tj-pxespacio, .mr-pxneon, .mr-pxglitch, .mr-pxboss, .nc-pxarcoiris, .pprem.anim .ppi { animation: none !important; } }
 :root[data-vt="pixel"] .rrow { border-radius: 0 !important; border: 2px solid #000 !important; box-shadow: 3px 3px 0 #000; }
 :root[data-vt="pixel"] .rrow b, :root[data-vt="pixel"] .rrow small { font-family: "Pixelify Sans", var(--body); }
 @media (prefers-reduced-motion: reduce) { .ppips span.on, .pmapa .pesc.gordo, .pmapa .pesc.sig::after { animation: none !important; } }
@@ -1278,7 +1338,7 @@ let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorO
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 // Temas de la app (paquetes de interfaz): cambian toda la app. Se guardan en el perfil (perfilV1.skin)
-const SKIN_BG = { estadio: "#06111f", oro: "#070707", pizarra: "#12261d", galaxia: "#070313", neon: "#0b0618", pixel: "#1a1c2c" };
+const SKIN_BG = { estadio: "#06111f", oro: "#070707", pizarra: "#12261d", galaxia: "#070313", neon: "#0b0618", pixel: "#1a1c2c", pxconsola: "#0f380f" };
 function skinActual() { try { const p = JSON.parse(localStorage.getItem("perfilV1") || "null"); return p && SKIN_BG[p.skin] ? p.skin : ""; } catch (e) { return ""; } }
 function aplicarTema() {
   const skin = skinActual();
@@ -2712,7 +2772,9 @@ function pintarPantallaAjustes() {
   $("vista").innerHTML = `<div class="aj" style="margin-top:12px">
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
     ${/^negraco/i.test(PERFIL.nombre || "") ? `<section class="ajb"><h3>🧪 Negraco · pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
-      <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div></section>` : ""}
+      <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div>
+      <p style="margin:12px 0 8px">Pase Premium de la Temporada 0 (de prueba, sin pagar): ${tienePremium() ? "<b>activado</b>" : "desactivado"}.</p>
+      <button class="apbtn" data-premprueba="1">${tienePremium() ? "Desactivar" : "Activar"} Pase Premium de prueba</button></section>` : ""}
     <section class="ajb"><h3>Lista de partidos</h3>${seg("verEsperados", [["false", "Sin goles esperados"], ["true", "Con goles esperados"]])}
       <p>Los goles (o puntos) esperados de cada equipo a la derecha del partido. El marcador en directo sale siempre.</p></section>
     <section class="ajb"><h3>Al abrir la app</h3>${seg("depInicio", [["ultimo", "El último"], ["f", "⚽"], ["b", "🏀"], ["te", "🎾"], ["e", "🎮"]])}
@@ -3596,6 +3658,26 @@ const CAT = {
     ["cazagigantes", "Cazagigantes", { insignia: "giganta" }], ["visionario", "Visionario", { nivel: 35 }], ["barrio", "Leyenda del barrio", { nivel: 70 }],
     ["elegido", "El Elegido", { nivel: 140 }], ["inmortalt", "Inmortal", { nivel: 200 }], ["pixelmaster", "Pixel Master", { pase: 30 }], ["campeont0", "Campeón T0", { evento: "temporada" }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
 };
+// ---- Pase Premium de la Temporada 0 (pixel): un objeto exclusivo por nivel. Solo estética: nada de monedas, comodines ni estrellas.
+const PREM_T0 = [
+  ["avatar", "pa1", "Fantasma", "👻", "#5d275d"], ["titulo", "jugador1", "Jugador 1"], ["tarjeta", "pxatardecer", "Atardecer pixel"], ["color", "pxverde", "Fósforo verde"],
+  ["avatar", "pa5", "Mando", "🎮", "#3b5dc9"], ["marco", "pxmadera", "Madera pixel"], ["titulo", "insertcoin", "Insert Coin"], ["avatar", "pa3", "Disquete", "💾", "#29366f"],
+  ["tarjeta", "pxoceano", "Mar 8-bit"], ["marco", "pxoro", "Oro pixel"], ["avatar", "pa2", "Seta", "🍄", "#b13e53"], ["titulo", "pulsastart", "Pulsa Start"],
+  ["color", "pxambar", "Ámbar CRT"], ["tarjeta", "pxbosque", "Bosque pixel"], ["color", "pxarcoiris", "Arcoíris 8-bit ✨", { anim: 1 }], ["avatar", "pa4", "Cinta VHS", "📼", "#333c57"],
+  ["marco", "pxhielo", "Hielo pixel"], ["titulo", "highscore", "High Score"], ["tarjeta", "pxnieve", "Nivel de hielo"], ["tarjeta", "pxmatrix", "Código ✨", { anim: 1 }],
+  ["avatar", "pa8", "Rana saltarina", "🐸", "#257179"], ["color", "pxcian", "Cian arcade"], ["titulo", "levelup", "Level Up"], ["marco", "pxmenta", "Menta pixel"],
+  ["marco", "pxneon", "Neón 8-bit ✨", { anim: 1 }], ["avatar", "pa7", "Alien", "👽", "#38b764"], ["tarjeta", "pxciudad", "Ciudad nocturna"], ["titulo", "combo", "Combo ×10"],
+  ["color", "pxrosa", "Rosa chicle"], ["tarjeta", "pxglitch", "Glitch ✨", { anim: 1 }], ["avatar", "pa10", "Espadas", "⚔️", "#566c86"], ["marco", "pxlava", "Lava pixel"],
+  ["titulo", "sincontinues", "Sin continues"], ["tarjeta", "pxcastillo", "Castillo"], ["titulo", "leyenda8", "Leyenda 8-bit"], ["avatar", "pa11", "Escudo", "🛡️", "#29366f"],
+  ["color", "pxoro", "Moneda de oro"], ["titulo", "speedrunner", "Speedrunner"], ["avatar", "pa12", "Castillo", "🏰", "#41a6f6"], ["tarjeta", "pxespacio", "Hiperespacio ✨", { anim: 1 }],
+  ["avatar", "pa13", "Nave", "🚀", "#1a1c2c"], ["tarjeta", "pxlava", "Mazmorra de lava"], ["titulo", "jefefinal", "Jefe final"], ["avatar", "pa14", "Gema", "💎", "#5d275d"],
+  ["marco", "pxboss", "Marco del jefe ✨", { anim: 1 }], ["avatar", "pa6", "Robot 8-bit", "🤖", "#257179"], ["titulo", "gameover", "Game Over para la app"], ["avatar", "pa9", "Dragón final", "🐉", "#b13e53"],
+  ["marco", "pxglitch", "Marco glitch ✨", { anim: 1 }], ["skin", "pxconsola", "Consola portátil ✨", { anim: 1 }],
+];
+PREM_T0.forEach(([t, id, n, e, bg], k) => { const x = typeof e === "object" ? e : {};
+  CAT[t].push(t === "avatar" ? { id, e, bg, n, prem: k + 1 } : { id, n, prem: k + 1, ...x }); });
+const regaloPrem = n => { const [t, id] = PREM_T0[n - 1], it = CAT[t].find(x => x.id === id); return { t, id, it, txt: it.n.replace(" ✨", "") }; };
+const tienePremium = () => !!(PERFIL.premium && PERFIL.premium.t0);
 const avatarDe = id => CAT.avatar.find(a => a.id === id) || CAT.avatar[0];
 // Insignias (se calculan con lo que has hecho)
 const INSIGNIAS = [
@@ -3611,7 +3693,7 @@ const INSIGNIAS = [
 ];
 function tieneItem(tipo, it) {
   if (it.perfil) return !!PERFIL.nombre;   // regalo por crearte el perfil en la Arena
-  if (it.evento || it.pase) return PERFIL.comprados.includes(tipo + ":" + it.id);   // podio del evento o de la temporada, o pase de temporada
+  if (it.evento || it.pase || it.prem) return PERFIL.comprados.includes(tipo + ":" + it.id);   // podio del evento o de la temporada, o pase de temporada
   if (!it.precio && !it.nivel && !it.insignia) return true;
   if (it.nivel) return nivelDe(totalXP()).n >= it.nivel;
   if (it.insignia) return datosJugador().insignias.includes(it.insignia);
@@ -3843,7 +3925,7 @@ function centrarCarril() {
 function pintarPersonalizar() {
   const sec = (tipo, titulo, pinta) => `<section class="mcard"><h3>${titulo}</h3><div class="pgrid ${tipo}">${CAT[tipo].map(it => {
     const ok = tieneItem(tipo, it), puesto = PERFIL[tipo] === it.id;
-    const cand = it.perfil ? "Crea tu perfil" : it.pase ? `Pase T0 · esc. ${it.pase}` : it.evento === "temporada" ? "Top 3 Temporada 0" : it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
+    const cand = it.perfil ? "Crea tu perfil" : it.pase ? `Pase T0 · nv ${it.pase}` : it.prem ? `Premium T0 · nv ${it.prem}` : it.evento === "temporada" ? "Top 3 Temporada 0" : it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
     return `<button class="pit ${puesto ? "on" : ""} ${ok ? "" : "lock"}" ${ok ? `data-poner="${tipo}" data-id="${it.id}"` : `data-vista="tienda"`}>${pinta(it)}${ok ? "" : `<small>🔒 ${cand}</small>`}</button>`;
   }).join("")}</div></section>`;
   let h = `<div class="volv"><button class="ico" data-vista="perfil" aria-label="Volver">‹</button></div>
@@ -3925,7 +4007,8 @@ function pintarTienda() {
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-tcat]"); if (!b) return; est.tcat = b.dataset.tcat; pintarLista(); });
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-poner],[data-comprar],[data-pnombre],[data-comodin],[data-skinprueba]"); if (!b) return;
+  const b = e.target.closest("[data-poner],[data-comprar],[data-pnombre],[data-comodin],[data-skinprueba],[data-premprueba]"); if (!b) return;
+  if (b.dataset.premprueba) { PERFIL.premium = tienePremium() ? {} : { t0: true }; guardarPerfil(); procesarRecompensas(); pintarLista(); return; }
   if (b.dataset.skinprueba !== undefined) { PERFIL.skin = b.dataset.skinprueba; guardarPerfil(); aplicarTema(); pintarLista(); return; }
 
   if (b.dataset.poner) { PERFIL[b.dataset.poner] = b.dataset.id; guardarPerfil(); if (b.dataset.poner === "skin") aplicarTema(); pintarLista(); return; }
@@ -4164,6 +4247,10 @@ function recompensasTemporada() {
     else if (g.t === "comodin") { if (cobrar("pase0:" + n, `🎮 Pase T0 · nivel ${n}: ${g.txt}`, 0, 0)) PERFIL.comodines[g.id]++; }
     else if (cobrar("pase0:" + n, `🎮 Pase T0 · nivel ${n}: ${g.txt}`, 0, 0)) { const k = g.t + ":" + g.id; if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k); }
   }
+  if (tienePremium()) for (let n = 1; n <= esc; n++) {
+    const g = regaloPrem(n), k = g.t + ":" + g.id;
+    if (!PERFIL.cobrados["pp0:" + n] && cobrar("pp0:" + n, `💎 Premium T0 · nivel ${n}: ${g.txt}`, 0, 0) && !PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
+  }
 }
 // ---- Rectángulo de la temporada en la Arena (debajo del perfil)
 function bannerTemporada() {
@@ -4199,8 +4286,13 @@ function pintarTemporada() {
   const dsT = diasTemporada(), filas = clasificacionReto(dsT), yo = filas.find(f => f.yo);
   const icoRegalo = g => g.t === "mon" ? px("moneda", 22) : g.t === "xp" ? `<span class="pxxp">XP</span>` : g.t === "comodin" ? pxCom(g.id)
     : `<span class="pxobj">${g.t === "skin" ? "🎨" : g.t === "tarjeta" ? "🪪" : g.t === "marco" ? "🖼️" : g.t === "titulo" ? "🏷️" : g.it.e}</span>`;
-  const celda = n => { const g = regaloPase(n), ok = nE >= n, gordo = !["mon", "xp", "comodin"].includes(g.t);
-    return `<div class="pesc ${ok ? "ok" : ""} ${gordo ? "gordo" : ""} ${g.t === "comodin" ? "com" : ""} ${n === nE + 1 ? "sig" : ""}"><span class="pen">${n}</span><span class="pei">${icoRegalo(g)}</span><small>${esc(g.t === "mon" ? g.mon + " 🪙" : g.t === "comodin" ? (g.id === "doble" ? "Comodín" : "2.ª opor.") : g.txt)}</small>${ok ? `<i>${px("ok", 12)}</i>` : ""}</div>`; };
+  const prem = tienePremium();
+  const icoPrem = g => g.t === "avatar" ? `<span class="ppav" style="background:${g.it.bg}">${g.it.e}</span>` : g.t === "tarjeta" ? `<span class="ppsw tj tj-${g.id}"></span>`
+    : g.t === "marco" ? `<span class="ppsw ppmr mr-${g.id}"><b></b></span>` : g.t === "skin" ? `<span class="ppsw sk-${g.id}"></span>`
+    : g.t === "color" ? `<b class="ppaa nc-${g.id}">Aa</b>` : `<span class="ppti">🏷️</span>`;
+  const celda = n => { const g = regaloPase(n), ok = nE >= n, gordo = !["mon", "xp", "comodin"].includes(g.t), gp = regaloPrem(n);
+    return `<div class="pesc ${ok ? "ok" : ""} ${gordo ? "gordo" : ""} ${g.t === "comodin" ? "com" : ""} ${n === nE + 1 ? "sig" : ""}"><span class="pen">${n}</span><span class="pei">${icoRegalo(g)}</span><small>${esc(g.t === "mon" ? g.mon + " 🪙" : g.t === "comodin" ? (g.id === "doble" ? "Comodín" : "2.ª opor.") : g.txt)}</small>${ok ? `<i>${px("ok", 12)}</i>` : ""}
+      <span class="pprem ${prem ? "" : "lock"} ${prem && ok ? "ok" : ""} ${gp.it.anim ? "anim" : ""}"><span class="ppi">${icoPrem(gp)}</span><small>${esc(gp.txt)}</small>${prem ? "" : '<em>🔒</em>'}</span></div>`; };
   let mapa = "";
   for (let f = 0; f < ESCALONES / 5; f++) {
     mapa += f === 0 ? `<div class="pmun">MUNDO 1</div>` : `<div class="pcon ${f % 2 ? "der" : "izq"}"><span>MUNDO ${f + 1}</span></div>`;
@@ -4224,6 +4316,8 @@ function pintarTemporada() {
     <div class="pnivel"><span class="pnv">NV ${nE}</span><div class="ppips">${pips}</div><span class="pnv sig">${nE >= ESCALONES ? "MAX" : "NV " + (nE + 1)}</span></div>
     <small class="apnota" style="display:block;text-align:center;margin:4px 0 0">${nE >= ESCALONES ? "¡Pase completado!" : `${dentro}/${EST_ESCALON} ★ para el nivel ${nE + 1}`}</small>
     ${gG ? `<div class="pgordo"><span class="pgi">${gG.t === "skin" ? `<span class="skmini sk-${gG.id}" style="width:54px;height:54px"></span>` : gG.t === "tarjeta" ? `<span class="tjmini tj tj-${gG.id}" style="width:64px;height:44px"></span>` : icoRegalo(gG)}</span><span><small>PRÓXIMO PREMIO GORDO</small><b>${esc(gG.txt)}</b><em>Nivel ${sigG} · te faltan ${(sigG * EST_ESCALON - est)} ★</em></span></div>` : ""}
+    ${prem ? `<div class="ppromo on"><b>💎 PASE PREMIUM ACTIVO</b><small>Te llevas también la fila de abajo de cada nivel y no ves anuncios esta temporada.</small></div>`
+      : `<div class="ppromo"><span><b>💎 PASE PREMIUM</b><small>50 objetos pixel exclusivos (uno por nivel, la fila de abajo) y sin anuncios toda la temporada. Solo estética: no da monedas ni ventajas.</small></span><button class="pxbtn ppbtn" disabled>3,99 € · PRONTO</button></div>`}
     <div class="pmapa" id="prail">${mapa}</div>
     <p class="apnota">★ +1 por acierto, +1 por día completo, +2 por ganarle el día a la app, y más con el regalo diario y las misiones.</p></section>
   <section class="mcard t0 tw-mis"><h3>📜 MISIONES</h3>
