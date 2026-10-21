@@ -1135,7 +1135,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .pgordo .pgi { flex: none; display: grid; place-items: center; min-width: 54px; } .pgordo .pgi .pxobj { font-size: 38px; }
 .pgordo small { display: block; font: 8px "Press Start 2P", monospace; color: #ffcd75; } .pgordo b { display: block; font: 700 16px "Pixelify Sans", var(--body); color: #fff; margin: 3px 0; }
 .pgordo em { font: 400 12px "Pixelify Sans", var(--body); font-style: normal; color: #94b0c2; }
-.pmapa { margin-top: 8px; padding: 6px 6px 8px; background: #1e2a4a; border: 3px solid #000;
+.pmapa { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-top: 8px; padding: 6px 10px 14px; background: #1e2a4a; border: 3px solid #000;
   background-image: radial-gradient(1.5px 1.5px, rgba(255,255,255,.25) 98%, transparent); background-size: 22px 22px; }
 .pmun { font: 7px "Press Start 2P", monospace; color: #94b0c2; margin: 4px 2px 8px; letter-spacing: .05em; }
 .pfila { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
@@ -1169,6 +1169,41 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .mcard.t0 .dsb i { background: repeating-linear-gradient(90deg, #38b764 0 6px, #a7f070 6px 12px); }
 .mcard.t0 .dsp { font: 400 12px "Pixelify Sans", var(--body); color: #94b0c2; } .mcard.t0 .dsf.ok .dsp { color: #a7f070; }
 .mcard.t0 .dsf.ok .dst { text-decoration: none; opacity: .8; }
+.pmapa::-webkit-scrollbar { display: none; }
+.pcol { flex: none; width: 96px; display: flex; flex-direction: column; align-items: stretch; gap: 6px; scroll-snap-align: center; position: relative; }
+.pmw { height: 10px; font: 7px "Press Start 2P", monospace; color: #94b0c2; white-space: nowrap; }
+.pnodo { position: relative; align-self: center; z-index: 1; width: 30px; height: 22px; display: grid; place-items: center; font: 8px "Press Start 2P", monospace; color: #fff; background: #333c57; border: 2px solid #000; }
+.pcol::before { content: ""; position: absolute; top: 25px; left: -8px; right: 0; height: 4px; background: repeating-linear-gradient(90deg, #566c86 0 6px, transparent 6px 10px); }
+.pcol.ok::before { background: repeating-linear-gradient(90deg, #a7f070 0 6px, transparent 6px 10px); } .pcol.ok .pnodo { background: #38b764; }
+.pcol:first-child::before { left: 50%; } .pcol:last-child::before { right: 50%; }
+.pmapa .pesc { padding: 0 !important; flex: 1; justify-content: flex-start; }
+.pfree { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px 6px; width: 100%; cursor: pointer; position: relative; }
+.pmapa .pesc .pprem { margin: 0 !important; cursor: pointer; flex: 1; justify-content: center; }
+.pmapa .pesc .pprem .ppi { height: 40px; } .pmapa .ppav { width: 34px; height: 34px; font-size: 20px; } .pmapa .ppsw { width: 44px; height: 28px; } .pmapa .ppsw.ppmr { width: 34px; height: 34px; } .pmapa .ppsw.ppmr b { width: 16px; height: 16px; }
+.pmapa .pesc .pprem small { font-size: 9.5px !important; }
+.pmapa .pesc .pen { display: none; } .pmapa .pesc.sig::after { top: -12px; }
+.pfree:active, .pprem:active { filter: brightness(1.25); }
+/* Ventana del premio */
+.pxmodal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 18px; background: rgba(10, 10, 20, .78); animation: pxAparece .18s steps(3); }
+@keyframes pxAparece { from { opacity: 0; transform: scale(.9); } }
+.pxmc { position: relative; width: min(100%, 360px); max-height: 92vh; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 16px 16px 18px;
+  background: #262b44; color: #f4f4f4; border: 4px solid #000; box-shadow: 0 0 0 3px #ffcd75, 8px 8px 0 3px #000; font-family: "Pixelify Sans", var(--body); }
+.pxmc.prem { background: linear-gradient(#4b1f7a, #262b44 55%); box-shadow: 0 0 0 3px #b98cff, 8px 8px 0 3px #000; }
+.pxx { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border: 3px solid #000; background: #b13e53; color: #fff; font: 12px "Press Start 2P", monospace; cursor: pointer; }
+.pxtag { font: 9px "Press Start 2P", monospace; color: #ffcd75; margin-top: 4px; }
+.pxprev { width: 100%; min-height: 170px; display: grid; place-items: center; padding: 16px 8px; margin: 4px 0;
+  background: radial-gradient(circle at 50% 45%, rgba(255,205,117,.25), transparent 60%), repeating-conic-gradient(rgba(255,255,255,.04) 0 25%, transparent 0 50%) 0 0 / 16px 16px; border: 3px solid #000; }
+.pxmc.anim .pxprev { animation: pxLuz 1.6s steps(2) infinite; } @keyframes pxLuz { 50% { box-shadow: inset 0 0 30px rgba(255,205,117,.35); } }
+.pxprev .pcab.pxpc { width: 100%; margin: 0; border: 2px solid #000; border-radius: 6px; } .pxprev .pnom { font-size: 20px; }
+.pxmovil { width: 150px; display: flex; flex-direction: column; gap: 8px; padding: 12px 10px 14px; border: 4px solid; border-radius: 18px; box-shadow: 0 0 0 3px #000, 6px 6px 0 3px #000; }
+.pxmovil.pxconsola { background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 2px, transparent 2px 4px) !important; }
+.pxbig { display: flex; flex-direction: column; align-items: center; gap: 10px; } .pxbig b { font: 18px "Press Start 2P", monospace; color: #fff; text-shadow: 3px 3px 0 #000; }
+.pxnom { font: 15px/1.4 "Press Start 2P", monospace; color: #fff; text-shadow: 3px 3px 0 #000; }
+.pxtipo { font: 600 13px "Pixelify Sans", var(--body); color: #ffcd75; }
+.pxmc p { margin: 2px 0; font: 400 14px/1.35 "Pixelify Sans", var(--body); color: #c2c3c7; }
+.pxest { width: 100%; padding: 9px; font: 9px/1.5 "Press Start 2P", monospace; background: #1a1c2c; border: 3px solid #000; color: #94b0c2; }
+.pxest.ok { background: #1e4d3a; color: #a7f070; } .pxmc .pxbtn { width: 100%; }
+@media (prefers-reduced-motion: reduce) { .pxmodal, .pxmc.anim .pxprev { animation: none !important; } }
 /* ---- Pase Premium T0: fila de abajo de cada nivel */
 .pmapa .pesc .pprem { align-self: stretch; margin: 4px -2px -5px; padding: 4px 2px 5px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative;
   background: linear-gradient(#7b3fbf, #4b1f7a); border-top: 3px solid #000; }
@@ -4291,13 +4326,10 @@ function pintarTemporada() {
     : g.t === "marco" ? `<span class="ppsw ppmr mr-${g.id}"><b></b></span>` : g.t === "skin" ? `<span class="ppsw sk-${g.id}"></span>`
     : g.t === "color" ? `<b class="ppaa nc-${g.id}">Aa</b>` : `<span class="ppti">🏷️</span>`;
   const celda = n => { const g = regaloPase(n), ok = nE >= n, gordo = !["mon", "xp", "comodin"].includes(g.t), gp = regaloPrem(n);
-    return `<div class="pesc ${ok ? "ok" : ""} ${gordo ? "gordo" : ""} ${g.t === "comodin" ? "com" : ""} ${n === nE + 1 ? "sig" : ""}"><span class="pen">${n}</span><span class="pei">${icoRegalo(g)}</span><small>${esc(g.t === "mon" ? g.mon + " 🪙" : g.t === "comodin" ? (g.id === "doble" ? "Comodín" : "2.ª opor.") : g.txt)}</small>${ok ? `<i>${px("ok", 12)}</i>` : ""}
-      <span class="pprem ${prem ? "" : "lock"} ${prem && ok ? "ok" : ""} ${gp.it.anim ? "anim" : ""}"><span class="ppi">${icoPrem(gp)}</span><small>${esc(gp.txt)}</small>${prem ? "" : '<em>🔒</em>'}</span></div>`; };
-  let mapa = "";
-  for (let f = 0; f < ESCALONES / 5; f++) {
-    mapa += f === 0 ? `<div class="pmun">MUNDO 1</div>` : `<div class="pcon ${f % 2 ? "der" : "izq"}"><span>MUNDO ${f + 1}</span></div>`;
-    mapa += `<div class="pfila ${f % 2 ? "inv" : ""}">${[1, 2, 3, 4, 5].map(k => celda(f * 5 + k)).join("")}</div>`;
-  }
+    return `<div class="pesc ${ok ? "ok" : ""} ${gordo ? "gordo" : ""} ${g.t === "comodin" ? "com" : ""} ${n === nE + 1 ? "sig" : ""}"><span class="pfree" data-pver="f${n}"><span class="pei">${icoRegalo(g)}</span><small>${esc(g.t === "mon" ? g.mon + " 🪙" : g.t === "comodin" ? (g.id === "doble" ? "Comodín" : "2.ª opor.") : g.txt)}</small>${ok ? `<i>${px("ok", 12)}</i>` : ""}</span>
+      <span data-pver="p${n}" class="pprem ${prem ? "" : "lock"} ${prem && ok ? "ok" : ""} ${gp.it.anim ? "anim" : ""}"><span class="ppi">${icoPrem(gp)}</span><small>${esc(gp.txt)}</small>${prem ? "" : '<em>🔒</em>'}</span></div>`; };
+  const mapa = [...Array(ESCALONES)].map((_, k) => { const n = k + 1;
+    return `<div class="pcol ${nE >= n ? "ok" : ""}"><span class="pmw">${n % 5 === 1 ? "MUNDO " + ((n - 1) / 5 + 1) : ""}</span><span class="pnodo">${n}</span>${celda(n)}</div>`; }).join("");
   const sigG = [...Array(ESCALONES)].map((_, k) => k + 1).find(n => n > nE && PASE_OBJ[n]);
   const gG = sigG && regaloPase(sigG);
   const pips = [...Array(EST_ESCALON)].map((_, k) => `<span class="${k < dentro ? "on" : ""}">${px("estrella", 14)}</span>`).join("");
@@ -4315,7 +4347,7 @@ function pintarTemporada() {
   <section class="mcard t0 tw-pase"><h3>🎮 PASE DE TEMPORADA</h3>
     <div class="pnivel"><span class="pnv">NV ${nE}</span><div class="ppips">${pips}</div><span class="pnv sig">${nE >= ESCALONES ? "MAX" : "NV " + (nE + 1)}</span></div>
     <small class="apnota" style="display:block;text-align:center;margin:4px 0 0">${nE >= ESCALONES ? "¡Pase completado!" : `${dentro}/${EST_ESCALON} ★ para el nivel ${nE + 1}`}</small>
-    ${gG ? `<div class="pgordo"><span class="pgi">${gG.t === "skin" ? `<span class="skmini sk-${gG.id}" style="width:54px;height:54px"></span>` : gG.t === "tarjeta" ? `<span class="tjmini tj tj-${gG.id}" style="width:64px;height:44px"></span>` : icoRegalo(gG)}</span><span><small>PRÓXIMO PREMIO GORDO</small><b>${esc(gG.txt)}</b><em>Nivel ${sigG} · te faltan ${(sigG * EST_ESCALON - est)} ★</em></span></div>` : ""}
+    ${gG ? `<div class="pgordo" data-pver="f${sigG}" style="cursor:pointer"><span class="pgi">${gG.t === "skin" ? `<span class="skmini sk-${gG.id}" style="width:54px;height:54px"></span>` : gG.t === "tarjeta" ? `<span class="tjmini tj tj-${gG.id}" style="width:64px;height:44px"></span>` : icoRegalo(gG)}</span><span><small>PRÓXIMO PREMIO GORDO</small><b>${esc(gG.txt)}</b><em>Nivel ${sigG} · te faltan ${(sigG * EST_ESCALON - est)} ★</em></span></div>` : ""}
     ${prem ? `<div class="ppromo on"><b>💎 PASE PREMIUM ACTIVO</b><small>Te llevas también la fila de abajo de cada nivel y no ves anuncios esta temporada.</small></div>`
       : `<div class="ppromo"><span><b>💎 PASE PREMIUM</b><small>50 objetos pixel exclusivos (uno por nivel, la fila de abajo) y sin anuncios toda la temporada. Solo estética: no da monedas ni ventajas.</small></span><button class="pxbtn ppbtn" disabled>3,99 € · PRONTO</button></div>`}
     <div class="pmapa" id="prail">${mapa}</div>
@@ -4327,7 +4359,55 @@ function pintarTemporada() {
     <button class="apbtn ap2 pxbtn" data-vista="evento" data-evento="premios" data-rkp="temporada" style="margin-top:10px">VER COMPLETA</button>
     <p class="apnota">Top 3: título «Campeón T0» + 10.000 / 6.000 / 4.000 🪙 y 20.000 XP.</p></section>`;
   $("vista").innerHTML = h;
+  const tr = $("prail"), sg = tr && tr.querySelector(".pesc.sig");
+  if (sg) tr.scrollLeft = sg.closest(".pcol").offsetLeft - tr.offsetLeft - tr.clientWidth / 2 + 48;
+  else if (tr && nE >= ESCALONES) tr.scrollLeft = tr.scrollWidth;
 }
+// ---- Ventana con la vista previa de un premio del pase
+const DESC_PREMIO = { avatar: "Avatar: tu imagen en el perfil, en la Arena y en todas las clasificaciones.", marco: "Marco: el borde de tu avatar. Lo ve todo el mundo en el ranking.",
+  tarjeta: "Tarjeta: el fondo de tu ficha en el perfil, en la Arena y en tu fila de la clasificación.", color: "Color de nombre: así sale tu nombre en todas partes.",
+  titulo: "Título: la frase que sale debajo de tu nombre.", skin: "Tema: cambia los colores y el estilo de toda la app.",
+  mon: "Monedas para gastar en la tienda.", xp: "XP para subir tu nivel de jugador (y llevarte sus regalos).",
+  doble: "Comodín ×2: haz que un acierto valga el doble (uno al día).", segunda: "Segunda oportunidad: cambia un pronóstico ya empezado (fútbol hasta el minuto 15, baloncesto durante el 1.er cuarto)." };
+const TIPO_PREMIO = { avatar: "Avatar", marco: "Marco", tarjeta: "Tarjeta", color: "Color de nombre", titulo: "Título", skin: "Tema de la app", mon: "Monedas", xp: "XP", comodin: "Comodín" };
+// Móvil de muestra con los colores de un tema (para la vista previa)
+const PALETA_TEMA = { pixel: ["#1a1c2c", "#262b44", "#f4f4f4", "#ffcd75", "#000", "#38b764"], oro: ["#070707", "#121110", "#f6efdc", "#f5c451", "#2b2617", "#c9a227"],
+  pxconsola: ["#0f380f", "#306230", "#d8f0a0", "#9bbc0f", "#0a260a", "#8bac0f"] };
+function movilTema(id) {
+  const [bg, su, ink, go, li, ac] = PALETA_TEMA[id] || PALETA_TEMA.pixel, px8 = id !== "oro";
+  const caja = (h, x = "") => `<span style="display:block;height:${h}px;background:${su};border:2px solid ${li};border-radius:${px8 ? 0 : 8}px;${px8 ? `box-shadow:3px 3px 0 ${li};` : ""}${x}"></span>`;
+  const linea = (w, c = ink) => `<span style="display:block;height:6px;width:${w}%;background:${c};opacity:.85;margin:6px 8px 0"></span>`;
+  return `<div class="pxmovil ${id}" style="background:${bg};border-color:${li}">
+    <span style="display:flex;justify-content:space-between;align-items:center;font:8px 'Press Start 2P',monospace;color:${go}"><b>${id === "oro" ? "ORO" : "PARTIDOS"}</b><span>●●●</span></span>
+    <span style="display:block;position:relative;height:58px;background:${su};border:2px solid ${li};border-radius:${px8 ? 0 : 8}px;${px8 ? `box-shadow:3px 3px 0 ${li};` : ""}">${linea(70)}${linea(45, go)}<span style="position:absolute;right:8px;bottom:8px;width:34px;height:16px;background:${ac}"></span></span>
+    ${caja(30)}${caja(30)}<span style="display:block;height:20px;background:${go};border:2px solid ${li};${px8 ? "" : "border-radius:8px;"}"></span></div>`;
+}
+function verPremio(cod) {
+  const premium = cod[0] === "p", n = +cod.slice(1), g = premium ? regaloPrem(n) : regaloPase(n);
+  const est = totalEst(), nE = escalonDe(est), llegado = nE >= n, prem = tienePremium();
+  const ficha = (o, extra) => `<div class="pcab tj tj-${o.tarjeta || "clasica"} pxpc">${avatarHTML(o, 72)}<b class="pnom nc-${o.color || "normal"}">${esc(nombreYo())}</b><span class="ptit">${esc(extra || tituloYo())}</span></div>`;
+  const yo = { ...PERFIL };
+  const prev = g.t === "avatar" ? avatarHTML({ ...yo, avatar: g.id }, 130) : g.t === "marco" ? avatarHTML({ ...yo, marco: g.id }, 130)
+    : g.t === "tarjeta" ? ficha({ ...yo, tarjeta: g.id }) : g.t === "color" ? ficha({ ...yo, color: g.id }) : g.t === "titulo" ? ficha(yo, g.it.n)
+    : g.t === "skin" ? movilTema(g.id)
+    : g.t === "mon" ? `<div class="pxbig">${px("moneda", 84)}<b>${g.mon}</b></div>` : g.t === "xp" ? `<div class="pxbig"><span class="pxxp" style="font-size:44px">XP</span><b>${fmtN(g.xp)}</b></div>`
+    : `<div class="pxbig"><span class="pxcom ${g.id === "doble" ? "c2" : "c3"}" style="width:76px;height:96px;font-size:28px">${g.id === "doble" ? "×2" : "↻"}</span></div>`;
+  const anim = g.it && g.it.anim, tuyo = g.it ? tieneItem(g.t, g.it) : llegado && (!premium || prem);
+  const estado = tuyo ? `<div class="pxest ok">${px("ok", 14)} ¡YA ES TUYO!</div>`
+    : `<div class="pxest">${premium && !prem ? "🔒 Necesitas el Pase Premium · " : ""}${llegado ? "Nivel conseguido" : `Nivel ${n} · te faltan ${n * EST_ESCALON - est} ★`}</div>`;
+  const div = document.createElement("div"); div.className = "pxmodal"; div.id = "pxmodal";
+  div.innerHTML = `<div class="pxmc ${premium ? "prem" : ""} ${anim ? "anim" : ""}"><button class="pxx" data-pxcerrar aria-label="Cerrar">✕</button>
+    <small class="pxtag">${premium ? "💎 PREMIUM" : "GRATIS"} · NIVEL ${n}</small><div class="pxprev">${prev}</div>
+    <b class="pxnom">${esc(g.t === "mon" ? g.mon + " monedas" : g.t === "xp" ? fmtN(g.xp) + " XP" : g.it ? g.it.n.replace(" ✨", "") : g.txt)}</b>
+    <span class="pxtipo">${TIPO_PREMIO[g.t]}${anim ? " · ✨ Animado" : ""}${g.it ? " · Exclusivo T0" : ""}</span>
+    <p>${DESC_PREMIO[g.t === "comodin" ? g.id : g.t]}${g.it ? " Solo se consigue en este pase: cuando acabe la temporada, no vuelve." : ""}</p>${estado}
+    ${tuyo && g.it ? `<button class="apbtn pxbtn" data-poner="${g.t}" data-id="${g.id}" data-pxcerrar>▶ PONÉRMELO</button>` : ""}</div>`;
+  document.getElementById("pxmodal")?.remove(); document.body.appendChild(div);
+}
+document.addEventListener("click", e => {
+  const v = e.target.closest("[data-pver]"); if (v) { verPremio(v.dataset.pver); return; }
+  const m = document.getElementById("pxmodal"); if (m && (e.target === m || e.target.closest("[data-pxcerrar]"))) m.remove();
+});
 const est_mt = () => est.mt || "dia";
 document.addEventListener("click", e => { const b = e.target.closest("[data-mt]"); if (!b) return; est.mt = b.dataset.mt; pintarLista(); });
 document.addEventListener("click", e => {
