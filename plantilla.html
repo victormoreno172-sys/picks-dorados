@@ -523,6 +523,13 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rtab td.rpr { text-align: right; padding-left: 2px; padding-right: 2px; } .rtab th:nth-child(3) { text-align: right; }
 .rprc { display: inline-flex; flex-direction: column; align-items: flex-end; font: 700 11px var(--mono); color: #b45309; background: var(--gold-soft); border-radius: 8px; padding: 3px 6px; white-space: nowrap; }
 .rprc small { font-size: 9.5px; color: #6d28d9; font-weight: 700; }
+.rail { width: 100%; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; padding: 4px 2px 8px; margin-top: 8px; -webkit-overflow-scrolling: touch; }
+.rail::-webkit-scrollbar { height: 4px; } .rail::-webkit-scrollbar-thumb { background: rgba(127,127,127,.35); border-radius: 4px; }
+.rcard { position: relative; flex: none; width: 82px; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 14px; background: rgba(127,127,127,.12); border: 1px solid rgba(127,127,127,.2); }
+.rcard .rnv { font: 800 11px var(--mono); color: #a855f7; } .rcard .rdib { height: 44px; display: grid; place-items: center; }
+.rcard small { font-size: 10.5px; text-align: center; line-height: 1.2; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.rcard.ok { opacity: .55; } .rcard .rchk { position: absolute; top: 4px; right: 6px; font-style: normal; font-size: 11px; color: #16a34a; font-weight: 800; }
+.rcard.fis { background: var(--gold-soft); border-color: #f59e0b; } .rcomod { font: 800 14px var(--mono); color: #7e22ce; background: rgba(168,85,247,.15); border-radius: 8px; padding: 6px 8px; }
 .gbtn { width: 100%; text-align: left; border: 1px dashed var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 10px 14px; margin: 0 0 12px; font: 600 13px var(--body); cursor: pointer; }
 .lnk { border: 0; background: none; padding: 0; color: #4f46e5; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
 .rsem { width: 100%; margin: 8px 0 2px; font: 600 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; }
@@ -3370,8 +3377,8 @@ function pintarPerfil() {
   <section class="pcab tj tj-${PERFIL.tarjeta || "clasica"}">${avatarHTML(PERFIL, 96)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
     <div class="pniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}</span></div>
     <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
-    ${xpEnCamino() ? `<small class="psig">⏳ +${xpEnCamino()} XP en camino: se suman cuando empiecen los partidos que has pronosticado. Las monedas llegan al acertar.</small>` : ""}
-    ${sig ? `<small class="psig">Siguiente regalo en el nivel ${sig.nivel}: ${esc(sig.n || "avatar " + sig.e)}</small>` : ""}
+    ${xpEnCamino() ? `<small class="psig">⏳ +${xpEnCamino()} XP en camino</small>` : ""}
+    ${carrilRecompensas(nv.n)}
     <div class="pacc"><button class="apbtn" data-vista="personalizar">✏️ Personalizar</button><button class="apbtn ap2" data-vista="tienda">🪙 ${fmtN(totalMon())} · Tienda</button></div></section>
   <section class="mcard"><h3>📊 Tus números</h3><div class="mkpis">
     <div><b>${fmtN(dj.pron)}</b><span>pronósticos</span></div><div><b>${dj.jug ? Math.round(dj.aciertos / dj.jug * 100) + " %" : "–"}</b><span>acierto</span></div>
@@ -3383,6 +3390,35 @@ function pintarPerfil() {
   <button class="gbtn" data-guia="perfil">📘 Guía completa: XP, niveles, monedas, tienda y eventos ›</button>
   `;
   $("vista").innerHTML = h;
+  centrarCarril();
+}
+// ---- Carril de recompensas por nivel (se desliza de lado; arriba de cada una, el nivel)
+function recompensasNivel() {
+  const L = [];
+  for (const t of ["avatar", "marco", "color", "titulo", "tarjeta"]) for (const it of CAT[t]) if (it.nivel) L.push({ n: it.nivel, t, it });
+  for (let n = 5; n <= NIVEL_MAX; n += 5) L.push({ n, t: "comodin", it: { n: n % 20 === 0 ? "×2 y 🔄" : "Comodín ×2" } });
+  L.push({ n: 100, t: "fisico", it: { e: "👕", n: "Camiseta" } }, { n: 200, t: "fisico", it: { e: "🎁", n: "Premio Inmortal" } });
+  return L.sort((a, b) => a.n - b.n || (a.t === "comodin") - (b.t === "comodin"));
+}
+function carrilRecompensas(nv) {
+  const dib = x => {
+    const it = x.it;
+    if (x.t === "avatar") return `<span class="av" style="--s:42px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`;
+    if (x.t === "marco") return `<span class="av mr-${it.id}" style="--s:36px"><span class="avi" style="background:${avatarDe(PERFIL.avatar).bg}">${avatarDe(PERFIL.avatar).e}</span></span>`;
+    if (x.t === "tarjeta") return `<span class="tjmini tj tj-${it.id}" style="width:56px;height:38px"></span>`;
+    if (x.t === "color") return `<b class="nc-${it.id}" style="font-size:18px">Aa</b>`;
+    if (x.t === "titulo") return `<span style="font-size:22px">🏷️</span>`;
+    if (x.t === "fisico") return `<span style="font-size:28px">${it.e}</span>`;
+    return `<span class="rcomod">${it.n.startsWith("×2 y") ? "×2🔄" : "×2"}</span>`;
+  };
+  const nombre = x => x.t === "avatar" ? "Avatar" : x.it.n;
+  return `<div class="rail" id="rail">${recompensasNivel().map(x => `<div class="rcard ${nv >= x.n ? "ok" : ""} ${x.t === "fisico" ? "fis" : ""}">
+      <span class="rnv">Nv ${x.n}</span><span class="rdib">${dib(x)}</span><small>${esc(nombre(x))}</small>${nv >= x.n ? '<i class="rchk">✓</i>' : ""}</div>`).join("")}</div>`;
+}
+// Al abrir el perfil, el carril se coloca en la siguiente recompensa
+function centrarCarril() {
+  const r = $("rail"); if (!r) return;
+  const sig = r.querySelector(".rcard:not(.ok)"); if (sig) r.scrollLeft = Math.max(0, sig.offsetLeft - r.offsetLeft - 70);
 }
 // ---- Personalizar
 function pintarPersonalizar() {
