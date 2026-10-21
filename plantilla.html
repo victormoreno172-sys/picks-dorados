@@ -632,7 +632,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .pmov div > span:first-child { display: flex; flex-direction: column; min-width: 0; } .pmov small { color: var(--muted); font-size: 11px; }
 .pmov div > span:last-child { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; font-family: var(--mono); font-size: 12px; }
 .pmov .xp { color: #6d28d9; } .pmov .mon { color: #b45309; } .pmov .gasto { color: var(--red); }
-.pgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .pgrid.color, .pgrid.titulo, .pgrid.tarjeta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .pgrid.color, .pgrid.titulo, .pgrid.tarjeta, .pgrid.skin { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pit { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 70px; padding: 8px 4px; border-radius: 14px; border: 2px solid transparent; background: var(--bar); cursor: pointer; color: var(--ink); font: inherit; }
 .pit b { font-size: 11.5px; } .pit small { font-size: 10px; color: var(--muted); } .pit.on { border-color: #4f46e5; background: rgba(79, 70, 229, .1); } .pit.lock { opacity: .55; }
 .tcab { display: flex; flex-direction: column; align-items: center; gap: 2px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; border-radius: 22px; padding: 18px; margin-bottom: 8px; text-align: center; }
@@ -973,6 +973,48 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .ajfila { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0; font-size: 13px; }
 .ajfila .seg { flex: 0 0 auto; margin: 0; }
 .ajfila .seg button { padding: 6px 12px; }
+
+/* ================= Temas de la app (paquetes de interfaz) ================= */
+.skmini { display: block; width: 100%; height: 42px; border-radius: 10px; border: 1px solid var(--line); }
+.sk-normal { background: linear-gradient(135deg, #f5f7fb 50%, #080d18 50%); }
+.sk-estadio { background: radial-gradient(circle at 20% 0, rgba(255,255,255,.5), transparent 45%), radial-gradient(circle at 80% 0, rgba(255,255,255,.5), transparent 45%), linear-gradient(#06111f 55%, #14532d); }
+.sk-oro { background: linear-gradient(135deg, #070707 55%, #c9a227 56%, #f5c451 70%, #070707 71%); }
+.sk-pizarra { background: #12261d; background-image: linear-gradient(90deg, transparent 49%, rgba(255,255,255,.35) 50%, transparent 51%), radial-gradient(circle, transparent 10px, rgba(255,255,255,.35) 11px, transparent 13px); }
+.sk-galaxia { background: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 60%, #fff, transparent), radial-gradient(circle at 70% 40%, rgba(168,85,247,.7), transparent 60%), #070313; }
+.sk-neon { background: linear-gradient(135deg, #0b0618, #1a0b33); box-shadow: inset 0 0 0 2px #ff2bd6, inset 0 0 12px #22d3ee; }
+:root[data-skin] { --display: "Space Grotesk", system-ui, sans-serif; }
+/* Estadio de noche */
+:root[data-skin="estadio"] { --bg: #06111f; --surface: #0c1a2d; --ink: #eef6ff; --muted: #8ea4c0; --line: #1a2e48; --bar: #12243b; --gold: #4ade80; --gold-soft: #0e2a1b; --gold-ink: #bbf7d0; --grad: linear-gradient(135deg, #4ade80, #16a34a); }
+:root[data-skin="estadio"] body { background: radial-gradient(700px 380px at 10% -5%, rgba(255,255,255,.16), transparent 60%), radial-gradient(700px 380px at 90% -5%, rgba(255,255,255,.16), transparent 60%), linear-gradient(180deg, #06111f 55%, #0b2a1a); background-attachment: fixed; }
+:root[data-skin="estadio"] body::before { background-image: repeating-linear-gradient(90deg, rgba(74,222,128,.045) 0 46px, transparent 46px 92px); mask-image: linear-gradient(transparent 40%, #000); }
+:root[data-skin="estadio"] header, :root[data-skin="estadio"] .abajo { background: rgba(6, 17, 31, .9); }
+/* Oro y negro */
+:root[data-skin="oro"] { --bg: #070707; --surface: #121110; --ink: #f6efdc; --muted: #a79f8a; --line: #2b2617; --bar: #1c1a13; --gold: #f5c451; --gold-soft: #2a2209; --gold-ink: #fde68a; --grad: linear-gradient(135deg, #fde68a, #c9a227); }
+:root[data-skin="oro"] body { background: radial-gradient(900px 420px at 50% -10%, rgba(245,196,81,.16), transparent 65%), #070707; background-attachment: fixed; }
+:root[data-skin="oro"] body::before { background-image: repeating-linear-gradient(135deg, rgba(245,196,81,.05) 0 1px, transparent 1px 26px); mask-image: none; }
+:root[data-skin="oro"] header, :root[data-skin="oro"] .abajo { background: rgba(7, 7, 7, .92); border-color: #3a3020; }
+:root[data-skin="oro"] .mnum, :root[data-skin="oro"] .rlado b { background: linear-gradient(180deg, #fff3c4, #c9a227); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Pizarra táctica */
+:root[data-skin="pizarra"] { --bg: #12261d; --surface: #183226; --ink: #f2f7f1; --muted: #a9c3b4; --line: #2a4b3b; --bar: #1f3d2f; --gold: #fde68a; --gold-soft: #2c3a1d; --gold-ink: #fef3c7; --grad: linear-gradient(135deg, #fef3c7, #fde68a); }
+:root[data-skin="pizarra"] body { background: #12261d; }
+:root[data-skin="pizarra"] body::before { mask-image: none; opacity: .5; background-size: 360px 360px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M40 60 q60 -40 120 10' stroke-dasharray='8 10'/%3E%3Cpath d='M150 64 l14 -4 -6 14'/%3E%3Ccircle cx='60' cy='200' r='14'/%3E%3Ccircle cx='140' cy='250' r='14'/%3E%3Cpath d='M240 180 l24 24 M264 180 l-24 24'/%3E%3Cpath d='M290 300 l20 20 M310 300 l-20 20'/%3E%3Cpath d='M80 300 q80 30 160 -40' /%3E%3Cpath d='M232 262 l10 -2 -2 10'/%3E%3C/svg%3E"); }
+:root[data-skin="pizarra"] h2, :root[data-skin="pizarra"] .sec { font-family: "Comic Sans MS", "Chalkboard SE", "Segoe Print", cursive; }
+:root[data-skin="pizarra"] header, :root[data-skin="pizarra"] .abajo { background: rgba(18, 38, 29, .93); }
+/* Galaxia (animado) */
+:root[data-skin="galaxia"] { --bg: #070313; --surface: #130b28; --ink: #f3ecff; --muted: #a99bc9; --line: #2a1c4f; --bar: #1c1238; --gold: #c084fc; --gold-soft: #2a1546; --gold-ink: #e9d5ff; --grad: linear-gradient(135deg, #f0abfc, #818cf8); }
+:root[data-skin="galaxia"] body { background: radial-gradient(800px 500px at 80% 10%, rgba(147,51,234,.28), transparent 60%), radial-gradient(700px 500px at 0% 80%, rgba(59,130,246,.22), transparent 60%), #070313; background-attachment: fixed; }
+:root[data-skin="galaxia"] body::before { mask-image: none; background-image: radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 90px 120px, #e9d5ff, transparent), radial-gradient(1px 1px at 160px 60px, #fff, transparent), radial-gradient(1.5px 1.5px at 230px 160px, #c7d2fe, transparent);
+  background-size: 260px 200px; animation: skEstrellas 90s linear infinite; }
+@keyframes skEstrellas { to { background-position: 260px 400px; } }
+:root[data-skin="galaxia"] header, :root[data-skin="galaxia"] .abajo { background: rgba(7, 3, 19, .88); }
+/* Neón Arcade (animado) */
+:root[data-skin="neon"] { --bg: #0b0618; --surface: #150b2c; --ink: #fdf4ff; --muted: #b9a4d6; --line: #3b1d5e; --bar: #1f1040; --gold: #22d3ee; --gold-soft: #0b2a33; --gold-ink: #a5f3fc; --grad: linear-gradient(135deg, #ff2bd6, #22d3ee); }
+:root[data-skin="neon"] body { background: radial-gradient(800px 400px at 50% 110%, rgba(255,43,214,.25), transparent 60%), #0b0618; background-attachment: fixed; }
+:root[data-skin="neon"] body::before { mask-image: linear-gradient(transparent 30%, #000); background-size: 40px 40px; background-image: linear-gradient(rgba(255,43,214,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.14) 1px, transparent 1px); animation: skNeon 4s ease-in-out infinite; }
+@keyframes skNeon { 0%, 100% { opacity: .9; } 50% { opacity: .55; } }
+:root[data-skin="neon"] header, :root[data-skin="neon"] .abajo { background: rgba(11, 6, 24, .9); border-color: #ff2bd6; }
+:root[data-skin="neon"] .mcard, :root[data-skin="neon"] .mhero, :root[data-skin="neon"] .partido, :root[data-skin="neon"] .rpart { box-shadow: 0 0 0 1px rgba(255,43,214,.35), 0 0 18px rgba(34,211,238,.12); }
+@media (prefers-reduced-motion: reduce) { :root[data-skin] body::before { animation: none !important; } }
 </style>
 
 <div class="wrap">
@@ -1077,13 +1119,19 @@ let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorO
   pushI: true, pushG: true, pushF: true, pushAp: true, pushBot: true };
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
+// Temas de la app (paquetes de interfaz): cambian toda la app. Se guardan en el perfil (perfilV1.skin)
+const SKIN_BG = { estadio: "#06111f", oro: "#070707", pizarra: "#12261d", galaxia: "#070313", neon: "#0b0618" };
+function skinActual() { try { const p = JSON.parse(localStorage.getItem("perfilV1") || "null"); return p && SKIN_BG[p.skin] ? p.skin : ""; } catch (e) { return ""; } }
 function aplicarTema() {
-  const oscuro = AJ.tema === "oscuro" || (AJ.tema === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+  const skin = skinActual();
+  const oscuro = !!skin || AJ.tema === "oscuro" || (AJ.tema === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.tema = oscuro ? "oscuro" : "claro";
-  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = oscuro ? "#080d18" : "#f5f7fb";
+  if (skin) document.documentElement.dataset.skin = skin; else delete document.documentElement.dataset.skin;
+  const fondo = skin ? SKIN_BG[skin] : oscuro ? "#080d18" : "#f5f7fb";
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = fondo;
   // En la app, la barra de arriba del móvil con el mismo color que la app
   try { const SB = ES_APP && capPlugin("StatusBar");
-    if (SB) { SB.setBackgroundColor({ color: oscuro ? "#080d18" : "#f5f7fb" }); SB.setStyle({ style: oscuro ? "DARK" : "LIGHT" }); } } catch (e) {}
+    if (SB) { SB.setBackgroundColor({ color: fondo }); SB.setStyle({ style: oscuro ? "DARK" : "LIGHT" }); } } catch (e) {}
 }
 function aplicarUmbral() {
   if (DATOS.umbral0 === undefined) DATOS.umbral0 = DATOS.umbral;
@@ -2502,7 +2550,9 @@ function pintarPantallaAjustes() {
       return `<label class="ajliga"><span>${inf.flag}</span><span class="nl">${esc(inf.nombre)}<small style="color:var(--muted)"> ${esc(inf.pais)}</small></span><input type="checkbox" data-ajliga="${esc(l)}" ${AJ.ocultas.includes(l) ? "" : "checked"}></label>`; }).join("") + `</details>`).join("");
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
   $("vista").innerHTML = `<div class="aj" style="margin-top:12px">
-    <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}</section>
+    <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
+    ${/^negraco/i.test(PERFIL.nombre || "") ? `<section class="ajb"><h3>🧪 Negraco · pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
+      <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div></section>` : ""}
     <section class="ajb"><h3>Lista de partidos</h3>${seg("verEsperados", [["false", "Sin goles esperados"], ["true", "Con goles esperados"]])}
       <p>Los goles (o puntos) esperados de cada equipo a la derecha del partido. El marcador en directo sale siempre.</p></section>
     <section class="ajb"><h3>Al abrir la app</h3>${seg("depInicio", [["ultimo", "El último"], ["f", "⚽"], ["b", "🏀"], ["te", "🎾"], ["e", "🎮"]])}
@@ -3366,6 +3416,9 @@ const CAT = {
     ["carbono", "Carbono", { precio: 1500 }], ["pasion", "Rojo pasión", { precio: 1200 }], ["retro", "Retro 90", { precio: 2000 }],
     ["aurora", "Aurora ✨", { precio: 6000, anim: 1 }], ["lava", "Lava ✨", { precio: 7000, anim: 1 }], ["galaxia", "Galaxia ✨", { precio: 8000, anim: 1 }],
     ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+  // Temas de toda la app
+  skin: [["", "Normal"], ["estadio", "Estadio de noche", { perfil: true }], ["oro", "Oro y negro", { evento: "temporada" }],
+    ["pizarra", "Pizarra táctica", { nivel: 20 }], ["galaxia", "Galaxia ✨", { nivel: 60, anim: 1 }], ["neon", "Neón Arcade ✨", { precio: 10000, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   titulo: [["rango", "Tu rango"], ["profeta", "El Profeta", { precio: 2000 }], ["empates", "Rey del Empate", { precio: 2000 }], ["matematico", "Matemático", { precio: 1500 }],
     ["cazagigantes", "Cazagigantes", { insignia: "giganta" }], ["visionario", "Visionario", { nivel: 35 }], ["barrio", "Leyenda del barrio", { nivel: 70 }],
     ["elegido", "El Elegido", { nivel: 140 }], ["inmortalt", "Inmortal", { nivel: 200 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
@@ -3384,7 +3437,8 @@ const INSIGNIAS = [
   ["nv10", "⭐", "Nivel 10", "Llega al nivel 10"], ["nv50", "🌟", "Nivel 50", "Llega al nivel 50"], ["nv100", "💫", "Nivel 100", "Llega al nivel 100"],
 ];
 function tieneItem(tipo, it) {
-  if (it.evento) return PERFIL.comprados.includes(tipo + ":" + it.id);   // solo para el podio del evento
+  if (it.perfil) return !!PERFIL.nombre;   // regalo por crearte el perfil en la Arena
+  if (it.evento) return PERFIL.comprados.includes(tipo + ":" + it.id);   // solo para el podio del evento o la temporada
   if (!it.precio && !it.nivel && !it.insignia) return true;
   if (it.nivel) return nivelDe(totalXP()).n >= it.nivel;
   if (it.insignia) return datosJugador().insignias.includes(it.insignia);
@@ -3467,6 +3521,12 @@ function procesarRecompensas() {
       for (const k of ["tarjeta:vencedor", "marco:circuito", "avatar:a28"]) if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
     if (!mon) PERFIL.cobrados["mes:" + mes] = 1;
   }
+  // Temporada 1 (octubre–diciembre de 2026): el top 3 se lleva el tema Oro y negro
+  if (AHORA.fecha > TEMP1.hasta && !PERFIL.cobrados["temp1"]) {
+    const ds = dias.filter(d => d >= TEMP1.desde && d <= TEMP1.hasta), yo = ds.length ? clasificacionReto(ds).find(f => f.yo) : null;
+    if (yo && yo.jug && yo.pos <= 3) { cobrar("temp1", `🏆 ${yo.pos}.º de la Temporada 1 · tema Oro y negro`, 20000, [10000, 6000, 4000][yo.pos - 1], { pos: yo.pos }); PERFIL.comprados.push("skin:oro"); }
+    else PERFIL.cobrados["temp1"] = 1;
+  }
   // Subidas de nivel: monedas siempre y regalos cada 5 y 10 niveles
   const nv = nivelDe(totalXP()).n;
   while (PERFIL.nivelCobrado < nv) {
@@ -3502,6 +3562,7 @@ function xpEnCamino() {
 }
 // Vitrina: hasta 5 cosas tuyas para lucir (insignias, avatares o tarjetas). Se guardan como "ins:id", "av:id", "tj:id".
 const VITRINA_MAX = 5;
+const TEMP1 = { desde: "2026-10-01", hasta: "2026-12-31" };
 function vitrina() {
   const dj = datosJugador();
   return (PERFIL.vitrina || []).map(v => v.includes(":") ? v : "ins:" + v).filter(v => {
@@ -3607,7 +3668,7 @@ function centrarCarril() {
 function pintarPersonalizar() {
   const sec = (tipo, titulo, pinta) => `<section class="mcard"><h3>${titulo}</h3><div class="pgrid ${tipo}">${CAT[tipo].map(it => {
     const ok = tieneItem(tipo, it), puesto = PERFIL[tipo] === it.id;
-    const cand = it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
+    const cand = it.perfil ? "Crea tu perfil" : it.evento === "temporada" ? "Top 3 Temporada 1" : it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
     return `<button class="pit ${puesto ? "on" : ""} ${ok ? "" : "lock"}" ${ok ? `data-poner="${tipo}" data-id="${it.id}"` : `data-vista="tienda"`}>${pinta(it)}${ok ? "" : `<small>🔒 ${cand}</small>`}</button>`;
   }).join("")}</div></section>`;
   let h = `<div class="volv"><button class="ico" data-vista="perfil" aria-label="Volver">‹</button></div>
@@ -3615,6 +3676,7 @@ function pintarPersonalizar() {
     <div class="pacc"><button class="apbtn ap2" data-pnombre="1">✏️ Cambiar nombre</button><label class="apbtn ap2 pfoto">📷 Usar mi foto<input type="file" accept="image/*" id="pfotoIn" hidden></label></div></section>`;
   h += sec("avatar", "Avatar", it => `<span class="av" style="--s:44px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`);
   h += sec("marco", "Marco", it => `<span class="av mr-${it.id}" style="--s:44px"><span class="avi" style="background:${avatarDe(PERFIL.avatar).bg}">${PERFIL.avatar === "foto" && PERFIL.foto ? `<img src="${PERFIL.foto}" alt="">` : avatarDe(PERFIL.avatar).e}</span></span><b>${esc(it.n)}</b>`);
+  h += sec("skin", "Tema de la app", it => `<span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b>`);
   h += sec("tarjeta", "Tarjeta", it => `<span class="tjmini tj tj-${it.id}"></span><b>${esc(it.n)}</b>`);
   h += sec("color", "Color del nombre", it => `<b class="nc-${it.id}" style="font-size:15px">${esc(nombreYo())}</b><small>${esc(it.n)}</small>`);
   h += sec("titulo", "Título", it => `<b>${esc(it.id === "rango" ? rangoDe(nivelDe(totalXP()).n) : it.n)}</b>`);
@@ -3635,6 +3697,8 @@ function pintarTienda() {
   <div class="tit"><span class="tico">🔄</span><span class="tin"><b>Segunda oportunidad</b><small>Cambia un pronóstico ya empezado: en fútbol hasta el minuto 15 y en baloncesto durante el 1.er cuarto. Tienes ${PERFIL.comodines.segunda}.</small></span><button class="tbtn" ${mon >= 1500 ? "" : "disabled"} data-comprar="comodin" data-id="segunda">1.500 🪙</button></div>
   <h2 class="sec">🧑 Avatares</h2>${CAT.avatar.filter(i => i.precio).map(it => fila("avatar", it, `<span class="av" style="--s:44px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`)).join("")}
   <h2 class="sec">🖼️ Marcos</h2>${CAT.marco.filter(i => i.precio).map(it => fila("marco", it, `<span class="av mr-${it.id}" style="--s:44px"><span class="avi" style="background:${avatarDe(PERFIL.avatar).bg}">${avatarDe(PERFIL.avatar).e}</span></span>`)).join("")}
+  <h2 class="sec">🎨 Temas de la app</h2>${CAT.skin.filter(i => i.precio).map(it => fila("skin", it, `<span class="skmini sk-${it.id}" style="width:64px;height:44px;flex:none"></span>`)).join("")}
+  <div class="tit"><span class="skmini sk-oro" style="width:64px;height:44px;flex:none"></span><span class="tin"><b>Oro y negro</b><small>Premio de la Temporada 1 (oct–dic): solo para el top 3. No se puede comprar.</small></span></div>
   <h2 class="sec">🪪 Tarjetas</h2>${CAT.tarjeta.filter(i => i.precio).map(it => fila("tarjeta", it, `<span class="tjmini tj tj-${it.id}" style="width:64px;height:44px;flex:none"></span>`)).join("")}
   <h2 class="sec">🏆 Exclusivos de eventos (animados)</h2>
   <div class="tit"><span class="av mr-circuito" style="--s:40px"><span class="avi" style="background:#1e1b4b"><span class="ava-robot">🤖</span></span></span><span class="tin"><b>Set «Vencedor de la máquina»</b><small>Tarjeta, marco Circuito y avatar Robot campeón, todos animados. Solo para los 3 primeros del mes en Gánale a la app.</small></span><span class="tjmini tj tj-vencedor" style="width:54px;height:40px;flex:none"></span></div>
@@ -3644,9 +3708,10 @@ function pintarTienda() {
   $("vista").innerHTML = h;
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-poner],[data-comprar],[data-pnombre],[data-comodin]"); if (!b) return;
+  const b = e.target.closest("[data-poner],[data-comprar],[data-pnombre],[data-comodin],[data-skinprueba]"); if (!b) return;
+  if (b.dataset.skinprueba !== undefined) { PERFIL.skin = b.dataset.skinprueba; guardarPerfil(); aplicarTema(); pintarLista(); return; }
 
-  if (b.dataset.poner) { PERFIL[b.dataset.poner] = b.dataset.id; guardarPerfil(); pintarLista(); return; }
+  if (b.dataset.poner) { PERFIL[b.dataset.poner] = b.dataset.id; guardarPerfil(); if (b.dataset.poner === "skin") aplicarTema(); pintarLista(); return; }
   if (b.dataset.pnombre) {
     const t = prompt("¿Qué nombre quieres que salga en la clasificación? (máx. 16 letras)", PERFIL.nombre || ""); if (t === null) return;
     PERFIL.nombre = t.trim().slice(0, 16); guardarPerfil(); pintarLista(); return;
@@ -3657,7 +3722,7 @@ document.addEventListener("click", e => {
     if (!precio || totalMon() < precio) return;
     const nombre = tipo === "comodin" ? (id === "doble" ? "comodín Doble" : "comodín Segunda oportunidad") : (CAT[tipo].find(i => i.id === id).n || "avatar " + CAT[tipo].find(i => i.id === id).e);
     if (!confirm(`¿Comprar ${nombre} por ${fmtN(precio)} monedas?`)) return;
-    if (tipo === "comodin") PERFIL.comodines[id]++; else { PERFIL.comprados.push(tipo + ":" + id); PERFIL[tipo] = id; }
+    if (tipo === "comodin") PERFIL.comodines[id]++; else { PERFIL.comprados.push(tipo + ":" + id); PERFIL[tipo] = id; if (tipo === "skin") aplicarTema(); }
     PERFIL.mov.push({ k: "compra:" + Date.now(), f: AHORA.fecha, txt: `Compra: ${nombre}`, mon: -precio });
     guardarPerfil(); brindis(`✅ ¡${nombre} es tuyo!`); pintarLista(); return;
   }
