@@ -18,7 +18,7 @@ BASE = f"https://firestore.googleapis.com/v1/projects/{proy}/databases/(default)
 if sys.argv[1:]:
     for uid in sys.argv[1:]:
         r = requests.delete(f"{BASE}/{uid}", headers=H, timeout=30)
-        print("borrado" if r.ok else f"error {r.status_code}", uid)
+        print("::notice::" + ("borrado " if r.ok else f"error {r.status_code} ") + uid)
     sys.exit()
 
 docs, pt = [], ""
@@ -35,5 +35,5 @@ for d in docs:
     filas.append((n.lower(), n, d["name"].split("/")[-1], t, d.get("updateTime", "")))
 for _, n, uid, t, up in sorted(filas):
     act = datetime.fromtimestamp(t / 1000, timezone.utc).strftime("%Y-%m-%d %H:%M") if t else "-"
-    print(f"JUG | {n!r:24} | {uid} | t={act} UTC | doc={up[:16]}")
+    print(f"::notice::JUG | {n!r:24} | {uid} | t={act} UTC | doc={up[:16]}")
 print("total", len(filas))
