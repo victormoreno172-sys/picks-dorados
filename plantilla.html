@@ -3615,12 +3615,17 @@ function fichaOnline() {
     const c = puntosDia(r, x => r.picks[claveReto(x)], r.dobles); reto[d] = [c.pts, c.ok, c.jug, c.vsApp]; }
   const arc = {}, y = partidaArc(diasArc(), picksYoArc, ARCD.cont);
   for (const z of y.log) { if (z.go || z.ok === undefined) continue; const a = arc[z.d] ||= [0, 0, 0]; a[0] += z.g || 0; a[1] += z.ok ? 1 : 0; a[2]++; }
-  return { n: nombreYo(), nl: nombreYo().toLowerCase(), nv: nivelDe(totalXP()).n, t: Date.now(), reto, arc: { d: arc, mejor: y.mejor },
+  const n = nombreOnline();
+  return { n, nl: n.toLowerCase(), nv: nivelDe(totalXP()).n, t: Date.now(), reto, arc: { d: arc, mejor: y.mejor },
     p: { avatar: PERFIL.avatar === "foto" ? "a1" : PERFIL.avatar || "a1", marco: PERFIL.marco || "ninguno", tarjeta: PERFIL.tarjeta || "clasica", color: PERFIL.color || "normal", tt: tituloYo() } };
 }
+// Sin nombre elegido sales como «Jugador XXXX» (con tu código), para que se vea que ya has entrado
+const nombreOnline = () => PERFIL.nombre && PERFIL.nombre.length >= 3 ? PERFIL.nombre : "Jugador " + ((FBA && FBA.uid) || "????").slice(0, 4).toUpperCase();
+const arenaVista = () => { try { return !!localStorage.getItem("arenaVista"); } catch (e) { return false; } };
 let _subH = "", _subTimer = 0;
 async function subirOnline() {
-  if (!fbOn() || !PERFIL.nombre || PERFIL.nombre.length < 3) return;
+  if (!fbOn() || !arenaVista()) return;
+  if (!FBA) await fbToken();
   const f = fichaOnline(), h = JSON.stringify({ ...f, t: 0 }); if (h === _subH) return;
   const tok = await fbToken(); if (!tok) return;
   try {
@@ -3646,7 +3651,7 @@ async function bajarOnline() {
 }
 async function syncOnline(repintar) {
   if (!fbOn()) return;
-  await subirOnline(); await bajarOnline();
+  await subirOnline(); if (repintar || Date.now() - ONL.t > 30000) await bajarOnline();
   if (repintar && !document.getElementById("pxmodal") && ["reto", "temporada", "arcade", "evento", "desafios"].includes(est.vista)) { const y = window.scrollY; pintarLista(); window.scrollTo(0, y); }
 }
 const rkOnline = () => { if (!fbOn()) return false; let m = est.rkModo; if (!m) try { m = localStorage.getItem("rkModo"); } catch (e) {} return (m || "online") === "online"; };
@@ -3657,7 +3662,7 @@ const filaOnline = (o, extra) => ({ n: o.n, uid: o.uid, online: true, perfil: o.
 function chipModo() {
   if (!fbOn()) return "";
   const on = rkOnline(), n = otrosOnline().length, hace = ONL.t ? Math.round((Date.now() - ONL.t) / 60000) : null;
-  const estado = !PERFIL.nombre || PERFIL.nombre.length < 3 ? `Ponte un nombre (3 letras o más) para salir en el ranking online. <button class="lnk" data-pnombre="1">Elegir nombre</button>`
+  const estado = !PERFIL.nombre || PERFIL.nombre.length < 3 ? `Sales como «${esc(nombreOnline())}». <button class="lnk" data-pnombre="1">Elegir mi nombre</button>`
     : ONL.err ? `⚠️ ${esc(ONL.err)}` : !ONL.t ? "Conectando…" : n ? `${n + 1} jugadores · actualizado ${hace ? "hace " + hace + " min" : "ahora"}` : "De momento solo estás tú: pásale la app a alguien 😉";
   return `<div class="rkmodo"><div class="rseg"><button data-rkmodo="online" aria-pressed="${on}">🌐 Online</button><button data-rkmodo="bots" aria-pressed="${!on}">🤖 De prueba</button></div>${on ? `<small>${estado}</small>` : `<small>40 jugadores de prueba</small>`}</div>`;
 }
@@ -3844,6 +3849,8 @@ const ARTE_EV = {
 };
 function pintarDesafios() {
   procesarRecompensas();
+  if (!arenaVista()) { try { localStorage.setItem("arenaVista", "1"); } catch (e) {} }
+  try { syncOnline(false); } catch (e) {}
   let h = `` + barraJugador() + bannerTemporada() + bannerArcade() + `<div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
