@@ -670,6 +670,21 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .rres { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; border-radius: 10px; padding: 6px; }
 .rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
 .rmes p { margin: 6px 0 0; }
+.rcab .req { display: grid; gap: 2px; } .reqe { display: flex; align-items: center; gap: 6px; min-width: 0; } .reqe span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .reqe .mini { width: 18px; height: 18px; }
+.rpart { position: relative; overflow: hidden; isolation: isolate; }
+.rpart::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.rpart.dep-f::before { background:
+  radial-gradient(circle at 100% 50%, transparent 34px, rgba(34,197,94,.22) 35px, rgba(34,197,94,.22) 37px, transparent 38px),
+  linear-gradient(90deg, transparent calc(100% - 1px), rgba(34,197,94,.22) calc(100% - 1px)),
+  repeating-linear-gradient(90deg, rgba(34,197,94,.07) 0 28px, rgba(34,197,94,.02) 28px 56px),
+  linear-gradient(135deg, rgba(22,163,74,.10), transparent 60%); }
+.rpart.dep-b::before { background:
+  radial-gradient(circle at 100% 50%, transparent 46px, rgba(249,115,22,.28) 47px, rgba(249,115,22,.28) 49px, transparent 50px),
+  radial-gradient(circle at 100% 50%, transparent 16px, rgba(249,115,22,.28) 17px, rgba(249,115,22,.28) 19px, transparent 20px),
+  repeating-linear-gradient(90deg, rgba(180,83,9,.08) 0 10px, rgba(180,83,9,.03) 10px 20px),
+  linear-gradient(135deg, rgba(234,88,12,.14), transparent 60%); }
+.rpart.dep-f { border-color: rgba(34,197,94,.35) !important; } .rpart.dep-b { border-color: rgba(249,115,22,.4) !important; }
+.rpart .rq::before { margin-right: 4px; } .rpart.dep-f .rq::before { content: "⚽"; } .rpart.dep-b .rq::before { content: "🏀"; }
 /* Reto: marcador grande y partidos compactos */
 .rmarc { padding: 26px 14px; border-radius: 26px; min-height: 170px; } .rlado b { font-size: 60px !important; line-height: 1; } .rlado small { font-size: 16px !important; font-weight: 700; margin-bottom: 4px; }
 .rvs { font-size: 20px !important; gap: 4px !important; } .rvs small { font-size: 12px !important; }
@@ -3252,7 +3267,8 @@ function pintarReto() {
         : appOk ? `<p class="rres mal">❌ Fallado · la app acierta +${ptsReto(top.p)}</p>` : `<p class="rres">❌ Falláis los dos</p>`;
     } else if (!mio && s.empezado) res = `<p class="rres">No lo pronosticaste</p>`;
     const attrs = s.pos ? ` data-abrirdia="${s.pos[0]}" data-abrirp="${s.pos[1]}" data-desde="reto"` : "";
-    return `<article class="rpart"><button class="rcab"${attrs}><span class="rh">${hora}</span><span class="req">${esc(x.local)}<br>${esc(x.visitante)}</span><span class="rmk">${marc ? `${marc[1]}<br>${marc[2]}` : ""}</span><small>${esc(ligaBase(x.liga))}</small></button>
+    const escu = s.p && s.p.fi && s.p.fi.esc ? s.p.fi.esc : [];
+    return `<article class="rpart dep-${x.dep === "b" ? "b" : "f"}"><button class="rcab"${attrs}><span class="rh">${hora}</span><span class="req"><span class="reqe">${miniEsc(escu[0] || "", x.local)}<span>${esc(x.local)}</span></span><span class="reqe">${miniEsc(escu[1] || "", x.visitante)}<span>${esc(x.visitante)}</span></span></span><span class="rmk">${marc ? `${marc[1]}<br>${marc[2]}` : ""}</span><small>${esc(ligaBase(x.liga))}</small></button>
       <p class="rq">${esc(x.q || "¿Quién gana?")}${r.dobles && r.dobles[k] ? ' <span class="rx2">×2</span>' : ""}</p><div class="rops n${x.ops.length}">${botones}</div>${res}
       ${mio && !s.empezado && (PERFIL.comodines.doble > 0 || (r.dobles && r.dobles[k])) ? `<div class="rcom"><button data-comodin="doble" data-k="${esc(k)}" class="${r.dobles && r.dobles[k] ? "on" : ""}">🃏 ×2 ${r.dobles && r.dobles[k] ? "(quitar)" : `· te quedan ${PERFIL.comodines.doble}`}</button></div>` : ""}
       ${mio && PERFIL.comodines.segunda > 0 && s.empezado && !s.final && enVentanaSegunda(x, s.e) && !(r.segunda && r.segunda[k]) ? `<div class="rcom"><button data-comodin="segunda" data-k="${esc(k)}">🔄 Segunda oportunidad · te quedan ${PERFIL.comodines.segunda}</button></div>` : ""}
