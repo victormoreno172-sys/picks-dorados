@@ -1385,6 +1385,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .jgk b { font: 800 17px var(--display); color: var(--ink); } .jgk small { font-size: 11px; color: var(--muted); }
 .jgh { margin: 6px 0 0; align-self: flex-start; font: 800 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .jgvit { width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } .jgvit .vslot { min-height: 64px; }
+.rpron { display: flex; align-items: center; gap: 12px; } .rpron > span { font-size: 30px; } .rpron b { display: block; font-size: 15px; } .rpron small { display: block; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
 /* ---- Personalizar */
 .pzchips { display: flex; gap: 6px; overflow-x: auto; margin: 2px -2px 4px; padding: 2px; scrollbar-width: none; } .pzchips::-webkit-scrollbar { display: none; }
 .pzchips button { flex: none; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: calc(999px * var(--rad)); padding: 8px 12px; font: 600 13px var(--body); cursor: pointer; }
@@ -4027,11 +4028,29 @@ function pintarEvento() {
     <div class="vacio">Este desafío llega pronto. Mientras tanto, juega a <b>Gánale a la app</b>: tus puntos de este mes contarán para el ranking.</div>
     <button class="apbtn" data-vista="reto" style="max-width:340px;margin:0 auto 14px;display:block">🤖 Jugar a Gánale a la app</button>` + htmlReglas(ev.id);
 }
+function colaReto(m) {
+  let h = "";
+  h += seccionClasif();
+  h += `<section class="mcard rmes"><h3>📅 Este mes</h3><div class="mkpis">
+      <div><b>${m.yo}</b><span>tus puntos</span></div><div><b>${m.app}</b><span>puntos de la app</span></div>
+      <div><b>${m.ganados}/${m.jugados}</b><span>días ganados</span></div><div><b>${m.racha ? "🔥 " + m.racha : "–"}</b><span>racha de días</span></div></div>
+      <p>Has acertado <b>${m.aciertosVsApp}</b> partido${m.aciertosVsApp === 1 ? "" : "s"} en los que la app falló.</p></section>
+    <details class="mcard"><summary><b>¿Cómo se juega?</b></summary><p>Cada día hay ${N_RETO} partidos. Responde la pregunta de cada uno antes de que empiece. La app 🤖 elige siempre lo más probable.</p>
+      <p>Cada partido trae una pregunta distinta: quién gana, cuántos goles habrá, si marcan los dos, los puntos en baloncesto…</p>
+      <p><b>Puntos:</b> acertar vale 10 ÷ la probabilidad: un favorito al 70 % da +14; un empate al 25 %, +40. Si aciertas uno en el que la app falla, <b>+${BONUS_RETO} extra</b>. Solo cuentan los partidos que pronostiques, para ti y para la app.</p>
+      <p>Más detalles en <button class="lnk" data-guia="reto">📘 Cómo funcionan la XP, las monedas y la tienda</button>.</p></details>` + htmlReglas("reto");
+  return h;
+}
 function pintarReto() {
   procesarRecompensas();
-  const r = retoDelDia(diaJuego());
+  const r = diaJuego() < INICIO_RANK ? null : retoDelDia(diaJuego());
   let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>`;
-  if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
+  if (!r) {   // sin partidos todavía: la pantalla del juego igual, con el aviso de cuándo salen
+    const m = resumenMesReto(), pronto = AHORA.hora < "23:30";
+    h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>0</b></div><div class="rvs">${pronto ? "Mañana" : "Hoy"}<small>${pronto ? "Salen a las 23:30" : "Sin partidos"}</small></div><div class="rlado"><small>🤖 App</small><b>0</b></div></section>
+      <section class="mcard rpron"><span>⏳</span><div><b>${pronto ? "Los partidos de mañana salen hoy a las 23:30" : "Hoy no hay partidos para el reto"}</b><small>${pronto ? "Te llegará un aviso cuando estén. Mientras, mira la clasificación y los premios." : "Vuelve mañana: a las 23:30 salen los del día siguiente."}</small></div></section>`;
+    $("vista").innerHTML = h + colaReto(m); return;
+  }
   const c = cuentaReto(r), m = resumenMesReto();
   const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
   // Marcador por puntos (lo que cuenta para el ranking); los aciertos, en pequeño
@@ -4063,15 +4082,7 @@ function pintarReto() {
       ${mio && PERFIL.comodines.segunda > 0 && s.empezado && !s.final && enVentanaSegunda(x, s.e) && !(r.segunda && r.segunda[k]) ? `<div class="rcom"><button data-comodin="segunda" data-k="${esc(k)}">🔄 Segunda oportunidad · te quedan ${PERFIL.comodines.segunda}</button></div>` : ""}
       ${segunda ? `<p class="rres">🔄 Puedes cambiar tu pronóstico ${textoVentana(x)}</p>` : ""}</article>`;
   }).join("");
-  h += seccionClasif();
-  h += `<section class="mcard rmes"><h3>📅 Este mes</h3><div class="mkpis">
-      <div><b>${m.yo}</b><span>tus puntos</span></div><div><b>${m.app}</b><span>puntos de la app</span></div>
-      <div><b>${m.ganados}/${m.jugados}</b><span>días ganados</span></div><div><b>${m.racha ? "🔥 " + m.racha : "–"}</b><span>racha de días</span></div></div>
-      <p>Has acertado <b>${m.aciertosVsApp}</b> partido${m.aciertosVsApp === 1 ? "" : "s"} en los que la app falló.</p></section>
-    <details class="mcard"><summary><b>¿Cómo se juega?</b></summary><p>Cada día hay ${N_RETO} partidos. Responde la pregunta de cada uno antes de que empiece. La app 🤖 elige siempre lo más probable.</p>
-      <p>Cada partido trae una pregunta distinta: quién gana, cuántos goles habrá, si marcan los dos, los puntos en baloncesto…</p>
-      <p><b>Puntos:</b> acertar vale 10 ÷ la probabilidad: un favorito al 70 % da +14; un empate al 25 %, +40. Si aciertas uno en el que la app falla, <b>+${BONUS_RETO} extra</b>. Solo cuentan los partidos que pronostiques, para ti y para la app.</p>
-      <p>Más detalles en <button class="lnk" data-guia="reto">📘 Cómo funcionan la XP, las monedas y la tienda</button>.</p></details>` + htmlReglas("reto");
+  h += colaReto(m);
   $("vista").innerHTML = h;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-evento]"); if (b) est.evento = b.dataset.evento; }, true);
