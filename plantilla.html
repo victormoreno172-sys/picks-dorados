@@ -3231,7 +3231,7 @@ function pintarReto() {
   const c = cuentaReto(r), m = resumenMesReto();
   const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
   // Marcador por puntos (lo que cuenta para el ranking); los aciertos, en pequeño
-  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>Aciertos ${c.okYo} – ${c.okApp}</small><small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
+  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>Aciertos ${c.okYo} – ${c.okApp}</small><small>${c.elegidos}/${r.partidos.length} pronosticados</small>${c.vivos ? `<small>● ${c.vivos} en juego</small>` : ""}</div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
   h += r.partidos.map(x => {
     const s = estadoReto(x), mio = r.picks[claveReto(x)], k = claveReto(x);
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
