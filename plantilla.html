@@ -3030,7 +3030,7 @@ function pintarPantallaAjustes() {
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
   $("vista").innerHTML = `<div class="aj" style="margin-top:12px">${htmlCuenta()}
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
-    ${/^negraco/i.test(PERFIL.nombre || "") ? `<section class="ajb"><h3>🧪 Negraco · pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
+    ${esProbador() ? `<section class="ajb"><h3>🧪 Pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
       <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div>
       <button class="candado ${modoTodo() ? "abierto" : ""}" data-candado="1"><span class="cdi">${modoTodo() ? "🔓" : "🔒"}</span><span><b>${modoTodo() ? "Todo desbloqueado" : "Desbloquear todo"}</b><small>${modoTodo() ? "Puedes ver y ponerte cualquier cosa. Toca para cerrar el candado y volver a lo tuyo." : "Abre el candado para ver y probar todas las personalizaciones. Al cerrarlo vuelves a lo que tienes de verdad."}</small></span></button>
       <p style="margin:12px 0 8px">Pase Premium de la Temporada 0 (de prueba, sin pagar): ${tienePremium() ? "<b>activado</b>" : "desactivado"}.</p>
@@ -3600,9 +3600,14 @@ const fbOn = () => !!(FB && FB.apiKey && FB.projectId);
 const ONL = { lista: [], t: 0, err: "" };
 try { const c = JSON.parse(localStorage.getItem("onlineV1") || "null"); if (c) { ONL.lista = c.lista || []; ONL.t = c.t || 0; } } catch (e) {}
 let FBA = (() => { try { return JSON.parse(localStorage.getItem("fbAuthV1") || "null"); } catch (e) { return null; } })();
-async function fbToken(reintento) {
-  if (!fbOn()) return null;
-  if (FBA && FBA.id && FBA.exp > Date.now() + 60000) return FBA.id;
+let _fbTokP = null;
+function fbToken(reintento) {
+  if (!fbOn()) return Promise.resolve(null);
+  if (FBA && FBA.id && FBA.exp > Date.now() + 60000) return Promise.resolve(FBA.id);
+  if (!_fbTokP) _fbTokP = _fbToken(reintento).finally(() => { _fbTokP = null; });
+  return _fbTokP;
+}
+async function _fbToken(reintento) {
   try {
     let r, j;
     if (FBA && FBA.rt) {
@@ -3618,7 +3623,7 @@ async function fbToken(reintento) {
     ONL.err = ""; return FBA.id;
   } catch (e) {
     ONL.err = String(e.message || e);
-    if (!reintento && FBA && /TOKEN|USER_NOT_FOUND|USER_DISABLED/i.test(ONL.err)) { FBA = null; return fbToken(true); }
+    if (!reintento && FBA && /TOKEN|USER_NOT_FOUND|USER_DISABLED/i.test(ONL.err)) { FBA = null; return _fbToken(true); }
     return null;
   }
 }
@@ -3654,8 +3659,8 @@ async function subirOnline() {
   } catch (e) { ONL.err = "Sin conexión"; }
 }
 const subirPronto = () => { clearTimeout(_subTimer); _subTimer = setTimeout(subirOnline, 2500); };
-async function bajarOnline() {
-  if (!fbOn() || !arenaVista()) return; const tok = await fbToken(); if (!tok) return;
+async function bajarOnline(forzar) {
+  if (!fbOn() || (!arenaVista() && !forzar)) return; const tok = await fbToken(); if (!tok) return;
   try {
     let docs = [], pt = "";
     do {
@@ -3663,7 +3668,9 @@ async function bajarOnline() {
       if (!r.ok) { ONL.err = "No se pudo leer el ranking (" + r.status + ")"; return; }
       docs = docs.concat(j.documents || []); pt = j.nextPageToken || "";
     } while (pt && docs.length < 3000);
-    ONL.lista = docs.map(d => ({ uid: d.name.split("/").pop(), ...fsDec({ mapValue: { fields: d.fields || {} } }) })).filter(x => x.n);
+    const todas = docs.map(d => ({ uid: d.name.split("/").pop(), ...fsDec({ mapValue: { fields: d.fields || {} } }) })).filter(x => x.n), porNom = {};
+    for (const x of todas) { const k = x.nl || x.n.toLowerCase(), y = porNom[k]; if (!y || (FBA && x.uid === FBA.uid) || ((x.t || 0) > (y.t || 0) && !(FBA && y.uid === FBA.uid))) porNom[k] = x; }
+    ONL.lista = Object.values(porNom);
     ONL.t = Date.now(); ONL.err = "";
     try { localStorage.setItem("onlineV1", JSON.stringify({ lista: ONL.lista, t: ONL.t })); } catch (e) {}
   } catch (e) { ONL.err = "Sin conexión"; }
@@ -3718,6 +3725,7 @@ async function entrarArena(modo, nombre, email, clave, yaTengo) {
       CUENTA = { modo: "email", email };
     } else CUENTA = { modo: "invitado" };
     if (nombre && nombre.length >= 3) {
+      if (fbOn()) { say("Un momento…"); await bajarOnline(true); }
       if (otrosOnline().some(o => o.nl === nombre.toLowerCase())) return say("Ese nombre ya lo tiene otro jugador. Elige otro.");
       PERFIL.nombre = nombre.slice(0, 16);
     }
@@ -4166,7 +4174,9 @@ const INSIGNIAS = [
   ["campeon", "🏆", "Campeón del mes", "Gana la clasificación de un mes"],
   ["nv10", "⭐", "Nivel 10", "Llega al nivel 10"], ["nv50", "🌟", "Nivel 50", "Llega al nivel 50"], ["nv100", "💫", "Nivel 100", "Llega al nivel 100"],
 ];
-const modoTodo = () => !!(PERFIL.prueba && PERFIL.prueba.on && /^negraco/i.test(PERFIL.nombre || ""));
+// Probadores: tienen la sección de pruebas en Ajustes (candado, temas y premium de prueba)
+const esProbador = () => /^(negraco|maxibonn)/i.test(PERFIL.nombre || "");
+const modoTodo = () => !!(PERFIL.prueba && PERFIL.prueba.on && esProbador());
 function tieneItem(tipo, it) {
   if (modoTodo()) return true;   // candado abierto (pruebas): todo desbloqueado
   if (it.perfil) return !!PERFIL.nombre;   // regalo por crearte el perfil en la Arena
