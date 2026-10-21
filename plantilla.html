@@ -2561,8 +2561,8 @@ function resolverMias() {
     if (resuelta(a) || a.manual) continue;
     for (const pi of patas(a)) {
       if (pi.ok === true || pi.ok === false || !pi.m) continue;
-      const x = partidoDePierna(pi); if (!x) continue;
-      const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]);
+      const x = partidoDePierna(pi), rg = (DATOS.resultados || {})[`${pi.fecha}|${pi.local}|${pi.visitante}`];
+      const e = x ? estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]) : rg ? { st: "post", m: rg } : null;
       if (!e || e.st !== "post") continue;
       const v = acierta(pi.m, e.m, pi.local, pi.visitante);
       if (v === true || v === false) { pi.ok = v; pi.res = e.m; cambio = true; }
@@ -2915,8 +2915,11 @@ function estadoReto(x) {
   const empezado = !!e || (x.fecha + " " + (x.hora || "99")) <= (AHORA.fecha + " " + AHORA.hora);
   let gana = null;   // mercado que va ganando / ha ganado
   if (e && /^(\d+)-(\d+)$/.test(e.m || "")) gana = x.ops.find(o => acierta(o.m, e.m, x.local, x.visitante) === true);
+  // Si el partido ya no sale en la app (días anteriores), su resultado viene en DATOS.resultados
+  const rg = !(e && e.st === "post") && (DATOS.resultados || {})[`${x.fecha}|${x.local}|${x.visitante}`];
+  if (rg) gana = x.ops.find(o => acierta(o.m, rg, x.local, x.visitante) === true);
   if (x.fin) gana = x.ops.find(o => o.m === x.fin);
-  return { pos, p, e, empezado, final: !!x.fin || (e && e.st === "post"), gana: gana ? gana.m : null };
+  return { pos, p, e, empezado: empezado || !!rg, final: !!x.fin || !!rg || (e && e.st === "post"), gana: gana ? gana.m : null };
 }
 // Puntos de un día: los tuyos y los de la app, solo en los partidos que has pronosticado y ya han acabado
 function cuentaReto(r) {

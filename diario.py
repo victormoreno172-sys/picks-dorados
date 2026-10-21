@@ -89,6 +89,28 @@ except Exception as e:
     print(f"aviso: historial no disponible: {e}")
     traceback.print_exc()
 
+# Resultados de los últimos 10 días (para los desafíos: el móvil los necesita aunque el partido ya no salga en la app)
+try:
+    import json as _json
+    from datetime import timedelta as _td
+    try:
+        with open("previo.json", encoding="utf-8") as _f:
+            _prev = _json.load(_f)
+    except (OSError, ValueError):
+        _prev = {}
+    _res = dict(_prev.get("resultados") or {})
+    for _fuente in (_prev, datos_app):
+        for _d in _fuente.get("dias", []):
+            for _p in _d.get("partidos", []):
+                _r = _p.get("res") or {}
+                if _r.get("st") == "post" and _r.get("m"):
+                    _res[f'{_d["fecha"]}|{_p["local"]}|{_p["visitante"]}'] = _r["m"]
+    _lim = (hoy - _td(days=10)).isoformat()
+    datos_app["resultados"] = {k: v for k, v in _res.items() if k[:10] >= _lim}
+    print(f"  resultados guardados para los desafíos: {len(datos_app['resultados'])}")
+except Exception as e:
+    print(f"aviso: resultados de los desafíos: {e}")
+
 web.escribir(datos_app)
 
 # Pestaña Ligas: clasificaciones, jornadas y equipos (un archivo por liga)
