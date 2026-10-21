@@ -523,7 +523,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
 .pcam { color: #6d28d9; font-weight: 700; }
-.rtab td.rpr { text-align: right; padding-left: 2px; padding-right: 2px; } .rtab th:nth-child(3) { text-align: right; }
+.rrow .rpr { text-align: right; }
 .rprc { display: inline-flex; flex-direction: column; align-items: flex-end; font: 700 11px var(--mono); color: #b45309; background: var(--gold-soft); border-radius: 8px; padding: 3px 6px; white-space: nowrap; }
 .rprc small { font-size: 9.5px; color: #6d28d9; font-weight: 700; }
 .rail { width: 100%; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; padding: 4px 2px 8px; margin-top: 8px; -webkit-overflow-scrolling: touch; }
@@ -547,7 +547,6 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .tj:not(.tj-clasica) .pxp { background: rgba(255,255,255,.22); }
 .tj:not(.tj-clasica) .apbtn.ap2 { background: rgba(255,255,255,.16); color: #fff; border-color: rgba(255,255,255,.25); }
 .tj:not(.tj-clasica) .psig { color: #fde68a; }
-.rjug.tj { border-radius: 12px; padding: 4px 8px 4px 4px; margin: -2px 0; }
 .tjmini { display: block; width: 100%; height: 42px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
 .tj.tj-noche { background: linear-gradient(135deg, #0f172a, #1e3a8a); }
 .tj.tj-cesped { background: repeating-linear-gradient(90deg, #15803d 0 26px, #16a34a 26px 52px); }
@@ -628,7 +627,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .tico { width: 44px; height: 44px; border-radius: 12px; background: var(--bar); display: grid; place-items: center; font: 800 18px var(--body); flex: none; }
 .tbtn { border: 0; border-radius: 999px; padding: 8px 14px; font: 700 13px var(--body); background: #4f46e5; color: #fff; cursor: pointer; white-space: nowrap; }
 .tbtn:disabled { background: var(--bar); color: var(--muted); cursor: default; } .tbtn.ok { background: var(--ok-soft); color: var(--ok-ink); }
-.rjug { display: flex; align-items: center; gap: 8px; } .rjug > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.rjug { display: flex; align-items: center; gap: 8px; min-width: 0; } .rjug > span:last-child { display: flex; flex-direction: column; min-width: 0; }
 .rcom { margin-top: 8px; display: flex; justify-content: center; } .rcom button { border: 1px dashed #a855f7; background: rgba(168, 85, 247, .08); color: #7e22ce; border-radius: 999px; padding: 6px 12px; font: 700 12px var(--body); cursor: pointer; }
 .rcom button.on { background: #a855f7; color: #fff; border-style: solid; } .rx2 { background: #a855f7; color: #fff; border-radius: 6px; padding: 1px 6px; font-size: 11px; }
 .brindis { position: fixed; left: 16px; right: 16px; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 99; background: #1e1b4b; color: #fff; border-radius: 16px; padding: 12px 16px; font-size: 13.5px; line-height: 1.45; box-shadow: 0 10px 30px rgba(0,0,0,.3); transform: translateY(-150%); transition: transform .35s ease; pointer-events: none; }
@@ -659,13 +658,18 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rclt { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .rseg { display: flex; background: var(--bar); border-radius: 999px; padding: 3px; } .rseg button { border: 0; background: none; padding: 5px 12px; border-radius: 999px; font: 600 12px var(--body); color: var(--muted); cursor: pointer; }
 .rseg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-.rtab { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
-.rtab th { font: 600 10.5px var(--mono); color: var(--muted); text-align: left; padding: 4px 6px; } .rtab th:nth-child(n+3) { text-align: right; }
-.rtab td { padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: middle; } .rtab td:first-child { width: 28px; text-align: center; font: 700 12px var(--mono); }
-.rtab td:nth-child(n+3) { text-align: right; font-family: var(--mono); white-space: nowrap; }
-.rtab td small { display: block; font-size: 10.5px; color: var(--muted); }
-.rtab tr.yo td { background: rgba(79, 70, 229, .12); } .rtab tr.yo td:first-child { border-radius: 10px 0 0 10px; } .rtab tr.yo td:last-child { border-radius: 0 10px 10px 0; }
-.rtab tr.app td { background: var(--bar); } .rtab tr.sep td { text-align: center; color: var(--muted); border: 0; padding: 2px; }
+.rtab { display: grid; gap: 6px; margin-top: 6px; }
+.rrow { display: grid; grid-template-columns: 30px minmax(0, 1fr) 46px 34px; gap: 6px; align-items: center; padding: 8px 10px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); font-size: 13px; }
+.rrow.cp { grid-template-columns: 26px minmax(0, 1fr) auto 38px 32px; }
+.rrow.rhead { background: none; border: 0; padding: 0 10px; font: 600 10.5px var(--mono); color: var(--muted); } .rrow.rhead span:nth-child(n+3) { text-align: right; }
+.rrow .rpos { text-align: center; font: 700 12px var(--mono); } .rrow .rac, .rrow .rpt { text-align: right; font-family: var(--mono); white-space: nowrap; }
+.rrow .rjug small { display: block; font-size: 10.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rrow .rjug b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rrow.yo { box-shadow: inset 0 0 0 2px #6366f1; } .rrow.yo:not(.tj) { background: rgba(79, 70, 229, .14); }
+.rrow.app:not(.tj) { background: var(--bar); }
+.rrow.tj .rprc { background: rgba(0,0,0,.35); color: #fde68a; } .rrow.tj .rprc small { color: #e9d5ff; }
+.rrow.tj > span { position: relative; z-index: 1; } .rrow.tj .rpos, .rrow.tj .rac, .rrow.tj .rpt { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.rsep { text-align: center; color: var(--muted); font-size: 12px; }
 .rq { margin: 0 0 7px; font-size: 13px; font-weight: 700; color: #4f46e5; }
 .evs { display: grid; gap: 14px; }
 .ev { position: relative; overflow: hidden; width: 100%; height: 132px; display: flex; align-items: flex-end; text-align: left; border: 0; border-radius: 22px; padding: 16px; color: #fff; cursor: pointer; font: inherit; box-shadow: 0 10px 24px rgba(15, 23, 42, .22); isolation: isolate; }
@@ -3011,13 +3015,16 @@ function premioDe(tipo, f) {
   return { mon, xp, fis: tipo === "mes" && f.pos <= 3 ? ["👕", "⚽", "🧣"][f.pos - 1] + "✨" : "" };
 }
 const kXP = n => n >= 1000 ? (n / 1000).toLocaleString("es-ES") + "k" : String(n);
-function tablaClasif(filas, todas, tipo) {
-  const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10);
-  const prem = f => { const x = premioDe(tipo, f); return PREMIOS_RANK[tipo] ? `<td class="rpr">${x ? `<span class="rprc">${x.fis ? x.fis + " " : ""}${fmtN(x.mon)} 🪙<small>+${kXP(x.xp)} XP</small></span>` : ""}</td>` : ""; };
+// Clasificación de los desafíos: cada fila es una tarjeta (el fondo del jugador) de lado a lado,
+// con el puesto, el jugador, el premio, los aciertos y los puntos encima
+function tablaRanking(filas, todas, tipo) {
+  const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10), conPrem = !!PREMIOS_RANK[tipo];
+  const prem = f => { const x = premioDe(tipo, f); return conPrem ? `<span class="rpr">${x ? `<span class="rprc">${x.fis ? x.fis + " " : ""}${fmtN(x.mon)} 🪙<small>+${kXP(x.xp)} XP</small></span>` : ""}</span>` : ""; };
   const av = f => f.app ? `<span class="av" style="--s:30px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(f.perfil, 30);
-  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug${f.perfil && f.perfil.tarjeta && f.perfil.tarjeta !== "clasica" ? " tj tj-" + f.perfil.tarjeta : ""}">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td>${prem(f)}<td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
-  const nc = PREMIOS_RANK[tipo] ? 5 : 4;
-  return `<table class="rtab"><tr><th>#</th><th>Jugador</th>${PREMIOS_RANK[tipo] ? "<th>Premio</th>" : ""}<th>Aciertos</th><th>Pts</th></tr>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<tr class="sep"><td colspan="${nc}">···</td></tr>` + fila(yo) : ""}</table>`;
+  const tj = f => f.perfil && f.perfil.tarjeta && f.perfil.tarjeta !== "clasica" ? " tj tj-" + f.perfil.tarjeta : "";
+  const fila = f => `<div class="rrow${conPrem ? " cp" : ""} ${f.yo ? "yo" : f.app ? "app" : ""}${tj(f)}"><span class="rpos">${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</span>
+    <span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span>${prem(f)}<span class="rac">${f.ok}/${f.jug}</span><span class="rpt"><b>${f.pts}</b></span></div>`;
+  return `<div class="rtab"><div class="rrow rhead${conPrem ? " cp" : ""}"><span>#</span><span>Jugador</span>${conPrem ? "<span>Premio</span>" : ""}<span>Acier.</span><span>Pts</span></div>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<div class="rsep">···</div>` + fila(yo) : ""}</div>`;
 }
 function seccionClasif() {
   const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
@@ -3030,7 +3037,7 @@ function seccionClasif() {
   return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
     ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
     <p>${filas.some(f => f.pts) ? `Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.` : "Aún no hay puntos: llegan cuando acaben los partidos."}</p>
-    ${premios}${tablaClasif(filas, false, vista)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa del mes</button>
+    ${premios}${tablaRanking(filas, false, vista)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa del mes</button>
     <p class="apnota">De momento son 40 jugadores de prueba con estilos distintos, para ver cómo funciona. Cuando haya ranking online, serán personas de verdad.</p></section>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-guia]"); if (!b) return; est.volverGuia = b.dataset.guia; est.vista = "guia"; window.scrollTo({ top: 0 }); pintarLista(); });
@@ -3124,7 +3131,7 @@ function pintarEvento() {
     const filas = clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
     $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
       <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>Ranking de ${["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>Suma de Gánale a la app de todo el mes</small></span></section>
-      <section class="mcard">${tablaClasif(filas, true, "mes")}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
+      <section class="mcard">${tablaRanking(filas, true, "mes")}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
     return;
   }
   $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
