@@ -771,6 +771,11 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .bolpata button { border: 0; background: var(--bar); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: var(--ink); flex: none; }
 .bolbar { position: fixed; left: 12px; right: 12px; bottom: calc(78px + env(safe-area-inset-bottom, 0px)); z-index: 60; border: 0; border-radius: 14px; padding: 11px 14px; background: var(--gold); color: #1a1200; font: 600 14px var(--body); box-shadow: 0 6px 20px rgba(0,0,0,.25); display: flex; justify-content: space-between; cursor: pointer; }
 .bolbar[hidden] { display: none; }
+.mtabs { margin: 0 auto 12px; width: max-content; }
+.dscroll { overflow-x: auto; margin: 6px -4px 0; } .dtab { border-collapse: collapse; font-size: 12px; min-width: 520px; width: 100%; }
+.dtab th { font: 600 10px var(--mono); color: var(--muted); text-align: right; padding: 6px 5px; white-space: nowrap; } .dtab th:first-child { text-align: left; }
+.dtab td { padding: 7px 5px; border-top: 1px solid var(--line); text-align: right; font-family: var(--mono); white-space: nowrap; } .dtab td:first-child { text-align: left; font-family: var(--body); }
+.dtab td small { display: block; font-size: 10px; color: var(--muted); } .dtab .pos { color: #16a34a; } .dtab .neg { color: var(--red); } .dtab tr.dtot td { font-weight: 700; border-top: 2px solid var(--line); }
 /* ---------- pantalla Mis apuestas ---------- */
 .mtarj { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 18px; box-shadow: var(--sombra); padding: 12px; margin-bottom: 12px; }
 .mtarj.bien { border-left-color: #16a34a; } .mtarj.mal { border-left-color: var(--red); }
@@ -2709,6 +2714,8 @@ function pintarMisApuestas() {
       <div class="apfila"><input id="miniV" inputmode="decimal" placeholder="Por ejemplo 73,51" value="${esc(est.miniV || "")}"><button class="apbtn" data-apinicial="1">Empezar</button></div></section>`;
     return;
   }
+  h += `<div class="rseg mtabs"><button data-mvista="resumen" aria-pressed="${est.mvista !== "diario"}">Resumen</button><button data-mvista="diario" aria-pressed="${est.mvista === "diario"}">Diario</button></div>`;
+  if (est.mvista === "diario") { $("vista").innerHTML = h + pintarDiarioMias(); return; }
   const c = cuentas(), L = MIAS.apuestas;
   const hora = a => a.fecha + (a.hora || "99");
   const pend = L.filter(a => !resuelta(a)).sort((x, y) => hora(x).localeCompare(hora(y)));
@@ -2751,6 +2758,50 @@ function pintarMisApuestas() {
   h += `<p class="nota" style="text-align:center;color:var(--muted);font-size:12px">Tus apuestas se guardan en este móvil. Se marcan solas al acabar el partido; si alguna no se marca, usa ✅ o ❌.</p>`;
   $("vista").innerHTML = h;
 }
+// ---- Medidor diario (como en el bot): cada apuesta cuenta en el día en que empieza
+function diasMias() {
+  const dias = [...new Set(MIAS.apuestas.map(a => a.fecha))].sort();
+  let saldo = MIAS.inicial || 0;
+  return dias.map(d => {
+    const del = MIAS.apuestas.filter(a => a.fecha === d), res = del.filter(resuelta);
+    const apostado = del.reduce((t, a) => t + a.importe, 0);
+    const cobrado = res.reduce((t, a) => t + (a.ok === true ? a.importe * a.cuota : a.ok === null ? a.importe : 0), 0);
+    const ganancia = res.reduce((t, a) => t + ganMia(a), 0), apRes = res.filter(a => a.ok !== null).reduce((t, a) => t + a.importe, 0);
+    const ini = saldo; saldo = ini - apostado + cobrado;
+    return { d, n: del.length, g: del.filter(a => a.ok === true).length, p: del.filter(a => a.ok === false).length, pend: del.length - res.length,
+      ini, apostado, cobrado, ganancia, roi: apRes ? ganancia / apRes : null, fin: saldo };
+  });
+}
+function pintarDiarioMias() {
+  const F = diasMias();
+  if (!F.length) return `<div class="vacio">Aún no hay días con apuestas.</div>`;
+  const cerr = F.filter(f => !f.pend), pos = cerr.filter(f => f.ganancia > 0).length, neg = cerr.filter(f => f.ganancia < 0).length;
+  const mejor = cerr.length ? cerr.reduce((a, b) => b.ganancia > a.ganancia ? b : a) : null, peor = cerr.length ? cerr.reduce((a, b) => b.ganancia < a.ganancia ? b : a) : null;
+  const tot = F.reduce((t, f) => ({ ap: t.ap + f.apostado, co: t.co + f.cobrado, ga: t.ga + f.ganancia }), { ap: 0, co: 0, ga: 0 });
+  const fd = d => { const x = new Date(d + "T12:00:00"); return `${x.getDate()}/${x.getMonth() + 1}`; };
+  const n2 = x => x.toFixed(2).replace(".", ",");
+  const cls = x => x > 0 ? "pos" : x < 0 ? "neg" : "";
+  return `<section class="mhero"><div class="mlab">RESUMEN POR DÍAS</div><div class="mkpis">
+      <div><b>${F.length}</b><span>días</span></div><div><b class="pos">${pos}</b><span>en positivo</span></div><div><b class="neg">${neg}</b><span>en negativo</span></div>
+      <div><b class="${cls(cerr.length ? cerr.reduce((t, f) => t + f.ganancia, 0) / cerr.length : 0)}">${cerr.length ? sigM(cerr.reduce((t, f) => t + f.ganancia, 0) / cerr.length) : "–"}</b><span>media por día</span></div>
+      <div><b class="pos">${mejor && mejor.ganancia > 0 ? sigM(mejor.ganancia) : "–"}</b><span>mejor día${mejor && mejor.ganancia > 0 ? " (" + fd(mejor.d) + ")" : ""}</span></div>
+      <div><b class="neg">${peor && peor.ganancia < 0 ? sigM(peor.ganancia) : "–"}</b><span>peor día${peor && peor.ganancia < 0 ? " (" + fd(peor.d) + ")" : ""}</span></div>
+      <div><b>${eurosM(F[F.length - 1].fin)}</b><span>saldo actual</span></div><div><b class="${cls(tot.ga)}">${sigM(tot.ga)}</b><span>beneficio total</span></div></div></section>
+    <section class="mcard"><div class="rclt"><h3>📅 Tabla diaria</h3><button class="tbtn" data-mcsv="1">⬇ Excel</button></div>
+      <div class="dscroll"><table class="dtab"><tr><th>Día</th><th>Saldo inicio</th><th>Apostado</th><th>Cobrado</th><th>Ganancia</th><th>ROI</th><th>Saldo fin</th></tr>
+      ${F.slice().reverse().map(f => `<tr><td><b>${fd(f.d)}</b>${f.pend ? " ⏳" : ""}<small>✅${f.g} ❌${f.p}${f.pend ? " ⏳" + f.pend : ""}</small></td><td>${n2(f.ini)}</td><td>${n2(f.apostado)}</td><td>${n2(f.cobrado)}</td><td class="${cls(f.ganancia)}">${sigM(f.ganancia).replace(" €", "")}</td><td class="${cls(f.roi || 0)}">${f.roi === null ? "–" : (f.roi >= 0 ? "+" : "") + Math.round(f.roi * 100) + " %"}</td><td><b>${n2(f.fin)}</b></td></tr>`).join("")}
+      <tr class="dtot"><td>Total</td><td>${n2(MIAS.inicial || 0)}</td><td>${n2(tot.ap)}</td><td>${n2(tot.co)}</td><td class="${cls(tot.ga)}">${sigM(tot.ga).replace(" €", "")}</td><td></td><td><b>${n2(F[F.length - 1].fin)}</b></td></tr></table></div>
+      <p class="apnota">Cada apuesta cuenta en el día en que empieza (aunque acabe de madrugada). Saldo = lo que tienes en la casa: al apostar se resta y al cobrar se suma. ⏳ = días con apuestas sin resolver.</p></section>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-mvista],[data-mcsv]"); if (!b) return;
+  if (b.dataset.mvista) { est.mvista = b.dataset.mvista; pintarLista(); return; }
+  const filas = [["Dia", "Saldo inicio", "Apostado", "Cobrado", "Ganancia", "ROI", "Saldo fin", "Acertadas", "Falladas", "Pendientes"]]
+    .concat(diasMias().map(f => [f.d, f.ini, f.apostado, f.cobrado, f.ganancia, f.roi === null ? "" : (f.roi * 100).toFixed(1), f.fin, f.g, f.p, f.pend].map(x => typeof x === "number" ? x.toFixed(2).replace(".", ",") : x)));
+  const csv = "\ufeff" + filas.map(r => r.join(";")).join("\n");
+  try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); a.download = "mis-apuestas-diario.csv"; a.click(); }
+  catch (x) { alert("No se ha podido descargar en este móvil."); }
+});
 // Formulario de la pestaña Probabilidades: apuntar una apuesta de este partido
 function formApuesta(p, dia) {
   const f = est.apf && est.apf.k === p.local + "|" + p.visitante ? est.apf : (est.apf = { k: p.local + "|" + p.visitante, m: "", c: "", i: "", otro: "" });
