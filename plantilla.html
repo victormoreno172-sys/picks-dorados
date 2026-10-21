@@ -1429,7 +1429,13 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .ppav { width: 26px; height: 26px; display: grid; place-items: center; font-size: 15px; border: 2px solid #000; }
 .ppsw { display: block; width: 34px; height: 22px; border: 2px solid #000; border-radius: 0 !important; overflow: hidden; }
 .ppsw.ppmr { width: 26px; height: 26px; display: grid; place-items: center; } .ppsw.ppmr b { width: 12px; height: 12px; background: #1a1c2c; border: 1px solid #000; }
-.ppaa { font: 13px "Press Start 2P", monospace; } .ppti { font-size: 18px; }
+.ppaa { font: 13px "Press Start 2P", monospace; }
+.ppmarco { display: grid; place-items: center; } .ppmarco .av { --s: 24px !important; }
+.ppsw.ppskin { position: relative; background: linear-gradient(135deg, var(--hero1), var(--hero2)) !important; }
+.ppsw.ppskin i { position: absolute; left: 3px; right: 3px; top: 3px; height: 4px; background: var(--acc); } .ppsw.ppskin b { position: absolute; left: 3px; bottom: 3px; width: 45%; height: 6px; background: var(--acc2); border: 1px solid #000; }
+.ppcol { display: grid; place-items: center; min-width: 32px; height: 24px; padding: 0 3px; background: #0b0618; border: 2px solid #000; } .ppcol b { font: 700 13px "Pixelify Sans", var(--body); }
+.pptit { display: inline-flex; align-items: center; gap: 2px; padding: 3px 4px; background: #1a1c2c; border: 2px solid #ffcd75; box-shadow: 2px 2px 0 #000; } .pptit b { font: 7px "Press Start 2P", monospace; color: #ffcd75; letter-spacing: .5px; }
+.pmapa .pesc.gordo .pei { height: 34px !important; } .ppti { font-size: 18px; }
 .ppromo { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; padding: 10px; background: linear-gradient(135deg, #4b1f7a, #7b3fbf); border: 3px solid #000; box-shadow: 3px 3px 0 #000; }
 .ppromo b { display: block; font: 10px "Press Start 2P", monospace; color: #ffcd75; text-shadow: 2px 2px 0 #000; } .ppromo small { display: block; font: 400 12px/1.3 "Pixelify Sans", var(--body); color: #f3e8ff; margin-top: 4px; }
 .ppromo.on { display: block; background: linear-gradient(135deg, #1e4d3a, #38b764); } .ppbtn { flex: none; width: auto !important; background: #ffcd75 !important; color: #1a1c2c !important; text-shadow: none !important; font-size: 9px !important; padding: 10px 8px !important; }
@@ -4832,16 +4838,24 @@ function px(nombre, tam = 18) {
   return `<svg class="pxs" viewBox="0 0 ${w} ${h}" width="${tam}" height="${Math.round(tam * h / w)}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
 }
 const pxCom = (id, g) => `<span class="pxcom ${id === "doble" ? "c2" : "c3"} ${g ? "g" : ""}">${id === "doble" ? "×2" : "↻"}</span>`;
+// Miniatura real de cada objeto del pase: el marco puesto en tu avatar, los colores del tema, el título como chip…
+function icoObj(g) {
+  if (g.t === "avatar") return `<span class="ppav" style="background:${g.it.bg}">${avE(g.it)}</span>`;
+  if (g.t === "tarjeta") return `<span class="ppsw tj tj-${g.id}"></span>`;
+  if (g.t === "marco") return `<span class="ppmarco">${avatarHTML({ ...PERFIL, marco: g.id }, 24)}</span>`;
+  if (g.t === "skin") return `<span class="ppsw ppskin skp-${g.id}"><i></i><b></b></span>`;
+  if (g.t === "color") return `<span class="ppcol"><b class="nc-${g.id}">Aa</b></span>`;
+  if (g.t === "titulo") return `<span class="pptit">${px("estrella", 8)}<b>TÍTULO</b></span>`;
+  return `<span class="pxobj">${g.it && g.it.e || "🎁"}</span>`;
+}
 function pintarTemporada() {
   procesarRecompensas();
   const est = totalEst(), nE = escalonDe(est), dentro = est - nE * EST_ESCALON, lg = estadoLogin();
   const dsT = diasTemporada(), filas = clasificacionTemp(dsT), yo = filas.find(f => f.yo);
   const icoRegalo = g => g.t === "mon" ? px("moneda", 22) : g.t === "xp" ? `<span class="pxxp">XP</span>` : g.t === "comodin" ? pxCom(g.id)
-    : `<span class="pxobj">${g.t === "skin" ? "🎨" : g.t === "tarjeta" ? "🪪" : g.t === "marco" ? "🖼️" : g.t === "titulo" ? "🏷️" : g.t === "avatar" ? avE(g.it) : g.it.e}</span>`;
+    : g.t === "avatar" && !SPRITES[g.id] ? `<span class="pxobj">${avE(g.it)}</span>` : icoObj(g);
   const prem = tienePremium();
-  const icoPrem = g => g.t === "avatar" ? `<span class="ppav" style="background:${g.it.bg}">${avE(g.it)}</span>` : g.t === "tarjeta" ? `<span class="ppsw tj tj-${g.id}"></span>`
-    : g.t === "marco" ? `<span class="ppsw ppmr mr-${g.id}"><b></b></span>` : g.t === "skin" ? `<span class="ppsw sk-${g.id}"></span>`
-    : g.t === "color" ? `<b class="ppaa nc-${g.id}">Aa</b>` : `<span class="ppti">🏷️</span>`;
+  const icoPrem = icoObj;
   const celda = n => { const g = regaloPase(n), ok = nE >= n, gordo = !["mon", "xp", "comodin"].includes(g.t), gp = regaloPrem(n);
     return `<div class="pesc ${ok ? "ok" : ""} ${gordo ? "gordo" : ""} ${g.t === "comodin" ? "com" : ""} ${n === nE + 1 ? "sig" : ""}"><span class="pfree" data-pver="f${n}"><span class="pei">${icoRegalo(g)}</span><small>${esc(g.t === "mon" ? g.mon + " 🪙" : g.t === "comodin" ? (g.id === "doble" ? "Comodín" : "2.ª opor.") : g.txt)}</small>${ok ? `<i>${px("ok", 12)}</i>` : ""}</span>
       <span data-pver="p${n}" class="pprem ${prem ? "" : "lock"} ${prem && ok ? "ok" : ""} ${gp.it.anim ? "anim" : ""}"><span class="ppi">${icoPrem(gp)}</span><small>${esc(gp.txt)}</small>${prem ? "" : '<em>🔒</em>'}</span></div>`; };
