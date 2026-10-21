@@ -1089,6 +1089,13 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .tbanner b { font: 13px "Press Start 2P", var(--mono); color: #fff; line-height: 1.4; }
 .tbanner em { font: 700 11px var(--mono); font-style: normal; color: #a7f0c2; }
 .tbbar, .pbarra { display: block; height: 10px; background: #333c57; border: 2px solid #000; } .tbbar i, .pbarra i { display: block; height: 100%; background: repeating-linear-gradient(90deg, #38b764 0 6px, #a7f070 6px 12px); }
+.tgrupo { position: relative; margin: 0 0 16px; padding: 10px 10px 12px; border: 3px solid #ffcd75; border-radius: 4px; box-shadow: 6px 6px 0 #000; image-rendering: pixelated;
+  background: #1a1c2c repeating-linear-gradient(0deg, rgba(255,205,117,.05) 0 2px, transparent 2px 6px); }
+.tgrupo .tbanner { margin: 0; border: 0; box-shadow: none; padding: 6px 4px 8px; background-color: transparent; }
+.tgrupo .tgun { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; }
+.tgrupo .tgun span { flex: 1; height: 0; border-top: 3px dashed #ffcd75; opacity: .7; }
+.tgrupo .tgun small { font: 7px "Press Start 2P", monospace; color: #ffcd75; letter-spacing: .06em; white-space: nowrap; }
+.tgrupo .arcban { margin: 0; width: calc(100% - 6px); margin-left: 3px; box-shadow: 0 0 0 3px #ff77a8, 4px 4px 0 3px #000; }
 .tbreg { position: absolute; top: -10px; right: 10px; font: 9px "Press Start 2P", var(--mono); background: #b13e53; color: #fff; padding: 5px 6px; border: 2px solid #000; animation: pxSalto .8s steps(2) infinite; }
 .tcab0 { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; background: #1a1c2c; color: #fff; border: 3px solid #ffcd75; box-shadow: 6px 6px 0 #000; padding: 18px 14px 14px; margin-bottom: 14px; border-radius: 4px; }
 .tcab0 .tbart { width: 96px; height: 72px; animation: pxSalto 1.2s steps(2) infinite; } .tcab0 > b { font: 28px "Press Start 2P", var(--mono); color: #a7f070; text-shadow: 4px 4px 0 #000; }
@@ -4011,7 +4018,7 @@ function pintarDesafios() {
   procesarRecompensas();
   if (!arenaVista()) { try { localStorage.setItem("arenaVista", "1"); } catch (e) {} }
   try { syncOnline(false); } catch (e) {}
-  let h = `` + barraJugador() + bannerTemporada() + bannerArcade() + `<div class="evs">`;
+  let h = `` + barraJugador() + grupoTemporada() + `<div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
     if (ev.id === "premios") {
@@ -4908,6 +4915,8 @@ function pintarTemporada() {
   if (sg) { const c = sg.closest(".pcol"); tr.scrollLeft = c.offsetLeft - tr.offsetLeft - (tr.clientWidth - c.offsetWidth) / 2; }
   else if (tr && nE >= ESCALONES) tr.scrollLeft = tr.scrollWidth;
 }
+// ---- La temporada y su evento juntos en la Arena, en un mismo bloque, para que se vea que el evento es de la temporada
+const grupoTemporada = () => `<section class="tgrupo">${bannerTemporada()}<div class="tgun"><span></span><small>▼ EVENTO DE ${TEMP.nombre.toUpperCase()} ▼</small><span></span></div>${bannerArcade()}</section>`;
 // ---- Rectángulo del evento en la Arena y en la pantalla de la temporada
 function bannerArcade() {
   if (diaJuego() < ARC.desde) return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b><span class="arcb2">${ARC.desde === sumaDias(AHORA.fecha, 1) ? "¡Partidos a las 23:30!" : "¡Empieza el " + fCorta(ARC.desde) + "!"} Mira los premios</span><span class="arcb3">PRONTO</span></button>`;
