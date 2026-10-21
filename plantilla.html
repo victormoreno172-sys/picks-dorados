@@ -670,6 +670,17 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .rres { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; border-radius: 10px; padding: 6px; }
 .rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
 .rmes p { margin: 6px 0 0; }
+/* Reto: marcador grande y partidos compactos */
+.rmarc { padding: 20px 14px; border-radius: 24px; } .rlado b { font-size: 46px !important; line-height: 1.05; } .rlado small { font-size: 14px !important; font-weight: 700; }
+.rlado em { font-style: normal; font: 700 11.5px var(--mono); background: rgba(255,255,255,.18); border-radius: 999px; padding: 3px 8px; margin-top: 4px; white-space: nowrap; }
+.rvs { font-size: 17px !important; } .rvs small { font-size: 11.5px !important; }
+.rpart { padding: 8px 10px 10px !important; margin-bottom: 8px !important; border-radius: 16px !important; }
+.rcab { grid-template-columns: 46px minmax(0, 1fr) 24px !important; padding-bottom: 4px !important; gap: 6px !important; }
+.rcab .req { font-size: 13px !important; line-height: 1.3 !important; } .rcab .rh { font-size: 11px !important; } .rcab .rmk { font-size: 13px !important; } .rcab small { font-size: 10px !important; }
+.rq { font-size: 12px !important; margin: 0 0 5px !important; }
+.rop { padding: 5px 3px 5px !important; border-radius: 10px !important; gap: 0 !important; } .rop .rc { font-size: 11px !important; } .rop .rn { font-size: 11px !important; } .rop .rp { font-size: 10px !important; } .rop .rpt { font-size: 11px !important; }
+.rres { font-size: 12px !important; padding: 4px !important; margin-top: 6px !important; } .rcom { margin-top: 6px !important; }
+
 .rclt { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .rseg { display: flex; background: var(--bar); border-radius: 999px; padding: 3px; } .rseg button { border: 0; background: none; padding: 5px 12px; border-radius: 999px; font: 600 12px var(--body); color: var(--muted); cursor: pointer; }
 .rseg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
@@ -2937,7 +2948,7 @@ function estadoReto(x) {
 }
 // Puntos de un día: los tuyos y los de la app, solo en los partidos que has pronosticado y ya han acabado
 function cuentaReto(r) {
-  let yo = 0, app = 0, vivos = 0, jugados = 0, ganadas = 0;
+  let yo = 0, app = 0, vivos = 0, jugados = 0, ganadas = 0, okYo = 0, okApp = 0;
   let cambio = false;
   for (const x of r.partidos) {
     const s = estadoReto(x);
@@ -2947,12 +2958,14 @@ function cuentaReto(r) {
     jugados++;
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
     const yoOk = mio === s.gana, appOk = top.m === s.gana;
+    if (yoOk) okYo++;
+    if (appOk) okApp++;
     if (yoOk) yo += (ptsReto(x.ops.find(o => o.m === mio).p) + (appOk ? 0 : BONUS_RETO)) * (r.dobles && r.dobles[claveReto(x)] ? 2 : 1);
     if (appOk) app += ptsReto(top.p);
     if (yoOk && !appOk) ganadas++;
   }
   if (cambio) guardarReto();
-  return { yo, app, vivos, jugados, ganadas, elegidos: Object.keys(r.picks).length };
+  return { yo, app, vivos, jugados, ganadas, okYo, okApp, elegidos: Object.keys(r.picks).length };
 }
 // ---- Jugadores de prueba (40 bots con estilos distintos) para ver cómo queda la clasificación.
 // Cada uno decide antes de los partidos, siempre igual para el mismo partido (semilla por nombre y partido).
@@ -3166,7 +3179,8 @@ function pintarReto() {
   if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
   const c = cuentaReto(r), m = resumenMesReto();
   const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
-  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
+  const acTxt = (n, t) => `<em>✅ ${n}/${t} acierto${t === 1 ? "" : "s"}</em>`;
+  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b>${acTxt(c.okYo, c.jugados)}</div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b>${acTxt(c.okApp, c.jugados)}</div></section>`;
   h += r.partidos.map(x => {
     const s = estadoReto(x), mio = r.picks[claveReto(x)], k = claveReto(x);
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
