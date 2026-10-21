@@ -1,5 +1,5 @@
 name: App Android
-# Compila la app (APK) de Picks Dorados: un contenedor que abre la web publicada, así que la app se
+# Compila la app (APK) de Clávala: un contenedor que abre la web publicada, así que la app se
 # actualiza sola con cada cambio de la web. Solo hay que recompilar cuando cambia algo del propio
 # contenedor (icono, nombre, pantalla de inicio, notificaciones...).
 on:
@@ -33,7 +33,7 @@ jobs:
           cd app
           npm install --no-audit --no-fund
           npx cap add android
-          npx capacitor-assets generate --android --iconBackgroundColor '#07110c' --iconBackgroundColorDark '#07110c' --splashBackgroundColor '#07110c' --splashBackgroundColorDark '#07110c'
+          npx capacitor-assets generate --android --iconBackgroundColor '#0b1220' --iconBackgroundColorDark '#0b1220' --splashBackgroundColor '#0b1220' --splashBackgroundColorDark '#0b1220'
           # Firebase (notificaciones): la configuración de la app va en un secreto
           printf '%s' "$FIREBASE_APP" > android/app/google-services.json
           python -c "import json; j=json.load(open('android/app/google-services.json')); print('firebase:', j['project_info']['project_id'])"
@@ -70,14 +70,15 @@ jobs:
           fi
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           "$BT/zipalign" -p -f 4 app/android/app/build/outputs/apk/release/app-release-unsigned.apk alineada.apk
-          "$BT/apksigner" sign --ks firma.jks --ks-pass env:CLAVE --ks-key-alias picks --key-pass env:CLAVE --out PicksDorados.apk alineada.apk
-          "$BT/apksigner" verify PicksDorados.apk && ls -la PicksDorados.apk
+          "$BT/apksigner" sign --ks firma.jks --ks-pass env:CLAVE --ks-key-alias picks --key-pass env:CLAVE --out Clavala.apk alineada.apk
+          "$BT/apksigner" verify Clavala.apk && ls -la Clavala.apk
+          cp Clavala.apk PicksDorados.apk   # el enlace antiguo sigue funcionando
           rm -f firma.jks
 
       - name: Publicar la descarga
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view app >/dev/null 2>&1 || gh release create app --title "App Android" --notes "Picks Dorados para Android. Descarga PicksDorados.apk e instálala." --prerelease
-          gh release upload app PicksDorados.apk --clobber
-          gh release edit app --notes "Picks Dorados para Android · versión 0.2.${{ github.run_number }}. Descarga PicksDorados.apk e instálala (encima de la anterior, sin perder nada)."
+          gh release view app >/dev/null 2>&1 || gh release create app --title "App Android" --notes "Clávala para Android. Descarga Clavala.apk e instálala." --prerelease
+          gh release upload app Clavala.apk PicksDorados.apk --clobber
+          gh release edit app --notes "Clávala para Android · versión 0.2.${{ github.run_number }}. Descarga Clavala.apk e instálala (encima de la anterior, sin perder nada)."

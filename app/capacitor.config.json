@@ -1,6 +1,6 @@
 {
   "appId": "com.picksdorados.app",
-  "appName": "Picks Dorados",
+  "appName": "Clávala",
   "webDir": "www",
   "server": {
     "url": "https://victormoreno172-sys.github.io/picks-dorados/",
@@ -10,14 +10,14 @@
     "errorPath": "sin-conexion.html"
   },
   "android": {
-    "backgroundColor": "#07110c"
+    "backgroundColor": "#0b1220"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1400,
       "launchAutoHide": true,
       "launchFadeOutDuration": 300,
-      "backgroundColor": "#07110c",
+      "backgroundColor": "#0b1220",
       "showSpinner": false,
       "androidScaleType": "CENTER_CROP"
     },

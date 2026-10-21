@@ -2,7 +2,7 @@
   "name": "picks-dorados-app",
   "private": true,
   "version": "0.2.0",
-  "description": "App Android de Picks Dorados (Partidos + Bot). Carga la web publicada, as\u00ed se actualiza sola.",
+  "description": "App Android de Clávala. Carga la web publicada, as\u00ed se actualiza sola.",
   "dependencies": {
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",

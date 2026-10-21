@@ -1,4 +1,4 @@
-<title>Partidos</title>
+<title>Clávala</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1559,7 +1559,7 @@ function cargarCapacitor(despues) {
   sc.onload = sc.onerror = () => { CAP.listo = !!(window.Capacitor && window.Capacitor.registerPlugin); despues && despues(); };
   document.head.appendChild(sc);
 }
-const URL_APK = "https://github.com/victormoreno172-sys/picks-dorados/releases/download/app/PicksDorados.apk";
+const URL_APK = "https://github.com/victormoreno172-sys/picks-dorados/releases/download/app/Clavala.apk";
 const GRUPOS = {
   f: [["Resultado", m => /Gana|Empate|o empate|No hay empate/.test(m)],
       ["Goles", m => /goles/.test(m)],
@@ -2982,7 +2982,7 @@ async function syncPush() {
     try {
       let perm = await FM.checkPermissions();
       if (perm.receive !== "granted") perm = await FM.requestPermissions();
-      if (perm.receive !== "granted") { PUSH.estado = "🔕 Sin permiso: actívalas en Ajustes del móvil → Apps → Picks Dorados → Notificaciones."; return; }
+      if (perm.receive !== "granted") { PUSH.estado = "🔕 Sin permiso: actívalas en Ajustes del móvil → Apps → Clávala → Notificaciones."; return; }
       await FM.getToken();
       let antes = []; try { antes = JSON.parse(localStorage.getItem("temasPush") || "[]"); } catch (e) {}
       const quiero = temasDeseados(), viejo = new Set(antes);
@@ -3051,7 +3051,7 @@ function pintarPantallaAjustes() {
     <section class="ajb"><h3>Color de mis apuestas</h3>${paleta("colorApuesta", AJ.colorApuesta || "#c026ff", ["#c026ff", "#a3e635", "#00e5ff", "#ff2bd6", "#ff6b00", "#ffe600"])}
       <p>Así se pinta en la ficha del partido el mercado que has apostado (y el 🎟️ de la lista).</p></section>
     <section class="ajb"><h3>Competiciones que ves</h3><p style="margin:0 0 6px">Quita las que no te interesen y no saldrán en Partidos.</p>${listaLigas}</section>
-    ${!ES_APP ? `<section class="ajb"><h3>📲 App para Android</h3><p style="margin:0 0 6px">Picks Dorados como app: icono propio, pantalla completa y (pronto) notificaciones. Se actualiza sola.</p>
+    ${!ES_APP ? `<section class="ajb"><h3>📲 App para Android</h3><p style="margin:0 0 6px">Clávala como app: icono propio, pantalla completa y (pronto) notificaciones. Se actualiza sola.</p>
       <a class="ajbtn" style="display:block;text-align:center;text-decoration:none;background:var(--gold);color:#1a1200;border-color:var(--gold)" href="${URL_APK}">⬇️ Descargar la app</a>
       <button class="ajbtn" data-ajdatos="copiar">📋 Copiar mis datos para la app</button>
       <p>Al instalar la app empieza vacía: copia aquí tus datos (favoritos, cuotas reales, apuestas marcadas…) y pégalos en la app, en Ajustes → Mis datos.</p></section>` : ""}
@@ -4635,7 +4635,7 @@ function semanasMes(mes) {
 const fCorta = f => `${+f.slice(8)}/${+f.slice(5, 7)}`;
 // ================================================================ Reglas (bases legales) de cada evento
 const BASES_GENERALES = [
-  ["Organizador", "La organiza el titular de la app «Picks Dorados» (nombre provisional). Antes de entregar premios físicos se publicarán aquí su nombre o razón social, NIF, domicilio y un correo de contacto."],
+  ["Organizador", "La organiza el titular de la app «Clávala». Antes de entregar premios físicos se publicarán aquí su nombre o razón social, NIF, domicilio y un correo de contacto."],
   ["Participación gratuita", "Participar es totalmente gratis. No hace falta comprar nada ni pagar nada. Las monedas de la app no se pueden comprar con dinero ni cambiar por dinero."],
   ["Quién puede participar", "Personas mayores de 18 años residentes en España. Una sola cuenta por persona: cuando haya ranking online se verificará el teléfono o el correo para optar a premios. No pueden optar a premios físicos el organizador ni quienes hayan colaborado en la app."],
   ["No es una apuesta", "Es un concurso de habilidad basado en pronósticos deportivos. No se arriesga dinero ni nada de valor y nada depende de una casa de apuestas."],

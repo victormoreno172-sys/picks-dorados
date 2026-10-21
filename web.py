@@ -42,7 +42,7 @@ CABECERA = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1711">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Picks Dorados">
+<meta name="apple-mobile-web-app-title" content="Clávala">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono.svg" type="image/svg+xml">
@@ -52,14 +52,13 @@ CABECERA = """<!doctype html>
 <body>
 """
 
-ICONO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<rect width="512" height="512" rx="112" fill="#0b1711"/>
-<circle cx="256" cy="256" r="150" fill="none" stroke="#f2bf3e" stroke-width="28"/>
-<text x="256" y="300" text-anchor="middle" font-family="Arial Narrow,Arial,sans-serif" font-weight="700" font-size="150" fill="#f2bf3e">%</text>
-</svg>"""
+def _icono_svg() -> str:
+    import logo
+    return logo.svg()
+
 
 MANIFEST = {
-    "name": "Partidos", "short_name": "Partidos", "lang": "es",
+    "name": "Clávala", "short_name": "Clávala", "lang": "es",
     "start_url": "./", "display": "standalone",
     "background_color": "#f5f7fb", "theme_color": "#f5f7fb",
     "icons": [{"src": "icono.svg", "sizes": "any", "type": "image/svg+xml"},
@@ -121,24 +120,16 @@ def html(datos: dict, documento_completo: bool = True) -> str:
         fb = None
     cuerpo = cuerpo.replace("__FIREBASE__", json.dumps(fb) if fb else "null")
     cuerpo = cuerpo.replace("__DATOS__", js).replace('href="bot/"', f'href="bot/?v={VERSION}"') + AUTO_RECARGA
-    return (CABECERA.replace("#0b1711", "#f5f7fb").replace("Picks Dorados", "Partidos") + cuerpo + "\n</body>\n</html>\n") if documento_completo else cuerpo
+    return (CABECERA.replace("#0b1711", "#f5f7fb") + cuerpo + "\n</body>\n</html>\n") if documento_completo else cuerpo
 
 
 def _icono_png(ruta: str):
     """PNG para iPhone (no acepta SVG como icono de pantalla de inicio)."""
     try:
-        from PIL import Image, ImageDraw, ImageFont
+        import logo
     except ImportError:
         return
-    im = Image.new("RGB", (512, 512), "#0b1711")
-    dr = ImageDraw.Draw(im)
-    dr.ellipse((106, 106, 406, 406), outline="#f2bf3e", width=28)
-    try:
-        fuente = ImageFont.truetype("DejaVuSans-Bold.ttf", 150)
-    except OSError:
-        fuente = ImageFont.load_default()
-    dr.text((256, 262), "%", fill="#f2bf3e", font=fuente, anchor="mm")
-    im.save(ruta)
+    logo.imagen(512).convert("RGB").save(ruta)
 
 
 def escribir(datos: dict, carpeta: str = SALIDA):
@@ -152,7 +143,7 @@ def escribir(datos: dict, carpeta: str = SALIDA):
     with open(os.path.join(carpeta, "manifest.webmanifest"), "w", encoding="utf-8") as f:
         json.dump(MANIFEST, f, ensure_ascii=False, indent=2)
     with open(os.path.join(carpeta, "icono.svg"), "w", encoding="utf-8") as f:
-        f.write(ICONO_SVG)
+        f.write(_icono_svg())
     _icono_png(os.path.join(carpeta, "icono.png"))
     print(f"App generada en {carpeta}/index.html")
 
