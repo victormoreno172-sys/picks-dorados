@@ -344,6 +344,9 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 
 /* ---------- pestaña Ligas ---------- */
 .lbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; align-items: center; gap: 10px; padding: 12px 0 10px; border-bottom: 1px solid var(--line); }
+.volv { position: sticky; top: calc(8px + env(safe-area-inset-top, 0px)); z-index: 6; height: 0; } .volv .ico { box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.volv + * { margin-top: 52px; }
+#vista > :first-child:not(.volv) { margin-top: 12px; }
 .lbar h2 { margin: 0; flex: 1; min-width: 0; font: 700 22px/1.1 var(--display); display: flex; align-items: center; gap: 8px; overflow: hidden; }
 .lbar h2 span.t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lbar .ico { flex: none; }
@@ -2020,7 +2023,7 @@ function pintarJuego() {
 
 function pintarIndiceLigas() {
   cargarIndice();
-  let h = `<div class="lbar"><h2><span class="t">Ligas</span></h2></div>`;
+  let h = ``;
   if (!LIGAS.indice) { $("vista").innerHTML = h + `<div class="vacio">Cargando ligas…</div>`; return; }
   if (!LIGAS.indice.length) { $("vista").innerHTML = h + `<div class="vacio">Las ligas aparecerán en la próxima actualización.</div>`; return; }
   const fila = l => { const inf = infoLiga(l.n), fav = est.ligasFav.has(l.n);
@@ -2447,7 +2450,7 @@ function pintarPantallaAjustes() {
     [...todas[k]].sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b)).map(l => { const inf = infoLiga(l);
       return `<label class="ajliga"><span>${inf.flag}</span><span class="nl">${esc(inf.nombre)}<small style="color:var(--muted)"> ${esc(inf.pais)}</small></span><input type="checkbox" data-ajliga="${esc(l)}" ${AJ.ocultas.includes(l) ? "" : "checked"}></label>`; }).join("") + `</details>`).join("");
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
-  $("vista").innerHTML = `<div class="lbar"><h2><span>⚙️</span><span class="t">Ajustes</span></h2></div><div class="aj" style="margin-top:12px">
+  $("vista").innerHTML = `<div class="aj" style="margin-top:12px">
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}</section>
     <section class="ajb"><h3>Lista de partidos</h3>${seg("verEsperados", [["false", "Sin goles esperados"], ["true", "Con goles esperados"]])}
       <p>Los goles (o puntos) esperados de cada equipo a la derecha del partido. El marcador en directo sale siempre.</p></section>
@@ -2668,7 +2671,7 @@ function seccionBoleto() {
 function pintarMisApuestas() {
   resolverMias();
   if (!MIAS.vivoT || Date.now() - MIAS.vivoT > 50000) { MIAS.vivoT = Date.now(); enDirecto(); }
-  let h = `<div class="lbar"><h2><span>📊</span><span class="t">Estadísticas</span></h2></div>` + seccionBoleto();
+  let h = `` + seccionBoleto();
   if (MIAS.inicial === null || MIAS.inicial === undefined) {
     $("vista").innerHTML = h + `<section class="mcard"><h3>¿Con cuánto dinero empiezas?</h3>
       <p>Pon lo que tienes ahora en tu casa de apuestas. Desde aquí se irá midiendo lo que ganas y pierdes con las apuestas que apuntes en cada partido (pestaña Probabilidades, abajo del todo).</p>
@@ -3092,7 +3095,7 @@ const ARTE_EV = {
 };
 function pintarDesafios() {
   procesarRecompensas();
-  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div>` + barraJugador() + `<div class="evs">`;
+  let h = `` + barraJugador() + `<div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
     if (ev.id === "premios") {
@@ -3119,12 +3122,12 @@ function pintarEvento() {
   if (ev.id === "premios") {
     const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
     const filas = clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
-    $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
+    $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
       <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>Ranking de ${["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>Suma de Gánale a la app de todo el mes</small></span></section>
       <section class="mcard">${tablaClasif(filas, true, "mes")}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
     return;
   }
-  $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
+  $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
     <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${ev.t}</b><small>${ev.d}</small></span></section>
     <div class="vacio">Este desafío llega pronto. Mientras tanto, juega a <b>Gánale a la app</b>: tus puntos de este mes contarán para el ranking.</div>
     <button class="apbtn" data-vista="reto" style="max-width:340px;margin:0 auto 14px;display:block">🤖 Jugar a Gánale a la app</button>` + htmlReglas(ev.id);
@@ -3132,7 +3135,7 @@ function pintarEvento() {
 function pintarReto() {
   procesarRecompensas();
   const r = retoDelDia(AHORA.fecha);
-  let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span>🎯</span><span class="t">Gánale a la app</span></h2></div>`;
+  let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>`;
   if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
   const c = cuentaReto(r), m = resumenMesReto();
   const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
@@ -3373,7 +3376,7 @@ function pintarPerfil() {
   procesarRecompensas();
   const xp = totalXP(), nv = nivelDe(xp), dj = datosJugador();
   const sig = CAT.avatar.concat(CAT.marco, CAT.color, CAT.titulo).filter(i => i.nivel > nv.n).sort((a, b) => a.nivel - b.nivel)[0];
-  let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">Perfil</span></h2></div>
+  let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
   <section class="pcab tj tj-${PERFIL.tarjeta || "clasica"}">${avatarHTML(PERFIL, 96)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
     <div class="pniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}</span></div>
     <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
@@ -3427,7 +3430,7 @@ function pintarPersonalizar() {
     const cand = it.evento ? "Podio del evento" : it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
     return `<button class="pit ${puesto ? "on" : ""} ${ok ? "" : "lock"}" ${ok ? `data-poner="${tipo}" data-id="${it.id}"` : `data-vista="tienda"`}>${pinta(it)}${ok ? "" : `<small>🔒 ${cand}</small>`}</button>`;
   }).join("")}</div></section>`;
-  let h = `<div class="lbar"><button class="ico" data-vista="perfil" aria-label="Volver">‹</button><h2><span class="t">Personalizar</span></h2></div>
+  let h = `<div class="volv"><button class="ico" data-vista="perfil" aria-label="Volver">‹</button></div>
   <section class="pcab tj tj-${PERFIL.tarjeta || "clasica"}">${avatarHTML(PERFIL, 80)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
     <div class="pacc"><button class="apbtn ap2" data-pnombre="1">✏️ Cambiar nombre</button><label class="apbtn ap2 pfoto">📷 Usar mi foto<input type="file" accept="image/*" id="pfotoIn" hidden></label></div></section>`;
   h += sec("avatar", "Avatar", it => `<span class="av" style="--s:44px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`);
@@ -3445,7 +3448,7 @@ function pintarTienda() {
     const ya = tieneItem(tipo, it);
     return `<div class="tit">${dibujo}<span class="tin"><b>${esc(it.n || "Avatar " + it.e)}</b><small>${ya ? "Ya es tuyo" : `${fmtN(it.precio)} 🪙`}</small></span>${ya ? `<button class="tbtn ok" data-vista="personalizar">Ponerlo</button>` : `<button class="tbtn" ${mon >= it.precio ? "" : "disabled"} data-comprar="${tipo}" data-id="${it.id}">Comprar</button>`}</div>`;
   };
-  let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">Tienda</span></h2></div>
+  let h = `<div class="volv"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button></div>
   <section class="tcab"><span>Tienes</span><b>🪙 ${fmtN(mon)}</b><small>Las monedas se ganan jugando a los desafíos y subiendo de nivel. No se pueden comprar con dinero.</small></section><button class="gbtn" data-guia="tienda">📘 Cómo se ganan monedas ›</button>
   <h2 class="sec">🃏 Comodines</h2>
   <div class="tit"><span class="tico">×2</span><span class="tin"><b>Doble</b><small>Un acierto vale el doble (1 al día). Tienes ${PERFIL.comodines.doble}.</small></span><button class="tbtn" ${mon >= 800 ? "" : "disabled"} data-comprar="comodin" data-id="doble">800 🪙</button></div>
@@ -3578,7 +3581,7 @@ function htmlReglas(id) {
 // ================================================================ Guía: XP, niveles, monedas, tienda y eventos
 function pintarGuia() {
   const t = (cab, filas) => `<table class="mtab"><tr>${cab.map(c => `<th>${c}</th>`).join("")}</tr>${filas.map(f => `<tr>${f.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
-  $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="${est.volverGuia || "desafios"}" aria-label="Volver">‹</button><h2><span>📘</span><span class="t">Cómo funciona</span></h2></div>
+  $("vista").innerHTML = `<div class="volv"><button class="ico" data-vista="${est.volverGuia || "desafios"}" aria-label="Volver">‹</button></div>
   <section class="mcard guia"><h3>🎯 La idea</h3><p>En <b>Desafíos</b> juegas gratis a pronosticar partidos. Con lo que aciertas ganas <b>XP</b> (sube tu nivel) y <b>monedas</b> (se gastan en la tienda). Hay rankings del día, de la semana y del mes, y eventos con premios.</p></section>
   <section class="mcard guia"><h3>⭐ XP y niveles</h3>
     <p>La XP <b>nunca baja</b>: aunque gastes monedas, tu nivel se queda. Hay <b>200 niveles</b>. Al principio se sube rápido (el 10 en unos 3 días) y luego cuesta más (el 100 en unos 6 meses jugando a diario; el 200, unos 2 años). Del nivel N al siguiente hacen falta 200 + 40 × N de XP.</p>
@@ -3620,7 +3623,7 @@ function cargarIndiceBuscar() {
 function pintarBuscadorGeneral() {
   cargarIndice(); cargarIndiceBuscar();
   if (!$("buscaG")) {
-    $("vista").innerHTML = `<div class="lbar"><h2><span>⌕</span><span class="t">Buscar</span></h2></div>
+    $("vista").innerHTML = `
       <div class="bgcaja"><input type="search" id="buscaG" placeholder="Equipo, jugador, liga, juego…" autocomplete="off" aria-label="Buscar en toda la app"></div>
       <div id="bgres"></div>`;
     $("buscaG").value = est.buscaG || "";
