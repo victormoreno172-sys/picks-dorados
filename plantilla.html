@@ -607,6 +607,16 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .pyt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; } .pyt b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .pyt small { font-size: 11.5px; color: var(--muted); }
 .pxp { display: block; height: 6px; border-radius: 99px; background: var(--bar); overflow: hidden; margin-top: 3px; } .pxp i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #4f46e5, #a855f7); }
 .pxp.grande { height: 10px; width: 100%; margin: 6px 0 4px; }
+.pbar.grande { flex-direction: column; align-items: stretch; gap: 8px; padding: 14px; border-radius: 22px; }
+.pbtop { display: flex; align-items: center; gap: 10px; } .pbar.grande .pyt b { font-size: 20px; } .pbar.grande .pyt small { font-size: 12.5px; }
+.pbniv { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); } .pbniv b { font-size: 15px; color: var(--ink); }
+.pbar.grande .pxp.grande { margin: 0; }
+.vitrina { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: inherit; }
+.vslot { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 14px; border: 1.5px dashed rgba(127,127,127,.45); }
+.vslot span { font-size: 24px; line-height: 1; opacity: .5; } .vslot small { font-size: 10.5px; color: var(--muted); text-align: center; }
+.vslot.si { border-style: solid; border-color: rgba(250, 204, 21, .7); background: rgba(250, 204, 21, .12); } .vslot.si span { opacity: 1; }
+.tj:not(.tj-clasica) .vslot { background: rgba(0,0,0,.22); border-color: rgba(255,255,255,.35); } .tj:not(.tj-clasica) .pbniv { color: rgba(255,255,255,.85); } .tj:not(.tj-clasica) .pbniv b { color: #fff; } .tj:not(.tj-clasica) .pcam { color: #fde68a; }
+button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position: relative; } .pin.vit { box-shadow: inset 0 0 0 2px #f59e0b; } .pvit { position: absolute; top: 4px; right: 6px; font-style: normal; font-size: 12px; }
 .pmon { border: 0; border-radius: 999px; padding: 8px 12px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; font: 800 14px var(--mono); cursor: pointer; white-space: nowrap; box-shadow: 0 3px 10px rgba(245, 158, 11, .35); }
 .pcab { display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px 16px 16px; margin-bottom: 12px; box-shadow: var(--sombra); text-align: center; }
 .pnom { font-size: 22px; margin-top: 6px; } .ptit { font-size: 13px; color: var(--muted); font-weight: 600; }
@@ -3378,11 +3388,18 @@ function xpEnCamino() {
   const r = RETO.dias[AHORA.fecha]; if (!r) return 0;
   return r.partidos.filter(x => r.picks[claveReto(x)] && !estadoReto(x).empezado).length * 50;
 }
+// Ficha grande de arriba en Desafíos: avatar, nombre, nivel con su barra, monedas y tu vitrina de 3 insignias
 function barraJugador() {
-  const xp = totalXP(), nv = nivelDe(xp);
-  return `<div class="pbar tj tj-${PERFIL.tarjeta || "clasica"}"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 46)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>Nv ${nv.n} · ${esc(tituloYo())}${xpEnCamino() ? ` · <span class="pcam">+${xpEnCamino()} XP en camino</span>` : ""}</small>
-      <span class="pxp"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span></span></button>
-    <button class="pmon" data-vista="tienda">🪙 ${fmtN(totalMon())}</button></div>`;
+  const xp = totalXP(), nv = nivelDe(xp), dj = datosJugador();
+  const vit = (PERFIL.vitrina || []).filter(id => dj.insignias.includes(id)).slice(0, 3);
+  const hueco = k => vit[k] ? (() => { const x = INSIGNIAS.find(z => z[0] === vit[k]); return `<span class="vslot si"><span>${x[1]}</span><small>${esc(x[2])}</small></span>`; })()
+    : `<span class="vslot"><span>＋</span><small>${dj.insignias.length ? "Elige insignia" : "Sin insignia"}</small></span>`;
+  return `<div class="pbar grande tj tj-${PERFIL.tarjeta || "clasica"}">
+    <div class="pbtop"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 72)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>${esc(tituloYo())}</small></span></button>
+      <button class="pmon" data-vista="tienda">🪙 ${fmtN(totalMon())}</button></div>
+    <div class="pbniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}${xpEnCamino() ? ` · <span class="pcam">+${xpEnCamino()} en camino</span>` : ""}</span></div>
+    <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
+    <button class="vitrina" data-vista="perfil" data-vitr="1">${hueco(0)}${hueco(1)}${hueco(2)}</button></div>`;
 }
 // ---- Pantalla Perfil
 function pintarPerfil() {
@@ -3401,7 +3418,8 @@ function pintarPerfil() {
     <div><b>${dj.vsApp}</b><span>aciertos contra la app</span></div><div><b>${dj.ganadosApp}</b><span>días ganados a la app</span></div>
     <div><b>${dj.rachaActual ? "🔥 " + dj.rachaActual : "–"}</b><span>racha actual</span></div><div><b>${dj.mejorRacha || "–"}</b><span>mejor racha</span></div>
     <div><b>${fmtN(xp)}</b><span>XP total</span></div><div><b>×2: ${PERFIL.comodines.doble} · 🔄 ${PERFIL.comodines.segunda}</b><span>comodines</span></div></div></section>
-  <section class="mcard"><h3>🎖️ Insignias · ${dj.insignias.length}/${INSIGNIAS.length}</h3><div class="pins">${INSIGNIAS.map(([id, i, n, d]) => `<div class="pin ${dj.insignias.includes(id) ? "si" : ""}"><span>${i}</span><b>${n}</b><small>${d}</small></div>`).join("")}</div></section>
+  <section class="mcard"><h3>🎖️ Insignias · ${dj.insignias.length}/${INSIGNIAS.length}</h3><p class="apnota" style="margin:0 0 8px">Toca hasta 3 insignias que tengas para lucirlas en tu ficha (⭐ = en tu vitrina).</p><div class="pins">${INSIGNIAS.map(([id, i, n, d]) => { const tengo = dj.insignias.includes(id), enV = (PERFIL.vitrina || []).includes(id);
+    return `<${tengo ? `button data-vitrina="${id}"` : "div"} class="pin ${tengo ? "si" : ""} ${enV ? "vit" : ""}"><span>${i}</span><b>${n}</b><small>${d}</small>${enV ? '<i class="pvit">⭐</i>' : ""}</${tengo ? "button" : "div"}>`; }).join("")}</div></section>
   <details class="mcard"><summary><b>🧾 Historial de XP y monedas</b></summary><div class="pmov">${PERFIL.mov.slice().reverse().slice(0, 80).map(m => `<div><span>${esc(m.txt)}<small>${m.f.slice(8)}/${m.f.slice(5, 7)}</small></span><span>${m.xp ? `<b class="xp">+${fmtN(m.xp)} XP</b>` : ""}${m.mon ? `<b class="${m.mon > 0 ? "mon" : "gasto"}">${m.mon > 0 ? "+" : "−"}${fmtN(Math.abs(m.mon))} 🪙</b>` : ""}</span></div>`).join("") || `<p class="apnota">Aún nada. Juega a Gánale a la app para empezar a ganar.</p>`}</div></details>
   <button class="gbtn" data-guia="perfil">📘 Guía completa: XP, niveles, monedas, tienda y eventos ›</button>
   `;
@@ -3477,7 +3495,12 @@ function pintarTienda() {
   $("vista").innerHTML = h;
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-poner],[data-comprar],[data-pnombre],[data-comodin]"); if (!b) return;
+  const b = e.target.closest("[data-poner],[data-comprar],[data-pnombre],[data-comodin],[data-vitrina]"); if (!b) return;
+  if (b.dataset.vitrina) {
+    const v = PERFIL.vitrina = (PERFIL.vitrina || []).filter(x => x !== b.dataset.vitrina);
+    if (!(b.classList.contains("vit"))) { if (v.length >= 3) return alert("Ya tienes 3 insignias en tu vitrina. Quita una primero."); v.push(b.dataset.vitrina); }
+    guardarPerfil(); pintarLista(); return;
+  }
   if (b.dataset.poner) { PERFIL[b.dataset.poner] = b.dataset.id; guardarPerfil(); pintarLista(); return; }
   if (b.dataset.pnombre) {
     const t = prompt("¿Qué nombre quieres que salga en la clasificación? (máx. 16 letras)", PERFIL.nombre || ""); if (t === null) return;
