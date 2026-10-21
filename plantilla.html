@@ -607,15 +607,15 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .pyt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; } .pyt b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .pyt small { font-size: 11.5px; color: var(--muted); }
 .pxp { display: block; height: 6px; border-radius: 99px; background: var(--bar); overflow: hidden; margin-top: 3px; } .pxp i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #4f46e5, #a855f7); }
 .pxp.grande { height: 10px; width: 100%; margin: 6px 0 4px; }
-.pbar.grande { flex-direction: column; align-items: stretch; gap: 12px; padding: 20px 18px 18px; border-radius: 26px; margin-bottom: 18px; }
-.pbtop { display: flex; align-items: center; gap: 14px; } .pbar.grande .pyo { gap: 14px; } .pbar.grande .pyt b { font-size: 23px; white-space: normal; overflow-wrap: anywhere; line-height: 1.1; } .pbar.grande .pyt small { font-size: 14px; }
-.pbar.grande .pmon { font-size: 17px; padding: 10px 16px; }
-.pbniv { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--muted); } .pbniv b { font-size: 20px; color: var(--ink); }
-.pbar.grande .pxp.grande { height: 12px; }
+.pbar.grande { flex-direction: column; align-items: stretch; gap: 12px; padding: 18px 16px 16px; border-radius: 26px; margin-bottom: 18px; min-height: 230px; justify-content: space-between; }
+.pbtop { display: flex; align-items: center; gap: 14px; } .pbar.grande .pyo { gap: 14px; } .pbar.grande .pyt b { font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.15; } .pbar.grande .pyt small { font-size: 12.5px; }
+.pbar.grande .pmon { font-size: 14px; padding: 7px 12px; }
+.pbniv { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); } .pbniv b { font-size: 16px; color: var(--ink); }
+.pbar.grande .pxp.grande { height: 8px; }
 .pbar.grande .pxp.grande { margin: 0; }
 .vitrina { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: inherit; }
 .vslot { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 14px; border: 1.5px dashed rgba(127,127,127,.45); }
-.vslot { min-width: 0; padding: 10px 2px; } .vslot .vi { font-size: 28px; line-height: 1; opacity: .5; height: 40px; display: grid; place-items: center; } .vslot small { font-size: 9.5px; color: var(--muted); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vslot { min-width: 0; padding: 6px 2px; } .vslot .vi { font-size: 20px; line-height: 1; opacity: .5; height: 30px; display: grid; place-items: center; } .vslot small { font-size: 9.5px; color: var(--muted); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vslot.si { border-style: solid; border-color: rgba(250, 204, 21, .7); background: rgba(250, 204, 21, .12); } .vslot.si .vi { opacity: 1; }
 .tj:not(.tj-clasica) .vslot { background: rgba(0,0,0,.22); border-color: rgba(255,255,255,.35); } .tj:not(.tj-clasica) .pbniv { color: rgba(255,255,255,.85); } .tj:not(.tj-clasica) .pbniv b { color: #fff; } .tj:not(.tj-clasica) .pcam { color: #fde68a; }
 button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position: relative; } .pin.vit { box-shadow: inset 0 0 0 2px #f59e0b; } .pvit { position: absolute; top: 4px; right: 6px; font-style: normal; font-size: 12px; }
@@ -3421,15 +3421,15 @@ function vitrina() {
 function dibujoVitrina(v) {
   const [t, id] = v.split(":");
   if (t === "ins") { const x = INSIGNIAS.find(z => z[0] === id); return `<span class="vi">${x[1]}</span><small>${esc(x[2])}</small>`; }
-  if (t === "av") { const a = CAT.avatar.find(x => x.id === id); return `<span class="vi">${avatarHTML({ avatar: id, marco: "ninguno" }, 38)}</span><small>${esc(a.n || "Avatar")}</small>`; }
-  const x = CAT.tarjeta.find(z => z.id === id); return `<span class="vi"><span class="tjmini tj tj-${id}" style="width:44px;height:32px"></span></span><small>${esc(x.n.replace(" ✨", ""))}</small>`;
+  if (t === "av") { const a = CAT.avatar.find(x => x.id === id); return `<span class="vi">${avatarHTML({ avatar: id, marco: "ninguno" }, 28)}</span><small>${esc(a.n || "Avatar")}</small>`; }
+  const x = CAT.tarjeta.find(z => z.id === id); return `<span class="vi"><span class="tjmini tj tj-${id}" style="width:36px;height:24px"></span></span><small>${esc(x.n.replace(" ✨", ""))}</small>`;
 }
 // Ficha grande de arriba en la Arena: avatar, nombre, nivel con su barra, monedas y tu vitrina de 5 huecos
 function barraJugador() {
   const xp = totalXP(), nv = nivelDe(xp), vit = vitrina();
   const hueco = k => vit[k] ? `<span class="vslot si">${dibujoVitrina(vit[k])}</span>` : `<span class="vslot"><span class="vi">＋</span><small>Añadir</small></span>`;
   return `<div class="pbar grande tj tj-${PERFIL.tarjeta || "clasica"}">
-    <div class="pbtop"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 96)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>${esc(tituloYo())}</small></span></button>
+    <div class="pbtop"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 62)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>${esc(tituloYo())}</small></span></button>
       <button class="pmon" data-vista="tienda">🪙 ${fmtN(totalMon())}<small>Tienda</small></button></div>
     <div class="pbniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}${xpEnCamino() ? ` · <span class="pcam">+${xpEnCamino()} en camino</span>` : ""}</span></div>
     <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
