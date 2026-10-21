@@ -3324,14 +3324,7 @@ function pintarPerfil() {
   <section class="mcard"><h3>🎖️ Insignias · ${dj.insignias.length}/${INSIGNIAS.length}</h3><div class="pins">${INSIGNIAS.map(([id, i, n, d]) => `<div class="pin ${dj.insignias.includes(id) ? "si" : ""}"><span>${i}</span><b>${n}</b><small>${d}</small></div>`).join("")}</div></section>
   <details class="mcard"><summary><b>🧾 Historial de XP y monedas</b></summary><div class="pmov">${PERFIL.mov.slice().reverse().slice(0, 80).map(m => `<div><span>${esc(m.txt)}<small>${m.f.slice(8)}/${m.f.slice(5, 7)}</small></span><span>${m.xp ? `<b class="xp">+${fmtN(m.xp)} XP</b>` : ""}${m.mon ? `<b class="${m.mon > 0 ? "mon" : "gasto"}">${m.mon > 0 ? "+" : "−"}${fmtN(Math.abs(m.mon))} 🪙</b>` : ""}</span></div>`).join("") || `<p class="apnota">Aún nada. Juega a Gánale a la app para empezar a ganar.</p>`}</div></details>
   <button class="gbtn" data-guia="perfil">📘 Guía completa: XP, niveles, monedas, tienda y eventos ›</button>
-  <details class="mcard"><summary><b>❓ Cómo se gana XP y monedas</b></summary><table class="mtab"><tr><th>Acción</th><th>XP</th><th>🪙</th></tr>
-    <tr><td>Pronosticar un partido</td><td>50</td><td>–</td></tr><tr><td>Acertar</td><td>puntos × 10</td><td>puntos</td></tr>
-    <tr><td>Completar el día</td><td>200</td><td>20</td></tr><tr><td>Ganarle el día a la app</td><td>500</td><td>50</td></tr>
-    <tr><td>Racha 3 / 7 / 30 días</td><td>300 / 1.000 / 5.000</td><td>50 / 200 / 1.000</td></tr>
-    <tr><td>Top 10 / podio semanal</td><td>1.500 / 3.000</td><td>200 / 1.000·600·400</td></tr>
-    <tr><td>Top 10 / podio mensual</td><td>5.000 / 10.000</td><td>1.000 / 5.000·3.000·2.000</td></tr>
-    <tr><td>Subir de nivel</td><td>–</td><td>20 + nivel</td></tr></table>
-    <p class="apnota">Cada 5 niveles, un comodín; cada 10, más comodines y objetos. Nivel 100: camiseta. Nivel 200: premio Inmortal.</p></details>`;
+  `;
   $("vista").innerHTML = h;
 }
 // ---- Personalizar
