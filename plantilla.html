@@ -752,6 +752,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .mhero { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--sombra); padding: 16px 14px 10px; margin-bottom: 14px; text-align: center; }
 .mlab { font: 600 11px var(--mono); color: var(--muted); letter-spacing: .06em; }
 .mnum { font: 800 36px/1.15 var(--mono); margin: 4px 0 2px; }
+.msub { font-size: 12.5px; color: var(--muted); margin: -2px 0 6px; } .msub b { color: var(--ink); }
 .mvar { font-size: 13px; color: var(--muted); display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
 .mini-ed { border: 0; background: var(--bar); border-radius: 999px; padding: 3px 8px; cursor: pointer; font-size: 12px; }
 .mkpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; margin: 14px 0 8px; }
@@ -2749,7 +2750,7 @@ function pintarMisApuestas() {
   const pend = L.filter(a => !resuelta(a)).sort((x, y) => hora(x).localeCompare(hora(y)));
   const res = L.filter(resuelta);
   h += `<section class="mhero">
-    <div class="mlab">TU DINERO AHORA</div><div class="mnum">${eurosM(c.disponible)}</div>
+    <div class="mlab">TU DINERO AHORA</div><div class="mnum">${eurosM(c.disponible)}</div>${c.enJuego ? `<div class="msub">disponible · + ${eurosM(c.enJuego)} en juego = <b>${eurosM(c.total)}</b></div>` : ""}
     <div class="mvar"><span class="${c.total >= c.ini ? "pos" : "neg"}">${sigM(c.total - c.ini)} (${c.ini ? ((c.total / c.ini - 1) * 100 >= 0 ? "+" : "") + ((c.total / c.ini - 1) * 100).toFixed(1).replace(".", ",") + " %" : "–"})</span> desde ${eurosM(c.ini)} <button class="mini-ed" data-apinicial="editar">✏️</button></div>
     <div class="mkpis">
       <div><b>${eurosM(c.enJuego)}</b><span>en juego</span></div>
