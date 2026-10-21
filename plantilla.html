@@ -671,7 +671,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
 .rmes p { margin: 6px 0 0; }
 /* Reto: marcador grande y partidos compactos */
-.rmarc { padding: 26px 14px; border-radius: 26px; min-height: 170px; } .rlado b { font-size: 72px !important; line-height: 1; } .rlado small { font-size: 16px !important; font-weight: 700; margin-bottom: 4px; }
+.rmarc { padding: 26px 14px; border-radius: 26px; min-height: 170px; } .rlado b { font-size: 60px !important; line-height: 1; } .rlado small { font-size: 16px !important; font-weight: 700; margin-bottom: 4px; }
 .rvs { font-size: 20px !important; gap: 4px !important; } .rvs small { font-size: 12px !important; }
 .rpart { padding: 6px 9px 8px !important; margin-bottom: 6px !important; border-radius: 14px !important; }
 .rcab { grid-template-columns: 40px minmax(0, 1fr) 24px !important; padding-bottom: 2px !important; gap: 6px !important; }
@@ -3230,8 +3230,8 @@ function pintarReto() {
   if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
   const c = cuentaReto(r), m = resumenMesReto();
   const nom = s => s.length > 13 ? s.slice(0, 12) + "…" : s;
-  // Marcador como un partido: aciertos de cada uno. Los puntos (lo que cuenta para el ranking), en pequeño
-  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.okYo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>Puntos ${c.yo} – ${c.app}</small><small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.okApp}</b></div></section>`;
+  // Marcador por puntos (lo que cuenta para el ranking); los aciertos, en pequeño
+  h += `<section class="rmarc"><div class="rlado"><small>Tú</small><b>${c.yo}</b></div><div class="rvs">${c.jugados ? (c.yo > c.app ? "¡Vas ganando!" : c.yo < c.app ? "Gana la app" : "Empate") : "Hoy"}<small>Aciertos ${c.okYo} – ${c.okApp}</small><small>${c.elegidos}/${r.partidos.length} pronosticados${c.vivos ? ` · ${c.vivos} en juego` : ""}</small></div><div class="rlado"><small>🤖 App</small><b>${c.app}</b></div></section>`;
   h += r.partidos.map(x => {
     const s = estadoReto(x), mio = r.picks[claveReto(x)], k = claveReto(x);
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
