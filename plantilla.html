@@ -4397,7 +4397,7 @@ const BASES_EVENTO = {
     ["Premios de cada mes", "1.º 5.000 monedas, 2.º 3.000 y 3.º 2.000, más 10.000 XP cada uno. Los tres se llevan además el set animado exclusivo «Vencedor de la máquina» (tarjeta, marco Circuito y avatar Robot campeón), que no se puede comprar. Del 4.º al 10.º, 1.000 monedas y 5.000 XP. Con ranking online: 1.º camiseta, 2.º balón y 3.º bufanda."],
   ],
   arcade: [
-    ["Fechas", "Del 21 de octubre al 20 de noviembre de 2026. Es el primer evento de la Temporada 0."],
+    ["Fechas", "Del 22 de octubre al 21 de noviembre de 2026. Es el primer evento de la Temporada 0."],
     ["Mecánica", "Cada día puedes elegir 3 respuestas de los partidos del día que salen en el evento (una por partido), hasta que empieza cada partido. Puedes cambiarlas o quitarlas antes de que empiecen."],
     ["Combo", "Cada acierto seguido sube tu combo: ×1, ×2, ×3… hasta ×8. Los puntos de un acierto son 10 ÷ la probabilidad de esa respuesta, multiplicados por el combo que tenías. Un fallo devuelve el combo a ×1. El combo continúa de un día a otro y se cuenta en el orden de los partidos."],
     ["Vidas", "Tienes 3 vidas cada semana (de lunes a domingo) y cada fallo quita una. Sin vidas, tus jugadas de esa semana no puntúan (GAME OVER) hasta el lunes. Una vez por semana puedes «continuar» gastando una Segunda oportunidad para recuperar una vida."],
@@ -4618,7 +4618,7 @@ function pintarTemporada() {
 }
 // ---- Rectángulo del evento en la Arena y en la pantalla de la temporada
 function bannerArcade() {
-  if (AHORA.fecha < ARC.desde) return "";
+  if (AHORA.fecha < ARC.desde) return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b><span class="arcb2">¡Empieza ${ARC.desde === sumaDias(AHORA.fecha, 1) ? "mañana" : "el " + fCorta(ARC.desde)}! Mira los premios</span><span class="arcb3">PRONTO</span></button>`;
   const y = estadoYoArc(), fin = AHORA.fecha > ARC.hasta;
   const vid = "♥".repeat(y.vidas) + "♡".repeat(Math.max(0, ARC.vidas - y.vidas));
   return `<button class="arcban" data-vista="arcade"><span class="arcb1">EVENTO T0</span><b>HI-SCORE</b>
@@ -4670,7 +4670,7 @@ function pintarArcade() {
         return `<button class="arop ${yoEs ? "yo" : ""}" ${cerrado || (!yoEs && !mio && picks.length >= ARC.picks) ? "disabled" : `data-arcpick="${i}|${q.tipo}|${esc(o.m)}"`}><b>${esc(o.n || o.m)}</b><span>${Math.round(o.p * 100)}% · +${ptsReto(o.p)}</span></button>`; }).join("")}</div></div>`).join("");
       return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" ${mio ? "open" : ""}><summary><span class="arh">${s0.empezado ? "●" : esc(pa.hora || "")}</span><span class="are"><b>${esc(pa.local)}</b><b>${esc(pa.visitante)}</b><small>${esc(ligaBase(pa.liga))}</small></span>${mio ? '<span class="armk">★</span>' : ""}</summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
     }).join("")}</section>`;
-  } else if (!fin) h += `<div class="vacio">Hoy no hay partidos para el evento. Vuelve mañana.</div>`;
+  } else if (!fin) h += `<div class="vacio">${hoy < ARC.desde ? `El evento empieza el ${fCorta(ARC.desde)}: ese día podrás elegir tus 3 primeros pronósticos.` : "Hoy no hay partidos para el evento. Vuelve mañana."}</div>`;
   const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
   if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
     return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span><b>${esc(o.n || o.m)}</b><small>${esc(nomC(z.x.local))} – ${esc(nomC(z.x.visitante))}</small></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
@@ -4710,10 +4710,13 @@ function movilTema(id) {
 // multiplica los puntos; un fallo lo devuelve a ×1 y quita una vida (3 por semana). Sin vidas, GAME OVER hasta
 // el lunes (o «continuar» gastando una Segunda oportunidad). El combo sigue de un día a otro.
 // Tiene su clasificación y premios, y sus puntos suman también a la clasificación de la Temporada 0.
-const ARC = { nombre: "HI-SCORE", desde: "2026-10-21", hasta: "2026-11-20", picks: 3, vidas: 3, maxCombo: 8 };
+const ARC = { nombre: "HI-SCORE", desde: "2026-10-22", hasta: "2026-11-21", picks: 3, vidas: 3, maxCombo: 8 };
 const ARC_K = "arcadeV1";
 let ARCD = (() => { try { const r = JSON.parse(localStorage.getItem(ARC_K) || "null"); if (r && r.dias) return r; } catch (e) {} return { dias: {}, cont: {} }; })();
 ARCD.cont ||= {};
+// Reinicio: lo jugado antes de que empiece el evento no cuenta (se borra)
+for (const d of Object.keys(ARCD.dias)) if (d < ARC.desde) delete ARCD.dias[d];
+for (const k of Object.keys(ARCD.cont)) if (k < "2026-10-19") delete ARCD.cont[k];
 const guardarArc = () => { try { localStorage.setItem(ARC_K, JSON.stringify(ARCD)); } catch (e) {} };
 const enArc = d => d >= ARC.desde && d <= ARC.hasta;
 const multiArc = racha => Math.min(ARC.maxCombo, 1 + racha);
@@ -4795,7 +4798,7 @@ function estadoYoArc() {
 }
 // Premios: estrellas y XP por acierto, hitos de combo y el podio al acabar
 function recompensasArc() {
-  if (AHORA.fecha < ARC.desde) return;
+  if (AHORA.fecha < ARC.desde) return;   // aún no ha empezado
   const yo = partidaArc(diasArc(), picksYoArc, ARCD.cont);
   for (const z of yo.log) if (z.ok) cobrar(`arc:${z.d}:${z.x.i}:${z.x.tipo}`, `🕹️ HI-SCORE · acierto ×${z.mult} (+${z.g})`, 50 + z.g * 5, 0, enTemp(z.d) ? { est: 1 } : null);
   const hitos = [[4, 150, 3, null, "Combo ×4"], [6, 300, 5, ["titulo", "combo6"], "Combo ×6 · título Combo ×6"], [8, 600, 8, ["avatar", "ficha"], "Combo ×8 · avatar Ficha arcade"]];
