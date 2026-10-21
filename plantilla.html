@@ -265,7 +265,7 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .fp .estrella { top: 50%; transform: translateY(-50%); right: 2px; }
 .fp.abierto .estrella { top: 26px; }
 .fp .det { border-top: 1px dashed var(--line); }
-.abajo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: 1fr 1fr 1fr 76px 1fr 1fr 1fr;
+.abajo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: 1fr 1fr 1fr 76px 1.5fr 1.5fr;
   padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px));
   background: rgba(255, 255, 255, .86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
 .abajo button, .abajo a { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none; color: var(--muted); font: 600 11px var(--body); text-decoration: none; padding: 6px 0; cursor: pointer; }
@@ -552,6 +552,13 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .apya { margin-top: 12px; display: grid; gap: 6px; } .apya div { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
 .apnota { font-size: 11.5px; color: var(--muted); margin: 10px 0 0; }
 .fila[data-apm] { cursor: pointer; }
+.apbtns { display: flex; gap: 8px; } .apbtns .apbtn { flex: 1; }
+.apbtn.ap2 { background: var(--bar); color: var(--ink); border: 1px solid var(--line); }
+.bolpata { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.bolpata span { display: flex; flex-direction: column; min-width: 0; font-size: 14px; } .bolpata small { color: var(--gold-ink); font-size: 12px; }
+.bolpata button { border: 0; background: var(--bar); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: var(--ink); flex: none; }
+.bolbar { position: fixed; left: 12px; right: 12px; bottom: calc(78px + env(safe-area-inset-bottom, 0px)); z-index: 60; border: 0; border-radius: 14px; padding: 11px 14px; background: var(--gold); color: #1a1200; font: 600 14px var(--body); box-shadow: 0 6px 20px rgba(0,0,0,.25); display: flex; justify-content: space-between; cursor: pointer; }
+.bolbar[hidden] { display: none; }
 /* ---------- pantalla Mis apuestas ---------- */
 .mtarj { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 18px; box-shadow: var(--sombra); padding: 12px; margin-bottom: 12px; }
 .mtarj.bien { border-left-color: #16a34a; } .mtarj.mal { border-left-color: var(--red); }
@@ -1163,6 +1170,7 @@ function enVivo() {
   return l;
 }
 function pintarLista() {
+  try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
   document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar"].includes(est.vista);
   if (est.vista === "buscar") return pintarBuscadorGeneral();
@@ -2190,7 +2198,7 @@ function temasDeseados() {
   for (const j of est.juegosFav) ents.push("j:" + j);
   for (const e of ents) for (const tp of tipos) t.add(tp + "_" + hashTema(e));
   // Partidos en los que tienes una apuesta en juego: avisos de empieza, goles y final
-  if (AJ.pushAp) for (const a of MIAS.apuestas) if (a.fecha >= hoy && !("ok" in a)) for (const tp of tipos) t.add(tp + "_" + hashTema("p:" + a.local + "|" + a.visitante));
+  if (AJ.pushAp) for (const a of MIAS.apuestas) if (!("ok" in a)) for (const pi of patas(a)) if (pi.fecha >= hoy) for (const tp of tipos) t.add(tp + "_" + hashTema("p:" + pi.local + "|" + pi.visitante));
   return t;
 }
 async function syncPush() {
@@ -2304,6 +2312,17 @@ function leerMias() {
 let MIAS = leerMias();
 function guardarMias() { try { localStorage.setItem(MIAS_K, JSON.stringify(MIAS)); } catch (e) {} MIAS_SET = null; }
 let MIAS_SET = null;
+// Combinada en preparación (selecciones de varios partidos antes de guardarla)
+let BOLETO = (() => { try { const b = JSON.parse(localStorage.getItem("boletoV1") || "null"); if (b && Array.isArray(b.piernas)) return b; } catch (e) {} return { piernas: [], c: "", i: "" }; })();
+function guardarBoleto() { try { localStorage.setItem("boletoV1", JSON.stringify(BOLETO)); } catch (e) {} pintarBarraBoleto(); }
+const cuotaBoleto = () => BOLETO.piernas.length && BOLETO.piernas.every(pi => pi.cuota) ? BOLETO.piernas.reduce((x, pi) => x * pi.cuota, 1) : null;
+function pintarBarraBoleto() {
+  let el = $("bolBar");
+  if (!el) { el = document.createElement("button"); el.id = "bolBar"; el.className = "bolbar"; el.dataset.nav = "misap"; document.body.appendChild(el); }
+  const n = BOLETO.piernas.length, c = cuotaBoleto();
+  el.hidden = !n || est.vista === "misap";
+  el.innerHTML = `🧩 Combinada · ${n} selecci${n === 1 ? "ón" : "ones"}${c ? " · cuota " + c.toFixed(2).replace(".", ",") : ""} <b>Terminar ›</b>`;
+}
 const ganMia = a => a.ok === true ? a.importe * (a.cuota - 1) : a.ok === false ? -a.importe : 0;
 const resuelta = a => "ok" in a;
 const eurosM = x => (x < 0 ? "−" : "") + Math.abs(x).toFixed(2).replace(".", ",") + " €";
@@ -2336,32 +2355,41 @@ function partidoDePierna(pi) {
   return null;
 }
 function estadoEnDia(d, p) { const antes = est.dia; est.dia = d; const e = estado(p); est.dia = antes; return e; }
-// Al acabar el partido, la apuesta se marca sola como ganada o perdida
+// Una apuesta sencilla es su propia "pata"; una combinada lleva varias en a.piernas
+const patas = a => a.piernas || [a];
+// Al acabar el partido, la apuesta se marca sola como ganada o perdida (la combinada: perdida en cuanto
+// falla una pata; ganada cuando aciertan todas)
 function resolverMias() {
   let cambio = false;
   for (const a of MIAS.apuestas) {
-    if (resuelta(a) || !a.m || a.manual) continue;
-    const x = partidoDePierna(a); if (!x) continue;
-    const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]);
-    if (!e || e.st !== "post") continue;
-    const v = acierta(a.m, e.m, a.local, a.visitante);
-    if (v === true || v === false) { a.ok = v; a.auto = true; a.res = e.m; cambio = true; }
+    if (resuelta(a) || a.manual) continue;
+    for (const pi of patas(a)) {
+      if (pi.ok === true || pi.ok === false || !pi.m) continue;
+      const x = partidoDePierna(pi); if (!x) continue;
+      const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]);
+      if (!e || e.st !== "post") continue;
+      const v = acierta(pi.m, e.m, pi.local, pi.visitante);
+      if (v === true || v === false) { pi.ok = v; pi.res = e.m; cambio = true; }
+    }
+    const ps = patas(a);
+    if (ps.some(pi => pi.ok === false)) { a.ok = false; a.auto = true; cambio = true; }
+    else if (ps.every(pi => pi.ok === true)) { a.ok = true; a.auto = true; cambio = true; }
   }
   if (cambio) guardarMias();
 }
 function mercadosApostados() {
   if (MIAS_SET) return MIAS_SET;
   const s = new Set(), desde = fechaMenos(AHORA.fecha, 2);
-  for (const a of MIAS.apuestas) if (a.fecha >= desde && a.m) s.add(`${a.local}|${a.visitante}|${a.m}`);
+  for (const a of MIAS.apuestas) for (const pi of patas(a)) if (pi.fecha >= desde && pi.m) s.add(`${pi.local}|${pi.visitante}|${pi.m}`);
   return (MIAS_SET = s);
 }
-const partidoApostado = p => MIAS.apuestas.some(a => a.local === p.local && a.visitante === p.visitante && a.fecha >= fechaMenos(AHORA.fecha, 1));
+const partidoApostado = p => MIAS.apuestas.some(a => patas(a).some(pi => pi.local === p.local && pi.visitante === p.visitante && pi.fecha >= fechaMenos(AHORA.fecha, 1)));
 function contarMisApuestas() {
   resolverMias();
   const el = $("nMisAp"); if (!el) return;
   const l = MIAS.apuestas.filter(a => !resuelta(a));
   el.hidden = !l.length; el.textContent = l.length;
-  const vivo = l.some(a => { const x = partidoDePierna(a); if (!x) return false; const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]); return e && e.st === "in"; });
+  const vivo = l.some(a => patas(a).some(pi => { const x = partidoDePierna(pi); if (!x) return false; const e = estadoEnDia(x[0], DATOS.dias[x[0]].partidos[x[1]]); return e && e.st === "in"; }));
   document.querySelector(".abajo .central").classList.toggle("envivo", vivo);
 }
 function cuentas() {
@@ -2377,30 +2405,38 @@ function cuentas() {
   return { ini, ganado, enJuego, apostado, g, p, racha, tipoR, disponible: ini + ganado - enJuego, total: ini + ganado,
     siTodas: ini + ganado - enJuego + pend.reduce((s, a) => s + a.importe * a.cuota, 0) };
 }
-// Una tarjeta por apuesta, con el partido en directo
-function tarjetaMia(a) {
-  const x = partidoDePierna(a), p = x ? DATOS.dias[x[0]].partidos[x[1]] : null;
+// Una tarjeta por apuesta, con sus partidos en directo
+function filaPata(pi, combi) {
+  const x = partidoDePierna(pi), p = x ? DATOS.dias[x[0]].partidos[x[1]] : null;
   const e = p ? estadoEnDia(x[0], p) : null;
-  const marc = (e && /^(\d+)-(\d+)$/.exec(e.m || "")) || (a.res && /^(\d+)-(\d+)$/.exec(a.res));
-  const va = resuelta(a) ? a.ok : (a.m && e && e.m ? acierta(a.m, e.m, a.local, a.visitante) : null);
-  const hora = !e ? esc(a.hora || "--:--") : e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(e.det))}</span>` : e.st === "post" ? `<span class="fin">FIN</span>` : esc(a.hora || "");
+  const marc = (e && /^(\d+)-(\d+)$/.exec(e.m || "")) || (pi.res && /^(\d+)-(\d+)$/.exec(pi.res));
+  const va = pi.ok === true || pi.ok === false ? pi.ok : (pi.m && e && e.m ? acierta(pi.m, e.m, pi.local, pi.visitante) : null);
+  const hora = !e ? esc(pi.hora || "--:--") : e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(e.det))}</span>` : e.st === "post" ? `<span class="fin">FIN</span>` : esc(pi.hora || "");
   const tag = x ? "button" : "div", attrs = x ? ` data-abrirdia="${x[0]}" data-abrirp="${x[1]}" data-desde="misap"` : "";
+  return { va, e, html: `<${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
+      <span class="mh">${hora}</span>
+      <span class="me"><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[0] : "", pi.local)}<span>${esc(pi.local)}</span></b><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[1] : "", pi.visitante)}<span>${esc(pi.visitante)}</span></b><small>${esc(combi ? pi.texto + (pi.cuota ? " · " + pi.cuota.toFixed(2).replace(".", ",") : "") : pi.liga || "")}</small></span>
+      <span class="mm">${marc ? `<span>${marc[1]}</span><span>${marc[2]}</span>` : ""}</span>
+      <span class="ms">${va === true ? "✅" : va === false ? "❌" : ""}</span></${tag}>` };
+}
+function tarjetaMia(a) {
+  const combi = !!a.piernas, filas = patas(a).map(pi => filaPata(pi, combi));
+  const vivo = filas.some(f => f.e && f.e.st === "in"), falla = filas.some(f => f.va === false);
+  const bien = filas.length && filas.every(f => f.va === true), acabado = filas.every(f => f.e && f.e.st === "post");
   const estadoAp = a.ok === true ? `<span class="mest bien">Ganada ${sigM(ganMia(a))}</span>` : a.ok === false ? `<span class="mest mal">Perdida ${sigM(ganMia(a))}</span>`
     : a.ok === null && resuelta(a) ? `<span class="mest">Anulada</span>`
-    : e && e.st === "in" ? (va === true ? `<span class="mest bien">Va ganando</span>` : va === false ? `<span class="mest mal">Va perdiendo</span>` : `<span class="mest">En directo</span>`)
-    : e && e.st === "post" ? `<span class="mest">Falta marcarla</span>` : `<span class="mest">En juego</span>`;
+    : falla ? `<span class="mest mal">${combi ? "Se ha caído una" : "Va perdiendo"}</span>`
+    : vivo && bien ? `<span class="mest bien">Va ganando</span>` : vivo ? `<span class="mest">En directo</span>`
+    : acabado ? `<span class="mest">Falta marcarla</span>` : `<span class="mest">En juego</span>`;
   const cls = a.ok === true ? "bien" : a.ok === false ? "mal" : "";
   const acc = resuelta(a)
     ? `<button data-apres="${a.id}" data-v="">↺ Deshacer</button>`
     : `<button data-apres="${a.id}" data-v="g">✅ Ganada</button><button data-apres="${a.id}" data-v="p">❌ Perdida</button><button data-apres="${a.id}" data-v="n">Anulada</button>`;
+  const titulo = combi ? `🧩 Combinada de ${a.piernas.length}` : esc(a.texto);
   return `<article class="mtarj ${cls}">
-    <div class="mcab"><div><b>${esc(a.texto)}</b> · cuota ${a.cuota.toFixed(2).replace(".", ",")}</div>${estadoAp}</div>
+    <div class="mcab"><div><b>${titulo}</b> · cuota ${a.cuota.toFixed(2).replace(".", ",")}</div>${estadoAp}</div>
     <div class="mdin"><span>Apostado <b>${eurosM(a.importe)}</b></span><span>${a.ok === true ? "Cobrado" : "Si gana"} <b>${eurosM(a.importe * a.cuota)}</b></span></div>
-    <${tag} class="mpierna ${va === true ? "bien" : va === false ? "mal" : ""}"${attrs}>
-      <span class="mh">${hora}</span>
-      <span class="me"><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[0] : "", a.local)}<span>${esc(a.local)}</span></b><b>${miniEsc(p && p.fi && p.fi.esc ? p.fi.esc[1] : "", a.visitante)}<span>${esc(a.visitante)}</span></b><small>${esc(a.liga || "")}</small></span>
-      <span class="mm">${marc ? `<span>${marc[1]}</span><span>${marc[2]}</span>` : ""}</span>
-      <span class="ms">${va === true ? "✅" : va === false ? "❌" : ""}</span></${tag}>
+    ${filas.map(f => f.html).join("")}
     <div class="macc">${acc}<button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div></article>`;
 }
 function graficaMias() {
@@ -2430,10 +2466,22 @@ function tablaGrupos(titulo, grupos) {
   }).join("");
   return filas ? `<h3 class="mst">${titulo}</h3><table class="mtab"><tr><th></th><th>Acert.</th><th>%</th><th>Ganancia</th><th>ROI</th></tr>${filas}</table>` : "";
 }
+function seccionBoleto() {
+  if (!BOLETO.piernas.length) return "";
+  const c = cuotaBoleto(), cv = numES(BOLETO.c) || c, iv = numES(BOLETO.i);
+  return `<section class="apform" id="bolform"><h3>🧩 Combinada en preparación</h3>
+    ${BOLETO.piernas.map((pi, k) => `<div class="bolpata"><span><b>${esc(pi.local)} – ${esc(pi.visitante)}</b><small>${esc(pi.texto)}${pi.cuota ? " · " + pi.cuota.toFixed(2).replace(".", ",") : ""}</small></span><button data-bolquitar="${k}" aria-label="Quitar">✕</button></div>`).join("")}
+    ${BOLETO.piernas.length < 2 ? `<p class="apnota">Añade al menos otra selección desde la pestaña Probabilidades de otro partido.</p>` : ""}
+    <div class="apfila"><label class="aplab">Cuota total<input id="bolC" class="apin" inputmode="decimal" placeholder="${c ? c.toFixed(2).replace(".", ",") : "la que diga tu casa"}" value="${esc(BOLETO.c)}"></label>
+      <label class="aplab">Apostado (€)<input id="bolI" class="apin" inputmode="decimal" placeholder="2,00" value="${esc(BOLETO.i)}"></label></div>
+    <div class="apinfo" id="bolInfo">${cv > 1 && iv > 0 ? `Si gana cobras <b>${eurosM(iv * cv)}</b> (${sigM(iv * (cv - 1))}).` : ""}</div>
+    <div class="apbtns"><button class="apbtn" data-bolguardar="1">Guardar combinada</button><button class="apbtn ap2" data-bolvaciar="1">Vaciar</button></div>
+    <p class="apnota">Pon la cuota total que te da tu casa (si no, se usa la multiplicación de las cuotas que pusiste).</p></section>`;
+}
 function pintarMisApuestas() {
   resolverMias();
   if (!MIAS.vivoT || Date.now() - MIAS.vivoT > 50000) { MIAS.vivoT = Date.now(); enDirecto(); }
-  let h = `<div class="lbar"><h2><span>📊</span><span class="t">Estadísticas</span></h2></div>`;
+  let h = `<div class="lbar"><h2><span>📊</span><span class="t">Estadísticas</span></h2></div>` + seccionBoleto();
   if (MIAS.inicial === null || MIAS.inicial === undefined) {
     $("vista").innerHTML = h + `<section class="mcard"><h3>¿Con cuánto dinero empiezas?</h3>
       <p>Pon lo que tienes ahora en tu casa de apuestas. Desde aquí se irá midiendo lo que ganas y pierdes con las apuestas que apuntes en cada partido (pestaña Probabilidades, abajo del todo).</p>
@@ -2461,7 +2509,7 @@ function pintarMisApuestas() {
     const dep = d => L.filter(a => (a.dep || "f") === d);
     const rango = (lo, hi) => L.filter(a => a.cuota >= lo && a.cuota < hi);
     h += `<details class="mcard mdet"><summary>📈 Por deporte y por cuota</summary>` +
-      tablaGrupos("Por deporte", [{ n: "⚽ Fútbol", l: dep("f") }, { n: "🏀 Basket", l: dep("b") }, { n: "🎾 Tenis", l: dep("te") }, { n: "🎮 Esports", l: dep("e") }]) +
+      tablaGrupos("Por deporte", [{ n: "⚽ Fútbol", l: dep("f") }, { n: "🏀 Basket", l: dep("b") }, { n: "🎾 Tenis", l: dep("te") }, { n: "🎮 Esports", l: dep("e") }, { n: "🧩 Combinadas", l: dep("c") }]) +
       tablaGrupos("Por cuota", [{ n: "1,01–1,49", l: rango(1, 1.5) }, { n: "1,50–1,99", l: rango(1.5, 2) }, { n: "2,00–2,99", l: rango(2, 3) }, { n: "3,00 o más", l: rango(3, 1e9) }]) + `</details>`;
   }
   if (!L.length) h += `<div class="vacio">Aún no has apuntado ninguna apuesta. Abre un partido y, en <b>Probabilidades</b>, abajo del todo, pon el mercado, la cuota y lo que apuestas.</div>`;
@@ -2494,19 +2542,29 @@ function formApuesta(p, dia) {
     if (sel) { const v = sel.p * cuota - 1; info += ` Según la app acierta el ${pct(sel.p)}: ${v >= 0 ? `<span class="pos">a la larga ganarías ${Math.round(v * 100)} %</span>` : `<span class="neg">a la larga perderías ${Math.round(-v * 100)} %</span>`}.`; }
     if (MIAS.inicial !== null && MIAS.inicial !== undefined) { const c = cuentas(); if (imp > c.disponible) info += ` <span class="neg">Es más de lo que tienes (${eurosM(c.disponible)}).</span>`; else info += ` Es el ${(imp / c.disponible * 100).toFixed(1).replace(".", ",")} % de tu dinero.`; }
   }
-  const ya = MIAS.apuestas.filter(a => a.local === p.local && a.visitante === p.visitante && a.fecha === dia.fecha);
+  const esta = pi => pi.local === p.local && pi.visitante === p.visitante && pi.fecha === dia.fecha;
+  const ya = MIAS.apuestas.filter(a => patas(a).some(esta));
+  const enBol = BOLETO.piernas.find(esta);
+  const txtYa = a => a.piernas ? `🧩 Combinada de ${a.piernas.length} (${esc(a.piernas.find(esta).texto)})` : esc(a.texto);
   return `<section class="apform" id="apform"><h3>🎟️ Apuntar una apuesta</h3>
     <label class="aplab">Mercado<select id="apM"><option value="">Elige el mercado…</option>${ops.map(k => `<option value="${esc(k.m)}"${k.m === f.m ? " selected" : ""}>${esc(textoMercado({ mercado: k.m, local: p.local, visitante: p.visitante }))} · ${pct(k.p)}</option>`).join("")}<option value="__otro"${f.m === "__otro" ? " selected" : ""}>Otro (escríbelo)</option></select></label>
     ${f.m === "__otro" ? `<input id="apOtro" class="apin" placeholder="Por ejemplo: Mbappé marca" value="${esc(f.otro)}">` : ""}
     <div class="apfila"><label class="aplab">Cuota<input id="apC" class="apin" inputmode="decimal" placeholder="1,85" value="${esc(f.c)}"></label>
       <label class="aplab">Apostado (€)<input id="apI" class="apin" inputmode="decimal" placeholder="2,00" value="${esc(f.i)}"></label></div>
     <div class="apinfo" id="apInfo">${info}</div>
-    <button class="apbtn" data-apguardar="1">Guardar apuesta</button>
-    ${ya.length ? `<div class="apya">${ya.map(a => `<div><span>${esc(a.texto)} · ${a.cuota.toFixed(2).replace(".", ",")} · ${eurosM(a.importe)}${resuelta(a) ? (a.ok === true ? " · ✅" : a.ok === false ? " · ❌" : " · anulada") : ""}</span><button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div>`).join("")}</div>` : ""}
-    <p class="apnota">Se guarda en <b>Estadísticas</b>. Si es un mercado de la lista, se marca sola como ganada o perdida al acabar.</p></section>`;
+    <div class="apbtns"><button class="apbtn" data-apguardar="1">Guardar sencilla</button><button class="apbtn ap2" data-apcombi="1">➕ A la combinada</button></div>
+    ${enBol ? `<p class="apnota">🧩 En tu combinada: <b>${esc(enBol.texto)}</b>${enBol.cuota ? " · " + enBol.cuota.toFixed(2).replace(".", ",") : ""}</p>` : ""}
+    ${ya.length ? `<div class="apya">${ya.map(a => `<div><span>${txtYa(a)} · ${a.cuota.toFixed(2).replace(".", ",")} · ${eurosM(a.importe)}${resuelta(a) ? (a.ok === true ? " · ✅" : a.ok === false ? " · ❌" : " · anulada") : ""}</span><button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div>`).join("")}</div>` : ""}
+    <p class="apnota">Se guarda en <b>Estadísticas</b>. Si es un mercado de la lista, se marca sola como ganada o perdida al acabar. Para una combinada, añade una selección de cada partido con «➕ A la combinada» (la cuota de cada una es opcional) y termínala en Estadísticas.</p></section>`;
 }
 document.addEventListener("input", e => {
   if (e.target.id === "miniV") { est.miniV = e.target.value; return; }
+  if (e.target.id === "bolC" || e.target.id === "bolI") {
+    BOLETO[e.target.id === "bolC" ? "c" : "i"] = e.target.value; try { localStorage.setItem("boletoV1", JSON.stringify(BOLETO)); } catch (x) {}
+    const cv = numES(BOLETO.c) || cuotaBoleto(), iv = numES(BOLETO.i);
+    if ($("bolInfo")) $("bolInfo").innerHTML = cv > 1 && iv > 0 ? `Si gana cobras <b>${eurosM(iv * cv)}</b> (${sigM(iv * (cv - 1))}).` : "";
+    return;
+  }
   if (!est.apf || !["apC", "apI", "apOtro"].includes(e.target.id)) return;
   est.apf[{ apC: "c", apI: "i", apOtro: "otro" }[e.target.id]] = e.target.value;
   const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel];
@@ -2520,8 +2578,31 @@ document.addEventListener("change", e => {
   pintarLista();
 });
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-apguardar],[data-apborrar],[data-apres],[data-apinicial],[data-apm]");
+  const b = e.target.closest("[data-apguardar],[data-apborrar],[data-apres],[data-apinicial],[data-apm],[data-apcombi],[data-bolquitar],[data-bolguardar],[data-bolvaciar]");
   if (!b) return;
+  if (b.dataset.apcombi) {
+    const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel], f = est.apf; if (!p || !f) return;
+    const otro = f.m === "__otro" ? (f.otro || "").trim() : "", cuota = numES(f.c);
+    if (!f.m || (f.m === "__otro" && !otro)) return alert("Elige el mercado (o escríbelo en «Otro»).");
+    const m = f.m === "__otro" ? null : f.m;
+    const pi = { fecha: dia.fecha, hora: p.hora, dep: p.dep || "f", liga: p.liga, local: p.local, visitante: p.visitante, m,
+      texto: m ? textoMercado({ mercado: m, local: p.local, visitante: p.visitante }) : otro, cuota: cuota > 1 ? Math.round(cuota * 100) / 100 : null };
+    BOLETO.piernas = BOLETO.piernas.filter(x => !(x.local === p.local && x.visitante === p.visitante && x.fecha === dia.fecha)).concat([pi]);
+    est.apf = { k: f.k, m: "", c: "", i: f.i, otro: "" };
+    guardarBoleto(); pintarLista(); return;
+  }
+  if (b.dataset.bolquitar !== undefined) { BOLETO.piernas.splice(+b.dataset.bolquitar, 1); guardarBoleto(); pintarLista(); return; }
+  if (b.dataset.bolvaciar) { if (!confirm("¿Vaciar la combinada en preparación?")) return; BOLETO = { piernas: [], c: "", i: "" }; guardarBoleto(); pintarLista(); return; }
+  if (b.dataset.bolguardar) {
+    if (BOLETO.piernas.length < 2) return alert("Una combinada necesita al menos 2 selecciones de partidos distintos.");
+    const cuota = numES(BOLETO.c) || cuotaBoleto(), imp = numES(BOLETO.i);
+    if (!(cuota > 1)) return alert("Pon la cuota total de la combinada.");
+    if (!(imp > 0)) return alert("Pon lo que has apostado.");
+    const ps = BOLETO.piernas.slice().sort((x, y) => (x.fecha + (x.hora || "99")).localeCompare(y.fecha + (y.hora || "99")));
+    MIAS.apuestas.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), tipo: "combinada", dep: "c",
+      fecha: ps[0].fecha, hora: ps[0].hora, piernas: ps, cuota: Math.round(cuota * 100) / 100, importe: Math.round(imp * 100) / 100, creada: AHORA.fecha + " " + AHORA.hora });
+    BOLETO = { piernas: [], c: "", i: "" }; guardarBoleto(); guardarMias(); contarMisApuestas(); syncPush(); pintarLista(); return;
+  }
   if (b.dataset.apm !== undefined) {   // tocar un mercado de la lista lo elige en el formulario
     const dia = DATOS.dias[est.dia], p = dia && dia.partidos[est.sel]; if (!p) return;
     est.apf = { k: p.local + "|" + p.visitante, m: b.dataset.apm, c: "", i: (est.apf && est.apf.i) || "", otro: "" };
@@ -2560,7 +2641,7 @@ document.addEventListener("click", e => {
   if (b.dataset.apres !== undefined) {
     const a = MIAS.apuestas.find(x => x.id === b.dataset.apres); if (!a) return;
     const v = b.dataset.v;
-    if (v === "") { delete a.ok; delete a.auto; delete a.res; a.manual = true; }   // vuelve a "en juego" y ya no se marca sola
+    if (v === "") { delete a.ok; delete a.auto; delete a.res; a.manual = true; patas(a).forEach(pi => { if (a.piernas) { delete pi.ok; delete pi.res; } }); }   // vuelve a "en juego" y ya no se marca sola
     else { a.ok = v === "g" ? true : v === "p" ? false : null; a.manual = true; delete a.auto; }
     guardarMias(); contarMisApuestas(); pintarLista(); return;
   }
