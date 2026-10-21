@@ -542,21 +542,40 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .rres { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); text-align: center; border-radius: 10px; padding: 6px; }
 .rres.bien { color: var(--ok-ink); background: var(--ok-soft); } .rres.mal { color: var(--red-ink); background: var(--red-soft); }
 .rmes p { margin: 6px 0 0; }
-.evs { display: grid; gap: 12px; }
-.ev { position: relative; overflow: hidden; width: 100%; display: grid; grid-template-columns: 56px minmax(0, 1fr); grid-template-rows: auto auto; gap: 4px 12px; align-items: center; text-align: left;
-  border: 0; border-radius: 22px; padding: 18px 16px 14px; min-height: 128px; color: #fff; cursor: pointer; font: inherit; box-shadow: 0 8px 22px rgba(15, 23, 42, .18); }
-.ev::after { content: ""; position: absolute; right: -30px; top: -30px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.10); }
-.ev .evico { grid-row: 1 / 3; font-size: 40px; text-align: center; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
-.ev .evtx { display: flex; flex-direction: column; gap: 3px; min-width: 0; z-index: 1; }
-.ev .evtx b { font-size: 19px; letter-spacing: -.01em; } .ev .evtx small { font-size: 12.5px; opacity: .9; line-height: 1.35; } .ev .evx { font-weight: 700; opacity: 1 !important; margin-top: 2px; }
-.ev .evchip { grid-column: 2; justify-self: start; z-index: 1; font: 700 11px var(--mono); padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.22); }
+.evs { display: grid; gap: 14px; }
+.ev { position: relative; overflow: hidden; width: 100%; height: 132px; display: flex; align-items: flex-end; text-align: left; border: 0; border-radius: 22px; padding: 16px; color: #fff; cursor: pointer; font: inherit; box-shadow: 0 10px 24px rgba(15, 23, 42, .22); isolation: isolate; }
+.ev:active { transform: scale(.985); }
+.ev .evart { position: absolute; inset: 0 0 0 auto; height: 100%; width: auto; max-width: 75%; z-index: -1; }
+.ev::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(0,0,0,.28), rgba(0,0,0,0) 65%); }
+.ev .evtx { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; max-width: 70%; }
+.ev .evtx b { font-size: 24px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; text-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.ev .evtx small { font-size: 13px; opacity: .95; line-height: 1.35; }
+.ev .evchip { font: 700 11px var(--mono); padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.25); backdrop-filter: blur(4px); }
 .ev .evchip.on { background: #fff; color: #1e1b4b; }
 .ev-app { background: linear-gradient(125deg, #1d4ed8, #7c3aed); }
-.ev-sup { background: linear-gradient(125deg, #065f46, #0d9488); }
+.ev-sup { background: linear-gradient(125deg, #064e3b, #0d9488); }
 .ev-porra { background: linear-gradient(125deg, #c2410c, #e11d48); }
-.ev-amigos { background: linear-gradient(125deg, #be185d, #9333ea); }
-.ev-premios { background: linear-gradient(125deg, #b45309, #eab308); }
-.evgrande { cursor: default; margin-bottom: 14px; }
+.ev-amigos { background: linear-gradient(125deg, #be185d, #7e22ce); }
+.ev-premios { background: linear-gradient(125deg, #92400e, #eab308); }
+.evgrande { cursor: default; margin-bottom: 14px; height: 160px; }
+@keyframes a-flota { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes a-late { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes a-parpadeo { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes a-luz { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+@keyframes a-latido { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
+@keyframes a-tic { 0%, 20% { stroke-dashoffset: 30; } 40%, 100% { stroke-dashoffset: 0; } }
+@keyframes a-bota { 0%, 100% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(14px, -38px) rotate(180deg); } }
+@keyframes a-brillo { 0%, 100% { opacity: .2; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes a-confeti { from { transform: translateY(-10px) rotate(0); } to { transform: translateY(140px) rotate(360deg); } }
+.evart .a-flota { animation: a-flota 3s ease-in-out infinite; } .evart .a-flota2 { animation: a-flota 3.6s ease-in-out .8s infinite; }
+.evart .a-late { animation: a-late 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.evart .a-ojo { animation: a-parpadeo 4s infinite; transform-box: fill-box; transform-origin: center; } .evart .a-luz { animation: a-luz 1.2s infinite; }
+.evart .a-latido { stroke-dasharray: 400; animation: a-latido 2.4s linear infinite; }
+.evart .a-tic1, .evart .a-tic2, .evart .a-tic3 { stroke-dasharray: 30; animation: a-tic 3s ease-out infinite; } .evart .a-tic2 { animation-delay: .4s; } .evart .a-tic3 { animation-delay: .8s; }
+.evart .a-bota { animation: a-bota 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.evart .a-brillo, .evart .a-brillo2, .evart .a-brillo3 { animation: a-brillo 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; } .evart .a-brillo2 { animation-delay: .7s; } .evart .a-brillo3 { animation-delay: 1.3s; }
+.evart .a-confeti rect { animation: a-confeti 3s linear infinite; } .evart .a-confeti rect:nth-child(2) { animation-delay: 1s; } .evart .a-confeti rect:nth-child(3) { animation-delay: 2s; }
+@media (prefers-reduced-motion: reduce) { .evart * { animation: none !important; } }
 /* ---------- Estadísticas (tus apuestas) y formulario para apuntarlas ---------- */
 .mcard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--sombra); padding: 14px; margin-bottom: 12px; }
 .mcard h3 { margin: 0 0 6px; font-size: 16px; } .mcard p { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.4; }
@@ -2783,34 +2802,61 @@ function bannerReto() {
 }
 // Pantalla Desafíos: un rectángulo por evento, cada uno con su estilo; al tocarlo entras en él
 const EVENTOS = [
-  { id: "reto", ico: "🤖", t: "Gánale a la app", d: "6 partidos al día. Tú contra la máquina: acierta donde ella falla.", tema: "ev-app", activo: true },
-  { id: "superv", ico: "🛡️", t: "Supervivencia", d: "Cada jornada, un equipo que gane y sin repetir. Si falla, fuera. Gana el último en pie.", tema: "ev-sup" },
-  { id: "porra", ico: "📋", t: "Porra semanal", d: "Los 10 partidos gordos de la semana. El que más acierte se lleva premio.", tema: "ev-porra" },
-  { id: "amigos", ico: "👥", t: "Ligas con amigos", d: "Crea una liga, pásales el código y compite con tu grupo en todos los desafíos.", tema: "ev-amigos" },
-  { id: "premios", ico: "🎁", t: "Ranking y premios", d: "Clasificación con toda la gente que juegue y premios cada mes: camisetas, balones…", tema: "ev-premios" },
+  { id: "reto", t: "Gánale a la app", d: "6 partidos al día. Tú contra la máquina: acierta donde ella falla.", tema: "ev-app", activo: true },
+  { id: "superv", t: "Supervivencia", d: "Cada jornada, un equipo que gane y sin repetir. Si falla, fuera. Gana el último en pie.", tema: "ev-sup" },
+  { id: "porra", t: "Porra semanal", d: "Los 10 partidos gordos de la semana. El que más acierte se lleva premio.", tema: "ev-porra" },
+  { id: "amigos", t: "Ligas con amigos", d: "Crea una liga, pásales el código y compite con tu grupo en todos los desafíos.", tema: "ev-amigos" },
+  { id: "premios", t: "Ranking y premios", d: "Clasificación con toda la gente que juegue y premios cada mes: camisetas, balones…", tema: "ev-premios" },
 ];
+// Dibujo animado de fondo de cada evento (SVG propio)
+const ARTE_EV = {
+  reto: `<svg viewBox="0 0 200 120" class="evart" aria-hidden="true">
+    <g stroke="rgba(255,255,255,.18)" stroke-width="2" fill="none"><line x1="100" y1="0" x2="100" y2="120"/><circle cx="100" cy="60" r="26"/><rect x="2" y="30" width="26" height="60"/><rect x="172" y="30" width="26" height="60"/></g>
+    <g class="a-flota"><rect x="128" y="34" width="46" height="40" rx="10" fill="#e0e7ff"/><line x1="151" y1="34" x2="151" y2="22" stroke="#e0e7ff" stroke-width="3"/><circle cx="151" cy="19" r="5" fill="#f472b6" class="a-luz"/>
+      <circle cx="141" cy="52" r="6" fill="#1e1b4b" class="a-ojo"/><circle cx="161" cy="52" r="6" fill="#1e1b4b" class="a-ojo"/><rect x="140" y="63" width="22" height="4" rx="2" fill="#1e1b4b"/></g>
+    <g class="a-late"><circle cx="100" cy="60" r="17" fill="#fbbf24"/><text x="100" y="66" text-anchor="middle" font-size="16" font-weight="900" fill="#1e1b4b" font-family="system-ui">VS</text></g></svg>`,
+  superv: `<svg viewBox="0 0 200 120" class="evart" aria-hidden="true">
+    <path d="M150 14 L182 26 V58 C182 82 166 98 150 106 C134 98 118 82 118 58 V26 Z" fill="rgba(255,255,255,.16)" stroke="rgba(255,255,255,.55)" stroke-width="3"/>
+    <polyline class="a-latido" points="0,70 40,70 52,70 60,48 70,92 80,40 90,70 130,70 200,70" fill="none" stroke="#a7f3d0" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+    <text x="150" y="70" text-anchor="middle" font-size="28" font-weight="900" fill="#fff" font-family="system-ui" class="a-late">1</text></svg>`,
+  porra: `<svg viewBox="0 0 200 120" class="evart" aria-hidden="true">
+    <rect x="118" y="16" width="62" height="86" rx="8" fill="rgba(255,255,255,.92)"/><rect x="136" y="10" width="26" height="12" rx="4" fill="#fde68a"/>
+    <g stroke="#e11d48" stroke-width="4" stroke-linecap="round"><path d="M128 40 l5 5 l9 -10" class="a-tic1" fill="none"/><path d="M128 62 l5 5 l9 -10" class="a-tic2" fill="none"/><path d="M128 84 l5 5 l9 -10" class="a-tic3" fill="none"/></g>
+    <g stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"><line x1="150" y1="40" x2="170" y2="40"/><line x1="150" y1="62" x2="170" y2="62"/><line x1="150" y1="84" x2="166" y2="84"/></g>
+    <g class="a-bota"><circle cx="70" cy="92" r="17" fill="#fff"/><path d="M70 82 l9 6 -3 10 h-12 l-3 -10z" fill="#111827"/></g></svg>`,
+  amigos: `<svg viewBox="0 0 200 120" class="evart" aria-hidden="true">
+    <g fill="rgba(255,255,255,.9)"><circle cx="112" cy="58" r="13"/><path d="M90 104 c0-20 44-20 44 0z"/><circle cx="152" cy="50" r="15"/><path d="M127 104 c0-24 50-24 50 0z"/><circle cx="190" cy="60" r="12"/></g>
+    <g class="a-flota"><rect x="96" y="12" width="38" height="22" rx="10" fill="#fde68a"/><text x="115" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="#831843" font-family="system-ui">3-1</text></g>
+    <g class="a-flota2"><rect x="146" y="6" width="34" height="20" rx="10" fill="#fff"/><text x="163" y="21" text-anchor="middle" font-size="12" fill="#9333ea" font-family="system-ui">🔥</text></g></svg>`,
+  premios: `<svg viewBox="0 0 200 120" class="evart" aria-hidden="true">
+    <g class="a-flota"><path d="M126 18 h44 v18 c0 18 -10 28 -22 30 c-12 -2 -22 -12 -22 -30z" fill="#fde047" stroke="#a16207" stroke-width="2"/>
+      <path d="M126 24 h-10 c0 14 8 20 14 20 M170 24 h10 c0 14 -8 20 -14 20" fill="none" stroke="#fde047" stroke-width="4"/>
+      <rect x="142" y="66" width="12" height="14" fill="#facc15"/><rect x="130" y="80" width="36" height="10" rx="3" fill="#a16207"/></g>
+    <g fill="#fff"><path class="a-brillo" d="M100 20 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/><path class="a-brillo2" d="M188 70 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z"/><path class="a-brillo3" d="M112 88 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/></g>
+    <g class="a-confeti"><rect x="60" y="0" width="5" height="9" fill="#f472b6"/><rect x="84" y="-20" width="5" height="9" fill="#60a5fa"/><rect x="40" y="-40" width="5" height="9" fill="#fff"/></g></svg>`,
+};
 function pintarDesafios() {
   let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div><div class="evs">`;
   for (const ev of EVENTOS) {
-    let chip = `<span class="evchip">Próximamente</span>`, extra = "";
+    let estado = "Próximamente", on = false;
     if (ev.id === "reto") {
+      on = true;
       const r = DATOS.dias.some(d => d.fecha === AHORA.fecha) ? retoDelDia(AHORA.fecha) : null;
       if (r) {
         const c = cuentaReto(r), pend = r.partidos.filter(x => !r.picks[claveReto(x)] && !estadoReto(x).empezado).length;
-        chip = `<span class="evchip on">Hoy · Tú ${c.yo} – ${c.app} App</span>`;
-        extra = `<small class="evx">${pend ? `Te quedan ${pend} partido${pend > 1 ? "s" : ""} por pronosticar` : c.elegidos ? "Ya has jugado hoy: mira cómo vas" : "El reto de hoy ya ha empezado"}</small>`;
-      } else chip = `<span class="evchip on">Jugar</span>`;
+        estado = `Tú ${c.yo} – ${c.app} App` + (c.vivos ? ` · ● ${c.vivos} en juego` : pend ? ` · ${pend} por jugar` : "");
+      } else estado = "Jugar";
     }
     h += `<button class="ev ${ev.tema}" data-vista="${ev.id === "reto" ? "reto" : "evento"}" data-evento="${ev.id}">
-      <span class="evico">${ev.ico}</span><span class="evtx"><b>${ev.t}</b><small>${ev.d}</small>${extra}</span>${chip}</button>`;
+      ${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${ev.t}</b><span class="evchip ${on ? "on" : ""}">${esc(estado)}</span></span></button>`;
   }
   $("vista").innerHTML = h + `</div>`;
 }
 // Eventos que aún no están: su pantalla con lo que será
 function pintarEvento() {
   const ev = EVENTOS.find(e => e.id === est.evento) || EVENTOS[1];
-  $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span>${ev.ico}</span><span class="t">${ev.t}</span></h2></div>
-    <section class="ev ${ev.tema} evgrande"><span class="evico">${ev.ico}</span><span class="evtx"><b>${ev.t}</b><small>${ev.d}</small></span></section>
+  $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
+    <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${ev.t}</b><small>${ev.d}</small></span></section>
     <div class="vacio">Este desafío llega pronto. Mientras tanto, juega a <b>Gánale a la app</b>: tus puntos de este mes contarán para el ranking.</div>
     <button class="apbtn" data-vista="reto" style="max-width:340px;margin:0 auto;display:block">🤖 Jugar a Gánale a la app</button>`;
 }
