@@ -520,6 +520,9 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
 .pcam { color: #6d28d9; font-weight: 700; }
+.rtab td.rpr { text-align: right; padding-left: 2px; padding-right: 2px; } .rtab th:nth-child(3) { text-align: right; }
+.rprc { display: inline-flex; flex-direction: column; align-items: flex-end; font: 700 11px var(--mono); color: #b45309; background: var(--gold-soft); border-radius: 8px; padding: 3px 6px; white-space: nowrap; }
+.rprc small { font-size: 9.5px; color: #6d28d9; font-weight: 700; }
 .gbtn { width: 100%; text-align: left; border: 1px dashed var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 10px 14px; margin: 0 0 12px; font: 600 13px var(--body); cursor: pointer; }
 .lnk { border: 0; background: none; padding: 0; color: #4f46e5; font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
 .rsem { width: 100%; margin: 8px 0 2px; font: 600 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; }
@@ -2946,11 +2949,21 @@ function xpBots() {
       v[b.n] = (v[b.n] || 0) + n * 50 + puntosDia(r, x => eligeBot(b, x)).pts * 10; } }
   _XB = { t: Date.now() >> 14, v }; return v;
 }
-function tablaClasif(filas, todas) {
+// Premio que se llevaría cada puesto si la semana o el mes terminasen ahora
+const PREMIOS_RANK = { semana: [[1000, 3000], [600, 3000], [400, 3000], [200, 1500]], mes: [[5000, 10000], [3000, 10000], [2000, 10000], [1000, 5000]] };
+function premioDe(tipo, f) {
+  if (!PREMIOS_RANK[tipo] || !f.pts || f.pos > 10) return null;
+  const [mon, xp] = PREMIOS_RANK[tipo][Math.min(f.pos, 4) - 1];
+  return { mon, xp, fis: tipo === "mes" && f.pos <= 3 ? ["👕", "⚽", "🧣"][f.pos - 1] : "" };
+}
+const kXP = n => n >= 1000 ? (n / 1000).toLocaleString("es-ES") + "k" : String(n);
+function tablaClasif(filas, todas, tipo) {
   const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10);
+  const prem = f => { const x = premioDe(tipo, f); return PREMIOS_RANK[tipo] ? `<td class="rpr">${x ? `<span class="rprc">${x.fis ? x.fis + " " : ""}${fmtN(x.mon)} 🪙<small>+${kXP(x.xp)} XP</small></span>` : ""}</td>` : ""; };
   const av = f => f.app ? `<span class="av" style="--s:30px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(f.perfil, 30);
-  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td><td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
-  return `<table class="rtab"><tr><th>#</th><th>Jugador</th><th>Aciertos</th><th>Pts</th></tr>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<tr class="sep"><td colspan="4">···</td></tr>` + fila(yo) : ""}</table>`;
+  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${!f.pts ? "–" : f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td>${prem(f)}<td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
+  const nc = PREMIOS_RANK[tipo] ? 5 : 4;
+  return `<table class="rtab"><tr><th>#</th><th>Jugador</th>${PREMIOS_RANK[tipo] ? "<th>Premio</th>" : ""}<th>Aciertos</th><th>Pts</th></tr>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<tr class="sep"><td colspan="${nc}">···</td></tr>` + fila(yo) : ""}</table>`;
 }
 function seccionClasif() {
   const mes = AHORA.fecha.slice(0, 7), dias = Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort();
@@ -2963,7 +2976,7 @@ function seccionClasif() {
   return `<section class="mcard rclas"><div class="rclt"><h3>🏆 Clasificación</h3><div class="rseg"><button data-clasr="hoy" aria-pressed="${vista === "hoy"}">Hoy</button><button data-clasr="semana" aria-pressed="${vista === "semana"}">Semana</button><button data-clasr="mes" aria-pressed="${vista === "mes"}">Mes</button></div></div>
     ${vista === "semana" ? `<select id="semSel" class="rsem">${sems.map(x => `<option value="${x.i}"${x.i === w.i ? " selected" : ""}>Semana ${x.i} · ${fCorta(x.desde)}–${fCorta(x.hasta)}${x.i === actual ? " (esta)" : x.hasta < AHORA.fecha ? " · terminada" : ""}</option>`).join("")}</select>` : ""}
     <p>${filas.some(f => f.pts) ? `Vas <b>${yo.pts ? yo.pos + ".º" : "sin puntos"}</b> de ${filas.length}${yo.pts ? ` con ${yo.pts} puntos` : ""}.` : "Aún no hay puntos: llegan cuando acaben los partidos."}</p>
-    ${premios}${tablaClasif(filas)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa del mes</button>
+    ${premios}${tablaClasif(filas, false, vista)}<button class="apbtn ap2" data-vista="evento" data-evento="premios" style="margin-top:10px">Ver la clasificación completa del mes</button>
     <p class="apnota">De momento son 40 jugadores de prueba con estilos distintos, para ver cómo funciona. Cuando haya ranking online, serán personas de verdad.</p></section>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-guia]"); if (!b) return; est.volverGuia = b.dataset.guia; est.vista = "guia"; window.scrollTo({ top: 0 }); pintarLista(); });
@@ -3057,7 +3070,7 @@ function pintarEvento() {
     const filas = clasificacionReto(dias), f = new Date(AHORA.fecha + "T12:00:00");
     $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
       <section class="ev ${ev.tema} evgrande">${ARTE_EV[ev.id] || ""}<span class="evtx"><b>Ranking de ${["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][f.getMonth()]}</b><small>Suma de Gánale a la app de todo el mes</small></span></section>
-      <section class="mcard">${tablaClasif(filas, true)}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
+      <section class="mcard">${tablaClasif(filas, true, "mes")}<p class="apnota">Premios (cuando haya ranking online con gente de verdad): 1.º camiseta, 2.º balón, 3.º bufanda. De momento, 40 jugadores de prueba.</p></section>` + htmlReglas("reto");
     return;
   }
   $("vista").innerHTML = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">${ev.t}</span></h2></div>
