@@ -519,6 +519,55 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
   font: 700 12px/22px var(--mono); font-style: normal; border: 2px solid var(--bg); }
 .abajo .central.envivo .bola::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(225, 29, 72, .55); animation: onda 1.8s ease-out infinite; }
 @keyframes onda { from { transform: scale(.85); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+/* ---------- Perfil, avatares, tienda ---------- */
+.av { --s: 40px; position: relative; display: inline-grid; place-items: center; width: var(--s); height: var(--s); border-radius: 50%; flex: none; }
+.av .avi { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-size: calc(var(--s) * .55); overflow: hidden; line-height: 1; }
+.av .avi img { width: 100%; height: 100%; object-fit: cover; }
+.av[class*="mr-"]:not(.mr-ninguno) { padding: calc(var(--s) * .07); width: calc(var(--s) * 1.14); height: calc(var(--s) * 1.14); }
+.mr-bronce { background: linear-gradient(135deg, #b45309, #fcd34d, #92400e); } .mr-plata { background: linear-gradient(135deg, #94a3b8, #f8fafc, #64748b); }
+.mr-oro { background: linear-gradient(135deg, #ca8a04, #fef08a, #a16207); } .mr-neon { background: #22d3ee; box-shadow: 0 0 10px #22d3ee, 0 0 18px #a855f7; }
+.mr-esmeralda { background: linear-gradient(135deg, #047857, #6ee7b7, #065f46); } .mr-rubi { background: linear-gradient(135deg, #9f1239, #fda4af, #881337); }
+.mr-fuego { background: conic-gradient(#f97316, #ef4444, #facc15, #f97316); animation: girar 4s linear infinite; }
+.mr-arcoiris, .mr-legendario, .mr-inmortal { background: conic-gradient(#ef4444, #f59e0b, #84cc16, #06b6d4, #6366f1, #d946ef, #ef4444); animation: girar 4s linear infinite; }
+.mr-diamante { background: linear-gradient(135deg, #67e8f9, #fff, #a5f3fc, #fff); box-shadow: 0 0 12px rgba(103, 232, 249, .8); }
+.mr-legendario { box-shadow: 0 0 14px rgba(250, 204, 21, .8); } .mr-inmortal { box-shadow: 0 0 18px rgba(217, 70, 239, .9); }
+.mr-fuego .avi, .mr-arcoiris .avi, .mr-legendario .avi, .mr-inmortal .avi { animation: girar 4s linear infinite reverse; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.nc-dorado { color: #d97706 !important; } .nc-cian { color: #0891b2 !important; } .nc-rosa { color: #db2777 !important; } .nc-neonv { color: #16a34a !important; text-shadow: 0 0 8px rgba(34,197,94,.5); }
+.nc-fuegoc { background: linear-gradient(90deg, #f97316, #ef4444, #facc15); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.nc-arcoirisc { background: linear-gradient(90deg, #ef4444, #f59e0b, #84cc16, #06b6d4, #6366f1, #d946ef); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.pbar { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 10px 12px; margin-bottom: 14px; box-shadow: var(--sombra); }
+.pyo { flex: 1; display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; color: var(--ink); font: inherit; min-width: 0; }
+.pyt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; } .pyt b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .pyt small { font-size: 11.5px; color: var(--muted); }
+.pxp { display: block; height: 6px; border-radius: 99px; background: var(--bar); overflow: hidden; margin-top: 3px; } .pxp i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #4f46e5, #a855f7); }
+.pxp.grande { height: 10px; width: 100%; margin: 6px 0 4px; }
+.pmon { border: 0; border-radius: 999px; padding: 8px 12px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; font: 800 14px var(--mono); cursor: pointer; white-space: nowrap; box-shadow: 0 3px 10px rgba(245, 158, 11, .35); }
+.pcab { display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px 16px 16px; margin-bottom: 12px; box-shadow: var(--sombra); text-align: center; }
+.pnom { font-size: 22px; margin-top: 6px; } .ptit { font-size: 13px; color: var(--muted); font-weight: 600; }
+.pniv { width: 100%; display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-top: 8px; } .pniv b { color: var(--ink); font-size: 16px; }
+.psig { font-size: 12px; color: #6d28d9; } .pacc { display: flex; gap: 8px; width: 100%; margin-top: 10px; } .pacc .apbtn { flex: 1; } .pfoto { text-align: center; cursor: pointer; }
+.pins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pin { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; padding: 10px 6px; border-radius: 14px; background: var(--bar); opacity: .45; filter: grayscale(1); }
+.pin.si { opacity: 1; filter: none; background: var(--gold-soft); } .pin span { font-size: 24px; } .pin b { font-size: 11.5px; } .pin small { font-size: 10px; color: var(--muted); line-height: 1.25; }
+.pmov div { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.pmov div > span:first-child { display: flex; flex-direction: column; min-width: 0; } .pmov small { color: var(--muted); font-size: 11px; }
+.pmov div > span:last-child { display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; font-family: var(--mono); font-size: 12px; }
+.pmov .xp { color: #6d28d9; } .pmov .mon { color: #b45309; } .pmov .gasto { color: var(--red); }
+.pgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .pgrid.color, .pgrid.titulo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pit { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 70px; padding: 8px 4px; border-radius: 14px; border: 2px solid transparent; background: var(--bar); cursor: pointer; color: var(--ink); font: inherit; }
+.pit b { font-size: 11.5px; } .pit small { font-size: 10px; color: var(--muted); } .pit.on { border-color: #4f46e5; background: rgba(79, 70, 229, .1); } .pit.lock { opacity: .55; }
+.tcab { display: flex; flex-direction: column; align-items: center; gap: 2px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; border-radius: 22px; padding: 18px; margin-bottom: 8px; text-align: center; }
+.tcab b { font: 800 32px var(--mono); } .tcab small { font-size: 12px; opacity: .85; max-width: 300px; }
+.tit { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; margin-bottom: 8px; }
+.tin { flex: 1; display: flex; flex-direction: column; min-width: 0; } .tin b { font-size: 14px; } .tin small { font-size: 12px; color: var(--muted); }
+.tico { width: 44px; height: 44px; border-radius: 12px; background: var(--bar); display: grid; place-items: center; font: 800 18px var(--body); flex: none; }
+.tbtn { border: 0; border-radius: 999px; padding: 8px 14px; font: 700 13px var(--body); background: #4f46e5; color: #fff; cursor: pointer; white-space: nowrap; }
+.tbtn:disabled { background: var(--bar); color: var(--muted); cursor: default; } .tbtn.ok { background: var(--ok-soft); color: var(--ok-ink); }
+.rjug { display: flex; align-items: center; gap: 8px; } .rjug > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.rcom { margin-top: 8px; display: flex; justify-content: center; } .rcom button { border: 1px dashed #a855f7; background: rgba(168, 85, 247, .08); color: #7e22ce; border-radius: 999px; padding: 6px 12px; font: 700 12px var(--body); cursor: pointer; }
+.rcom button.on { background: #a855f7; color: #fff; border-style: solid; } .rx2 { background: #a855f7; color: #fff; border-radius: 6px; padding: 1px 6px; font-size: 11px; }
+.brindis { position: fixed; left: 16px; right: 16px; top: calc(14px + env(safe-area-inset-top, 0px)); z-index: 99; background: #1e1b4b; color: #fff; border-radius: 16px; padding: 12px 16px; font-size: 13.5px; line-height: 1.45; box-shadow: 0 10px 30px rgba(0,0,0,.3); transform: translateY(-150%); transition: transform .35s ease; pointer-events: none; }
+.brindis.ver { transform: translateY(0); }
 /* ---------- Juego "Gánale a la app" ---------- */
 .retoban { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; border: 0; border-radius: 16px; padding: 12px 14px; margin: 0 0 10px; cursor: pointer;
   background: linear-gradient(120deg, #1d4ed8, #7c3aed); color: #fff; box-shadow: 0 6px 18px rgba(79, 70, 229, .3); }
@@ -1241,11 +1290,14 @@ function enVivo() {
 function pintarLista() {
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
-  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento"].includes(est.vista);
+  document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda"].includes(est.vista);
   if (est.vista === "buscar") return pintarBuscadorGeneral();
   if (est.vista === "reto") return pintarReto();
   if (est.vista === "desafios") return pintarDesafios();
   if (est.vista === "evento") return pintarEvento();
+  if (est.vista === "perfil") return pintarPerfil();
+  if (est.vista === "personalizar") return pintarPersonalizar();
+  if (est.vista === "tienda") return pintarTienda();
   if (est.vista === "misap") return pintarMisApuestas();
   if (est.vista === "ajustes") return pintarPantallaAjustes();  // estas pantallas tienen su propia cabecera
   if (est.vista === "partido") return pintarFicha();
@@ -2806,7 +2858,7 @@ function cuentaReto(r) {
     jugados++;
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
     const yoOk = mio === s.gana, appOk = top.m === s.gana;
-    if (yoOk) yo += ptsReto(x.ops.find(o => o.m === mio).p) + (appOk ? 0 : BONUS_RETO);
+    if (yoOk) yo += (ptsReto(x.ops.find(o => o.m === mio).p) + (appOk ? 0 : BONUS_RETO)) * (r.dobles && r.dobles[claveReto(x)] ? 2 : 1);
     if (appOk) app += ptsReto(top.p);
     if (yoOk && !appOk) ganadas++;
   }
@@ -2851,31 +2903,43 @@ function eligeBot(bot, x) {
   }
 }
 // Puntos de cualquier jugador en un día (picks: {clave: mercado})
-function puntosDia(r, elige) {
+function puntosDia(r, elige, dobles) {
   let pts = 0, ok = 0, jug = 0, vsApp = 0;
   for (const x of r.partidos) {
     const m = elige(x); if (!m) continue;
     const s = estadoReto(x); if (!s.final || !s.gana) continue;
     jug++;
     const top = x.ops.reduce((a, b) => b.p > a.p ? b : a), appOk = top.m === s.gana;
-    if (m === s.gana) { ok++; pts += ptsReto(x.ops.find(o => o.m === m).p) + (appOk ? 0 : BONUS_RETO); if (!appOk) vsApp++; }
+    if (m === s.gana) { ok++; pts += (ptsReto(x.ops.find(o => o.m === m).p) + (appOk ? 0 : BONUS_RETO)) * (dobles && dobles[claveReto(x)] ? 2 : 1); if (!appOk) vsApp++; }
   }
   return { pts, ok, jug, vsApp };
 }
 function clasificacionReto(dias) {
   const filas = [];
-  const suma = elige => dias.reduce((t, d) => { const r = RETO.dias[d], c = puntosDia(r, x => elige(x, r)); return { pts: t.pts + c.pts, ok: t.ok + c.ok, jug: t.jug + c.jug, vsApp: t.vsApp + c.vsApp }; }, { pts: 0, ok: 0, jug: 0, vsApp: 0 });
-  filas.push({ n: "Tú", yo: true, ...suma((x, r) => r.picks[claveReto(x)]) });
-  filas.push({ n: "🤖 La App", app: true, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
-  for (const b of BOTS_RETO) filas.push({ n: b.n, e: ESTILOS[b.e], ...suma(x => eligeBot(b, x)) });
+  const suma = (elige, yo) => dias.reduce((t, d) => { const r = RETO.dias[d], c = puntosDia(r, x => elige(x, r), yo ? r.dobles : null); return { pts: t.pts + c.pts, ok: t.ok + c.ok, jug: t.jug + c.jug, vsApp: t.vsApp + c.vsApp }; }, { pts: 0, ok: 0, jug: 0, vsApp: 0 });
+  const xb = xpBots();
+  filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...suma((x, r) => r.picks[claveReto(x)], true) });
+  filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
+  BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
   filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null;
   filas.forEach((f, i) => { if (f.pts !== ant) { pos = i + 1; ant = f.pts; } f.pos = pos; });
   return filas;
 }
+// XP de los jugadores de prueba (lo mismo que tú: 50 por pronóstico y puntos × 10), con todos los días jugados
+let _XB = null;
+function xpBots() {
+  if (_XB && _XB.t === Date.now() >> 14) return _XB.v;
+  const v = {};
+  for (const d of Object.keys(RETO.dias)) { const r = RETO.dias[d];
+    for (const b of BOTS_RETO) { let n = 0; for (const x of r.partidos) if (eligeBot(b, x) && estadoReto(x).empezado) n++;
+      v[b.n] = (v[b.n] || 0) + n * 50 + puntosDia(r, x => eligeBot(b, x)).pts * 10; } }
+  _XB = { t: Date.now() >> 14, v }; return v;
+}
 function tablaClasif(filas, todas) {
   const yo = filas.find(f => f.yo), ver = todas ? filas : filas.slice(0, 10);
-  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><b>${esc(f.n)}</b>${f.e ? `<small>${esc(f.e)}</small>` : ""}</td><td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
+  const av = f => f.app ? `<span class="av" style="--s:30px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(f.perfil, 30);
+  const fila = f => `<tr class="${f.yo ? "yo" : f.app ? "app" : ""}"><td>${f.pos <= 3 ? ["🥇", "🥈", "🥉"][f.pos - 1] : f.pos}</td><td><span class="rjug">${av(f)}<span><b class="${f.yo ? "nc-" + PERFIL.color : ""}">${esc(f.n)}</b><small>${f.nv ? `Nv ${f.nv} · ` : ""}${esc(f.e || "")}</small></span></span></td><td>${f.ok}/${f.jug}</td><td><b>${f.pts}</b></td></tr>`;
   return `<table class="rtab"><tr><th>#</th><th>Jugador</th><th>Aciertos</th><th>Pts</th></tr>${ver.map(fila).join("")}${!todas && yo.pos > 10 ? `<tr class="sep"><td colspan="4">···</td></tr>` + fila(yo) : ""}</table>`;
 }
 function seccionClasif() {
@@ -2946,7 +3010,8 @@ const ARTE_EV = {
     <g class="a-confeti"><rect x="60" y="0" width="5" height="9" fill="#f472b6"/><rect x="84" y="-20" width="5" height="9" fill="#60a5fa"/><rect x="40" y="-40" width="5" height="9" fill="#fff"/></g></svg>`,
 };
 function pintarDesafios() {
-  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div><div class="evs">`;
+  procesarRecompensas();
+  let h = `<div class="lbar"><h2><span>🎯</span><span class="t">Desafíos</span></h2></div>` + barraJugador() + `<div class="evs">`;
   for (const ev of EVENTOS) {
     let estado = "Próximamente", on = false;
     if (ev.id === "premios") {
@@ -2984,6 +3049,7 @@ function pintarEvento() {
     <button class="apbtn" data-vista="reto" style="max-width:340px;margin:0 auto;display:block">🤖 Jugar a Gánale a la app</button>`;
 }
 function pintarReto() {
+  procesarRecompensas();
   const r = retoDelDia(AHORA.fecha);
   let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span>🎯</span><span class="t">Gánale a la app</span></h2></div>`;
   if (!r) { $("vista").innerHTML = h + `<div class="vacio">Hoy no hay partidos para el reto. Vuelve mañana.</div>`; return; }
@@ -2996,9 +3062,11 @@ function pintarReto() {
     const hora = s.e && s.e.st === "in" ? `<span class="vivo">● ${esc(minutoTxt(s.e.det))}</span>` : s.final ? `<span class="fin">FIN</span>` : esc(x.hora || "");
     const marc = s.e && /^(\d+)-(\d+)$/.exec(s.e.m || "");
     const etiqueta = o => o.n || (o.c === "1" ? nom(x.local) : o.c === "2" ? nom(x.visitante) : "Empate");
+    const segunda = r.segunda && r.segunda[k] === "activa" && s.empezado && !s.final && minutoDe(s.e) <= 15;
+    const bloqueado = s.empezado && !segunda;
     const botones = x.ops.map(o => {
       const yo = mio === o.m, va = s.gana === o.m;
-      return `<button class="rop ${yo ? "yo" : ""} ${s.final && va ? "ok" : ""} ${s.final && yo && !va ? "ko" : ""}" ${s.empezado ? "disabled" : `data-retopick="${esc(k)}" data-m="${esc(o.m)}"`}>
+      return `<button class="rop ${yo ? "yo" : ""} ${s.final && va ? "ok" : ""} ${s.final && yo && !va ? "ko" : ""}" ${bloqueado ? "disabled" : `data-retopick="${esc(k)}" data-m="${esc(o.m)}"`}>
         <span class="rc">${o.c}</span><span class="rn">${esc(etiqueta(o))}</span><span class="rp">${Math.round(o.p * 100)} %</span><span class="rpt">+${ptsReto(o.p)}${o.m !== top.m ? `<i>+${BONUS_RETO}</i>` : ""}</span>${o.m === top.m ? '<span class="rapp">🤖</span>' : ""}</button>`;
     }).join("");
     let res = "";
@@ -3009,7 +3077,10 @@ function pintarReto() {
     } else if (!mio && s.empezado) res = `<p class="rres">No lo pronosticaste</p>`;
     const attrs = s.pos ? ` data-abrirdia="${s.pos[0]}" data-abrirp="${s.pos[1]}" data-desde="reto"` : "";
     return `<article class="rpart"><button class="rcab"${attrs}><span class="rh">${hora}</span><span class="req">${esc(x.local)}<br>${esc(x.visitante)}</span><span class="rmk">${marc ? `${marc[1]}<br>${marc[2]}` : ""}</span><small>${esc(ligaBase(x.liga))}</small></button>
-      <p class="rq">${esc(x.q || "¿Quién gana?")}</p><div class="rops n${x.ops.length}">${botones}</div>${res}</article>`;
+      <p class="rq">${esc(x.q || "¿Quién gana?")}${r.dobles && r.dobles[k] ? ' <span class="rx2">×2</span>' : ""}</p><div class="rops n${x.ops.length}">${botones}</div>${res}
+      ${mio && !s.empezado ? `<div class="rcom"><button data-comodin="doble" data-k="${esc(k)}" class="${r.dobles && r.dobles[k] ? "on" : ""}">🃏 ×2 ${r.dobles && r.dobles[k] ? "(quitar)" : `· te quedan ${PERFIL.comodines.doble}`}</button></div>` : ""}
+      ${mio && s.empezado && !s.final && minutoDe(s.e) <= 15 && !(r.segunda && r.segunda[k]) ? `<div class="rcom"><button data-comodin="segunda" data-k="${esc(k)}">🔄 Segunda oportunidad · te quedan ${PERFIL.comodines.segunda}</button></div>` : ""}
+      ${segunda ? `<p class="rres">🔄 Puedes cambiar tu pronóstico hasta el minuto 15</p>` : ""}</article>`;
   }).join("");
   h += seccionClasif();
   h += `<section class="mcard rmes"><h3>📅 Este mes</h3><div class="mkpis">
@@ -3026,11 +3097,297 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-even
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-retopick]"); if (!b) return;
   const r = RETO.dias[AHORA.fecha]; if (!r) return;
-  const x = r.partidos.find(y => claveReto(y) === b.dataset.retopick); if (!x || estadoReto(x).empezado) return pintarLista();
-  if (r.picks[b.dataset.retopick] === b.dataset.m) delete r.picks[b.dataset.retopick]; else r.picks[b.dataset.retopick] = b.dataset.m;
+  const x = r.partidos.find(y => claveReto(y) === b.dataset.retopick); if (!x) return;
+  const st = estadoReto(x), k = b.dataset.retopick;
+  if (st.empezado) {   // solo con la Segunda oportunidad activa y antes del minuto 15
+    if (!(r.segunda && r.segunda[k] === "activa") || st.final || minutoDe(st.e) > 15) return pintarLista();
+    r.picks[k] = b.dataset.m; r.segunda[k] = "usada";
+  } else if (r.picks[k] === b.dataset.m) { delete r.picks[k]; if (r.dobles && r.dobles[k]) { delete r.dobles[k]; PERFIL.comodines.doble++; guardarPerfil(); } }
+  else r.picks[k] = b.dataset.m;
   guardarReto(); pintarLista();
 });
 
+// ================================================================ Perfil, niveles, monedas y tienda
+// XP: sube el nivel y nunca baja. Monedas: se ganan y se gastan en la tienda. Todo sale de lo que pasa en los
+// desafíos: cada recompensa tiene su clave y se cobra una sola vez (queda en el historial).
+const PERFIL_K = "perfilV1";
+let PERFIL = (() => { try { const p = JSON.parse(localStorage.getItem(PERFIL_K) || "null"); if (p && p.mov) return p; } catch (e) {} return null; })()
+  || { nombre: "", avatar: "a1", marco: "ninguno", color: "normal", titulo: "rango", comprados: [], comodines: { doble: 0, segunda: 0 }, mov: [], cobrados: {}, nivelCobrado: 1, foto: null };
+function guardarPerfil() { try { localStorage.setItem(PERFIL_K, JSON.stringify(PERFIL)); } catch (e) { if (PERFIL.foto) { alert("No cabe la foto en el móvil: prueba con otra más pequeña."); } } }
+const fmtN = n => Math.round(n).toLocaleString("es-ES");
+// ---- Niveles: del N al N+1 hacen falta 200 + 40·N de XP (nivel 10 en ~3 días, 100 en ~6 meses, 200 en ~2 años)
+const NIVEL_MAX = 200;
+const xpPara = n => 200 + 40 * n;
+function nivelDe(xp) { let n = 1, resto = xp; while (n < NIVEL_MAX && resto >= xpPara(n)) { resto -= xpPara(n); n++; } return { n, resto, falta: n < NIVEL_MAX ? xpPara(n) : 0 }; }
+const RANGOS = [[1, "Novato"], [10, "Aficionado"], [25, "Promesa"], [50, "Experto"], [80, "Crack"], [110, "Estrella"], [140, "Leyenda"], [170, "Mito"], [200, "Inmortal"]];
+const rangoDe = n => RANGOS.filter(r => n >= r[0]).pop()[1];
+// ---- Catálogo: avatares, marcos, colores de nombre y títulos (gratis, por nivel, por insignia o en la tienda)
+const CAT = {
+  avatar: [
+    ["a1", "⚽", "#16a34a"], ["a2", "🦁", "#d97706"], ["a3", "🐺", "#475569"], ["a4", "🦅", "#0369a1"], ["a5", "🔥", "#dc2626"], ["a6", "😎", "#7c3aed"],
+    ["a7", "🦊", "#ea580c", { precio: 500 }], ["a8", "🐻", "#92400e", { precio: 500 }], ["a9", "🐯", "#f59e0b", { precio: 600 }], ["a10", "🦈", "#0e7490", { precio: 600 }],
+    ["a11", "🐉", "#15803d", { precio: 800 }], ["a12", "👽", "#65a30d", { precio: 800 }], ["a13", "🥷", "#111827", { precio: 1000 }], ["a14", "🧙", "#6d28d9", { precio: 1000 }],
+    ["a15", "🦄", "#db2777", { precio: 1200 }], ["a16", "👑", "#ca8a04", { precio: 1500 }],
+    ["a17", "🏆", "#b45309", { nivel: 15 }], ["a18", "🎯", "#be123c", { nivel: 30 }], ["a19", "🚀", "#1d4ed8", { nivel: 45 }], ["a20", "💎", "#0891b2", { nivel: 60 }],
+    ["a21", "🌋", "#9a3412", { nivel: 75 }], ["a22", "⚡", "#4338ca", { nivel: 90 }], ["a23", "🌟", "#a16207", { nivel: 110 }], ["a24", "🛡️", "#334155", { nivel: 130 }],
+    ["a25", "🐲", "#047857", { nivel: 150 }], ["a26", "🔱", "#0f172a", { nivel: 175 }], ["a27", "♾️", "#000000", { nivel: 200 }],
+  ].map(([id, e, bg, x]) => ({ id, e, bg, ...(x || {}) })),
+  marco: [["ninguno", "Sin marco"], ["bronce", "Bronce", { nivel: 10 }], ["plata", "Plata", { nivel: 20 }], ["oro", "Oro", { nivel: 40 }], ["neon", "Neón", { precio: 2000 }],
+    ["esmeralda", "Esmeralda", { nivel: 60 }], ["fuego", "Fuego", { precio: 3000 }], ["rubi", "Rubí", { nivel: 80 }], ["arcoiris", "Arcoíris", { precio: 4000 }],
+    ["diamante", "Diamante", { nivel: 100 }], ["legendario", "Legendario", { nivel: 150 }], ["inmortal", "Inmortal", { nivel: 200 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+  color: [["normal", "Normal"], ["dorado", "Dorado", { nivel: 5 }], ["cian", "Cian", { precio: 1000 }], ["rosa", "Rosa", { precio: 1000 }], ["neonv", "Verde neón", { nivel: 25 }],
+    ["fuegoc", "Fuego", { precio: 2500 }], ["arcoirisc", "Arcoíris", { nivel: 120 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+  titulo: [["rango", "Tu rango"], ["profeta", "El Profeta", { precio: 2000 }], ["empates", "Rey del Empate", { precio: 2000 }], ["matematico", "Matemático", { precio: 1500 }],
+    ["cazagigantes", "Cazagigantes", { insignia: "giganta" }], ["visionario", "Visionario", { nivel: 35 }], ["barrio", "Leyenda del barrio", { nivel: 70 }],
+    ["elegido", "El Elegido", { nivel: 140 }], ["inmortalt", "Inmortal", { nivel: 200 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+};
+const avatarDe = id => CAT.avatar.find(a => a.id === id) || CAT.avatar[0];
+// Insignias (se calculan con lo que has hecho)
+const INSIGNIAS = [
+  ["primera", "🥇", "Primera victoria", "Acierta un partido en el que la app falla"],
+  ["giganta", "🗡️", "Cazagigantes", "Acierta 10 partidos en los que la app falla"],
+  ["perfecto", "💯", "Día perfecto", "Acierta todos los partidos de un día (mínimo 4)"],
+  ["racha7", "🔥", "Una semana seguida", "Juega 7 días seguidos"],
+  ["racha30", "🌋", "Un mes seguido", "Juega 30 días seguidos"],
+  ["cien", "📈", "Cien pronósticos", "Haz 100 pronósticos"],
+  ["podio", "🏅", "Al podio", "Queda entre los 3 primeros de una semana"],
+  ["campeon", "🏆", "Campeón del mes", "Gana la clasificación de un mes"],
+  ["nv10", "⭐", "Nivel 10", "Llega al nivel 10"], ["nv50", "🌟", "Nivel 50", "Llega al nivel 50"], ["nv100", "💫", "Nivel 100", "Llega al nivel 100"],
+];
+function tieneItem(tipo, it) {
+  if (!it.precio && !it.nivel && !it.insignia) return true;
+  if (it.nivel) return nivelDe(totalXP()).n >= it.nivel;
+  if (it.insignia) return datosJugador().insignias.includes(it.insignia);
+  return PERFIL.comprados.includes(tipo + ":" + it.id);
+}
+const totalXP = () => PERFIL.mov.reduce((s, m) => s + (m.xp || 0), 0);
+const totalMon = () => PERFIL.mov.reduce((s, m) => s + (m.mon || 0), 0);
+// ---- Recompensas: se miran todos los días jugados y se cobra lo nuevo
+const semanaDe = f => { const d = new Date(f + "T12:00:00"), dow = (d.getDay() + 6) % 7; d.setDate(d.getDate() - dow); return d.toISOString().slice(0, 10); };
+let _DJ = null;
+function datosJugador() {   // estadísticas del jugador (para perfil e insignias)
+  if (_DJ && _DJ.t === Date.now() >> 12) return _DJ;
+  const dias = Object.keys(RETO.dias).sort();
+  let pron = 0, aciertos = 0, jug = 0, vsApp = 0, ganadosApp = 0, perfecto = false, racha = 0, mejorRacha = 0, ant = null;
+  for (const d of dias) {
+    const r = RETO.dias[d], n = Object.keys(r.picks).length;
+    if (!n) continue;
+    const c = cuentaReto(r), pd = puntosDia(r, x => r.picks[claveReto(x)], r.dobles);
+    pron += n; aciertos += pd.ok; jug += pd.jug; vsApp += pd.vsApp;
+    if (c.jugados && c.jugados === c.elegidos && c.yo > c.app) ganadosApp++;
+    if (pd.jug >= 4 && pd.ok === pd.jug) perfecto = true;
+    racha = ant && fechaMenos(d, 1) === ant ? racha + 1 : 1; ant = d; mejorRacha = Math.max(mejorRacha, racha);
+  }
+  const rachaActual = ant && (ant === AHORA.fecha || ant === fechaMenos(AHORA.fecha, 1)) ? racha : 0;
+  const ins = [];
+  if (vsApp >= 1) ins.push("primera"); if (vsApp >= 10) ins.push("giganta"); if (perfecto) ins.push("perfecto");
+  if (mejorRacha >= 7) ins.push("racha7"); if (mejorRacha >= 30) ins.push("racha30"); if (pron >= 100) ins.push("cien");
+  if (PERFIL.mov.some(m => /^sem:/.test(m.k) && m.pos <= 3)) ins.push("podio"); if (PERFIL.mov.some(m => /^mes:/.test(m.k) && m.pos === 1)) ins.push("campeon");
+  const nv = nivelDe(totalXP()).n; if (nv >= 10) ins.push("nv10"); if (nv >= 50) ins.push("nv50"); if (nv >= 100) ins.push("nv100");
+  return (_DJ = { t: Date.now() >> 12, pron, aciertos, jug, vsApp, ganadosApp, mejorRacha, rachaActual, insignias: ins });
+}
+let _avisos = [];
+function cobrar(k, txt, xp, mon, extra) {
+  if (PERFIL.cobrados[k]) return false;
+  PERFIL.cobrados[k] = 1;
+  PERFIL.mov.push({ k, f: AHORA.fecha, txt, xp: xp || 0, mon: mon || 0, ...(extra || {}) });
+  _avisos.push(`${txt}${xp ? ` · +${fmtN(xp)} XP` : ""}${mon ? ` · +${fmtN(mon)} 🪙` : ""}`);
+  return true;
+}
+function procesarRecompensas() {
+  const antes = PERFIL.mov.length, dias = Object.keys(RETO.dias).sort();
+  let ant = null, racha = 0;
+  for (const d of dias) {
+    const r = RETO.dias[d], n = Object.keys(r.picks).length;
+    if (!n) continue;
+    for (const x of r.partidos) {
+      const k = claveReto(x), mio = r.picks[k]; if (!mio) continue;
+      const s = estadoReto(x);
+      if (s.empezado) cobrar(`pron:${d}:${k}`, `Pronóstico · ${x.local} – ${x.visitante}`, 50, 0);
+      if (s.final && s.gana) {
+        const top = x.ops.reduce((a, b) => b.p > a.p ? b : a);
+        if (mio === s.gana) {
+          const pts = (ptsReto(x.ops.find(o => o.m === mio).p) + (top.m === s.gana ? 0 : BONUS_RETO)) * (r.dobles && r.dobles[k] ? 2 : 1);
+          cobrar(`ac:${d}:${k}`, `${top.m === s.gana ? "Acierto" : "¡Acierto contra la app!"}${r.dobles && r.dobles[k] ? " ×2" : ""} · ${x.local} – ${x.visitante}`, pts * 10, pts);
+        }
+      }
+    }
+    const todos = r.partidos.every(x => r.picks[claveReto(x)]), empezados = r.partidos.every(x => estadoReto(x).empezado);
+    if (todos && empezados) cobrar(`comp:${d}`, `Día completo (${d.slice(8)}/${d.slice(5, 7)})`, 200, 20);
+    const c = cuentaReto(r);
+    if (c.jugados && c.jugados === c.elegidos && r.partidos.every(x => !r.picks[claveReto(x)] || estadoReto(x).final) && c.yo > c.app)
+      cobrar(`gana:${d}`, `Le ganaste el día a la app (${c.yo}–${c.app})`, 500, 50);
+    racha = ant && fechaMenos(d, 1) === ant ? racha + 1 : 1; ant = d;
+    for (const [nr, xp, mon] of [[3, 300, 50], [7, 1000, 200], [30, 5000, 1000]]) if (racha === nr) cobrar(`racha${nr}:${d}`, `Racha de ${nr} días jugando 🔥`, xp, mon);
+  }
+  // Semanas y meses terminados: puesto en la clasificación
+  const semanas = [...new Set(dias.map(semanaDe))];
+  for (const w of semanas) {
+    const fin = new Date(w + "T12:00:00"); fin.setDate(fin.getDate() + 6);
+    const finS = fin.toISOString().slice(0, 10); if (finS >= AHORA.fecha || PERFIL.cobrados["sem:" + w]) continue;
+    const ds = dias.filter(d => semanaDe(d) === w), yo = clasificacionReto(ds).find(f => f.yo);
+    if (!yo.jug) { PERFIL.cobrados["sem:" + w] = 1; continue; }
+    const pos = yo.pos, mon = pos === 1 ? 1000 : pos === 2 ? 600 : pos === 3 ? 400 : pos <= 10 ? 200 : 0, xp = pos <= 3 ? 3000 : pos <= 10 ? 1500 : 0;
+    if (mon) cobrar("sem:" + w, `${pos}.º de la semana del ${w.slice(8)}/${w.slice(5, 7)}`, xp, mon, { pos }); else PERFIL.cobrados["sem:" + w] = 1;
+  }
+  for (const mes of [...new Set(dias.map(d => d.slice(0, 7)))]) {
+    if (mes >= AHORA.fecha.slice(0, 7) || PERFIL.cobrados["mes:" + mes]) continue;
+    const yo = clasificacionReto(dias.filter(d => d.startsWith(mes))).find(f => f.yo);
+    if (!yo.jug) { PERFIL.cobrados["mes:" + mes] = 1; continue; }
+    const pos = yo.pos, mon = [5000, 3000, 2000][pos - 1] || (pos <= 10 ? 1000 : 0), xp = pos <= 3 ? 10000 : pos <= 10 ? 5000 : 0;
+    if (mon) cobrar("mes:" + mes, `${pos}.º del mes (${mes.slice(5)}/${mes.slice(0, 4)})`, xp, mon, { pos }); else PERFIL.cobrados["mes:" + mes] = 1;
+  }
+  // Subidas de nivel: monedas siempre y regalos cada 5 y 10 niveles
+  const nv = nivelDe(totalXP()).n;
+  while (PERFIL.nivelCobrado < nv) {
+    const n = ++PERFIL.nivelCobrado;
+    const desbl = ["avatar", "marco", "color", "titulo"].flatMap(t => CAT[t].filter(i => i.nivel === n).map(i => i.n || "avatar " + i.e));
+    let regalo = "";
+    if (n % 10 === 0) { PERFIL.comodines.doble++; if (n % 20 === 0) PERFIL.comodines.segunda++; regalo = n % 20 === 0 ? " + comodines ×2 y 🔄" : " + comodín ×2"; }
+    else if (n % 5 === 0) { PERFIL.comodines.doble++; regalo = " + comodín ×2"; }
+    if (n === 100) regalo += " + 👕 camiseta (cuando sea online)";
+    if (n === 200) regalo += " + 🎁 premio Inmortal (cuando sea online)";
+    cobrar(`nv:${n}`, `🎉 ¡Nivel ${n}!${desbl.length ? " Desbloqueas: " + desbl.join(", ") : ""}${regalo}`, 0, 20 + n);
+  }
+  if (PERFIL.mov.length !== antes) { guardarPerfil(); _DJ = null; }
+  if (_avisos.length) { const a = _avisos.slice(-3); _avisos = []; brindis(a.join("<br>")); }
+}
+function brindis(html) {
+  let el = $("brindis"); if (!el) { el = document.createElement("div"); el.id = "brindis"; document.body.appendChild(el); }
+  el.innerHTML = html; el.className = "brindis ver"; clearTimeout(brindis.t); brindis.t = setTimeout(() => { el.className = "brindis"; }, 4500);
+}
+// ---- Pintar avatar, nombre y tarjeta de jugador
+function avatarHTML(o, tam) {
+  o = o || PERFIL; const a = avatarDe(o.avatar);
+  const dentro = o.avatar === "foto" && o.foto ? `<img src="${o.foto}" alt="">` : a.e;
+  return `<span class="av mr-${o.marco || "ninguno"}" style="--s:${tam || 40}px"><span class="avi" style="background:${o.avatar === "foto" ? "#000" : a.bg}">${dentro}</span></span>`;
+}
+const nombreYo = () => PERFIL.nombre || "Tú";
+const tituloYo = () => { const t = CAT.titulo.find(x => x.id === PERFIL.titulo); return !t || t.id === "rango" ? rangoDe(nivelDe(totalXP()).n) : t.n; };
+function barraJugador() {
+  const xp = totalXP(), nv = nivelDe(xp);
+  return `<div class="pbar"><button class="pyo" data-vista="perfil">${avatarHTML(PERFIL, 46)}<span class="pyt"><b class="nc-${PERFIL.color}">${esc(nombreYo())}</b><small>Nv ${nv.n} · ${esc(tituloYo())}</small>
+      <span class="pxp"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span></span></button>
+    <button class="pmon" data-vista="tienda">🪙 ${fmtN(totalMon())}</button></div>`;
+}
+// ---- Pantalla Perfil
+function pintarPerfil() {
+  procesarRecompensas();
+  const xp = totalXP(), nv = nivelDe(xp), dj = datosJugador();
+  const sig = CAT.avatar.concat(CAT.marco, CAT.color, CAT.titulo).filter(i => i.nivel > nv.n).sort((a, b) => a.nivel - b.nivel)[0];
+  let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">Perfil</span></h2></div>
+  <section class="pcab">${avatarHTML(PERFIL, 96)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
+    <div class="pniv"><span>Nivel <b>${nv.n}</b></span><span>${nv.falta ? `${fmtN(nv.resto)} / ${fmtN(nv.falta)} XP` : "Nivel máximo"}</span></div>
+    <span class="pxp grande"><i style="width:${nv.falta ? (nv.resto / nv.falta * 100).toFixed(1) : 100}%"></i></span>
+    ${sig ? `<small class="psig">Siguiente regalo en el nivel ${sig.nivel}: ${esc(sig.n || "avatar " + sig.e)}</small>` : ""}
+    <div class="pacc"><button class="apbtn" data-vista="personalizar">✏️ Personalizar</button><button class="apbtn ap2" data-vista="tienda">🪙 ${fmtN(totalMon())} · Tienda</button></div></section>
+  <section class="mcard"><h3>📊 Tus números</h3><div class="mkpis">
+    <div><b>${fmtN(dj.pron)}</b><span>pronósticos</span></div><div><b>${dj.jug ? Math.round(dj.aciertos / dj.jug * 100) + " %" : "–"}</b><span>acierto</span></div>
+    <div><b>${dj.vsApp}</b><span>aciertos contra la app</span></div><div><b>${dj.ganadosApp}</b><span>días ganados a la app</span></div>
+    <div><b>${dj.rachaActual ? "🔥 " + dj.rachaActual : "–"}</b><span>racha actual</span></div><div><b>${dj.mejorRacha || "–"}</b><span>mejor racha</span></div>
+    <div><b>${fmtN(xp)}</b><span>XP total</span></div><div><b>×2: ${PERFIL.comodines.doble} · 🔄 ${PERFIL.comodines.segunda}</b><span>comodines</span></div></div></section>
+  <section class="mcard"><h3>🎖️ Insignias · ${dj.insignias.length}/${INSIGNIAS.length}</h3><div class="pins">${INSIGNIAS.map(([id, i, n, d]) => `<div class="pin ${dj.insignias.includes(id) ? "si" : ""}"><span>${i}</span><b>${n}</b><small>${d}</small></div>`).join("")}</div></section>
+  <details class="mcard"><summary><b>🧾 Historial de XP y monedas</b></summary><div class="pmov">${PERFIL.mov.slice().reverse().slice(0, 80).map(m => `<div><span>${esc(m.txt)}<small>${m.f.slice(8)}/${m.f.slice(5, 7)}</small></span><span>${m.xp ? `<b class="xp">+${fmtN(m.xp)} XP</b>` : ""}${m.mon ? `<b class="${m.mon > 0 ? "mon" : "gasto"}">${m.mon > 0 ? "+" : "−"}${fmtN(Math.abs(m.mon))} 🪙</b>` : ""}</span></div>`).join("") || `<p class="apnota">Aún nada. Juega a Gánale a la app para empezar a ganar.</p>`}</div></details>
+  <details class="mcard"><summary><b>❓ Cómo se gana XP y monedas</b></summary><table class="mtab"><tr><th>Acción</th><th>XP</th><th>🪙</th></tr>
+    <tr><td>Pronosticar un partido</td><td>50</td><td>–</td></tr><tr><td>Acertar</td><td>puntos × 10</td><td>puntos</td></tr>
+    <tr><td>Completar el día</td><td>200</td><td>20</td></tr><tr><td>Ganarle el día a la app</td><td>500</td><td>50</td></tr>
+    <tr><td>Racha 3 / 7 / 30 días</td><td>300 / 1.000 / 5.000</td><td>50 / 200 / 1.000</td></tr>
+    <tr><td>Top 10 / podio semanal</td><td>1.500 / 3.000</td><td>200 / 1.000·600·400</td></tr>
+    <tr><td>Top 10 / podio mensual</td><td>5.000 / 10.000</td><td>1.000 / 5.000·3.000·2.000</td></tr>
+    <tr><td>Subir de nivel</td><td>–</td><td>20 + nivel</td></tr></table>
+    <p class="apnota">Cada 5 niveles, un comodín; cada 10, más comodines y objetos. Nivel 100: camiseta. Nivel 200: premio Inmortal.</p></details>`;
+  $("vista").innerHTML = h;
+}
+// ---- Personalizar
+function pintarPersonalizar() {
+  const sec = (tipo, titulo, pinta) => `<section class="mcard"><h3>${titulo}</h3><div class="pgrid ${tipo}">${CAT[tipo].map(it => {
+    const ok = tieneItem(tipo, it), puesto = PERFIL[tipo] === it.id;
+    const cand = it.nivel ? `Nv ${it.nivel}` : it.precio ? `${fmtN(it.precio)} 🪙` : it.insignia ? "Insignia" : "";
+    return `<button class="pit ${puesto ? "on" : ""} ${ok ? "" : "lock"}" ${ok ? `data-poner="${tipo}" data-id="${it.id}"` : `data-vista="tienda"`}>${pinta(it)}${ok ? "" : `<small>🔒 ${cand}</small>`}</button>`;
+  }).join("")}</div></section>`;
+  let h = `<div class="lbar"><button class="ico" data-vista="perfil" aria-label="Volver">‹</button><h2><span class="t">Personalizar</span></h2></div>
+  <section class="pcab">${avatarHTML(PERFIL, 80)}<b class="pnom nc-${PERFIL.color}">${esc(nombreYo())}</b><span class="ptit">${esc(tituloYo())}</span>
+    <div class="pacc"><button class="apbtn ap2" data-pnombre="1">✏️ Cambiar nombre</button><label class="apbtn ap2 pfoto">📷 Usar mi foto<input type="file" accept="image/*" id="pfotoIn" hidden></label></div></section>`;
+  h += sec("avatar", "Avatar", it => `<span class="av" style="--s:44px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`);
+  h += sec("marco", "Marco", it => `<span class="av mr-${it.id}" style="--s:44px"><span class="avi" style="background:${avatarDe(PERFIL.avatar).bg}">${PERFIL.avatar === "foto" && PERFIL.foto ? `<img src="${PERFIL.foto}" alt="">` : avatarDe(PERFIL.avatar).e}</span></span><b>${esc(it.n)}</b>`);
+  h += sec("color", "Color del nombre", it => `<b class="nc-${it.id}" style="font-size:15px">${esc(nombreYo())}</b><small>${esc(it.n)}</small>`);
+  h += sec("titulo", "Título", it => `<b>${esc(it.id === "rango" ? rangoDe(nivelDe(totalXP()).n) : it.n)}</b>`);
+  $("vista").innerHTML = h;
+}
+// ---- Tienda
+function pintarTienda() {
+  procesarRecompensas();
+  const mon = totalMon();
+  const fila = (tipo, it, dibujo) => {
+    const ya = tieneItem(tipo, it);
+    return `<div class="tit">${dibujo}<span class="tin"><b>${esc(it.n || "Avatar " + it.e)}</b><small>${ya ? "Ya es tuyo" : `${fmtN(it.precio)} 🪙`}</small></span>${ya ? `<button class="tbtn ok" data-vista="personalizar">Ponerlo</button>` : `<button class="tbtn" ${mon >= it.precio ? "" : "disabled"} data-comprar="${tipo}" data-id="${it.id}">Comprar</button>`}</div>`;
+  };
+  let h = `<div class="lbar"><button class="ico" data-vista="desafios" aria-label="Volver">‹</button><h2><span class="t">Tienda</span></h2></div>
+  <section class="tcab"><span>Tienes</span><b>🪙 ${fmtN(mon)}</b><small>Las monedas se ganan jugando a los desafíos y subiendo de nivel. No se pueden comprar con dinero.</small></section>
+  <h2 class="sec">🃏 Comodines</h2>
+  <div class="tit"><span class="tico">×2</span><span class="tin"><b>Doble</b><small>Un acierto vale el doble (1 al día). Tienes ${PERFIL.comodines.doble}.</small></span><button class="tbtn" ${mon >= 800 ? "" : "disabled"} data-comprar="comodin" data-id="doble">800 🪙</button></div>
+  <div class="tit"><span class="tico">🔄</span><span class="tin"><b>Segunda oportunidad</b><small>Cambia un pronóstico en los primeros 15 minutos. Tienes ${PERFIL.comodines.segunda}.</small></span><button class="tbtn" ${mon >= 1500 ? "" : "disabled"} data-comprar="comodin" data-id="segunda">1.500 🪙</button></div>
+  <h2 class="sec">🧑 Avatares</h2>${CAT.avatar.filter(i => i.precio).map(it => fila("avatar", it, `<span class="av" style="--s:44px"><span class="avi" style="background:${it.bg}">${it.e}</span></span>`)).join("")}
+  <h2 class="sec">🖼️ Marcos</h2>${CAT.marco.filter(i => i.precio).map(it => fila("marco", it, `<span class="av mr-${it.id}" style="--s:44px"><span class="avi" style="background:${avatarDe(PERFIL.avatar).bg}">${avatarDe(PERFIL.avatar).e}</span></span>`)).join("")}
+  <h2 class="sec">🎨 Colores y títulos</h2>${CAT.color.filter(i => i.precio).map(it => fila("color", it, `<span class="tico"><b class="nc-${it.id}">Aa</b></span>`)).join("")}${CAT.titulo.filter(i => i.precio).map(it => fila("titulo", it, `<span class="tico">🏷️</span>`)).join("")}
+  <h2 class="sec">🎁 Premios físicos</h2>
+  ${[["🧣", "Bufanda", 15000], ["⚽", "Balón", 25000], ["👕", "Camiseta", 30000]].map(([i, n, p]) => `<div class="tit"><span class="tico">${i}</span><span class="tin"><b>${n}</b><small>${fmtN(p)} 🪙 · disponible cuando haya ranking online</small></span><button class="tbtn" disabled>Pronto</button></div>`).join("")}`;
+  $("vista").innerHTML = h;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-poner],[data-comprar],[data-pnombre],[data-comodin]"); if (!b) return;
+  if (b.dataset.poner) { PERFIL[b.dataset.poner] = b.dataset.id; guardarPerfil(); pintarLista(); return; }
+  if (b.dataset.pnombre) {
+    const t = prompt("¿Qué nombre quieres que salga en la clasificación? (máx. 16 letras)", PERFIL.nombre || ""); if (t === null) return;
+    PERFIL.nombre = t.trim().slice(0, 16); guardarPerfil(); pintarLista(); return;
+  }
+  if (b.dataset.comprar) {
+    const tipo = b.dataset.comprar, id = b.dataset.id;
+    const precio = tipo === "comodin" ? (id === "doble" ? 800 : 1500) : (CAT[tipo].find(i => i.id === id) || {}).precio;
+    if (!precio || totalMon() < precio) return;
+    const nombre = tipo === "comodin" ? (id === "doble" ? "comodín Doble" : "comodín Segunda oportunidad") : (CAT[tipo].find(i => i.id === id).n || "avatar " + CAT[tipo].find(i => i.id === id).e);
+    if (!confirm(`¿Comprar ${nombre} por ${fmtN(precio)} monedas?`)) return;
+    if (tipo === "comodin") PERFIL.comodines[id]++; else { PERFIL.comprados.push(tipo + ":" + id); PERFIL[tipo] = id; }
+    PERFIL.mov.push({ k: "compra:" + Date.now(), f: AHORA.fecha, txt: `Compra: ${nombre}`, mon: -precio });
+    guardarPerfil(); brindis(`✅ ¡${nombre} es tuyo!`); pintarLista(); return;
+  }
+  if (b.dataset.comodin) {   // usar un comodín en un partido del reto
+    const r = RETO.dias[AHORA.fecha], k = b.dataset.k; if (!r) return;
+    const x = r.partidos.find(y => claveReto(y) === k); if (!x) return;
+    if (b.dataset.comodin === "doble") {
+      r.dobles = r.dobles || {};
+      if (r.dobles[k]) { if (estadoReto(x).empezado) return; delete r.dobles[k]; PERFIL.comodines.doble++; }
+      else {
+        if (Object.keys(r.dobles).length) return alert("Solo puedes usar un comodín ×2 al día.");
+        if (PERFIL.comodines.doble < 1) { if (confirm("No te quedan comodines ×2. ¿Ir a la tienda?")) { est.vista = "tienda"; pintarLista(); } return; }
+        r.dobles[k] = 1; PERFIL.comodines.doble--;
+      }
+    } else if (b.dataset.comodin === "segunda") {
+      if (PERFIL.comodines.segunda < 1) { if (confirm("No te quedan comodines 🔄. ¿Ir a la tienda?")) { est.vista = "tienda"; pintarLista(); } return; }
+      if (!confirm("¿Usar una Segunda oportunidad en este partido? Podrás cambiar tu pronóstico hasta el minuto 15.")) return;
+      r.segunda = r.segunda || {}; r.segunda[k] = "activa"; PERFIL.comodines.segunda--;
+    }
+    guardarReto(); guardarPerfil(); pintarLista(); return;
+  }
+});
+// Foto propia: se reduce a 160 px y se guarda en el móvil
+document.addEventListener("change", e => {
+  if (e.target.id !== "pfotoIn" || !e.target.files || !e.target.files[0]) return;
+  const fr = new FileReader();
+  fr.onload = () => { const img = new Image(); img.onload = () => {
+    const c = document.createElement("canvas"), t = 160, m = Math.min(img.width, img.height);
+    c.width = c.height = t; c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, t, t);
+    PERFIL.foto = c.toDataURL("image/jpeg", 0.8); PERFIL.avatar = "foto"; guardarPerfil(); pintarLista(); }; img.src = fr.result; };
+  fr.readAsDataURL(e.target.files[0]);
+});
+// Minuto del partido en juego (para la Segunda oportunidad)
+const minutoDe = e => { const m = /(\d+)/.exec(String((e && e.det) || "")); return m ? +m[1] : 99; };
+// Avatar y nivel de los jugadores de prueba
+function perfilBot(b, i) {
+  const libres = CAT.avatar.filter(a => !a.nivel), a = libres[i % libres.length];
+  const marcos = ["ninguno", "ninguno", "bronce", "plata", "ninguno", "oro", "neon", "fuego"];
+  return { avatar: a.id, marco: marcos[i % marcos.length], color: "normal" };
+}
 // ---------------------------------------------------------------- buscador general (botón Buscar de abajo)
 // Busca en todo: partidos de todos los días y deportes, competiciones y equipos/jugadores
 const NOMBRE_DEP_B = { f: "⚽ Fútbol", b: "🏀 Basket", te: "🎾 Tenis", e: "🎮 Esports" };
@@ -3125,7 +3482,7 @@ function pintarSelector() {
     const total = DATOS.dias.reduce((s, d) => s + d.partidos.filter(p => (p.dep || "f") === k).length, 0);
     return `<button class="dep" data-dep="${k}" aria-pressed="${est.dep === k}"><span>${ICONO_DEP[k]}</span>${n}<small>${total}</small></button>`;
   }).join("");
-  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto", "evento"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
+  document.querySelectorAll(".abajo [data-nav]").forEach(b => b.setAttribute("aria-pressed", b.dataset.nav === (est.vista === "buscar" ? "buscar" : ["desafios", "reto", "evento", "perfil", "personalizar", "tienda"].includes(est.vista) ? "desafios" : est.vista === "misap" ? "misap" : est.vista === "ajustes" ? "ajustes" : ["ligas", "clasif", "juego"].includes(est.vista) ? "ligas" : est.vista === "favs" ? "favs" : "comps")));
 }
 
 function pintarAjustes() { return; }
