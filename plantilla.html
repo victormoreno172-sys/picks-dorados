@@ -1103,6 +1103,9 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 /* Tarjetas vivas: el lienzo va dentro de la tarjeta, detrás del contenido */
 .tj.tjviva { position: relative; overflow: hidden; isolation: isolate; } .tj.tjviva::before, .tj.tjviva::after { display: none !important; }
 .tjcv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; border-radius: inherit; }
+#avisofallo { position: fixed; left: 10px; right: 10px; bottom: 96px; z-index: 60; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #3b1020; color: #fff; font: 600 13px var(--body); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+#avisofallo span { flex: 1; } #avisofallo button { border: 0; border-radius: 9px; padding: 8px 10px; background: #ffcd75; color: #1b1200; font: 700 13px var(--body); }
+.mcard.fallo pre { white-space: pre-wrap; word-break: break-word; font: 11px var(--mono); background: rgba(0,0,0,.25); padding: 8px; border-radius: 8px; }
 #fondovivo { position: fixed; top: 0; left: 0; width: 100%; z-index: -1; pointer-events: none; }
 :root.fondovivo:not([data-skin="galaxia"]) body::before { opacity: 0 !important; }
 
@@ -2036,6 +2039,33 @@ function enVivo() {
   return l;
 }
 function pintarLista() {
+  try { pintarListaReal(); }
+  catch (e) { mostrarFallo(e); }
+}
+// Si una pantalla falla, en vez de quedarse en blanco o enseñar otra, se ve qué ha pasado y cómo arreglarlo
+function mostrarFallo(e) {
+  try { console.error(e); } catch (x) {}
+  const v = $("vista"); if (!v) return;
+  document.querySelector("header").hidden = false;
+  v.innerHTML = `<section class="mcard fallo"><h3>⚠️ Esta pantalla ha fallado</h3>
+    <p>Mándale una captura de esto a quien hace la app:</p><pre>${esc(String(e && e.message || e))}\n${esc(String(e && e.stack || "").split("\n").slice(1, 3).join("\n"))}\nversión ${esc(APP_VERSION)} · ${esc(est.vista || "")}</pre>
+    <button class="apbtn" data-reparar="1">🔧 Arreglar la app</button><button class="apbtn ap2" data-vista="comps" style="margin-top:8px">Volver a Partidos</button>
+    <p class="apnota">«Arreglar» borra solo lo de la pantalla (qué liga tenías abierta, en qué día estabas…). Tus apuestas, tu perfil y tus favoritos no se tocan.</p></section>`;
+}
+// Arreglar: limpia el estado de la pantalla guardado en el móvil (no las apuestas, el perfil ni los favoritos) y vuelve a abrir la app
+function repararApp() {
+  try { sessionStorage.clear(); } catch (e) {}
+  for (const k of ["ligasAb", "arSec", "onlineV1", "rkModo", "dep", "orden", "recargaV1", "hltvMapas"]) try { localStorage.removeItem(k); } catch (e) {}
+  location.replace(location.pathname + "?r=" + Date.now());
+}
+document.addEventListener("click", e => { if (e.target.closest("[data-reparar]")) { e.stopImmediatePropagation(); repararApp(); } }, true);
+window.addEventListener("error", ev => {   // cualquier otro fallo: un aviso abajo con el botón de arreglar
+  if (document.getElementById("avisofallo")) return;
+  const d = document.createElement("div"); d.id = "avisofallo";
+  d.innerHTML = `<span>⚠️ Algo ha fallado: ${esc(String(ev.message || "").slice(0, 120))}</span><button data-reparar="1">🔧 Arreglar</button>`;
+  document.body.appendChild(d);
+});
+function pintarListaReal() {
   RKREG = [];
   if (pintarLista._v !== est.vista) { pintarLista._v = est.vista; try { const el = document.getElementById("brindis"); if (el && el.classList.contains("ver") && Date.now() - (el._t || 0) > 1200) quitarBrindis(); } catch (e) {} }
   try { pintarBarraBoleto(); } catch (e) {}
@@ -3143,7 +3173,7 @@ function pintarPantallaAjustes() {
     [...todas[k]].sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b)).map(l => { const inf = infoLiga(l);
       return `<label class="ajliga"><span>${inf.flag}</span><span class="nl">${esc(inf.nombre)}<small style="color:var(--muted)"> ${esc(inf.pais)}</small></span><input type="checkbox" data-ajliga="${esc(l)}" ${AJ.ocultas.includes(l) ? "" : "checked"}></label>`; }).join("") + `</details>`).join("");
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
-  $("vista").innerHTML = `<p class="apnota" style="text-align:center;margin:10px 0 0">Clávala · <b>versión ${esc(APP_VERSION)}</b> · datos del ${esc(DATOS.generado)}</p><div class="aj" style="margin-top:12px">${htmlCuenta()}
+  $("vista").innerHTML = `<p class="apnota" style="text-align:center;margin:10px 0 0">Clávala · <b>versión ${esc(APP_VERSION)}</b> · datos del ${esc(DATOS.generado)} · <button class="lnk" data-reparar="1">🔧 Arreglar la app</button></p><div class="aj" style="margin-top:12px">${htmlCuenta()}
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
     ${esProbador() ? `<section class="ajb"><h3>🧪 Pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
       <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div>
@@ -5888,15 +5918,16 @@ function guardarNav() {
   if (!window.__navListo) return;  // hasta haber recuperado la pantalla anterior, no se pisa
   try {
     const d = DATOS.dias[est.dia], p = d && est.vista === "partido" ? d.partidos[est.sel] : null;
-    sessionStorage.setItem("navApp", JSON.stringify(Object.assign(fotoNav(), { pk: p ? clavePartido(d, p) : null, t: Date.now() })));
+    sessionStorage.setItem("navApp", JSON.stringify(Object.assign(fotoNav(), { pk: p ? clavePartido(d, p) : null, fecha: d ? d.fecha : null, ver: APP_VERSION, t: Date.now() })));
   } catch (e) {}
 }
 (function restaurarNav() {
   let g = null;
   try { g = JSON.parse(sessionStorage.getItem("navApp") || "null"); } catch (e) {}
   window.__navListo = true;
-  if (!g || Date.now() - g.t > 6 * 3600 * 1000) return;
+  if (!g || Date.now() - g.t > 6 * 3600 * 1000 || g.ver !== APP_VERSION) { try { sessionStorage.removeItem("navApp"); } catch (e) {} return; }
   for (const k of CAMPOS_NAV) if (k in g && g[k] !== null) est[k] = g[k];
+  if (g.fecha) { const i = DATOS.dias.findIndex(d => d.fecha === g.fecha); est.dia = i >= 0 ? i : Math.max(0, DATOS.dias.findIndex(d => d.fecha === AHORA.fecha)); }
   if (est.vista === "partido") {
     let ok = false;
     DATOS.dias.forEach((d, i) => { const j = d.partidos.findIndex(p => clavePartido(d, p) === g.pk); if (j >= 0 && !ok) { est.dia = i; est.sel = j; ok = true; } });
