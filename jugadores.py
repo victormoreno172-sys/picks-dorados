@@ -16,6 +16,12 @@ if not tok:
 H = {"Authorization": "Bearer " + tok}
 BASE = f"https://firestore.googleapis.com/v1/projects/{proy}/databases/(default)/documents/jugadores"
 
+if sys.argv[1:2] == ["reglas"]:   # python jugadores.py reglas -> qué reglas tiene Firestore ahora
+    rel = requests.get(f"https://firebaserules.googleapis.com/v1/projects/{proy}/releases/cloud.firestore", headers=H, timeout=30).json()
+    src = requests.get(f"https://firebaserules.googleapis.com/v1/{rel.get('rulesetName')}", headers=H, timeout=30).json()
+    txt = "".join(f.get("content", "") for f in src.get("source", {}).get("files", []))
+    print("::notice::" + ("con pk" if "'pk'" in txt else "SIN pk") + " · " + rel.get("updateTime", ""))
+    sys.exit()
 if sys.argv[1:2] == ["ver"]:   # python jugadores.py ver UID -> muestra lo que tiene guardado
     for uid in sys.argv[2:]:
         f = requests.get(f"{BASE}/{uid}", headers=H, timeout=30).json().get("fields", {})
