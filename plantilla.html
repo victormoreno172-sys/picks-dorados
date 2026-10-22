@@ -1081,6 +1081,17 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 :root.fondovivo header { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-bottom-color: transparent !important; box-shadow: none !important; }
 :root.fondovivo :is(.mcard, .partido, .rpart, .comps, .ajb, .todos, .caja, .jp, .jcard, .rrow:not(.rhead):not(.tj), .tcard, .tdest, .fbar, .fequipos, .tabla2, .fila, .arp, .arsl) { background-color: color-mix(in srgb, var(--surface) 62%, transparent) !important; background-image: none; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
 :root.fondovivo :is(.comps .comp, .comps .compir) { background: transparent !important; }
+/* Primera tirada: solo 7 animados por tipo (2 de clasificaciones, 3 del pase y 2 de compra); el resto quietos */
+:is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix), :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix)::before, :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix)::after,
+.av:is(.mr-neon, .mr-fuego, .mr-arcoiris, .mr-diamante, .mr-legendario, .mr-inmortal, .mr-pxglitch), .av:is(.mr-neon, .mr-fuego, .mr-arcoiris, .mr-diamante, .mr-legendario, .mr-inmortal, .mr-pxglitch)::before, .av:is(.mr-neon, .mr-fuego, .mr-arcoiris, .mr-diamante, .mr-legendario, .mr-inmortal, .mr-pxglitch)::after,
+:is(.nc-fuegoc, .nc-arcoirisc) { animation: none !important; }
+.nc-vencedorc { color: #73eff7 !important; background: linear-gradient(90deg, #73eff7 0 40%, #f4f4f4 45%, #73eff7 50% 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 6px rgba(115,239,247,.55); animation: ncRayo 1.4s steps(10) infinite; }
+@keyframes ncRayo { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.nc-hiscorec { color: #ffec27 !important; text-shadow: 2px 2px 0 #ff004d; animation: ncArcade .8s steps(1) infinite; } @keyframes ncArcade { 50% { color: #ff004d !important; text-shadow: 2px 2px 0 #ffec27; } }
+.nc-pxverde { animation: ncFosforo 2.2s steps(1) infinite; } @keyframes ncFosforo { 0%, 100% { opacity: 1; } 47% { opacity: .55; } 49% { opacity: 1; } 51% { opacity: .7; } 53% { opacity: 1; } }
+.nc-pxoro { background-size: 100% 100%, 250% 100% !important; background-image: linear-gradient(180deg, #fff3c4 0 35%, #ffcd75 35% 70%, #ef7d57 70%), linear-gradient(100deg, transparent 40%, #fff 48%, transparent 56%) !important; background-blend-mode: screen; animation: ncOro 2.4s steps(12) infinite; }
+@keyframes ncOro { from { background-position: 0 0, 120% 0; } to { background-position: 0 0, -120% 0; } }
+@media (prefers-reduced-motion: reduce) { .nc-vencedorc, .nc-hiscorec, .nc-pxverde, .nc-pxoro { animation: none !important; } }
 /* Tarjetas vivas: el lienzo va dentro de la tarjeta, detrás del contenido */
 .tj.tjviva { position: relative; overflow: hidden; isolation: isolate; } .tj.tjviva::before, .tj.tjviva::after { display: none !important; }
 .tjcv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; border-radius: inherit; }
@@ -4313,19 +4324,19 @@ const CAT = {
     ["a28", "🤖", "#1e1b4b", { evento: "reto", anim: "robot", n: "Robot campeón" }],
     ["a29", "👾", "#312e81", { pase: 10, n: "Invasor" }], ["a30", "🕹️", "#1a1c2c", { pase: 35, n: "Joystick" }],
   ].map(([id, e, bg, x]) => ({ id, e, bg, ...(x || {}) })),
-  marco: [["ninguno", "Sin marco"], ["bronce", "Bronce", { nivel: 10 }], ["plata", "Plata", { nivel: 20 }], ["oro", "Oro", { nivel: 40 }], ["neon", "Neón", { precio: 400 }],
-    ["esmeralda", "Esmeralda", { nivel: 60 }], ["fuego", "Fuego", { precio: 550 }], ["rubi", "Rubí", { nivel: 80 }], ["arcoiris", "Arcoíris", { precio: 700 }],
+  marco: [["ninguno", "Sin marco"], ["bronce", "Bronce", { nivel: 10 }], ["plata", "Plata", { nivel: 20 }], ["oro", "Oro", { nivel: 40 }], ["neon", "Neón", { precio: 300 }],
+    ["esmeralda", "Esmeralda", { nivel: 60 }], ["fuego", "Fuego", { precio: 350 }], ["rubi", "Rubí", { nivel: 80 }], ["arcoiris", "Arcoíris", { precio: 400 }],
     ["diamante", "Diamante", { nivel: 100 }], ["legendario", "Legendario", { nivel: 150 }], ["inmortal", "Inmortal", { nivel: 200 }],
-    ["circuito", "Circuito", { evento: "reto" }], ["pixel", "Pixel", { pase: 20 }], ["pixelrgb", "Pixel arcoíris", { pase: 45 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+    ["circuito", "Circuito ✨", { evento: "reto", anim: 1 }], ["pixel", "Pixel", { pase: 20 }], ["pixelrgb", "Pixel arcoíris ✨", { pase: 45, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   color: [["normal", "Normal"], ["dorado", "Dorado", { nivel: 5 }], ["cian", "Cian", { precio: 200 }], ["rosa", "Rosa", { precio: 200 }], ["neonv", "Verde neón", { nivel: 25 }],
-    ["fuegoc", "Fuego", { precio: 450 }], ["arcoirisc", "Arcoíris", { nivel: 120 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+    ["fuegoc", "Fuego", { precio: 450 }], ["arcoirisc", "Arcoíris", { nivel: 120 }], ["vencedorc", "Circuito ✨", { evento: "reto", anim: 1, como: "Top 3 del mes en Gánale a la app" }], ["hiscorec", "HI-SCORE ✨", { evento: "arcade", anim: 1, como: "Top 3 del evento HI-SCORE" }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   // Tarjetas: el fondo de tu ficha (barra de Desafíos, perfil y tu fila en la clasificación)
   tarjeta: [["clasica", "Clásica"], ["noche", "Noche"], ["cesped", "Césped"],
     ["atardecer", "Atardecer", { nivel: 3 }], ["oceano", "Océano", { nivel: 8 }], ["pizarra", "Pizarra táctica", { nivel: 12 }], ["estadio", "Estadio", { nivel: 18 }],
     ["oro", "Oro viejo", { nivel: 28 }], ["grada", "Grada", { nivel: 40 }], ["neonu", "Neón urbano", { nivel: 55 }], ["marmol", "Mármol", { nivel: 75 }],
-    ["leyenda", "Leyenda ✨", { nivel: 100, anim: 1 }], ["infinito", "Infinito ✨", { nivel: 150, anim: 1 }],
+    ["leyenda", "Leyenda", { nivel: 100 }], ["infinito", "Infinito", { nivel: 150 }],
     ["carbono", "Carbono", { precio: 300 }], ["pasion", "Rojo pasión", { precio: 250 }], ["retro", "Retro 90", { precio: 400 }],
-    ["aurora", "Aurora ✨", { precio: 750, anim: 1 }], ["lava", "Lava ✨", { precio: 850, anim: 1 }], ["galaxia", "Galaxia ✨", { precio: 950, anim: 1 }],
+    ["aurora", "Aurora", { precio: 400 }], ["lava", "Lava", { precio: 450 }], ["galaxia", "Galaxia", { precio: 500 }],
     ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }], ["pixel", "Pixel", { pase: 15 }], ["arcade8", "Arcade 8-bit ✨", { pase: 40, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   // Temas de toda la app
   skin: [["", "Normal"], ["estadio", "Estadio de noche", { perfil: true }], ["oro", "Oro y negro", { pase: 25 }],
@@ -4336,19 +4347,19 @@ const CAT = {
 };
 // ---- Pase Premium de la Temporada 0 (pixel): un objeto exclusivo por nivel. Solo estética: nada de monedas, comodines ni estrellas.
 const PREM_T0 = [
-  ["avatar", "pa1", "Fantasma", "👻", "#5d275d"], ["titulo", "jugador1", "Jugador 1"], ["tarjeta", "pxatardecer", "Atardecer pixel"], ["color", "pxverde", "Fósforo verde"],
+  ["avatar", "pa1", "Fantasma", "👻", "#5d275d"], ["titulo", "jugador1", "Jugador 1"], ["tarjeta", "pxatardecer", "Atardecer pixel"], ["color", "pxverde", "Fósforo verde ✨", { anim: 1 }],
   ["avatar", "pa5", "Mando", "🎮", "#3b5dc9"], ["marco", "pxmadera", "Madera pixel"], ["titulo", "insertcoin", "Insert Coin"], ["avatar", "pa3", "Disquete", "💾", "#29366f"],
   ["tarjeta", "pxoceano", "Mar 8-bit"], ["marco", "pxoro", "Oro pixel"], ["avatar", "pa2", "Seta", "🍄", "#b13e53"], ["titulo", "pulsastart", "Pulsa Start"],
   ["color", "pxambar", "Ámbar CRT"], ["tarjeta", "pxbosque", "Bosque pixel"], ["color", "pxarcoiris", "Arcoíris 8-bit ✨", { anim: 1 }], ["avatar", "pa4", "Cinta VHS", "📼", "#333c57"],
-  ["marco", "pxhielo", "Hielo pixel"], ["titulo", "highscore", "High Score"], ["tarjeta", "pxnieve", "Nivel de hielo"], ["tarjeta", "pxmatrix", "Código ✨", { anim: 1 }],
+  ["marco", "pxhielo", "Hielo pixel"], ["titulo", "highscore", "High Score"], ["tarjeta", "pxnieve", "Nivel de hielo"], ["tarjeta", "pxmatrix", "Código"],
   ["avatar", "pa8", "Rana saltarina", "🐸", "#257179"], ["color", "pxcian", "Cian arcade"], ["titulo", "levelup", "Level Up"], ["marco", "pxmenta", "Menta pixel"],
   ["marco", "pxneon", "Neón 8-bit ✨", { anim: 1 }], ["avatar", "pa7", "Alien", "👽", "#38b764"], ["tarjeta", "pxciudad", "Ciudad nocturna"], ["titulo", "combo", "Combo ×10"],
   ["color", "pxrosa", "Rosa chicle"], ["tarjeta", "pxglitch", "Glitch ✨", { anim: 1 }], ["avatar", "pa10", "Espadas", "⚔️", "#566c86"], ["marco", "pxlava", "Lava pixel"],
   ["titulo", "sincontinues", "Sin continues"], ["tarjeta", "pxcastillo", "Castillo"], ["titulo", "leyenda8", "Leyenda 8-bit"], ["avatar", "pa11", "Escudo", "🛡️", "#29366f"],
-  ["color", "pxoro", "Moneda de oro"], ["titulo", "speedrunner", "Speedrunner"], ["avatar", "pa12", "Castillo", "🏰", "#41a6f6"], ["tarjeta", "pxespacio", "Hiperespacio ✨", { anim: 1 }],
+  ["color", "pxoro", "Moneda de oro ✨", { anim: 1 }], ["titulo", "speedrunner", "Speedrunner"], ["avatar", "pa12", "Castillo", "🏰", "#41a6f6"], ["tarjeta", "pxespacio", "Hiperespacio ✨", { anim: 1 }],
   ["avatar", "pa13", "Nave", "🚀", "#1a1c2c"], ["tarjeta", "pxlava", "Mazmorra de lava"], ["titulo", "jefefinal", "Jefe final"], ["avatar", "pa14", "Gema", "💎", "#5d275d"],
   ["marco", "pxboss", "Marco del jefe ✨", { anim: 1 }], ["avatar", "pa6", "Robot 8-bit", "🤖", "#257179"], ["titulo", "gameover", "Game Over para la app"], ["avatar", "pa9", "Dragón final", "🐉", "#b13e53"],
-  ["marco", "pxglitch", "Marco glitch ✨", { anim: 1 }], ["skin", "pxconsola", "Consola portátil ✨", { anim: 1 }],
+  ["marco", "pxglitch", "Marco glitch"], ["skin", "pxconsola", "Consola portátil ✨", { anim: 1 }],
 ];
 PREM_T0.forEach(([t, id, n, e, bg], k) => { const x = typeof e === "object" ? e : {};
   CAT[t].push(t === "avatar" ? { id, e, bg, n, prem: k + 1 } : { id, n, prem: k + 1, ...x }); });
@@ -4475,7 +4486,7 @@ function procesarRecompensas() {
     if (!yo.jug) { PERFIL.cobrados["mes:" + mes] = 1; continue; }
     const pos = yo.pos, mon = [5000, 3000, 2000][pos - 1] || (pos <= 10 ? 1000 : 0), xp = pos <= 3 ? 10000 : pos <= 10 ? 5000 : 0;
     if (mon && cobrar("mes:" + mes, `${pos}.º del mes (${mes.slice(5)}/${mes.slice(0, 4)})${pos <= 3 ? " · set animado de Gánale a la app" : ""}`, xp, mon, { pos }) && pos <= 3)
-      for (const k of ["tarjeta:vencedor", "marco:circuito", "avatar:a28"]) if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
+      for (const k of ["tarjeta:vencedor", "marco:circuito", "avatar:a28", "color:vencedorc"]) if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
     if (!mon) PERFIL.cobrados["mes:" + mes] = 1;
   }
   // Temporada 1 (octubre–diciembre de 2026): el top 3 se lleva el tema Oro y negro
@@ -4721,7 +4732,7 @@ function pintarTienda() {
   else if (cat === "excl") {
     h += `<p class="tnota">No se compran: se ganan quedando arriba. Así, quien los lleva demuestra que lo ha conseguido.</p>
     <div class="texcl r-leg"><span class="tcp">${dibujoTienda("skin", { id: "oro" })}</span><span><b>Tema Oro y negro</b><small>Top 3 de la Temporada 0 (oct–dic) · ${quedanTemp()}</small></span><span class="tlock">${tieneItem("skin", { id: "oro", evento: "temporada" }) ? "✓ Tuyo" : "🔒"}</span></div>
-    <div class="texcl r-leg"><span class="tcp" style="display:flex;gap:8px;align-items:center"><span class="av mr-circuito" style="--s:46px"><span class="avi" style="background:#1e1b4b"><span class="ava-robot">🤖</span></span></span><span class="tjmini tj tj-vencedor" style="width:70px;height:46px"></span></span><span><b>Set «Vencedor de la máquina»</b><small>Tarjeta, marco y avatar animados · top 3 del mes en Gánale a la app</small></span><span class="tlock">${PERFIL.comprados.includes("tarjeta:vencedor") ? "✓ Tuyo" : "🔒"}</span></div>`;
+    <div class="texcl r-leg"><span class="tcp" style="display:flex;gap:8px;align-items:center"><span class="av mr-circuito" style="--s:46px"><span class="avi" style="background:#1e1b4b"><span class="ava-robot">🤖</span></span></span><span class="tjmini tj tj-vencedor" style="width:70px;height:46px"></span></span><span><b>Set «Vencedor de la máquina»</b><small>Tarjeta, marco, color de nombre y avatar animados · top 3 del mes en Gánale a la app</small></span><span class="tlock">${PERFIL.comprados.includes("tarjeta:vencedor") ? "✓ Tuyo" : "🔒"}</span></div>`;
   } else if (cat === "fis") {
     h += `<p class="tnota">Premios de verdad con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online con cuentas verificadas.</p>` +
       rejilla([["🧣", "Bufanda", 13000], ["⚽", "Balón", 20000], ["👕", "Camiseta", 26000]].map(([e, n, p]) => `<div class="tcard r-leg fis"><span class="tcr">Premio real</span><span class="tcp"><span style="font-size:54px">${e}</span></span><b class="tcn">${n}</b><button class="tcbtn" disabled>🪙 ${fmtN(p)} · Pronto</button></div>`));
@@ -4863,7 +4874,7 @@ const BASES_EVENTO = {
     ["Vidas", "Tienes 4 vidas cada semana (de lunes a domingo) y cada fallo quita una. Sin vidas, tus jugadas de esa semana no puntúan (GAME OVER) hasta el lunes. Una vez por semana puedes «continuar» gastando una Segunda oportunidad para recuperar una vida."],
     ["Clasificación", "Gana quien más puntos sume en todo el evento. Desempate: mayor combo conseguido y después más aciertos. Los puntos del evento suman también a la clasificación de la Temporada 0."],
     ["Monedas", "Cada acierto te da tantas monedas como puntos consigue, con el combo incluido: un acierto de +20 con combo ×3 son 60 monedas."],
-    ["Premios", "1.º, 2.º y 3.º: set exclusivo animado (tarjeta HI-SCORE, marco Arcade y título HI-SCORE), 3.000, 2.000 y 1.000 monedas y 5.000 XP. Del 4.º al 10.º: título Top 10 Arcade, 500 monedas y 1.000 XP. Hitos: combo ×4, 150 monedas; combo ×6, título Combo ×6; combo ×8, avatar Ficha arcade. Cada acierto da 1 estrella del pase de temporada."],
+    ["Premios", "1.º, 2.º y 3.º: set exclusivo animado (tarjeta HI-SCORE, marco Arcade, color de nombre HI-SCORE y título HI-SCORE), 3.000, 2.000 y 1.000 monedas y 5.000 XP. Del 4.º al 10.º: título Top 10 Arcade, 500 monedas y 1.000 XP. Hitos: combo ×4, 150 monedas; combo ×6, título Combo ×6; combo ×8, avatar Ficha arcade. Cada acierto da 1 estrella del pase de temporada."],
   ],
   superv: [["Mecánica (borrador)", "Cada jornada se elige un equipo que crees que va a ganar, sin poder repetir equipo en todo el evento. Si empata o pierde, quedas eliminado. Gana el último que siga vivo; si caen todos a la vez, ganan los que llegaron más lejos."]],
   porra: [["Mecánica (borrador)", "Cada semana se publican 10 partidos destacados y hay que acertar el resultado exacto o el 1-X-2 antes de que empiecen. Gana quien más puntos sume en la semana."]],
@@ -5302,7 +5313,7 @@ function recompensasArc() {
     if (f && f.pts && f.pos <= 10) {
       const [mon, xp] = PREMIOS_RANK.arcade[Math.min(f.pos, 4) - 1];
       if (cobrar("arcfin", `🕹️ ${f.pos}.º en HI-SCORE`, xp, mon, { pos: f.pos }))
-        for (const k of f.pos <= 3 ? ["tarjeta:hiscore", "marco:arcade", "titulo:hiscore"] : ["titulo:top10arc"]) if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
+        for (const k of f.pos <= 3 ? ["tarjeta:hiscore", "marco:arcade", "titulo:hiscore", "color:hiscorec"] : ["titulo:top10arc"]) if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k);
     } else PERFIL.cobrados["arcfin"] = 1;
   }
 }
@@ -6060,7 +6071,8 @@ const TJVIVA = (() => {
       txt("YOU WIN", W / 2, H - 2, Math.max(5, Math.round(H * .14)), s.t % 10 < 7 ? "#a7f070" : "#ffec27");
     } };
   // ---------------------------------------------------------------- motor
-  function idDe(el) { for (const k of el.classList) if (k.startsWith("tj-") && E[k.slice(3)]) return k.slice(3); return null; }
+  const animada = id => !!(CAT.tarjeta.find(t => t.id === id) || {}).anim;
+  function idDe(el) { for (const k of el.classList) if (k.startsWith("tj-") && E[k.slice(3)] && animada(k.slice(3))) return k.slice(3); return null; }
   function montar(el) {
     const id = idDe(el); if (el._tjv && el._tjv.id === id) return; if (el._tjv) quitar(el); if (!id) return;
     const cv = document.createElement("canvas"); cv.className = "tjcv"; cv.setAttribute("aria-hidden", "true");
