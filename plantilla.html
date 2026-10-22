@@ -5924,32 +5924,50 @@ const TJVIVA = (() => {
       px(s.can - 3, H - 4, 7, 2, "#38b764"); px(s.can - 1, H - 5, 3, 1, "#38b764"); px(s.can, H - 6, 1, 1, "#a7f070"); px(0, H - 1, W, 1, "#38b764");
       txt(String(s.pts).padStart(5, "0"), W - 2, Math.min(H - 2, 7), 5, "#f4f4f4", "right");
     } };
-  // ---------------------------------------------------------------- HI-SCORE: el comecocos se come las bolitas con los fantasmas detrás; con la bola grande se vuelven azules
+  // ---------------------------------------------------------------- HI-SCORE (premio del top 3 del primer evento de la Temporada 0):
+  // la recreativa del evento. Letrero con bombillas que corren, la puntuación que se dispara, la barra de combo que se llena
+  // hasta ×8, "NEW RECORD!" con lluvia de monedas y el suelo de neón avanzando. Cada ronda acaba en récord y vuelve a empezar.
   E.hiscore = { px: 1,
-    crear: (W, H) => ({ t: 0, pac: 0, pts: ri(1000, 9000), puntos: [], fant: [0, 1, 2, 3].map(i => ({ x: -10 - i * 8, col: ["#ff004d", "#ff77a8", "#73eff7", "#ffa300"][i], comido: 0 })), poder: 0, txt: [], dir: 1 }),
+    crear: () => ({ t: 0, pts: 0, meta: ri(60000, 99999) * 10, combo: 0, fase: "sube", ft: 0, mon: [], brillo: -1, tiembla: 0, est: [...Array(24)].map(() => [Math.random(), Math.random() * .5, r(.2, .9)]) }),
     paso: (s, W, H) => {
-      s.t++; const v = .9; s.pac += v * s.dir;
-      if (s.pac > W + 8 || s.pac < -40) { s.dir = s.pac > W + 8 ? -1 : 1; s.pac = s.dir > 0 ? -8 : W + 8; s.poder = 0; s.fant.forEach((f, i) => { f.x = s.pac - s.dir * (10 + i * 8); f.comido = 0; }); s.comidas = {}; }
-      if (Math.random() < .006 && !s.poder) s.poder = 70;
-      if (s.poder) s.poder--;
-      s.fant.forEach((f, i) => { if (f.comido) return; const obj = s.pac - (s.poder ? -1 : 1) * s.dir * (8 + i * 7); f.x += Math.max(-1, Math.min(1, obj - f.x)) * (s.poder ? .55 : .95);
-        if (s.poder && Math.abs(f.x - s.pac) < 3) { f.comido = 1; s.pts += 200 * (1 + s.fant.filter(z => z.comido).length); s.txt.push({ x: f.x, v: 14, t: String(200 * s.fant.filter(z => z.comido).length) }); } });
-      s.pts += 1; s.txt.forEach(x => x.v--); s.txt = s.txt.filter(x => x.v > 0);
+      s.t++; s.ft++;
+      if (s.fase === "sube") {
+        s.pts = Math.min(s.meta, s.pts + Math.round(s.meta / ri(70, 110)) * (1 + s.combo * .15));
+        if (s.ft % 12 === 0 && s.combo < 8) { s.combo++; if (s.combo === 8) s.tiembla = 8; }
+        if (s.pts >= s.meta) { s.fase = "record"; s.ft = 0; for (let k = 0; k < 26; k++) s.mon.push({ x: r(0, W), y: r(-H, 0), vy: r(.4, 1.2), vx: r(-.3, .3), g: ri(0, 3) }); }
+      } else if (s.fase === "record" && s.ft > 60) { s.fase = "sube"; s.ft = 0; s.pts = 0; s.combo = 0; s.meta = ri(60000, 99999) * 10; }
+      if (s.brillo >= 0) { s.brillo += 2; if (s.brillo > W + 20) s.brillo = -1; } else if (Math.random() < .03) s.brillo = 0;
+      s.mon.forEach(m => { m.vy += .08; m.y += m.vy; m.x += m.vx; if (m.y > H - 3 && m.vy > 0) { m.y = H - 3; m.vy *= -.45; if (Math.abs(m.vy) < .3) m.vy = 0; } m.g = (m.g + .25) % 4; });
+      if (s.fase === "sube" && s.ft > 30) s.mon = s.mon.filter(m => m.vy !== 0 || Math.random() < .9);
+      if (s.tiembla) s.tiembla--;
     },
     dibu: (s, W, H) => {
-      px(0, 0, W, H, "#0b0618"); const my = Math.round(H * .55);
-      for (const y of [my - 6, my + 6]) { px(0, y, W, 1, "#3b5dc9"); px(0, y + (y < my ? -1 : 1), W, 1, "#29366f"); }
-      for (let x = 2; x < W; x += 4) { const comida = s.dir > 0 ? x < s.pac : x > s.pac; if (!comida) px(x, my, 1, 1, "#ffcd75"); }
-      for (let x = 10; x < W; x += 28) if (s.dir > 0 ? x > s.pac : x < s.pac) if (s.t % 8 < 5) px(x - 1, my - 1, 3, 3, "#ffcd75");
-      const boca = Math.floor(s.t / 2) % 2, pxx = Math.round(s.pac);
-      px(pxx - 2, my - 2, 5, 5, "#ffec27"); px(pxx - 1, my - 3, 3, 1, "#ffec27"); px(pxx - 1, my + 3, 3, 1, "#ffec27");
-      if (boca) { px(pxx + (s.dir > 0 ? 1 : -2), my - 1, 2, 3, "#0b0618"); px(pxx + (s.dir > 0 ? 2 : -3), my - 2, 1, 5, "#0b0618"); }
-      for (const f of s.fant) { if (f.comido) { px(f.x - 1, my - 1, 1, 1, "#f4f4f4"); px(f.x + 1, my - 1, 1, 1, "#f4f4f4"); continue; }
-        const col = s.poder ? (s.poder < 20 && s.t % 4 < 2 ? "#f4f4f4" : "#3b5dc9") : f.col; px(f.x - 2, my - 2, 5, 4, col); px(f.x - 1, my - 3, 3, 1, col);
-        px(f.x - 2 + (s.t % 4 < 2 ? 0 : 1), my + 2, 1, 1, col); px(f.x + (s.t % 4 < 2 ? 0 : 1), my + 2, 1, 1, col); px(f.x + 2 - (s.t % 4 < 2 ? 0 : 1), my + 2, 1, 1, col);
-        px(f.x - 1, my - 1, 1, 1, "#f4f4f4"); px(f.x + 1, my - 1, 1, 1, "#f4f4f4"); }
-      for (const x of s.txt) txt(x.t, x.x, my - 7, 5, "#73eff7");
-      txt("HI " + String(s.pts).padStart(6, "0"), W / 2, Math.max(6, my - 9), 5, s.t % 30 < 24 ? "#ff004d" : "#f4f4f4");
+      const dx = s.tiembla ? ri(-1, 1) : 0, rec = s.fase === "record";
+      // fondo: noche de neón con estrellas y el suelo de rejilla que avanza
+      px(0, 0, W, H, "#0b0618"); for (const [x, y, v] of s.est) px(x * W, y * H, 1, 1, (s.t + x * 50) % 20 < 15 ? "#f4f4f4" : "#566c86");
+      const hz = Math.round(H * .62); px(0, hz, W, H - hz, "#1a0b2e");
+      c.fillStyle = "rgba(255,0,77,.55)"; for (let i = 0; i < 7; i++) { const f = ((i + (s.t % 10) / 10) / 7), y = hz + Math.round((H - hz) * f * f); c.fillRect(0, y, W, 1); }
+      for (let i = -8; i <= 8; i++) { c.strokeStyle = "rgba(255,0,77,.45)"; c.lineWidth = 1; c.beginPath(); c.moveTo(W / 2 + i * 3, hz); c.lineTo(W / 2 + i * W * .14, H); c.stroke(); }
+      px(0, hz, W, 1, "#ff77a8");
+      // letrero con bombillas alrededor que van corriendo
+      const mx = 2, my = 1, mw = W - 4, mh = Math.max(9, Math.round(H * .44));
+      px(mx + dx, my, mw, mh, "#29133f"); px(mx + 1 + dx, my + 1, mw - 2, mh - 2, "#120720");
+      const bombillas = []; for (let x = mx; x < mx + mw; x += 3) bombillas.push([x, my], [x, my + mh - 1]); for (let y = my + 3; y < my + mh - 2; y += 3) bombillas.push([mx, y], [mx + mw - 1, y]);
+      bombillas.forEach(([x, y], i) => px(x + dx, y, 1, 1, (i + Math.floor(s.t / 2)) % 3 === 0 ? (rec ? "#f4f4f4" : "#ffec27") : "#7e2553"));
+      const tam = Math.max(6, Math.round(mh * .62)), ly = my + Math.round(mh * .72);
+      txt("HI-SCORE", W / 2 + dx + 1, ly + 1, tam, "#ff004d"); txt("HI-SCORE", W / 2 + dx, ly, tam, rec && s.t % 6 < 3 ? "#f4f4f4" : "#ffec27");
+      if (s.brillo >= 0) { c.save(); c.beginPath(); c.rect(mx + 1, my + 1, mw - 2, mh - 2); c.clip(); c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.moveTo(s.brillo, my); c.lineTo(s.brillo + 4, my); c.lineTo(s.brillo - 2, my + mh); c.lineTo(s.brillo - 6, my + mh); c.fill(); c.restore(); }
+      // puntuación y barra de combo
+      const sy = my + mh + Math.max(5, Math.round(H * .14)), t2 = Math.max(5, Math.round(H * .12));
+      if (sy < H - 2) {
+        txt(String(Math.round(s.pts)).padStart(7, "0"), W * .3 + dx, sy, t2, "#73eff7");
+        const bx = Math.round(W * .56), bw = Math.round(W * .4), seg = Math.max(2, Math.floor((bw - 7) / 8));
+        for (let k = 0; k < 8; k++) px(bx + k * (seg + 1) + dx, sy - t2 + 1, seg, Math.max(2, t2 - 2), k < s.combo ? (s.combo === 8 ? (s.t % 4 < 2 ? "#ff004d" : "#ffec27") : ["#38b764", "#a7f070", "#ffec27", "#ffa300"][Math.floor(k / 2)]) : "#29366f");
+        txt("x" + Math.max(1, s.combo), bx - 2 + dx, sy, t2, s.combo === 8 ? "#ff004d" : "#ffcd75", "right");
+      }
+      if (rec && s.ft % 10 < 7) { const ty = Math.min(H - 2, sy + Math.max(7, Math.round(H * .18))); txt("NEW RECORD!", W / 2, ty, Math.max(5, Math.round(H * .13)), s.ft % 4 < 2 ? "#ffec27" : "#ff77a8"); }
+      // monedas que caen y rebotan (giran: de frente, de canto…)
+      for (const m of s.mon) { const g = Math.floor(m.g), a = [3, 2, 1, 2][g]; px(m.x - a / 2, m.y - 1, a, 3, "#ffcd75"); if (a > 1) px(m.x - a / 2, m.y - 1, 1, 3, "#ef7d57"); }
     } };
   // ---------------------------------------------------------------- Código: lluvia de símbolos verdes; a veces se forma una palabra
   E.pxmatrix = { px: 1,
