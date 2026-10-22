@@ -1079,7 +1079,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 /* Fondos animados de algunos temas (lienzo #fondovivo detrás de todo); el dibujo fijo de esos temas se apaga */
 /* Con fondo animado: la cabecera es transparente y las tarjetas dejan ver lo de detrás */
 :root.fondovivo header { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-bottom-color: transparent !important; box-shadow: none !important; }
-:root.fondovivo :is(.mcard, .partido, .rpart, .comps, .ajb, .todos, .caja, .jp, .jcard, .rrow:not(.rhead):not(.tj), .tcard, .tdest, .fbar, .fequipos, .tabla2, .fila, .arp, .arsl) { background-color: color-mix(in srgb, var(--surface) 62%, transparent) !important; background-image: none; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
+:root.fondovivo :is(.mcard, .partido, .rpart, .comps, .ajb, .todos, .caja, .jp, .jcard, .rrow:not(.rhead):not(.tj), .tcard, .tdest, .fbar, .fequipos, .tabla2, .fila, .arp, .arsl, .bliga, .fliga, .fesp, .det, .apform) { background-color: color-mix(in srgb, var(--surface) 62%, transparent) !important; background-image: none; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
 :root.fondovivo :is(.comps .comp, .comps .compir) { background: transparent !important; }
 /* Primera tirada: solo 7 animados por tipo (2 de clasificaciones, 3 del pase y 2 de compra); el resto quietos */
 :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix), :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix)::before, :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix)::after,
@@ -1095,6 +1095,8 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 /* Tarjetas vivas: el lienzo va dentro de la tarjeta, detrás del contenido */
 .tj.tjviva { position: relative; overflow: hidden; isolation: isolate; } .tj.tjviva::before, .tj.tjviva::after { display: none !important; }
 .tjcv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; border-radius: inherit; }
+#fondocab { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+:root.fondovivo header { isolation: isolate; background-color: var(--fondocab, transparent) !important; }
 #fondovivo { position: fixed; top: 0; left: 0; width: 100%; z-index: -1; pointer-events: none; }
 :root.fondovivo:not([data-skin="galaxia"]) body::before { opacity: 0 !important; }
 
@@ -6123,7 +6125,7 @@ const TJVIVA = (() => {
 // Un lienzo detrás de la app (debajo de todo, sin tocar nada). Solo lo usan algunos temas; en el resto no hay nada.
 // Va a pocos fotogramas por segundo, se para con la app en segundo plano y, con "reducir movimiento", se queda quieto.
 const FONDO = (() => {
-  let cv = null, cx = null, esc = "", st = null, ult = 0, w = 0, h = 0, k = 1, quieto = false, bot = 0;
+  let cv = null, cx = null, cab = null, esc = "", st = null, ult = 0, w = 0, h = 0, k = 1, quieto = false, bot = 0;
   const PX = { f: "pxf", b: "pxb", te: "pxte", e: "pxe" };
   const ESCENAS = { s0estadio: d => PX[d] || "pxf", pizarra: () => "pizarra", estadio: () => "noche", pixel: () => "pxrun", neon: () => "neon", galaxia: () => "galaxia" };
   const OPAC = { pxf: .5, pxb: .5, pxte: .5, pxe: .55, pizarra: .75, noche: .9, pxrun: .85, neon: .7, galaxia: .9 };
@@ -6139,20 +6141,30 @@ const FONDO = (() => {
   }
   function iniciar(e) {
     esc = e;
-    if (!e) { if (cv) cv.hidden = true; document.documentElement.classList.remove("fondovivo"); return; }
+    if (!e) { if (cv) cv.hidden = true; if (cab) cab.hidden = true; document.documentElement.classList.remove("fondovivo"); return; }
     if (!cv) { cv = document.createElement("canvas"); cv.id = "fondovivo"; cv.setAttribute("aria-hidden", "true"); document.body.prepend(cv); addEventListener("resize", () => { if (esc && Math.abs(innerWidth - w) > 2) { medir(); st = CREAR[esc](); } }); }   // solo si cambia el ancho (girar el móvil); el teclado al buscar no cuenta
     cv.hidden = false; cv.style.opacity = OPAC[e]; cv.style.imageRendering = esPixel(e) ? "pixelated" : "auto";
+    const hd = document.querySelector("header"); if (hd && !cab) { cab = document.createElement("canvas"); cab.id = "fondocab"; cab.setAttribute("aria-hidden", "true"); hd.prepend(cab); }
+    if (cab) { cab.hidden = false; cab.style.opacity = OPAC[e]; cab.style.imageRendering = cv.style.imageRendering; }
+    try { document.documentElement.style.setProperty("--fondocab", getComputedStyle(document.body).backgroundColor); } catch (er) {}
     document.documentElement.classList.add("fondovivo");
     medir(); st = CREAR[e](); ult = 0;
     quieto = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-    if (quieto) { for (let i = 0; i < 40; i++) PASO[e](st); DIBU[e](st, 0); }
+    if (quieto) { for (let i = 0; i < 40; i++) PASO[e](st); DIBU[e](st, 0); copiarCab(); }
   }
   function bucle(ts) {
     requestAnimationFrame(bucle);
     const e = escenaAhora(); if (e !== esc) iniciar(e);
     if (!esc || quieto || document.hidden) return;
     if (ts - ult < 1000 / (esPixel(esc) ? 14 : 30)) return; ult = ts;
-    PASO[esc](st, ts); DIBU[esc](st, ts);
+    PASO[esc](st, ts); DIBU[esc](st, ts); copiarCab();
+  }
+  // La cabecera se queda con el trozo de dibujo que tiene detrás: así se ve el fondo, pero no la lista que pasa por debajo al bajar
+  function copiarCab() {
+    if (!cab || cab.hidden) return; const hd = cab.parentElement, rc = hd.getBoundingClientRect(); if (!rc.height) return;
+    const f = cv.height / h, sy = Math.max(0, rc.top * f), sh = Math.max(1, Math.round(rc.height * f));
+    if (cab.width !== cv.width || cab.height !== sh) { cab.width = cv.width; cab.height = sh; }
+    const x = cab.getContext("2d"); x.imageSmoothingEnabled = !esPixel(esc); x.clearRect(0, 0, cab.width, cab.height); x.drawImage(cv, 0, sy, cv.width, sh, 0, 0, cab.width, sh);
   }
   // ---------------------------------------------------------------- utilidades pixel
   const W = () => cv.width, H = () => Math.floor(cv.height - bot / k), hu = () => h - bot;
