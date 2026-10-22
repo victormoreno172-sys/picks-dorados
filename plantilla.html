@@ -2019,6 +2019,16 @@ function filaPartido(p, idx) {
   </article>`;
 }
 
+// Una liga como desplegable (Partidos y Favoritos): al abrirla salen sus partidos y el enlace a su clasificación, jornadas y equipos
+function filaComp(l, lista, conIcono) {
+  const inf = infoLiga(l), fav = est.ligasFav.has(l), ab = LIGAS_AB.has(l);
+  const pais = conIcono && lista.length ? `${ICONO_DEP[lista[0][0].dep || "f"] || ""} ${inf.pais}` : inf.pais;
+  return `<div class="comp ${ab ? "ab" : ""}"><button class="compir" data-ligadesp="${esc(l)}" aria-expanded="${ab}"><span class="flag">${inf.flag}</span>
+    <span class="nl"><small>${esc(pais)}</small><b>${esc(inf.nombre)}</b></span>
+    <span class="cnt">${lista.length}</span><span class="cflecha">▾</span></button>
+    <button class="lfav" data-ligafav="${esc(l)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>
+    ${ab ? `<div class="compdesp">${lista.map(([p, i]) => filaPartido(p, i)).join("")}<button class="compver" data-ligaresumen="${esc(l)}">📊 Clasificación, jornadas y equipos <span>›</span></button></div>` : ""}`;
+}
 // Ligas abiertas en la lista de competiciones (se recuerdan)
 const LIGAS_AB = (() => { try { return new Set(JSON.parse(localStorage.getItem("ligasAb") || "[]")); } catch (e) { return new Set(); } })();
 function bloqueLiga(liga, lista) {
@@ -2096,12 +2106,7 @@ function pintarListaReal() {
   let h = "";
   if (est.vista === "comps" && !(est.busca || "").trim()) {
     cargarIndice();   // para que «Clasificación, jornadas y equipos» lleve directo a la liga
-    const fila = l => { const inf = infoLiga(l), fav = est.ligasFav.has(l), ab = LIGAS_AB.has(l);
-      return `<div class="comp ${ab ? "ab" : ""}"><button class="compir" data-ligadesp="${esc(l)}" aria-expanded="${ab}"><span class="flag">${inf.flag}</span>
-        <span class="nl"><small>${esc(inf.pais)}</small><b>${esc(inf.nombre)}</b></span>
-        <span class="cnt">${porLiga[l].length}</span><span class="cflecha">▾</span></button>
-        <button class="lfav" data-ligafav="${esc(l)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>
-        ${ab ? `<div class="compdesp">${porLiga[l].map(([p, i]) => filaPartido(p, i)).join("")}<button class="compver" data-ligaresumen="${esc(l)}">📊 Clasificación, jornadas y equipos <span>›</span></button></div>` : ""}`; };
+    const fila = l => filaComp(l, porLiga[l]);
     const favs = ligas.filter(l => est.ligasFav.has(l)), resto = ligas.filter(l => !est.ligasFav.has(l));
     const nVivo = enVivo().length;
     h += `<button class="todos endirecto ${nVivo ? "hay" : ""}" data-endirecto="1"><span class="punto"></span><b>En directo</b><span class="cnt vivo-c">${nVivo}</span></button>`;
@@ -2128,6 +2133,14 @@ function pintarListaReal() {
       for (const l of ligas) porLiga[l] = porLiga[l].filter(([p]) => esFav(l) || est.favs.has(clavePartido(dia, p)));
       sel = ligas.filter(l => porLiga[l].length);
       sel.sort((x, y) => (esFav(y) - esFav(x)) || ordenLiga(x) - ordenLiga(y));
+    }
+    if (est.vista === "favs" && !(est.busca || "").trim()) {   // Favoritos igual que Partidos: cada competición es un desplegable
+      cargarIndice();
+      const n = sel.reduce((t, l) => t + porLiga[l].length, 0);
+      h += `<h2 class="sec">⭐ Tus favoritos <small style="opacity:.7">· ${n} partido${n === 1 ? "" : "s"}</small></h2>`;
+      h += sel.length ? `<div class="comps">${sel.map(l => filaComp(l, porLiga[l], true)).join("")}</div>`
+        : `<div class="vacio">${est.ligasFav.size || est.juegosFav.size ? "Tus competiciones favoritas no juegan este día. Prueba otro día arriba." : "Toca la ☆ de un partido o de una competición para tenerlo aquí."}</div>`;
+      $("vista").innerHTML = h; return;
     }
     if ((est.busca || "").trim()) titulo = "Resultados de la búsqueda";
     let chipsFav = "";
@@ -5786,8 +5799,8 @@ document.addEventListener("click", e => {
     est.dep = p.dep || "f"; est.volverA = b.dataset.desde || "clasif"; est.vista = "partido"; est.sel = +b.dataset.abrirp; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligadesp !== undefined) { const l = b.dataset.ligadesp; LIGAS_AB.has(l) ? LIGAS_AB.delete(l) : LIGAS_AB.add(l);
     try { localStorage.setItem("ligasAb", JSON.stringify([...LIGAS_AB])); } catch (er) {} const y = window.scrollY; pintarLista(); window.scrollTo(0, y); return; }
-  if (b.dataset.ligaresumen !== undefined) {   // de un partido o de la lista: al resumen de la liga (clasificación, jornadas y equipos)
-    const l = ligaBase(b.dataset.ligaresumen), li = idDeLiga(l);
+  if (b.dataset.ligaresumen !== undefined || (b.dataset.ligaIr !== undefined && idDeLiga(ligaBase(b.dataset.ligaIr)))) {   // al resumen de la liga (clasificación, jornadas y equipos)
+    const l = ligaBase(b.dataset.ligaresumen !== undefined ? b.dataset.ligaresumen : b.dataset.ligaIr), li = idDeLiga(l);
     if (!li) { cargarIndice(); est.vista = "liga"; est.liga = l; window.scrollTo({ top: 0 }); pintarLista(); return; }
     est.vista = "clasif"; est.lid = li.id; est.ltab = li.tipo === "copa" || (/^e-/.test(li.id) && li.tipo !== "ranking") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
     est.ltabElegida = false; if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
