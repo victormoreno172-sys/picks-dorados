@@ -301,7 +301,7 @@ def _vlr_bloques(t: str) -> list:
 def _vlr_resultados() -> list:
     if time.time() - _VLRR["t"] > 300:
         try:
-            t = requests.get("https://www.vlr.gg/matches/results", headers={**UA, "Accept": "text/html"}, timeout=25).text
+            t = requests.get("https://www.vlr.gg/matches/results", headers={**UA, "Accept": "text/html", "Cache-Control": "no-cache"}, timeout=25, params={"_": int(time.time())}).text
             _VLRR["lista"], _VLRR["t"] = [x for x in _vlr_bloques(t) if x["st"].startswith("COMPLETED")], time.time()
         except requests.RequestException:
             pass
@@ -350,7 +350,7 @@ def vlr_valorant(cand: list) -> dict:
 def _vlr_lista() -> list:
     if time.time() - _VLR["t"] > 120:
         try:
-            t = requests.get("https://www.vlr.gg/matches", headers={**UA, "Accept": "text/html"}, timeout=25).text
+            t = requests.get("https://www.vlr.gg/matches", headers={**UA, "Accept": "text/html", "Cache-Control": "no-cache"}, timeout=25, params={"_": int(time.time())}).text
             lista = []
             for bloque in t.split('class="wf-module-item match-item')[1:]:
                 href = re.search(r'href="(/\d+/[^"]+)"', bloque) or re.search(r"^[^>]*?href=\"(/\d+/[^\"]+)\"", bloque)
@@ -379,7 +379,9 @@ def vlr(local: str, visitante: str, url: str | None = None, giro: bool = False) 
     if not m:
         return None
     try:
-        t = requests.get("https://www.vlr.gg" + m["url"], headers={**UA, "Accept": "text/html"}, timeout=25).text
+        # con un parámetro que cambia: si no, vlr.gg/Cloudflare devuelve una copia vieja de la página (p. ej. de antes de empezar)
+        t = requests.get("https://www.vlr.gg" + m["url"], headers={**UA, "Accept": "text/html", "Cache-Control": "no-cache"}, timeout=25,
+                         params={"game": "all", "tab": "overview", "_": int(time.time())}).text
     except requests.RequestException:
         return None
     mapas, envivo, sa, sb = [], None, 0, 0
