@@ -236,6 +236,12 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .comps { background: var(--surface); border: 1px solid var(--line); border-radius: calc(16px * var(--rad)); box-shadow: var(--sombra); overflow: hidden; }
 .comp { display: flex; align-items: center; border-top: 1px solid var(--line); }
 .comp:first-child { border-top: 0; }
+.comp .cflecha { flex: none; margin-left: 2px; color: var(--muted); font-size: 14px; transition: transform .2s; } .comp.ab .cflecha { transform: rotate(180deg); color: var(--gold); }
+.compdesp { border-top: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 35%, transparent); }
+.compdesp .fp { border-radius: 0 !important; margin: 0 !important; box-shadow: none !important; border: 0 !important; border-top: 1px solid var(--line) !important; background: transparent !important; }
+.compdesp .fp:first-child { border-top: 0 !important; }
+.comp .compir .nl { flex: 1; }
+.compver { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 14px; border: 0; border-top: 1px solid var(--line); background: none; color: var(--gold); font: 600 13px var(--body); cursor: pointer; }
 .compir { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 12px 6px 12px 14px; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
 .flag { flex: none; width: 36px; height: 26px; display: grid; place-items: center; font-size: 22px; border-radius: calc(6px * var(--rad)); background: var(--bar); overflow: hidden; }
 .nl { min-width: 0; display: flex; flex-direction: column; }
@@ -2008,6 +2014,8 @@ function filaPartido(p, idx) {
   </article>`;
 }
 
+// Ligas abiertas en la lista de competiciones (se recuerdan)
+const LIGAS_AB = (() => { try { return new Set(JSON.parse(localStorage.getItem("ligasAb") || "[]")); } catch (e) { return new Set(); } })();
 function bloqueLiga(liga, lista) {
   const inf = Object.assign({}, infoLiga(liga));
   if (est.vista === "favs" && lista.length) inf.pais = `${ICONO_DEP[lista[0][0].dep || "f"]} ${inf.pais}`;  // deportes mezclados
@@ -2055,11 +2063,13 @@ function pintarLista() {
   const ligas = Object.keys(porLiga).sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b));
   let h = "";
   if (est.vista === "comps" && !(est.busca || "").trim()) {
-    const fila = l => { const inf = infoLiga(l), fav = est.ligasFav.has(l);
-      return `<div class="comp"><button class="compir" data-liga-ir="${esc(l)}"><span class="flag">${inf.flag}</span>
+    cargarIndice();   // para que «Clasificación, jornadas y equipos» lleve directo a la liga
+    const fila = l => { const inf = infoLiga(l), fav = est.ligasFav.has(l), ab = LIGAS_AB.has(l);
+      return `<div class="comp ${ab ? "ab" : ""}"><button class="compir" data-ligadesp="${esc(l)}" aria-expanded="${ab}"><span class="flag">${inf.flag}</span>
         <span class="nl"><small>${esc(inf.pais)}</small><b>${esc(inf.nombre)}</b></span>
-        <span class="cnt">${porLiga[l].length}</span></button>
-        <button class="lfav" data-ligafav="${esc(l)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>`; };
+        <span class="cnt">${porLiga[l].length}</span><span class="cflecha">▾</span></button>
+        <button class="lfav" data-ligafav="${esc(l)}" aria-pressed="${fav}" aria-label="Competición favorita">${fav ? "★" : "☆"}</button></div>
+        ${ab ? `<div class="compdesp">${porLiga[l].map(([p, i]) => filaPartido(p, i)).join("")}<button class="compver" data-ligaresumen="${esc(l)}">📊 Clasificación, jornadas y equipos <span>›</span></button></div>` : ""}`; };
     const favs = ligas.filter(l => est.ligasFav.has(l)), resto = ligas.filter(l => !est.ligasFav.has(l));
     const nVivo = enVivo().length;
     h += `<button class="todos endirecto ${nVivo ? "hay" : ""}" data-endirecto="1"><span class="punto"></span><b>En directo</b><span class="cnt vivo-c">${nVivo}</span></button>`;
@@ -2462,7 +2472,7 @@ function pintarFicha() {
       <span class="fdep">${ICONO_DEP[est.dep]} ${DEPORTES.find(d => d[0] === est.dep)[1]}</span>
       <span style="display:flex;gap:8px"><button class="ico" data-refrescar="1" aria-label="Actualizar">↻</button>
       <button class="ico" data-fav="${est.sel}" aria-pressed="${fav}" aria-label="Favorito">${fav ? "★" : "☆"}</button></span></div>
-    <button class="fliga" data-liga-ir="${esc(ligaBase(p.liga))}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
+    ${(cargarIndice(), "")}<button class="fliga" data-ligaresumen="${esc(ligaBase(p.liga))}"><span class="flag">${inf.flag}</span><span>${esc(inf.pais.toUpperCase())}${inf.pais ? ": " : ""}<b>${esc(inf.nombre.toUpperCase())}</b></span><span class="flecha">›</span></button>
     <div class="fequipos">
       <div class="feq">${escudo((fi.esc || [])[0], p.local)}<b class="${tam(p.local)}">${esc(p.local)}</b>${rkChip((p.rk || [])[0])}</div>
       <div class="fcentro"><small>${DIAS_L[f.getDay()]} ${f.getDate()} ${MESES[f.getMonth()]} · ${esc(p.hora || "")}</small>${(() => { const es = estado(p);
@@ -5742,6 +5752,13 @@ document.addEventListener("click", e => {
   if (b.dataset.compeq !== undefined) { est.compEq = b.dataset.compeq; pintarLista(); return; }
   if (b.dataset.abrirdia !== undefined) { est.dia = +b.dataset.abrirdia; const p = DATOS.dias[est.dia].partidos[+b.dataset.abrirp];
     est.dep = p.dep || "f"; est.volverA = b.dataset.desde || "clasif"; est.vista = "partido"; est.sel = +b.dataset.abrirp; est.tab = "prob"; window.scrollTo({ top: 0 }); pintarDias(); pintarSelector(); pintarLista(); return; }
+  if (b.dataset.ligadesp !== undefined) { const l = b.dataset.ligadesp; LIGAS_AB.has(l) ? LIGAS_AB.delete(l) : LIGAS_AB.add(l);
+    try { localStorage.setItem("ligasAb", JSON.stringify([...LIGAS_AB])); } catch (er) {} const y = window.scrollY; pintarLista(); window.scrollTo(0, y); return; }
+  if (b.dataset.ligaresumen !== undefined) {   // de un partido o de la lista: al resumen de la liga (clasificación, jornadas y equipos)
+    const l = ligaBase(b.dataset.ligaresumen), li = idDeLiga(l);
+    if (!li) { cargarIndice(); est.vista = "liga"; est.liga = l; window.scrollTo({ top: 0 }); pintarLista(); return; }
+    est.vista = "clasif"; est.lid = li.id; est.ltab = li.tipo === "copa" || (/^e-/.test(li.id) && li.tipo !== "ranking") ? "jor" : "tabla"; est.jor = null; est.equipo = null;
+    est.ltabElegida = false; if (LIGAS.datos[est.lid]) est.jor = LIGAS.datos[est.lid].actual || 0; window.scrollTo({ top: 0 }); pintarSelector(); pintarLista(); return; }
   if (b.dataset.ligaIr !== undefined) { est.vista = "liga"; est.liga = ligaBase(b.dataset.ligaIr); window.scrollTo({ top: 0 }); pintarLista(); return; }
   if (b.dataset.ligafav !== undefined) { const l = b.dataset.ligafav; est.ligasFav.has(l) ? est.ligasFav.delete(l) : est.ligasFav.add(l);
     try { localStorage.setItem("ligasFav", JSON.stringify([...est.ligasFav])); } catch (e) {} pintarLista(); syncPush(); return; }
