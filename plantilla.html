@@ -6055,84 +6055,202 @@ const FONDO = (() => {
     cx.fillStyle = gr; cx.beginPath(); cx.moveTo(0, hu() * .78); cx.quadraticCurveTo(w / 2, hu() * .68, w, hu() * .78); cx.lineTo(w, h); cx.lineTo(0, h); cx.fill();
     for (const f of s.fl) { cx.fillStyle = `rgba(255,255,255,${f.v})`; cx.beginPath(); cx.arc(f.x, f.y, 1.2 + f.v * 1.8, 0, 7); cx.fill(); }
   };
-  // Pixel art: dos niños sentados en la alfombra, de espaldas, jugando a un partido en la consola; la tele de tubo delante
+  // Pixel art: dos niños sentados en la alfombra, de espaldas, jugando a la consola; la tele de tubo delante.
+  // De vez en cuando uno se levanta, va a la consola, cambia de juego (fútbol, tenis, carreras o naves) y vuelve a sentarse.
+  const JUEGOS = {
+    futbol: {
+      nombre: "FUTBOL",
+      crear: (a, b) => ({ j: [{ x: a * .3, y: b * .55, eq: 0 }, { x: a * .7, y: b * .45, eq: 1 }], bal: { x: a / 2, y: b / 2, vx: 0, vy: 0 }, marc: [0, 0], fiesta: 0, quien: -1 }),
+      paso: (g, a, b) => {
+        const bl = g.bal;
+        if (g.fiesta > 0) { if (!--g.fiesta) { bl.x = a / 2; bl.y = b / 2; bl.vx = bl.vy = 0; g.j[0].x = a * .3; g.j[1].x = a * .7; } return; }
+        for (const j of g.j) {
+          const dx = bl.x - j.x, dy = bl.y - j.y, d = Math.hypot(dx, dy) || 1; j.x += dx / d * r(.5, .95); j.y += dy / d * r(.4, .8);
+          if (d < 2.5) { const gx = j.eq ? -2 : a + 2, gy = b / 2 + r(-b * .25, b * .25), dd = Math.hypot(gx - bl.x, gy - bl.y); bl.vx = (gx - bl.x) / dd * r(1.6, 2.8); bl.vy = (gy - bl.y) / dd * r(1.6, 2.8) + r(-.4, .4); }
+        }
+        bl.x += bl.vx; bl.y += bl.vy; bl.vx *= .93; bl.vy *= .93;
+        if (bl.y < 1 || bl.y > b - 2) { bl.vy *= -1; bl.y = Math.max(1, Math.min(b - 2, bl.y)); }
+        if (bl.x < 1 || bl.x > a - 2) { if (Math.abs(bl.y - b / 2) < b * .22) { g.quien = bl.x < 1 ? 1 : 0; g.marc[g.quien] = (g.marc[g.quien] + 1) % 10; g.fiesta = 26; } else { bl.vx *= -1; bl.x = Math.max(1, Math.min(a - 2, bl.x)); } }
+      },
+      dibu: (g, p, flash) => {
+        caja(p.x, p.y, p.a, p.b, flash ? "#a7f070" : "#38b764"); for (let x = 0; x < p.a; x += 8) caja(p.x + x, p.y, 4, p.b, flash ? "#b8f580" : "#2fa35a");
+        const c = "rgba(244,244,244,.8)"; marco(p.x + 1, p.y + 1, p.a - 2, p.b - 2, c); caja(p.x + Math.round(p.a / 2), p.y + 1, 1, p.b - 2, c); circ(p.x + p.a / 2, p.y + p.b / 2, Math.round(p.b * .16), c);
+        caja(p.x, p.y + Math.round(p.b * .3), 2, Math.round(p.b * .4), "#f4f4f4"); caja(p.x + p.a - 2, p.y + Math.round(p.b * .3), 2, Math.round(p.b * .4), "#f4f4f4");
+        for (const j of g.j) { caja(p.x + j.x - 1, p.y + j.y - 2, 3, 4, j.eq ? "#3b5dc9" : "#ff004d"); caja(p.x + j.x, p.y + j.y - 3, 1, 1, "#ffcd75"); }
+        caja(p.x + g.bal.x - 1, p.y + g.bal.y - 1, 2, 2, "#f4f4f4");
+        return { marc: `${g.marc[0]}-${g.marc[1]}`, grito: g.fiesta && g.fiesta % 8 < 5 ? "GOL!" : "" };
+      },
+    },
+    tenis: {
+      nombre: "TENIS",
+      crear: (a, b) => ({ j: [{ x: 4, y: b / 2 }, { x: a - 5, y: b / 2 }], bal: { sx: 5, sy: b / 2, tx: a - 6, ty: b / 2, p: 0, va: 1, x: 5, y: b / 2 }, marc: [0, 0], fiesta: 0, quien: -1 }),
+      paso: (g, a, b) => {
+        const bl = g.bal;
+        if (g.fiesta > 0) { if (!--g.fiesta) { bl.sx = 5; bl.sy = b / 2; bl.va = 1; bl.tx = a - 6; bl.ty = r(b * .2, b * .8); bl.p = 0; } return; }
+        bl.p += .045; bl.x = bl.sx + (bl.tx - bl.sx) * bl.p; bl.y = bl.sy + (bl.ty - bl.sy) * bl.p;
+        const rec = g.j[bl.va]; rec.y += Math.max(-1.1, Math.min(1.1, bl.ty - rec.y));
+        if (bl.p >= 1) {
+          if (Math.abs(rec.y - bl.ty) > 2 || Math.random() < .07) { g.quien = 1 - bl.va; g.marc[g.quien] = (g.marc[g.quien] + 1) % 7; g.fiesta = 20; return; }   // no llega: punto del otro
+          bl.sx = bl.x; bl.sy = bl.y; bl.va = 1 - bl.va; bl.tx = bl.va ? a - 6 : 5; bl.ty = r(b * .15, b * .85); bl.p = 0;
+        }
+      },
+      dibu: (g, p, flash) => {
+        caja(p.x, p.y, p.a, p.b, "#257179"); caja(p.x + 3, p.y + 3, p.a - 6, p.b - 6, flash ? "#41a6f6" : "#3b5dc9");
+        const c = "#f4f4f4"; marco(p.x + 3, p.y + 3, p.a - 6, p.b - 6, c); caja(p.x + 3, p.y + Math.round(p.b * .2), p.a - 6, 1, c); caja(p.x + 3, p.y + Math.round(p.b * .8), p.a - 6, 1, c);
+        caja(p.x + Math.round(p.a * .28), p.y + Math.round(p.b * .2), 1, Math.round(p.b * .6), c); caja(p.x + Math.round(p.a * .72), p.y + Math.round(p.b * .2), 1, Math.round(p.b * .6), c); caja(p.x + Math.round(p.a * .28), p.y + Math.round(p.b / 2), Math.round(p.a * .44), 1, c);
+        caja(p.x + Math.round(p.a / 2), p.y + 1, 1, p.b - 2, "#c2c3c7");
+        g.j.forEach((j, i) => { caja(p.x + j.x - 1, p.y + j.y - 2, 3, 4, i ? "#3b5dc9" : "#ff004d"); caja(p.x + j.x + (i ? -2 : 2), p.y + j.y - 3, 1, 3, "#ffcd75"); });
+        const bl = g.bal, alto = Math.sin(bl.p * Math.PI) * 4; caja(p.x + bl.x, p.y + bl.y, 1, 1, "rgba(0,0,0,.4)"); caja(p.x + bl.x, p.y + bl.y - alto, 2, 2, "#a7f070");
+        const pts = ["0", "15", "30", "40", "V", "J", "J"];
+        return { marc: `${pts[g.marc[0]]}-${pts[g.marc[1]]}`, grito: g.fiesta && g.fiesta % 8 < 5 ? "PUNTO" : "" };
+      },
+    },
+    carreras: {
+      nombre: "CARRERAS",
+      crear: (a, b) => ({ coches: [{ x: a * .35, c: "#ff004d", obj: a * .35 }, { x: a * .65, c: "#3b5dc9", obj: a * .65 }], rocas: [], lin: 0, vuelta: 1, lider: 0, fiesta: 0, quien: -1, km: 0 }),
+      paso: (g, a, b) => {
+        g.lin = (g.lin + 2) % 8; g.km++;
+        if (Math.random() < .06) g.rocas.push({ x: r(a * .2, a * .8), y: -4 });
+        g.rocas.forEach(o => o.y += 2); g.rocas = g.rocas.filter(o => o.y < b + 4);
+        for (const c of g.coches) {   // esquivan lo que viene por delante
+          const peligro = g.rocas.find(o => o.y > b - 22 && o.y < b - 6 && Math.abs(o.x - c.x) < 6);
+          if (peligro) c.obj = peligro.x < a / 2 ? Math.min(a * .8, peligro.x + 10) : Math.max(a * .2, peligro.x - 10);
+          else if (Math.random() < .02) c.obj = r(a * .22, a * .78);
+          c.x += Math.max(-1.2, Math.min(1.2, c.obj - c.x));
+        }
+        if (g.km % 140 === 0) { g.vuelta = g.vuelta % 3 + 1; g.lider = 1 - g.lider; if (g.vuelta === 1) { g.quien = g.lider; g.fiesta = 22; } }
+        if (g.fiesta) g.fiesta--;
+      },
+      dibu: (g, p, flash) => {
+        caja(p.x, p.y, p.a, p.b, "#38b764"); const rx = p.x + Math.round(p.a * .16), ra = Math.round(p.a * .68); caja(rx, p.y, ra, p.b, flash ? "#566c86" : "#333c57");
+        for (let y = -8 + g.lin; y < p.b; y += 8) { caja(rx - 2, p.y + y, 2, 4, "#ff004d"); caja(rx - 2, p.y + y + 4, 2, 4, "#f4f4f4"); caja(rx + ra, p.y + y, 2, 4, "#ff004d"); caja(rx + ra, p.y + y + 4, 2, 4, "#f4f4f4"); caja(rx + Math.round(ra / 2), p.y + y, 1, 4, "#ffcd75"); }
+        for (const o of g.rocas) if (o.y > 0 && o.y < p.b - 2) caja(p.x + o.x - 2, p.y + o.y, 4, 3, "#94b0c2");
+        g.coches.forEach((c, i) => { const y = p.y + p.b - 10 - (i === g.lider ? 4 : 0); caja(p.x + c.x - 2, y, 5, 7, c.c); caja(p.x + c.x - 1, y + 1, 3, 2, "#a7f070"); caja(p.x + c.x - 3, y + 1, 1, 2, "#1a1c2c"); caja(p.x + c.x + 3, y + 1, 1, 2, "#1a1c2c"); caja(p.x + c.x - 3, y + 5, 1, 2, "#1a1c2c"); caja(p.x + c.x + 3, y + 5, 1, 2, "#1a1c2c"); });
+        return { marc: `V${g.vuelta}/3`, grito: g.fiesta && g.fiesta % 8 < 5 ? "META!" : "" };
+      },
+    },
+    naves: {
+      nombre: "NAVES",
+      crear: (a, b) => ({ naves: [{ x: a * .35, c: "#ff004d" }, { x: a * .65, c: "#73eff7" }], tiros: [], rocas: [], boom: [], est: [...Array(18)].map(() => ({ x: r(0, a), y: r(0, b) })), marc: [0, 0], fiesta: 0, quien: -1 }),
+      paso: (g, a, b) => {
+        g.est.forEach(e => { e.y += .6; if (e.y > b) { e.y = 0; e.x = r(0, a); } });
+        if (Math.random() < .07) g.rocas.push({ x: r(4, a - 4), y: -3, v: r(.5, 1.1) });
+        g.rocas.forEach(o => o.y += o.v);
+        g.naves.forEach((n, i) => {
+          const obj = g.rocas.filter(o => o.y > 2).sort((u, v) => Math.abs(u.x - n.x) - Math.abs(v.x - n.x))[0];
+          if (obj) n.x += Math.max(-1, Math.min(1, obj.x - n.x)); if (Math.random() < .16) g.tiros.push({ x: n.x, y: b - 9, i });
+        });
+        g.tiros.forEach(t => t.y -= 3);
+        for (const t of g.tiros) for (const o of g.rocas) if (!o.f && Math.abs(t.x - o.x) < 3 && Math.abs(t.y - o.y) < 3) { o.f = t.f = 1; g.boom.push({ x: o.x, y: o.y, v: 6 }); g.marc[t.i] = (g.marc[t.i] + 1) % 100; if (g.marc[t.i] % 10 === 0) { g.quien = t.i; g.fiesta = 20; } }
+        g.tiros = g.tiros.filter(t => !t.f && t.y > 0); g.rocas = g.rocas.filter(o => !o.f && o.y < b); g.boom.forEach(x => x.v--); g.boom = g.boom.filter(x => x.v > 0);
+        if (g.fiesta) g.fiesta--;
+      },
+      dibu: (g, p, flash) => {
+        caja(p.x, p.y, p.a, p.b, flash ? "#29366f" : "#0b0618"); for (const e of g.est) caja(p.x + e.x, p.y + e.y, 1, 1, "#94b0c2");
+        for (const o of g.rocas) { caja(p.x + o.x - 2, p.y + o.y - 1, 4, 3, "#8b5a2b"); caja(p.x + o.x - 1, p.y + o.y - 1, 1, 1, "#d9a066"); }
+        for (const t of g.tiros) caja(p.x + t.x, p.y + t.y, 1, 3, t.i ? "#73eff7" : "#ff77a8");
+        for (const x of g.boom) { caja(p.x + x.x - (7 - x.v) / 2, p.y + x.y - (7 - x.v) / 2, 7 - x.v, 7 - x.v, x.v % 2 ? "#ffec27" : "#ef7d57"); }
+        g.naves.forEach(n => { const y = p.y + p.b - 8; caja(p.x + n.x, y, 1, 2, "#f4f4f4"); caja(p.x + n.x - 1, y + 2, 3, 2, n.c); caja(p.x + n.x - 3, y + 4, 7, 2, n.c); caja(p.x + n.x - 1, y + 6, 1, 1, "#ffec27"); caja(p.x + n.x + 1, y + 6, 1, 1, "#ffec27"); });
+        return { marc: `${g.marc[0]}-${g.marc[1]}`, grito: g.fiesta && g.fiesta % 8 < 5 ? "+10" : "" };
+      },
+    },
+  };
+  const LISTA_JUEGOS = Object.keys(JUEGOS);
   CREAR.pxrun = () => {
     const cw = W(), ch = H(), tvw = Math.min(cw - 24, Math.round(cw * .66)), tvh = Math.round(tvw * .74), suelo = Math.round(ch * .6);
     const mueble = { x: Math.round((cw - tvw - 16) / 2), y: suelo - 8, a: tvw + 16, b: 18 };
     const tv = { x: Math.round((cw - tvw) / 2), y: mueble.y - tvh, a: tvw, b: tvh };
     const pan = { x: tv.x + 6, y: tv.y + 6, a: tvw - 20, b: tvh - 12 };
-    const juego = { j: [{ x: pan.a * .3, y: pan.b * .55, eq: 0 }, { x: pan.a * .7, y: pan.b * .45, eq: 1 }], bal: { x: pan.a / 2, y: pan.b / 2, vx: 0, vy: 0 }, marc: [0, 0], gol: 0, quien: -1 };
     const ninos = [{ x: Math.round(cw * .31), pelo: "#5d3a1a", cam: "#b13e53" }, { x: Math.round(cw * .69), pelo: "#1a1c2c", cam: "#3b5dc9", coleta: 1 }];
-    return { cw, ch, suelo, mueble, tv, pan, juego, ninos, t: 0, luz: "#38b764", est: [...Array(9)].map(() => ({ x: r(2, 26), y: r(2, 18) })) };
+    ninos.forEach(n => { n.sx = n.x; });
+    const s = { cw, ch, suelo, mueble, tv, pan, ninos, t: 0, cual: "futbol", ev: null, prox: ri(260, 480), est: [...Array(9)].map(() => ({ x: r(2, 26), y: r(2, 18) })) };
+    s.juego = JUEGOS.futbol.crear(pan.a, pan.b); s.co = { x: Math.round(cw / 2 - 9), y: mueble.y + mueble.b + 3 };
+    return s;
   };
   PASO.pxrun = s => {
     s.t++;
-    const g = s.juego, b = g.bal, pa = s.pan.a, pb = s.pan.b;
-    if (g.gol > 0) { if (!--g.gol) { b.x = pa / 2; b.y = pb / 2; b.vx = b.vy = 0; g.j[0].x = pa * .3; g.j[1].x = pa * .7; } return; }
-    for (const j of g.j) {   // cada niño lleva a su jugador hacia la pelota y la chuta a la portería contraria
-      const dx = b.x - j.x, dy = b.y - j.y, d = Math.hypot(dx, dy) || 1; j.x += dx / d * r(.5, .95); j.y += dy / d * r(.4, .8);
-      if (d < 2.5) { const gx = j.eq ? -2 : pa + 2, gy = pb / 2 + r(-pb * .25, pb * .25), dd = Math.hypot(gx - b.x, gy - b.y); b.vx = (gx - b.x) / dd * r(1.6, 2.8); b.vy = (gy - b.y) / dd * r(1.6, 2.8) + r(-.4, .4); }
+    const ev = s.ev, base = s.ch - 3;
+    if (!ev) {
+      JUEGOS[s.cual].paso(s.juego, s.pan.a, s.pan.b);
+      if (s.t >= s.prox && !s.juego.fiesta) s.ev = { n: ri(0, 1), fase: "levanta", t: 0 };
+      return;
     }
-    b.x += b.vx; b.y += b.vy; b.vx *= .93; b.vy *= .93;
-    if (b.y < 1 || b.y > pb - 2) { b.vy *= -1; b.y = Math.max(1, Math.min(pb - 2, b.y)); }
-    const enPorteria = Math.abs(b.y - pb / 2) < pb * .22;
-    if (b.x < 1 || b.x > pa - 2) { if (enPorteria) { g.quien = b.x < 1 ? 1 : 0; g.marc[g.quien]++; if (g.marc[g.quien] > 9) g.marc = [0, 0]; g.gol = 26; } else { b.vx *= -1; b.x = Math.max(1, Math.min(pa - 2, b.x)); } }
+    ev.t++;
+    const n = s.ninos[ev.n], meta = { x: s.co.x + 9 + (ev.n ? 8 : -8), y: s.co.y + 30 };
+    if (ev.fase === "levanta" && ev.t > 8) { ev.fase = "va"; ev.t = 0; }
+    else if (ev.fase === "va") { const f = Math.min(1, ev.t / 46); n.x = n.sx + (meta.x - n.sx) * f; n.ay = (meta.y - base) * f; if (f >= 1) { ev.fase = "cambia"; ev.t = 0; } }
+    else if (ev.fase === "cambia") {
+      if (ev.t === 14) { const otros = LISTA_JUEGOS.filter(k => k !== s.cual); s.cual = otros[ri(0, otros.length - 1)]; s.juego = JUEGOS[s.cual].crear(s.pan.a, s.pan.b); }
+      if (ev.t > 34) { ev.fase = "vuelve"; ev.t = 0; }
+    }
+    else if (ev.fase === "vuelve") { const f = Math.min(1, ev.t / 46); n.x = meta.x + (n.sx - meta.x) * f; n.ay = (meta.y - base) * (1 - f); if (f >= 1) { ev.fase = "sienta"; ev.t = 0; } }
+    else if (ev.fase === "sienta" && ev.t > 8) { n.x = n.sx; n.ay = 0; s.ev = null; s.prox = s.t + ri(420, 900); }
   };
+  // Un niño de espaldas: sentado (con el mando), de pie andando o agachado delante de la consola
+  function pintarNino(s, n, i, base, luz) {
+    const g = s.juego, ev = s.ev && s.ev.n === i ? s.ev : null, pose = !ev ? "sentado" : ev.fase === "cambia" ? "agachado" : ev.fase === "va" || ev.fase === "vuelve" ? "andando" : "medio";
+    const celebra = pose === "sentado" && g.fiesta && g.quien === i, bote = celebra ? (s.t % 4 < 2 ? 2 : 0) : 0, pulsa = !s.ev && s.t % (5 + i) < 2 ? 1 : 0;
+    const x = Math.round(n.x), y0 = Math.round(base + (n.ay || 0)) - bote, alza = pose === "andando" ? 12 : pose === "medio" ? 6 : pose === "agachado" ? 4 : 0;
+    if (pose === "sentado") { cx.strokeStyle = "#1a1c2c"; cx.beginPath(); cx.moveTo(x, y0 - 18); cx.quadraticCurveTo((x + s.co.x + 9) / 2, y0 - 30, s.co.x + (i ? 14 : 4), s.co.y + 5); cx.stroke(); caja(x - 12, y0 - 4, 24, 5, "#1d2650"); caja(x - 13, y0 - 2, 26, 3, "#29366f"); }
+    else {   // piernas de pie (se mueven al andar) o en cuclillas
+      const paso = pose === "andando" && s.t % 6 < 3;
+      if (pose === "agachado") { caja(x - 8, y0 - 6, 16, 6, "#29366f"); caja(x - 9, y0 - 1, 5, 2, "#1a1c2c"); caja(x + 4, y0 - 1, 5, 2, "#1a1c2c"); }
+      else { caja(x - 5, y0 - alza - 1, 4, alza + 1 - (paso ? 2 : 0), "#29366f"); caja(x + 1, y0 - alza - 1, 4, alza + 1 - (paso ? 0 : 2), "#29366f"); caja(x - 5, y0 - (paso ? 2 : 0) - 1, 4, 2, "#1a1c2c"); caja(x + 1, y0 - (paso ? 0 : 2) - 1, 4, 2, "#1a1c2c"); }
+    }
+    const top = y0 - alza;
+    for (let k = 0; k < 15; k++) { const a = 7 + Math.round(k * (pose === "sentado" ? .25 : .1)); caja(x - a, top - 19 + k, a * 2, 1, n.cam); }
+    caja(x - 1, top - 18, 2, 14, "rgba(0,0,0,.15)");
+    if (celebra) { caja(x - 12, top - 34, 3, 14, n.cam); caja(x + 9, top - 34, 3, 14, n.cam); caja(x - 12, top - 36, 3, 3, "#ffcd75"); caja(x + 9, top - 36, 3, 3, "#ffcd75"); }
+    else if (pose === "agachado") { caja(x - 9, top - 12, 3, 7, n.cam); caja(x + 6, top - 12, 3, 7, n.cam); caja(x - 3, top - 4, 6, 2, "#ffcd75"); }
+    else if (pose === "andando") { const br = s.t % 6 < 3 ? 1 : -1; caja(x - 10, top - 17 + br, 3, 10, n.cam); caja(x + 7, top - 17 - br, 3, 10, n.cam); caja(x - 10, top - 7 + br, 3, 2, "#ffcd75"); caja(x + 7, top - 7 - br, 3, 2, "#ffcd75"); }
+    else { caja(x - 11 - pulsa, top - 15, 3, 6, n.cam); caja(x + 8 + pulsa, top - 15, 3, 6, n.cam); }
+    caja(x - 2, top - 21, 4, 3, "#e6a86a");
+    for (let k = 0; k < 13; k++) { const a = [3, 5, 6, 7, 7, 7, 7, 7, 7, 6, 6, 5, 3][k]; caja(x - a, top - 33 + k, a * 2, 1, n.pelo); }
+    caja(x - 8, top - 26, 1, 3, "#ffcd75"); caja(x + 7, top - 26, 1, 3, "#ffcd75");
+    caja(x - 4, top - 33, 8, 1, luz + ".55)");
+    if (n.coleta) { caja(x - 2, top - 21, 4, 4, n.pelo); caja(x - 1, top - 17, 2, 3 + (pose === "andando" && s.t % 6 < 3 ? 1 : 0), n.pelo); caja(x - 2, top - 22, 4, 1, "#ff004d"); }
+  }
   DIBU.pxrun = s => {
-    const { cw, ch, suelo, mueble: mu, tv, pan: p, juego: g } = s;
+    const { cw, ch, suelo, mueble: mu, tv, pan: p, co } = s, ev = s.ev;
     cx.clearRect(0, 0, cw, cv.height);
-    // la luz de la tele en la habitación cambia cuando hay gol
-    const flash = g.gol && g.gol % 6 < 3, luz = flash ? "rgba(255,236,39," : "rgba(115,239,247,";
-    // pared con papel de rayas, ventana de noche y póster
+    const g = s.juego, flash = !ev && g.fiesta && g.fiesta % 6 < 3, cambiando = ev && ev.fase === "cambia", luz = cambiando ? "rgba(194,195,199," : flash ? "rgba(255,236,39," : "rgba(115,239,247,";
     caja(0, 0, cw, suelo, "#29366f"); for (let x = 0; x < cw; x += 6) caja(x, 0, 2, suelo, "#2e3c78");
     caja(0, suelo - 3, cw, 3, "#1d2650");
     const vx = 5, vy = 8; caja(vx, vy, 30, 22, "#566c86"); caja(vx + 2, vy + 2, 26, 18, "#131a2e");
     for (const e of s.est) if ((s.t + e.x * 7) % 40 < 34) caja(vx + 2 + e.x, vy + 2 + e.y, 1, 1, "#f4f4f4");
     caja(vx + 20, vy + 4, 4, 4, "#ffcd75"); caja(vx + 21, vy + 4, 3, 3, "#131a2e"); caja(vx + 15, vy + 2, 1, 18, "#566c86"); caja(vx + 2, vy + 11, 26, 1, "#566c86");
     const px = cw - 25, py = 9; caja(px, py, 19, 25, "#f4f4f4"); caja(px + 1, py + 1, 17, 17, "#38b764"); caja(px + 1, py + 9, 17, 1, "#a7f070"); caja(px + 7, py + 6, 5, 5, "#f4f4f4"); caja(px + 9, py + 7, 1, 3, "#1a1c2c"); caja(px + 2, py + 20, 15, 2, "#b13e53"); caja(px + 4, py + 23, 11, 1, "#566c86");
-    // resplandor de la tele en la pared
     for (let i = 3; i > 0; i--) { cx.fillStyle = luz + (.05 * i) + ")"; cx.fillRect(tv.x - i * 6, tv.y - i * 5, tv.a + i * 12, tv.b + i * 8); }
-    // suelo de madera y alfombra
     for (let y = suelo; y < cv.height; y += 4) caja(0, y, cw, 4, (y / 4) % 2 ? "#8b5a2b" : "#7a4e24");
     for (let y = suelo; y < cv.height; y += 4) for (let x = ((y / 4) % 3) * 9; x < cw; x += 27) caja(x, y, 1, 4, "#5d3a1a");
     const ax = Math.round(cw * .1), ay = Math.round(suelo + (ch - suelo) * .38); caja(ax, ay, cw - 2 * ax, ch - ay + 2, "#b13e53"); caja(ax + 2, ay + 2, cw - 2 * ax - 4, ch - ay - 2, "#c74a62");
     for (let x = ax + 4; x < cw - ax - 4; x += 6) caja(x, ay + 3, 3, 1, "#ffcd75");
     cx.fillStyle = luz + ".12)"; cx.fillRect(ax, ay, cw - 2 * ax, ch - ay);
-    // mueble, consola y tele de tubo
     caja(mu.x, mu.y, mu.a, mu.b, "#5d3a1a"); caja(mu.x, mu.y, mu.a, 2, "#8b5a2b"); caja(mu.x + 3, mu.y + 5, mu.a / 2 - 5, mu.b - 8, "#4a2e14"); caja(mu.x + mu.a / 2 + 2, mu.y + 5, mu.a / 2 - 5, mu.b - 8, "#4a2e14");
-    const co = { x: Math.round(cw / 2 - 9), y: mu.y + mu.b + 3 }; caja(co.x, co.y, 18, 6, "#c2c3c7"); caja(co.x, co.y + 5, 18, 1, "#566c86"); caja(co.x + 3, co.y + 2, 6, 1, "#1a1c2c"); caja(co.x + 13, co.y + 2, 2, 2, s.t % 14 < 10 ? "#ff004d" : "#7e2553");
+    caja(co.x, co.y, 18, 6, "#c2c3c7"); caja(co.x, co.y + 5, 18, 1, "#566c86"); caja(co.x + 3, co.y + 2, 6, 1, "#1a1c2c"); caja(co.x + 13, co.y + 2, 2, 2, cambiando ? "#ffec27" : s.t % 14 < 10 ? "#ff004d" : "#7e2553");
+    if (cambiando && ev.t > 4 && ev.t < 26) caja(co.x + 4, co.y - 4 - (ev.t < 14 ? 14 - ev.t : ev.t - 14) / 3, 8, 4, "#ef7d57");   // el cartucho sale y entra
     caja(tv.x, tv.y, tv.a, tv.b, "#333c57"); caja(tv.x + 1, tv.y + 1, tv.a - 2, 1, "#566c86"); caja(tv.x, tv.y + tv.b - 2, tv.a, 2, "#1a1c2c");
     caja(tv.x + tv.a - 10, tv.y + 10, 6, 6, "#1a1c2c"); caja(tv.x + tv.a - 9, tv.y + 11, 4, 4, "#566c86"); caja(tv.x + tv.a - 9, tv.y + 22, 4, 2, "#1a1c2c"); caja(tv.x + tv.a - 9, tv.y + 26, 4, 2, "#1a1c2c"); caja(tv.x + tv.a - 7, tv.y + tv.b - 7, 2, 2, "#a7f070");
     cx.strokeStyle = "#566c86"; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(tv.x + tv.a / 2, tv.y); cx.lineTo(tv.x + tv.a / 2 - 12, tv.y - 14); cx.moveTo(tv.x + tv.a / 2, tv.y); cx.lineTo(tv.x + tv.a / 2 + 10, tv.y - 15); cx.stroke();
     caja(tv.x + tv.a / 2 - 3, tv.y - 2, 6, 2, "#1a1c2c");
-    // la pantalla: el partido de los dos niños
-    caja(p.x, p.y, p.a, p.b, flash ? "#a7f070" : "#38b764");
-    for (let x = 0; x < p.a; x += 8) caja(p.x + x, p.y, 4, p.b, flash ? "#b8f580" : "#2fa35a");
-    const c = "rgba(244,244,244,.8)"; marco(p.x + 1, p.y + 1, p.a - 2, p.b - 2, c); caja(p.x + Math.round(p.a / 2), p.y + 1, 1, p.b - 2, c); circ(p.x + p.a / 2, p.y + p.b / 2, Math.round(p.b * .16), c);
-    caja(p.x, p.y + Math.round(p.b * .3), 2, Math.round(p.b * .4), "#f4f4f4"); caja(p.x + p.a - 2, p.y + Math.round(p.b * .3), 2, Math.round(p.b * .4), "#f4f4f4");
-    for (const j of g.j) { caja(p.x + j.x - 1, p.y + j.y - 2, 3, 4, j.eq ? "#3b5dc9" : "#ff004d"); caja(p.x + j.x, p.y + j.y - 3, 1, 1, "#ffcd75"); }
-    caja(p.x + g.bal.x - 1, p.y + g.bal.y - 1, 2, 2, "#f4f4f4");
-    caja(p.x + p.a / 2 - 9, p.y + 2, 18, 6, "rgba(26,28,44,.75)");
-    cx.fillStyle = "#f4f4f4"; cx.font = "bold 6px monospace"; cx.textAlign = "center"; cx.fillText(`${g.marc[0]}-${g.marc[1]}`, p.x + p.a / 2, p.y + 7);
-    if (g.gol && g.gol % 8 < 5) { cx.fillStyle = "#ffec27"; cx.font = "bold 10px monospace"; cx.fillText("GOL!", p.x + p.a / 2, p.y + p.b / 2 + 4); }
+    // la pantalla: el juego que toca, la nieve al cambiar de cartucho o la pausa mientras uno se levanta
+    cx.fillStyle = "#f4f4f4"; cx.textAlign = "center";
+    if (cambiando && ev.t < 22) {
+      for (let y = 0; y < p.b; y += 2) for (let x = 0; x < p.a; x += 2) caja(p.x + x, p.y + y, 2, 2, ["#1a1c2c", "#566c86", "#c2c3c7", "#f4f4f4"][ri(0, 3)]);
+    } else if (cambiando) {
+      caja(p.x, p.y, p.a, p.b, "#1a1c2c"); cx.font = "bold 9px monospace"; cx.fillStyle = "#ffec27"; cx.fillText(JUEGOS[s.cual].nombre, p.x + p.a / 2, p.y + p.b / 2 + 2);
+      cx.font = "bold 6px monospace"; cx.fillStyle = ev.t % 8 < 5 ? "#f4f4f4" : "transparent"; cx.fillText("PULSA START", p.x + p.a / 2, p.y + p.b / 2 + 12);
+    } else {
+      const hud = JUEGOS[s.cual].dibu(g, p, flash);
+      caja(p.x + p.a / 2 - 11, p.y + 2, 22, 6, "rgba(26,28,44,.75)"); cx.fillStyle = "#f4f4f4"; cx.font = "bold 6px monospace"; cx.fillText(hud.marc, p.x + p.a / 2, p.y + 7);
+      if (ev) { caja(p.x, p.y, p.a, p.b, "rgba(26,28,44,.45)"); cx.font = "bold 9px monospace"; cx.fillStyle = "#f4f4f4"; cx.fillText("PAUSA", p.x + p.a / 2, p.y + p.b / 2 + 3); }
+      else if (hud.grito) { cx.fillStyle = "#ffec27"; cx.font = "bold 10px monospace"; cx.fillText(hud.grito, p.x + p.a / 2, p.y + p.b / 2 + 4); }
+    }
     cx.fillStyle = "rgba(0,0,0,.18)"; for (let y = 0; y < p.b; y += 2) cx.fillRect(p.x, p.y + y, p.a, 1);
     cx.fillStyle = "rgba(255,255,255,.08)"; cx.fillRect(p.x + 2, p.y + 2, Math.round(p.a * .35), 2);
-    // los dos niños de espaldas, con el cable del mando hasta la consola
-    const base = ch - 3;
-    s.ninos.forEach((n, i) => {
-      const celebra = g.gol && g.quien === i, bote = celebra ? (s.t % 4 < 2 ? 2 : 0) : 0, pulsa = s.t % (5 + i) < 2 ? 1 : 0, y0 = base - bote;
-      cx.strokeStyle = "#1a1c2c"; cx.beginPath(); cx.moveTo(n.x, y0 - 18); cx.quadraticCurveTo((n.x + co.x + 9) / 2, y0 - 30, co.x + (i ? 14 : 4), co.y + 5); cx.stroke();
-      caja(n.x - 12, y0 - 4, 24, 5, "#1d2650"); caja(n.x - 13, y0 - 2, 26, 3, "#29366f");   // piernas cruzadas
-      for (let k = 0; k < 15; k++) { const a = 7 + Math.round(k * .25); caja(n.x - a, y0 - 19 + k, a * 2, 1, n.cam); }   // espalda
-      caja(n.x - 1, y0 - 18, 2, 14, "rgba(0,0,0,.15)");
-      if (celebra) { caja(n.x - 12, y0 - 34, 3, 14, n.cam); caja(n.x + 9, y0 - 34, 3, 14, n.cam); caja(n.x - 12, y0 - 36, 3, 3, "#ffcd75"); caja(n.x + 9, y0 - 36, 3, 3, "#ffcd75"); }
-      else { caja(n.x - 11 - pulsa, y0 - 15, 3, 6, n.cam); caja(n.x + 8 + pulsa, y0 - 15, 3, 6, n.cam); }
-      caja(n.x - 2, y0 - 21, 4, 3, "#e6a86a");   // cuello
-      for (let k = 0; k < 13; k++) { const a = [3, 5, 6, 7, 7, 7, 7, 7, 7, 6, 6, 5, 3][k]; caja(n.x - a, y0 - 33 + k, a * 2, 1, n.pelo); }   // cabeza (pelo)
-      caja(n.x - 8, y0 - 26, 1, 3, "#ffcd75"); caja(n.x + 7, y0 - 26, 1, 3, "#ffcd75");   // orejas
-      caja(n.x - 4, y0 - 33, 8, 1, luz + ".55)");   // el brillo de la tele en el pelo
-      if (n.coleta) { caja(n.x - 2, y0 - 21, 4, 4, n.pelo); caja(n.x - 1, y0 - 17, 2, 3, n.pelo); caja(n.x - 2, y0 - 22, 4, 1, "#ff004d"); }
-    });
+    // niños: el que está más lejos (yendo a la consola) se pinta primero
+    const base = ch - 3, orden = [0, 1].sort((a, b) => (s.ninos[a].ay || 0) - (s.ninos[b].ay || 0));
+    for (const i of orden) pintarNino(s, s.ninos[i], i, base, luz);
   };
   // Neón: carretera synthwave hacia el horizonte con el sol a rayas
   CREAR.neon = () => ({ t: 0 });
@@ -6160,7 +6278,7 @@ const FONDO = (() => {
     for (const f of s.fug) { const x = f.x - f.v * 9, y = f.y + f.v * 5, g = cx.createLinearGradient(x, y, x + 60, y - 33); g.addColorStop(0, `rgba(255,255,255,${1 - f.v / 26})`); g.addColorStop(1, "rgba(255,255,255,0)"); cx.strokeStyle = g; cx.lineWidth = 1.6; cx.beginPath(); cx.moveTo(x, y); cx.lineTo(x + 60, y - 33); cx.stroke(); }
   };
   requestAnimationFrame(bucle);
-  return { escena: () => esc };
+  return { escena: () => esc, estado: () => st };
 })();
 
 // ---------------------------------------------------------------- marcadores en directo (ESPN, desde el móvil)
