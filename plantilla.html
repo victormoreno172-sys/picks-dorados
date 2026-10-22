@@ -4337,7 +4337,7 @@ const CAT = {
     ["leyenda", "Leyenda", { nivel: 100 }], ["infinito", "Infinito", { nivel: 150 }],
     ["carbono", "Carbono", { precio: 300 }], ["pasion", "Rojo pasión", { precio: 250 }], ["retro", "Retro 90", { precio: 400 }],
     ["aurora", "Aurora", { precio: 400 }], ["lava", "Lava", { precio: 450 }], ["galaxia", "Galaxia", { precio: 500 }],
-    ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }], ["pixel", "Pixel", { pase: 15 }], ["arcade8", "Arcade 8-bit ✨", { pase: 40, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+    ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }], ["pixel", "Pixel", { pase: 15 }], ["pxespacio", "Hiperespacio ✨", { pase: 40, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   // Temas de toda la app
   skin: [["", "Normal"], ["estadio", "Estadio de noche", { perfil: true }], ["oro", "Oro y negro", { pase: 25 }],
     ["pizarra", "Pizarra táctica", { nivel: 20 }], ["galaxia", "Galaxia ✨", { nivel: 60, anim: 1 }], ["neon", "Neón Arcade ✨", { precio: 1500, anim: 1 }], ["pixel", "Pixel art ✨", { pase: 50, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
@@ -4356,7 +4356,7 @@ const PREM_T0 = [
   ["marco", "pxneon", "Neón 8-bit ✨", { anim: 1 }], ["avatar", "pa7", "Alien", "👽", "#38b764"], ["tarjeta", "pxciudad", "Ciudad nocturna"], ["titulo", "combo", "Combo ×10"],
   ["color", "pxrosa", "Rosa chicle"], ["tarjeta", "pxglitch", "Glitch ✨", { anim: 1 }], ["avatar", "pa10", "Espadas", "⚔️", "#566c86"], ["marco", "pxlava", "Lava pixel"],
   ["titulo", "sincontinues", "Sin continues"], ["tarjeta", "pxcastillo", "Castillo"], ["titulo", "leyenda8", "Leyenda 8-bit"], ["avatar", "pa11", "Escudo", "🛡️", "#29366f"],
-  ["color", "pxoro", "Moneda de oro ✨", { anim: 1 }], ["titulo", "speedrunner", "Speedrunner"], ["avatar", "pa12", "Castillo", "🏰", "#41a6f6"], ["tarjeta", "pxespacio", "Hiperespacio ✨", { anim: 1 }],
+  ["color", "pxoro", "Moneda de oro ✨", { anim: 1 }], ["titulo", "speedrunner", "Speedrunner"], ["avatar", "pa12", "Castillo", "🏰", "#41a6f6"], ["tarjeta", "arcade8", "Arcade 8-bit ✨", { anim: 1 }],
   ["avatar", "pa13", "Nave", "🚀", "#1a1c2c"], ["tarjeta", "pxlava", "Mazmorra de lava"], ["titulo", "jefefinal", "Jefe final"], ["avatar", "pa14", "Gema", "💎", "#5d275d"],
   ["marco", "pxboss", "Marco del jefe ✨", { anim: 1 }], ["avatar", "pa6", "Robot 8-bit", "🤖", "#257179"], ["titulo", "gameover", "Game Over para la app"], ["avatar", "pa9", "Dragón final", "🐉", "#b13e53"],
   ["marco", "pxglitch", "Marco glitch"], ["skin", "pxconsola", "Consola portátil ✨", { anim: 1 }],
@@ -4931,7 +4931,7 @@ const totalEst = () => PERFIL.mov.reduce((s, m) => s + (m.est || 0), 0);
 const escalonDe = est => Math.min(ESCALONES, Math.floor(est / EST_ESCALON));
 // Regalos del pase: objetos de la temática en los escalones redondos; en el resto, monedas o comodines
 const PASE_OBJ = { 10: ["avatar", "a29"], 15: ["tarjeta", "pixel"], 20: ["marco", "pixel"], 25: ["skin", "oro"], 30: ["titulo", "pixelmaster"],
-  35: ["avatar", "a30"], 40: ["tarjeta", "arcade8"], 45: ["marco", "pixelrgb"], 50: ["skin", "pixel"] };
+  35: ["avatar", "a30"], 40: ["tarjeta", "pxespacio"], 45: ["marco", "pixelrgb"], 50: ["skin", "pixel"] };
 function regaloPase(n) {
   if (PASE_OBJ[n]) { const [t, id] = PASE_OBJ[n], it = CAT[t].find(x => x.id === id); return { t, id, it, txt: (it.n || "Avatar " + it.e).replace(" ✨", "") }; }
   // Comodines contados (valen 400 y 700 🪙 en la tienda); el resto, XP (pares) y monedas (impares)
