@@ -1,6 +1,6 @@
 """
 Ligas de fútbol que football-data.co.uk no tiene en el formato normal: se leen
-de ESPN (calendario, resultados y, a veces, cuotas): MLS, liga argentina y Brasileirão.
+de ESPN (calendario, resultados y, a veces, cuotas): MLS, liga argentina, Brasileirão y Saudi Pro League.
 """
 from __future__ import annotations
 

@@ -26,6 +26,7 @@ LIGAS = [
     ("ligue1", "Ligue 1", "soccer", "fra.1"), ("eredivisie", "Eredivisie", "soccer", "ned.1"),
     ("portugal", "Liga Portugal", "soccer", "por.1"), ("mls", "MLS", "soccer", "usa.1"),
     ("argentina", "Liga Argentina", "soccer", "arg.1"), ("brasil", "Brasileirão", "soccer", "bra.1"),
+    ("saudi", "Saudi Pro League", "soccer", "ksa.1"),
     ("champions", "Champions League", "soccer", "uefa.champions"), ("europa", "Europa League", "soccer", "uefa.europa"),
     ("conference", "Conference League", "soccer", "uefa.europa.conf"),
     ("nba", "NBA", "basketball", "nba"),
@@ -690,7 +691,7 @@ def _jornadas_fases(E: dict, logos: dict) -> tuple[list, list]:
 PAIS_DE = {"copadelrey": "Spain", "supercopa": "Spain", "segunda": "Spain", "laliga": "Spain", "facup": "England",
            "carabao": "England", "championship": "England", "coppa": "Italy", "pokal": "Germany", "coupe": "France",
            "knvb": "Netherlands", "taca": "Portugal", "copaarg": "Argentina", "copabrasil": "Brazil", "brasil": "Brazil",
-           "argentina": "Argentina", "mls": "USA"}
+           "argentina": "Argentina", "mls": "USA", "saudi": "Saudi"}
 
 
 def _completar_escudos(archivos: list):

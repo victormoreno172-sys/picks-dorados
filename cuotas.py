@@ -40,7 +40,7 @@ DEPORTES = {
     "soccer_spain_la_liga": "SP1", "soccer_spain_segunda_division": "SP2", "soccer_epl": "E0",
     "soccer_efl_champ": "E1", "soccer_italy_serie_a": "I1", "soccer_germany_bundesliga": "D1",
     "soccer_france_ligue_one": "F1", "soccer_netherlands_eredivisie": "N1",
-    "soccer_portugal_primeira_liga": "P1", "soccer_usa_mls": "MLS", "soccer_argentina_primera_division": "ARG", "soccer_brazil_campeonato": "BRA", "soccer_uefa_champs_league": "UCL",
+    "soccer_portugal_primeira_liga": "P1", "soccer_usa_mls": "MLS", "soccer_argentina_primera_division": "ARG", "soccer_brazil_campeonato": "BRA", "soccer_saudi_arabia_pro_league": "SAU", "soccer_uefa_champs_league": "UCL",
     "soccer_uefa_europa_league": "UEL", "soccer_uefa_europa_conference_league": "UECL",
     "basketball_nba": "NBA", "basketball_euroleague": "EL",
 }

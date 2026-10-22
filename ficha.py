@@ -27,7 +27,7 @@ SLUGS = {
     "LaLiga": ("soccer", "esp.1"), "Segunda División": ("soccer", "esp.2"), "Premier League": ("soccer", "eng.1"),
     "Championship": ("soccer", "eng.2"), "Serie A": ("soccer", "ita.1"), "Bundesliga": ("soccer", "ger.1"),
     "Ligue 1": ("soccer", "fra.1"), "Eredivisie": ("soccer", "ned.1"), "Liga Portugal": ("soccer", "por.1"),
-    "MLS": ("soccer", "usa.1"), "Liga Argentina": ("soccer", "arg.1"), "Brasileirão": ("soccer", "bra.1"),
+    "MLS": ("soccer", "usa.1"), "Liga Argentina": ("soccer", "arg.1"), "Brasileirão": ("soccer", "bra.1"), "Saudi Pro League": ("soccer", "ksa.1"),
     "Champions League": ("soccer", "uefa.champions"), "Europa League": ("soccer", "uefa.europa"),
     "Conference League": ("soccer", "uefa.europa.conf"),
     "NBA": ("basketball", "nba"), "NBA · Pretemporada": ("basketball", "nba"),
