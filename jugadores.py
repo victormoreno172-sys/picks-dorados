@@ -2,6 +2,7 @@
 python jugadores.py            -> lista las cuentas (uid, nombre, última actividad)
 python jugadores.py UID [UID…]  -> borra esas cuentas
 """
+import json
 import sys
 from datetime import datetime, timezone
 
@@ -15,6 +16,12 @@ if not tok:
 H = {"Authorization": "Bearer " + tok}
 BASE = f"https://firestore.googleapis.com/v1/projects/{proy}/databases/(default)/documents/jugadores"
 
+if sys.argv[1:2] == ["ver"]:   # python jugadores.py ver UID -> muestra lo que tiene guardado
+    for uid in sys.argv[2:]:
+        f = requests.get(f"{BASE}/{uid}", headers=H, timeout=30).json().get("fields", {})
+        for k in ("n", "t", "reto", "arc"):
+            print("::notice::" + k + " = " + json.dumps(f.get(k), ensure_ascii=False)[:900])
+    sys.exit()
 if sys.argv[1:]:
     for uid in sys.argv[1:]:
         r = requests.delete(f"{BASE}/{uid}", headers=H, timeout=30)

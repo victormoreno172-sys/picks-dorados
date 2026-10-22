@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       borrar:
-        description: "UIDs a borrar (vacío = solo listar)"
+        description: "UIDs a borrar, o «ver UID» para ver una cuenta (vacío = solo listar)"
         required: false
         default: ""
 jobs:
