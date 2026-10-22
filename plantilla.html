@@ -1081,7 +1081,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 :root.fondovivo header { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-bottom-color: transparent !important; box-shadow: none !important; }
 :root.fondovivo :is(.mcard, .partido, .rpart, .comps, .ajb, .todos, .caja, .jp, .jcard, .rrow:not(.rhead):not(.tj), .tcard, .tdest, .fbar, .fequipos, .tabla2, .fila, .arp, .arsl) { background-color: color-mix(in srgb, var(--surface) 62%, transparent) !important; background-image: none; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
 :root.fondovivo :is(.comps .comp, .comps .compir) { background: transparent !important; }
-#fondovivo { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+#fondovivo { position: fixed; top: 0; left: 0; width: 100%; z-index: -1; pointer-events: none; }
 :root.fondovivo:not([data-skin="galaxia"]) body::before { opacity: 0 !important; }
 
 /* ================= Temporada 0 · Pixel ================= */
@@ -5832,7 +5832,7 @@ const FONDO = (() => {
   const escenaAhora = () => { const f = ESCENAS[document.documentElement.dataset.skin || ""]; return f ? f(est.dep) : ""; };
   const esPixel = e => e.startsWith("px");
   function medir() {
-    w = innerWidth; h = innerHeight;
+    w = innerWidth; h = innerHeight; cv.style.height = h + "px";   // alto fijo: si sale el teclado, el dibujo no se aplasta ni se reinicia
     const ab = document.querySelector(".abajo"); bot = ab ? Math.max(0, h - ab.getBoundingClientRect().top) : 0;   // los dibujos acaban justo donde empiezan los botones de abajo
     if (esPixel(esc)) { k = Math.max(2, Math.round(w / 130)); cv.width = Math.ceil(w / k); cv.height = Math.ceil(h / k); }
     else { k = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(w * k); cv.height = Math.round(h * k); }
@@ -5841,7 +5841,7 @@ const FONDO = (() => {
   function iniciar(e) {
     esc = e;
     if (!e) { if (cv) cv.hidden = true; document.documentElement.classList.remove("fondovivo"); return; }
-    if (!cv) { cv = document.createElement("canvas"); cv.id = "fondovivo"; cv.setAttribute("aria-hidden", "true"); document.body.prepend(cv); addEventListener("resize", () => { if (esc) { medir(); st = CREAR[esc](); } }); }
+    if (!cv) { cv = document.createElement("canvas"); cv.id = "fondovivo"; cv.setAttribute("aria-hidden", "true"); document.body.prepend(cv); addEventListener("resize", () => { if (esc && Math.abs(innerWidth - w) > 2) { medir(); st = CREAR[esc](); } }); }   // solo si cambia el ancho (girar el móvil); el teclado al buscar no cuenta
     cv.hidden = false; cv.style.opacity = OPAC[e]; cv.style.imageRendering = esPixel(e) ? "pixelated" : "auto";
     document.documentElement.classList.add("fondovivo");
     medir(); st = CREAR[e](); ult = 0;
