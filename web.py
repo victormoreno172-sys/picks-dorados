@@ -27,7 +27,12 @@ AUTO_RECARGA = """<script>(function () {
   function mira() {
     fetch(base + "version.txt?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (t) {
       t = (t || "").trim();
-      if (t && /^\\d+$/.test(t) && +t > +V) { var u = new URL(location.href); u.searchParams.set("v", t); location.replace(u.toString()); }
+      if (t && /^\\d+$/.test(t) && +t > +V) {
+        var k = "recargaVer", n = 0; try { var o = JSON.parse(sessionStorage.getItem(k) || "{}"); n = o.v === t && Date.now() - o.t < 300000 ? o.n : 0; } catch (e) {}
+        if (n >= 2) return;   // nunca en bucle (mientras GitHub aún sirve la versión anterior)
+        try { sessionStorage.setItem(k, JSON.stringify({ v: t, n: n + 1, t: Date.now() })); } catch (e) { return; }
+        var u = new URL(location.href); u.searchParams.set("v", t); location.replace(u.toString());
+      }
     }).catch(function () {});
   }
   mira();

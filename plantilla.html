@@ -1084,7 +1084,8 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 @media (prefers-reduced-motion: reduce) { :root[data-skin] body::before { animation: none !important; } }
 /* Fondos animados de algunos temas (lienzo #fondovivo detrás de todo); el dibujo fijo de esos temas se apaga */
 /* Con fondo animado: la cabecera es transparente y las tarjetas dejan ver lo de detrás */
-:root.fondovivo header { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-bottom-color: transparent !important; box-shadow: none !important; }
+:root.fondovivo header { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-bottom-color: transparent !important; box-shadow: none !important; transition: background-color .2s; }
+:root.fondovivo.cabopaca header { background: var(--bg) !important; border-bottom-color: var(--line) !important; }
 :root.fondovivo :is(.mcard, .partido, .rpart, .comps, .ajb, .todos, .caja, .jp, .jcard, .rrow:not(.rhead):not(.tj), .tcard, .tdest, .fbar, .fequipos, .tabla2, .fila, .arp, .arsl, .bliga, .fliga, .fesp, .det, .apform) { background-color: color-mix(in srgb, var(--surface) 62%, transparent) !important; background-image: none; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
 :root.fondovivo :is(.comps .comp, .comps .compir) { background: transparent !important; }
 /* Primera tirada: solo 7 animados por tipo (2 de clasificaciones, 3 del pase y 2 de compra); el resto quietos */
@@ -5828,13 +5829,21 @@ async function hayNuevos() {
   const d = await r.json();
   return d.generado && d.generado !== DATOS.generado ? d.generado : null;
 }
-const recargar = () => location.replace(location.pathname + "?v=" + Date.now());
+// Recarga para coger los datos nuevos, pero nunca en bucle: si ya se ha intentado 2 veces para los mismos datos en 5 minutos
+// (pasa justo después de publicar, mientras GitHub aún sirve la versión anterior), se espera y no se recarga más.
+function recargar(nuevo) {
+  let r = {}; try { r = JSON.parse(sessionStorage.getItem("recargaV1") || "{}"); } catch (e) {}
+  const ahora = Date.now(); if (r.para !== nuevo || ahora - (r.t || 0) > 300000) r = { para: nuevo, n: 0, t: ahora };
+  if (r.n >= 2) return false;
+  r.n++; try { sessionStorage.setItem("recargaV1", JSON.stringify(r)); } catch (e) { return false; }
+  location.replace(location.pathname + "?v=" + ahora); return true;
+}
 async function comprobar(manual) {
   const b = $("refrescar"), aviso = $("avisoAct");
   if (manual) { b.disabled = true; b.classList.add("gira"); }
   try {
     const nuevo = await hayNuevos();
-    if (nuevo) { recargar(); return; }
+    if (nuevo && recargar(nuevo)) return;
     if (manual) {
       aviso.hidden = false;
       aviso.innerHTML = `Ya tienes lo último (${esc(DATOS.generado)}). La app se actualiza sola varias veces al día. ` +
@@ -6332,12 +6341,11 @@ const FONDO = (() => {
   }
   // La cabecera es transparente: lo que sube al bajar por la lista se recorta justo donde empieza la cabecera,
   // así por arriba solo se ve el fondo (ni detrás de los días y botones ni detrás de la barra del móvil)
+  // (Antes se recortaba la lista con clip-path y en algunos móviles dejaba partes de la pantalla sin verse.)
+  // Ahora: arriba del todo la cabecera es transparente; en cuanto bajas, se pone del color del fondo para que no se vea nada por detrás.
   function copiarCab() {
-    const hd = document.querySelector("header"), corte = hd && esc ? hd.getBoundingClientRect().bottom : 0;
-    document.querySelectorAll(".wrap > :not(header)").forEach(el => {
-      if (el.hidden) return; const d = Math.round(corte - el.getBoundingClientRect().top);
-      const v = d > 0 ? `inset(${d}px 0 0 0)` : ""; if (el.style.clipPath !== v) el.style.clipPath = v;
-    });
+    document.querySelectorAll(".wrap > :not(header)").forEach(el => { if (el.style.clipPath) el.style.clipPath = ""; });
+    document.documentElement.classList.toggle("cabopaca", !!esc && window.scrollY > 4);
   }
   addEventListener("scroll", () => copiarCab(), { passive: true });
   // ---------------------------------------------------------------- utilidades pixel
