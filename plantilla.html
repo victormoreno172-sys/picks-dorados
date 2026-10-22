@@ -1223,6 +1223,8 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .pxmodal.fuera { animation: pxFondo .14s ease-in reverse both; } .pxmodal.fuera .pxmc { animation: pxSale .14s ease-in both; }
 @keyframes pxFondo { from { opacity: 0; } } @keyframes pxAparece { from { opacity: 0; transform: translateY(14px) scale(.94); } } @keyframes pxSale { to { opacity: 0; transform: scale(.96); } }
 :root.pxabierto body::before, :root.pxabierto .pmapa * { animation-play-state: paused !important; }
+:root.pxabierto, :root.pxabierto body { overflow: hidden; overscroll-behavior: none; }   /* con un modal abierto, la página de debajo no se mueve */
+.pxmodal { overscroll-behavior: contain; touch-action: pan-y; } .pxmc { overscroll-behavior: contain; }
 .pxmc { position: relative; width: min(100%, 360px); max-height: 92vh; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 16px 16px 18px;
   background: #262b44; color: #f4f4f4; border: 4px solid #000; box-shadow: 0 0 0 3px #ffcd75, 8px 8px 0 3px #000; font-family: "Pixelify Sans", var(--body); }
 .pxmc.prem { background: linear-gradient(#4b1f7a, #262b44 55%); box-shadow: 0 0 0 3px #b98cff, 8px 8px 0 3px #000; }
@@ -1399,7 +1401,9 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .bvmsg { margin: 0; min-height: 18px; text-align: center; font-weight: 600; color: var(--red); }
 /* Perfil de otro jugador */
 .rrow[data-rk] { cursor: pointer; } .rrow[data-rk]:active { transform: scale(.985); }
-.pxmc.jg .pxprev { min-height: 0; padding: 0; background: none; } .pxmc.jg .pxprev .pcab { padding: 18px 12px 14px; }
+.pxmc.jg .pxprev { min-height: 0; padding: 0; background: none; } .pxmc.jg .pxprev .pcab { padding: 12px; aspect-ratio: 2 / 1; justify-content: center; gap: 3px; background-position: center bottom; }
+.pxmc.jg .pxprev .pcab .av { --s: 64px !important; } .pxmc.jg .pxprev .pcab .pnom { font-size: 19px; line-height: 1.15; text-shadow: 0 2px 6px rgba(0,0,0,.65); }
+.pxmc.jg .pxprev .pcab .ptit { text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 .jgk { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; } .jgk div { background: var(--bar); border-radius: calc(12px * var(--rad)); padding: 8px 4px; display: flex; flex-direction: column; gap: 2px; }
 .jgk b { font: 800 17px var(--display); color: var(--ink); } .jgk small { font-size: 11px; color: var(--muted); }
 .jgh { margin: 6px 0 0; align-self: flex-start; font: 800 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -5138,8 +5142,10 @@ const origenItem = it => it.como ? it.como : it.perfil ? "Regalo por crear tu pe
   : it.insignia ? "Con la insignia " + ((INSIGNIAS.find(x => x[0] === it.insignia) || [])[2] || "") : "De serie";
 function abrirModal(html, clase) {
   const div = document.createElement("div"); div.className = "pxmodal"; div.id = "pxmodal"; div.innerHTML = `<div class="pxmc ${clase || ""}">${html}</div>`;
-  document.getElementById("pxmodal")?.remove(); document.body.appendChild(div); document.documentElement.classList.add("pxabierto");
+  document.getElementById("pxmodal")?.remove(); document.body.appendChild(div); document.documentElement.classList.add("pxabierto"); histModal();
 }
+// El botón atrás del móvil cierra el modal en vez de volver en la página de debajo
+function histModal() { if (!(history.state && history.state.pxmodal)) try { history.pushState({ ...(history.state || {}), pxmodal: 1 }, ""); } catch (e) {} }
 function verObjeto(t, id) {
   const it = CAT[t].find(x => x.id === id); if (!it) return;
   const ok = tieneItem(t, it), t0 = it.pase || it.prem || it.evento === "arcade", nombre = t === "titulo" && id === "rango" ? "Tu rango" : (it.n || "Avatar " + it.e).replace(" ✨", "");
@@ -5166,16 +5172,20 @@ function verPremio(cod) {
     <span class="pxtipo">${TIPO_PREMIO[g.t]}${anim ? " · ✨ Animado" : ""}${g.it ? " · Exclusivo T0" : ""}</span>
     <p>${DESC_PREMIO[g.t === "comodin" ? g.id : g.t]}${g.it ? " Solo se consigue en este pase: cuando acabe la temporada, no vuelve." : ""}</p>${estado}
     ${tuyo && g.it ? `<button class="apbtn pxbtn" data-poner="${g.t}" data-id="${g.id}" data-pxcerrar>▶ PONÉRMELO</button>` : ""}</div>`;
-  document.getElementById("pxmodal")?.remove(); document.body.appendChild(div); document.documentElement.classList.add("pxabierto");
+  document.getElementById("pxmodal")?.remove(); document.body.appendChild(div); document.documentElement.classList.add("pxabierto"); histModal();
 }
-function cerrarPremio() {
+function cerrarPremio(desdeAtras, navega) {
   const m = document.getElementById("pxmodal"); if (!m || m.classList.contains("fuera")) return;
+  if (!desdeAtras && history.state && history.state.pxmodal) {
+    if (!navega) { history.back(); return; }   // con la ✕ o tocando fuera: lo cierra el popstate
+    try { const { pxmodal, ...st } = history.state; history.replaceState(st, ""); } catch (e) {}   // un botón que lleva a otra pantalla
+  }
   document.documentElement.classList.remove("pxabierto");
   m.classList.add("fuera"); setTimeout(() => m.remove(), 140);
 }
 document.addEventListener("click", e => {
   const v = e.target.closest("[data-pver]"); if (v) { verPremio(v.dataset.pver); return; }
-  const m = document.getElementById("pxmodal"); if (m && (e.target === m || e.target.closest("[data-pxcerrar]"))) cerrarPremio();
+  const m = document.getElementById("pxmodal"); if (m && (e.target === m || e.target.closest("[data-pxcerrar]"))) cerrarPremio(false, !!e.target.closest("[data-vista]"));
 });
 const est_mt = () => est.mt || "dia";
 document.addEventListener("click", e => { const b = e.target.closest("[data-mt]"); if (!b) return; est.mt = b.dataset.mt; pintarLista(); });
@@ -5628,6 +5638,7 @@ function guardarNav() {
   pintarDias(); pintarSelector(); pintarLista();
 })();
 window.addEventListener("popstate", e => {
+  if (document.getElementById("pxmodal")) { cerrarPremio(true); return; }   // atrás con un modal abierto: solo se cierra el modal
   const st = e.state && e.state.app ? e.state.s : { vista: "comps" };
   for (const k of CAMPOS_NAV) if (k in st) est[k] = st[k];
   if (est.vista === "partido" && !(DATOS.dias[est.dia] && DATOS.dias[est.dia].partidos[est.sel])) est.vista = "comps";
