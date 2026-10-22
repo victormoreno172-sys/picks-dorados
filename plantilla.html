@@ -6145,6 +6145,7 @@ const FONDO = (() => {
           const [j0, j1] = g.jue;
           if ((Math.max(j0, j1) >= 6 && Math.abs(j0 - j1) >= 2) || g.tb) { g.fin = 1; g.ganador = w; return; }
           if (j0 === 6 && j1 === 6) g.tb = 1;
+          g.corte = 1; g.ganador = w; return;   // acaba el juego: se cambia de juego y el set sigue cuando vuelvan al tenis
         }
         g.pausa = 5;
       },
@@ -6168,7 +6169,7 @@ const FONDO = (() => {
         g.j.forEach((j, i) => { caja(p.x + j.x - 1, p.y + j.y - 1, 2, 3, i ? AZUL : ROJO); caja(p.x + j.x + (i ? -2 : 1), p.y + j.y - 2, 1, 2, "#ffcd75"); });
         if (!g.pausa) { const bl = g.bal, alto = Math.sin(bl.p * Math.PI) * 3; caja(p.x + bl.x, p.y + bl.y, 1, 1, "rgba(0,0,0,.4)"); caja(p.x + bl.x, p.y + bl.y - alto, 1, 1, "#ffec27"); }
         const P = ["0", "15", "30", "40"], pt = i => g.tb ? String(g.pts[i]) : g.pts[0] >= 3 && g.pts[1] >= 3 ? (g.pts[i] > g.pts[1 - i] ? "AD" : "40") : P[Math.min(3, g.pts[i])];
-        return { marc: `${g.jue[0]}-${g.jue[1]} ${pt(0)}:${pt(1)}`, grito: g.fiesta && g.fiesta % 8 < 5 ? "JUEGO" : "" };
+        return { marc: `${g.jue[0]}-${g.jue[1]} ${pt(0)}:${pt(1)}`, grito: "" };
       },
     },
     // ---------------------------------------------------------- naves: el primero que llega a 20 puntos
@@ -6290,7 +6291,7 @@ const FONDO = (() => {
     const ev = s.ev;
     if (!ev) {
       const g = s.juego;
-      if (!g.fin) { JUEGOS[s.cual].paso(g, s.pan.a, s.pan.b); if (++g.dur > 14 * 180 && !g.fin) { const m = g.marc || g.jue || [0, 0]; g.fin = 1; g.ganador = m[0] === m[1] ? ri(0, 1) : m[0] > m[1] ? 0 : 1; } }   // por si acaso, ninguna dura más de 3 min: gana el que va por delante
+      if (!g.fin && !g.corte) { JUEGOS[s.cual].paso(g, s.pan.a, s.pan.b); if (++g.dur > 14 * 180 && !g.fin) { const m = g.marc || g.jue || [0, 0]; g.fin = 1; g.ganador = m[0] === m[1] ? ri(0, 1) : m[0] > m[1] ? 0 : 1; } }   // por si acaso, ninguna dura más de 3 min: gana el que va por delante
       else if (++g.finT > 50) s.ev = { n: 1 - g.ganador, fase: "levanta", t: 0 };   // se ve quién ha ganado y el que pierde va a cambiar el juego
       return;
     }
@@ -6299,7 +6300,12 @@ const FONDO = (() => {
     if (ev.fase === "levanta" && ev.t > 8) { ev.fase = "va"; ev.t = 0; }
     else if (ev.fase === "va") { const f = Math.min(1, ev.t / 40); n.x = n.sx + (meta.x - n.sx) * f; n.f = f; if (f >= 1) { ev.fase = "cambia"; ev.t = 0; } }
     else if (ev.fase === "cambia") {
-      if (ev.t === 14) { const otros = LISTA_JUEGOS.filter(k => k !== s.cual); s.cual = otros[ri(0, otros.length - 1)]; s.juego = nuevaPartida(s, s.cual); }
+      if (ev.t === 14) {
+        if (s.cual === "tenis" && s.juego.corte && !s.juego.fin) s.tenis = s.juego;   // el set se queda a medias, guardado
+        const otros = LISTA_JUEGOS.filter(k => k !== s.cual); s.cual = otros[ri(0, otros.length - 1)];
+        if (s.cual === "tenis" && s.tenis) { const g = s.tenis; s.tenis = null; g.corte = 0; g.finT = 0; g.dur = 0; g.fiesta = 0; g.sigue = 1; JUEGOS.tenis.saque(g, s.pan.a, s.pan.b); s.juego = g; }   // vuelven al set donde lo dejaron
+        else s.juego = nuevaPartida(s, s.cual);
+      }
       if (ev.t > 34) { ev.fase = "vuelve"; ev.t = 0; }
     }
     else if (ev.fase === "vuelve") { const f = Math.min(1, ev.t / 40); n.x = meta.x + (n.sx - meta.x) * f; n.f = 1 - f; if (f >= 1) { ev.fase = "sienta"; ev.t = 0; } }
@@ -6312,8 +6318,8 @@ const FONDO = (() => {
     const pose = !ev ? "sentado" : ev.fase === "cambia" ? "agachado" : ev.fase === "va" || ev.fase === "vuelve" ? "andando" : "depie";
     const f = n.f || 0, sc = 2 - .85 * f;   // escala: 2 en el sillón, 1,15 junto a la consola
     const pieY = pose === "sentado" ? so.y + 4 : so.y + 30 + (s.co.y + 12 - (so.y + 30)) * f;   // dónde estarían los pies (en el sillón quedan tapados)
-    const alza = pose === "sentado" ? -4 : pose === "agachado" ? 4 : 12, celebra = pose === "sentado" && ((g.fiesta && g.quien === i) || (g.fin && g.ganador === i));
-    const bote = celebra && s.t % 4 < 2 ? 2 : 0, pulsa = !s.ev && !g.fin && s.t % (5 + i) < 2 ? 1 : 0;
+    const alza = pose === "sentado" ? -4 : pose === "agachado" ? 4 : 12, celebra = pose === "sentado" && ((g.fiesta && g.quien === i) || ((g.fin || g.corte) && g.ganador === i));
+    const bote = celebra && s.t % 4 < 2 ? 2 : 0, pulsa = !s.ev && !g.fin && !g.corte && s.t % (5 + i) < 2 ? 1 : 0;
     const x = n.x, top = pieY - alza * sc - bote;
     const kc = (dx, dy, ww, hh, c) => caja(x + dx * sc, top + dy * sc, Math.max(1, Math.round(ww * sc)), Math.max(1, Math.round(hh * sc)), c);
     if (pose === "sentado") { cx.strokeStyle = "#1a1c2c"; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(x, top - 14 * sc); cx.quadraticCurveTo((x + s.co.x + 8) / 2, top - 30 * sc, s.co.x + (i ? 13 : 3), s.co.y + 5); cx.stroke(); }
@@ -6375,7 +6381,7 @@ const FONDO = (() => {
       for (let y = 0; y < p.b; y += 2) for (let x = 0; x < p.a; x += 2) caja(p.x + x, p.y + y, 2, 2, ["#1a1c2c", "#566c86", "#c2c3c7", "#f4f4f4"][ri(0, 3)]);
     } else if (cambiando) {
       caja(p.x, p.y, p.a, p.b, "#1a1c2c"); cx.font = "bold 7px monospace"; cx.fillStyle = "#ffec27"; cx.fillText(JUEGOS[s.cual].nombre, p.x + p.a / 2, p.y + p.b / 2 + 1);
-      cx.font = "bold 5px monospace"; cx.fillStyle = ev.t % 8 < 5 ? "#f4f4f4" : "transparent"; cx.fillText("PULSA START", p.x + p.a / 2, p.y + p.b / 2 + 9);
+      cx.font = "bold 5px monospace"; cx.fillStyle = ev.t % 8 < 5 ? "#f4f4f4" : "transparent"; cx.fillText(g.sigue ? `SIGUE EL SET ${g.jue[0]}-${g.jue[1]}` : "PULSA START", p.x + p.a / 2, p.y + p.b / 2 + 9);
     } else {
       const hud = JUEGOS[s.cual].dibu(g, p, flash);
       cx.font = "bold 5px monospace"; const tw = Math.ceil(cx.measureText(hud.marc).width) + 4;
@@ -6384,6 +6390,10 @@ const FONDO = (() => {
         caja(p.x, p.y + p.b / 2 - 9, p.a, 18, "rgba(26,28,44,.8)");
         texto("GANA " + NOM[g.ganador], p.x + p.a / 2, p.y + p.b / 2 - 1, 7, s.t % 10 < 6 ? (g.ganador ? "#73eff7" : "#ff77a8") : "#ffec27");
         texto(hud.marc, p.x + p.a / 2, p.y + p.b / 2 + 7, 5, "#f4f4f4");
+      } else if (g.corte) {   // tenis: acaba un juego del set
+        caja(p.x, p.y + p.b / 2 - 9, p.a, 18, "rgba(26,28,44,.8)");
+        texto("JUEGO " + NOM[g.ganador], p.x + p.a / 2, p.y + p.b / 2 - 1, 6, s.t % 10 < 6 ? (g.ganador ? "#73eff7" : "#ff77a8") : "#ffec27");
+        texto(`JUEGOS ${g.jue[0]}-${g.jue[1]}`, p.x + p.a / 2, p.y + p.b / 2 + 7, 5, "#f4f4f4");
       }
       else if (hud.grito) { cx.fillStyle = "#ffec27"; cx.font = "bold 8px monospace"; cx.fillText(hud.grito, p.x + p.a / 2, p.y + p.b / 2 + 3); }
     }
@@ -6426,7 +6436,7 @@ const FONDO = (() => {
     for (const f of s.fug) { const x = f.x - f.v * 9, y = f.y + f.v * 5, g = cx.createLinearGradient(x, y, x + 60, y - 33); g.addColorStop(0, `rgba(255,255,255,${1 - f.v / 26})`); g.addColorStop(1, "rgba(255,255,255,0)"); cx.strokeStyle = g; cx.lineWidth = 1.6; cx.beginPath(); cx.moveTo(x, y); cx.lineTo(x + 60, y - 33); cx.stroke(); }
   };
   requestAnimationFrame(bucle);
-  return { escena: () => esc, estado: () => st, _j: () => ({ JUEGOS, nuevaPartida }) };
+  return { escena: () => esc, estado: () => st, _j: () => ({ JUEGOS, nuevaPartida }), _paso: x => PASO.pxrun(x) };
 })();
 
 // ---------------------------------------------------------------- marcadores en directo (ESPN, desde el móvil)
