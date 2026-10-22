@@ -1076,6 +1076,9 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 :root[data-skin="neon"] header, .skp-neon header, :root[data-skin="neon"] .abajo, .skp-neon .abajo { background: rgba(11, 6, 24, .9); border-color: #ff2bd6; }
 :root[data-skin="neon"] .mcard, .skp-neon .mcard, :root[data-skin="neon"] .mhero, .skp-neon .mhero, :root[data-skin="neon"] .partido, .skp-neon .partido, :root[data-skin="neon"] .rpart, .skp-neon .rpart { box-shadow: 0 0 0 1px rgba(255,43,214,.35), 0 0 18px rgba(34,211,238,.12); }
 @media (prefers-reduced-motion: reduce) { :root[data-skin] body::before { animation: none !important; } }
+/* Fondos animados de algunos temas (lienzo #fondovivo detrás de todo); el dibujo fijo de esos temas se apaga */
+#fondovivo { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+:root.fondovivo:not([data-skin="galaxia"]) body::before { opacity: 0 !important; }
 
 /* ================= Temporada 0 · Pixel ================= */
 .tbanner { position: relative; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; border: 3px solid #ffcd75; border-radius: 4px; padding: 14px; margin: 0 0 14px; cursor: pointer;
@@ -5813,6 +5816,290 @@ window.addEventListener("popstate", e => {
   pintarDias(); pintarSelector(); pintarLista();
   window.scrollTo({ top: 0 });
 });
+// ================================================================ Fondos animados de los temas
+// Un lienzo detrás de la app (debajo de todo, sin tocar nada). Solo lo usan algunos temas; en el resto no hay nada.
+// Va a pocos fotogramas por segundo, se para con la app en segundo plano y, con "reducir movimiento", se queda quieto.
+const FONDO = (() => {
+  let cv = null, cx = null, esc = "", st = null, ult = 0, w = 0, h = 0, k = 1, quieto = false;
+  const PX = { f: "pxf", b: "pxb", te: "pxte", e: "pxe" };
+  const ESCENAS = { s0estadio: d => PX[d] || "pxf", pizarra: () => "pizarra", estadio: () => "noche", pixel: () => "pxrun", neon: () => "neon", galaxia: () => "galaxia" };
+  const OPAC = { pxf: .5, pxb: .5, pxte: .5, pxe: .55, pizarra: .75, noche: .9, pxrun: .85, neon: .7, galaxia: .9 };
+  const r = (a, b) => a + Math.random() * (b - a), ri = (a, b) => Math.floor(r(a, b + 1));
+  const escenaAhora = () => { const f = ESCENAS[document.documentElement.dataset.skin || ""]; return f ? f(est.dep) : ""; };
+  const esPixel = e => e.startsWith("px");
+  function medir() {
+    w = innerWidth; h = innerHeight;
+    if (esPixel(esc)) { k = Math.max(2, Math.round(w / 130)); cv.width = Math.ceil(w / k); cv.height = Math.ceil(h / k); }
+    else { k = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(w * k); cv.height = Math.round(h * k); }
+    cx = cv.getContext("2d"); cx.imageSmoothingEnabled = !esPixel(esc);
+  }
+  function iniciar(e) {
+    esc = e;
+    if (!e) { if (cv) cv.hidden = true; document.documentElement.classList.remove("fondovivo"); return; }
+    if (!cv) { cv = document.createElement("canvas"); cv.id = "fondovivo"; cv.setAttribute("aria-hidden", "true"); document.body.prepend(cv); addEventListener("resize", () => { if (esc) { medir(); st = CREAR[esc](); } }); }
+    cv.hidden = false; cv.style.opacity = OPAC[e]; cv.style.imageRendering = esPixel(e) ? "pixelated" : "auto";
+    document.documentElement.classList.add("fondovivo");
+    medir(); st = CREAR[e](); ult = 0;
+    quieto = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (quieto) { for (let i = 0; i < 40; i++) PASO[e](st); DIBU[e](st, 0); }
+  }
+  function bucle(ts) {
+    requestAnimationFrame(bucle);
+    const e = escenaAhora(); if (e !== esc) iniciar(e);
+    if (!esc || quieto || document.hidden) return;
+    if (ts - ult < 1000 / (esPixel(esc) ? 14 : 30)) return; ult = ts;
+    PASO[esc](st, ts); DIBU[esc](st, ts);
+  }
+  // ---------------------------------------------------------------- utilidades pixel
+  const W = () => cv.width, H = () => cv.height;
+  const caja = (x, y, a, b, c) => { cx.fillStyle = c; cx.fillRect(Math.round(x), Math.round(y), a, b); };
+  const marco = (x, y, a, b, c) => { cx.fillStyle = c; cx.fillRect(x, y, a, 1); cx.fillRect(x, y + b - 1, a, 1); cx.fillRect(x, y, 1, b); cx.fillRect(x + a - 1, y, 1, b); };
+  const circ = (x0, y0, rr, c) => { cx.fillStyle = c; for (let a = 0; a < 360; a += 6) cx.fillRect(Math.round(x0 + rr * Math.cos(a * Math.PI / 180)), Math.round(y0 + rr * Math.sin(a * Math.PI / 180)), 1, 1); };
+  // Jugadores que persiguen la pelota (fútbol y baloncesto, vistos desde arriba; el equipo A ataca hacia arriba)
+  function equipos(n, campo) {
+    const { x0, y0, aw, ah } = campo, js = [];
+    const forma = n === 5 ? [[.5, .92], [.3, .72], [.7, .72], [.35, .58], [.65, .58]] : [[.5, .94], [.2, .78], [.4, .8], [.6, .8], [.8, .78], [.3, .64], [.5, .66], [.7, .64], [.3, .55], [.5, .53], [.7, .55]];
+    for (const eq of [0, 1]) for (const [fx, fy] of forma) {
+      const hx = x0 + fx * aw, hy = y0 + (eq ? 1 - fy : fy) * ah;
+      js.push({ eq, x: hx, y: hy, hx, hy, v: r(.55, .85), port: fy > .9 });
+    }
+    return js;
+  }
+  function moverJugadores(s, alcance) {
+    const b = s.bal, { x0, y0, aw, ah } = s.campo;
+    for (const eq of [0, 1]) {   // los 2 más cercanos de cada equipo van a por la pelota; el resto acompaña la jugada
+      const cerca = s.js.filter(j => j.eq === eq && !j.port).sort((a, c) => Math.hypot(a.x - b.x, a.y - b.y) - Math.hypot(c.x - b.x, c.y - b.y)).slice(0, 2);
+      for (const j of s.js.filter(j => j.eq === eq)) {
+        let tx, ty;
+        if (cerca.includes(j)) { tx = b.x; ty = b.y; }
+        else if (j.port) { tx = Math.max(x0 + aw * .35, Math.min(x0 + aw * .65, b.x)); ty = j.hy; }
+        else { tx = j.hx + (b.x - (x0 + aw / 2)) * .45; ty = j.hy + (b.y - (y0 + ah / 2)) * .5; }
+        const dx = tx - j.x, dy = ty - j.y, d = Math.hypot(dx, dy) || 1, v = Math.min(d, j.v * (cerca.includes(j) ? 1.15 : .7));
+        j.x += dx / d * v + r(-.15, .15); j.y += dy / d * v + r(-.15, .15);
+        if (Math.hypot(j.x - b.x, j.y - b.y) < alcance && b.cd <= 0) {   // le da a la pelota hacia la portería / canasta contraria
+          const gy = eq ? y0 + ah + 2 : y0 - 2, gx = x0 + aw / 2 + r(-aw * .18, aw * .18);
+          const ddx = gx - b.x, ddy = gy - b.y, dd = Math.hypot(ddx, ddy) || 1, f = r(1.6, 3.2);
+          b.vx = ddx / dd * f + r(-.6, .6); b.vy = ddy / dd * f; b.cd = 6; b.ult = eq;
+        }
+      }
+    }
+    b.cd--;
+  }
+  function pintarJugadores(s, ca, cb) {
+    for (const j of s.js) { caja(j.x - 1, j.y + 1, 3, 2, "rgba(0,0,0,.35)"); caja(j.x - 1, j.y - 1, 3, 3, j.eq ? cb : ca); caja(j.x, j.y - 1, 1, 1, "#ffcd75"); }
+  }
+  // ---------------------------------------------------------------- escenas
+  const CREAR = {}, PASO = {}, DIBU = {};
+  // Fútbol: campo visto desde arriba y 22 jugadores detrás del balón
+  CREAR.pxf = () => {
+    const aw = W() - 8, ah = H() - 8, campo = { x0: Math.round((W() - aw) / 2), y0: Math.round((H() - ah) / 2), aw, ah };
+    const s = { campo, js: equipos(11, campo), bal: { x: campo.x0 + aw / 2, y: campo.y0 + ah / 2, vx: r(-1, 1), vy: r(-1, 1), cd: 0 }, gol: 0 };
+    return s;
+  };
+  PASO.pxf = s => {
+    const b = s.bal, { x0, y0, aw, ah } = s.campo;
+    if (s.gol > 0) { s.gol--; if (!s.gol) { b.x = x0 + aw / 2; b.y = y0 + ah / 2; b.vx = b.vy = 0; s.js.forEach(j => { j.x = j.hx; j.y = j.hy; }); } return; }
+    moverJugadores(s, 2.2);
+    b.x += b.vx; b.y += b.vy; b.vx *= .95; b.vy *= .95;
+    if (b.x < x0 + 1 || b.x > x0 + aw - 2) { b.vx *= -1; b.x = Math.max(x0 + 1, Math.min(x0 + aw - 2, b.x)); }
+    const enPorteria = Math.abs(b.x - (x0 + aw / 2)) < aw * .12;
+    if (b.y < y0 + 1 || b.y > y0 + ah - 2) { if (enPorteria) s.gol = 22; else { b.vy *= -1; b.y = Math.max(y0 + 1, Math.min(y0 + ah - 2, b.y)); } }
+  };
+  DIBU.pxf = s => {
+    const { x0, y0, aw, ah } = s.campo, c = "rgba(244,244,244,.55)";
+    cx.clearRect(0, 0, W(), H());
+    for (let y = y0, i = 0; y < y0 + ah; y += 10, i++) caja(x0, y, aw, Math.min(10, y0 + ah - y), i % 2 ? "#2c8a4d" : "#38b764");
+    marco(x0, y0, aw, ah, c); caja(x0, y0 + Math.round(ah / 2), aw, 1, c); circ(x0 + aw / 2, y0 + ah / 2, Math.round(aw * .14), c);
+    for (const top of [true, false]) {
+      const aa = Math.round(aw * .56), ab = Math.round(ah * .15), pa = Math.round(aw * .26), pb = Math.round(ah * .06), x1 = x0 + Math.round((aw - aa) / 2), x2 = x0 + Math.round((aw - pa) / 2);
+      marco(x1, top ? y0 : y0 + ah - ab, aa, ab, c); marco(x2, top ? y0 : y0 + ah - pb, pa, pb, c);
+      caja(x0 + Math.round(aw * .38), top ? y0 - 2 : y0 + ah, Math.round(aw * .24), 2, "#f4f4f4");
+    }
+    pintarJugadores(s, "#ff004d", "#41a6f6");
+    caja(s.bal.x - 1, s.bal.y - 1, 2, 2, "#f4f4f4"); caja(s.bal.x, s.bal.y, 1, 1, "#1a1c2c");
+    if (s.gol && s.gol % 6 < 4) { cx.fillStyle = "#ffec27"; cx.font = "bold 12px monospace"; cx.textAlign = "center"; cx.fillText("¡GOL!", W() / 2, y0 + ah / 2 + 4); }
+  };
+  // Baloncesto: cancha de parquet, 10 jugadores y tiros a canasta
+  CREAR.pxb = () => {
+    const aw = W() - 8, ah = H() - 8, campo = { x0: Math.round((W() - aw) / 2), y0: Math.round((H() - ah) / 2), aw, ah };
+    return { campo, js: equipos(5, campo), bal: { x: campo.x0 + aw / 2, y: campo.y0 + ah / 2, vx: 0, vy: 0, cd: 0 }, tiro: null, punt: [0, 0], cesta: 0 };
+  };
+  PASO.pxb = s => {
+    const b = s.bal, { x0, y0, aw, ah } = s.campo, aros = [{ x: x0 + aw / 2, y: y0 + 6 }, { x: x0 + aw / 2, y: y0 + ah - 7 }];
+    if (s.cesta > 0) { s.cesta--; if (!s.cesta) { b.x = x0 + aw / 2; b.y = y0 + ah / 2; b.vx = b.vy = 0; } return; }
+    if (s.tiro) {   // la pelota vuela al aro
+      const t = s.tiro; t.p += .07; b.x = t.x + (t.tx - t.x) * t.p; b.y = t.y + (t.ty - t.y) * t.p;
+      if (t.p >= 1) { s.tiro = null; if (t.entra) { s.punt[t.eq] += 2; s.cesta = 18; } else { b.vx = r(-1.5, 1.5); b.vy = (t.eq ? -1 : 1) * r(1, 2); } }
+      moverJugadores(s, -1); return;
+    }
+    moverJugadores(s, 2.2);
+    b.x += b.vx; b.y += b.vy; b.vx *= .9; b.vy *= .9;
+    b.x = Math.max(x0 + 1, Math.min(x0 + aw - 2, b.x)); b.y = Math.max(y0 + 1, Math.min(y0 + ah - 2, b.y));
+    const a = aros[b.ult === 1 ? 1 : 0];
+    if (b.ult !== undefined && Math.hypot(b.x - a.x, b.y - a.y) < aw * .38 && Math.random() < .12) s.tiro = { x: b.x, y: b.y, tx: a.x, ty: a.y, p: 0, eq: b.ult, entra: Math.random() < .55 };
+  };
+  DIBU.pxb = s => {
+    const { x0, y0, aw, ah } = s.campo, c = "rgba(244,244,244,.6)";
+    cx.clearRect(0, 0, W(), H());
+    for (let x = x0, i = 0; x < x0 + aw; x += 4, i++) caja(x, y0, Math.min(4, x0 + aw - x), ah, i % 3 === 0 ? "#b9783f" : i % 3 === 1 ? "#d9a066" : "#c88a50");
+    marco(x0, y0, aw, ah, c); caja(x0, y0 + Math.round(ah / 2), aw, 1, c); circ(x0 + aw / 2, y0 + ah / 2, Math.round(aw * .13), c);
+    for (const top of [true, false]) {
+      const zw = Math.round(aw * .32), zh = Math.round(ah * .2), zx = x0 + Math.round((aw - zw) / 2), zy = top ? y0 : y0 + ah - zh;
+      caja(zx, zy, zw, zh, "rgba(239,125,87,.55)"); marco(zx, zy, zw, zh, c); circ(x0 + aw / 2, top ? y0 + zh : y0 + ah - zh, Math.round(zw / 2), c);
+      circ(x0 + aw / 2, top ? y0 + 6 : y0 + ah - 7, 2, "#ff004d"); caja(x0 + aw / 2 - 4, top ? y0 + 2 : y0 + ah - 3, 8, 1, "#f4f4f4");
+    }
+    pintarJugadores(s, "#ffec27", "#5d275d");
+    const b = s.bal, alto = s.tiro ? Math.sin(s.tiro.p * Math.PI) * 6 : 0;
+    if (s.tiro) caja(b.x - 1, b.y, 2, 1, "rgba(0,0,0,.4)");
+    caja(b.x - 1, b.y - 1 - alto, 3, 3, "#ef7d57"); caja(b.x, b.y - 1 - alto, 1, 3, "#1a1c2c");
+    cx.fillStyle = "#f4f4f4"; cx.font = "bold 8px monospace"; cx.textAlign = "left"; cx.fillText(`${s.punt[0]}-${s.punt[1]}`, x0 + 3, y0 + ah / 2 - 3);
+    if (s.cesta && s.cesta % 6 < 4) { cx.fillStyle = "#ffec27"; cx.font = "bold 11px monospace"; cx.textAlign = "center"; cx.fillText("¡CANASTA!", W() / 2, y0 + ah / 2 + 14); }
+  };
+  // Tenis: pista dura, dos jugadores y el peloteo de fondo
+  CREAR.pxte = () => {
+    const aw = Math.min(W() - 16, Math.round((H() - 16) * .46)), ah = Math.min(H() - 16, Math.round(aw / .46)), campo = { x0: Math.round((W() - aw) / 2), y0: Math.round((H() - ah) / 2), aw, ah };
+    const s = { campo, js: [{ x: campo.x0 + aw / 2, y: campo.y0 + ah - 2, eq: 0 }, { x: campo.x0 + aw / 2, y: campo.y0 + 2, eq: 1 }], bal: null, golpe: 0 };
+    s.bal = { x: s.js[0].x, y: s.js[0].y, tx: s.js[1].x, ty: s.js[1].y, sx: s.js[0].x, sy: s.js[0].y, p: 0, va: 1 };
+    return s;
+  };
+  PASO.pxte = s => {
+    const b = s.bal, { x0, aw } = s.campo; b.p += .035;
+    b.x = b.sx + (b.tx - b.sx) * b.p; b.y = b.sy + (b.ty - b.sy) * b.p;
+    const rec = s.js[b.va];   // el que va a recibir se mueve hacia donde llega la bola
+    rec.x += Math.max(-1.3, Math.min(1.3, b.tx - rec.x));
+    const otro = s.js[1 - b.va]; otro.x += Math.max(-.6, Math.min(.6, x0 + aw / 2 - otro.x));
+    if (b.p >= 1) { const sig = 1 - b.va; b.sx = b.x; b.sy = b.y; b.va = sig; b.tx = x0 + r(aw * .12, aw * .88); b.ty = s.js[sig].y; b.p = 0; s.golpe = 4; }
+    if (s.golpe) s.golpe--;
+  };
+  DIBU.pxte = s => {
+    const { x0, y0, aw, ah } = s.campo, c = "#f4f4f4";
+    cx.clearRect(0, 0, W(), H());
+    caja(x0 - 6, y0 - 6, aw + 12, ah + 12, "#257179"); caja(x0, y0, aw, ah, "#3b5dc9");
+    marco(x0, y0, aw, ah, c); const al = Math.round(aw * .12); caja(x0 + al, y0, 1, ah, c); caja(x0 + aw - al - 1, y0, 1, ah, c);
+    const sv = Math.round(ah * .23); caja(x0 + al, y0 + sv, aw - 2 * al, 1, c); caja(x0 + al, y0 + ah - sv, aw - 2 * al, 1, c); caja(x0 + aw / 2, y0 + sv, 1, ah - 2 * sv, c);
+    caja(x0 - 4, y0 + Math.round(ah / 2), aw + 8, 1, "#c2c3c7"); caja(x0 - 4, y0 + Math.round(ah / 2) - 1, aw + 8, 1, "rgba(0,0,0,.35)");
+    for (const j of s.js) { caja(j.x - 1, j.y - 2, 3, 4, j.eq ? "#ff004d" : "#f4f4f4"); caja(j.x, j.y - 3, 1, 1, "#ffcd75"); }
+    const b = s.bal, alto = Math.sin(b.p * Math.PI) * 8;
+    caja(b.x, b.y, 1, 1, "rgba(0,0,0,.45)"); caja(b.x - 1, b.y - 1 - alto, 2, 2, "#a7f070");
+  };
+  // Esports: minimapa de una partida con los dos equipos moviéndose y disparos
+  CREAR.pxe = () => {
+    const s = { muros: [], js: [], tiros: [], t: 0 };
+    for (let i = 0; i < 26; i++) { const vert = Math.random() < .5; s.muros.push({ x: ri(4, W() - 20), y: ri(4, H() - 20), a: vert ? 2 : ri(10, 26), b: vert ? ri(10, 26) : 2 }); }
+    for (const eq of [0, 1]) for (let i = 0; i < 5; i++) s.js.push({ eq, x: eq ? W() - ri(8, 20) : ri(8, 20), y: eq ? ri(8, 30) : H() - ri(8, 30), tx: 0, ty: 0, vivo: 1 });
+    s.js.forEach(j => { j.tx = r(10, W() - 10); j.ty = r(10, H() - 10); });
+    return s;
+  };
+  PASO.pxe = s => {
+    s.t++;
+    for (const j of s.js) {
+      if (!j.vivo) { if (Math.random() < .01) { j.vivo = 1; j.x = j.eq ? W() - 10 : 10; j.y = j.eq ? 10 : H() - 10; } continue; }
+      const dx = j.tx - j.x, dy = j.ty - j.y, d = Math.hypot(dx, dy);
+      if (d < 2) { j.tx = r(8, W() - 8); j.ty = r(8, H() - 8); } else { j.x += dx / d * .9; j.y += dy / d * .9; }
+      const rival = s.js.find(o => o.vivo && o.eq !== j.eq && Math.hypot(o.x - j.x, o.y - j.y) < 22);
+      if (rival && Math.random() < .05) { s.tiros.push({ x: j.x, y: j.y, tx: rival.x, ty: rival.y, v: 4, eq: j.eq }); if (Math.random() < .3) rival.vivo = 0; }
+    }
+    s.tiros.forEach(t => t.v--); s.tiros = s.tiros.filter(t => t.v > 0);
+  };
+  DIBU.pxe = s => {
+    cx.clearRect(0, 0, W(), H());
+    cx.fillStyle = "rgba(65,166,246,.12)"; for (let x = 0; x < W(); x += 8) cx.fillRect(x, 0, 1, H()); for (let y = 0; y < H(); y += 8) cx.fillRect(0, y, W(), 1);
+    for (const m of s.muros) caja(m.x, m.y, m.a, m.b, "#566c86");
+    for (const [x, y, l] of [[W() * .25, H() * .3, "A"], [W() * .7, H() * .7, "B"]]) { marco(Math.round(x) - 8, Math.round(y) - 8, 16, 16, s.t % 20 < 10 ? "#ffcd75" : "#ef7d57"); cx.fillStyle = "#ffcd75"; cx.font = "bold 8px monospace"; cx.textAlign = "center"; cx.fillText(l, x, y + 3); }
+    for (const t of s.tiros) { cx.strokeStyle = t.eq ? "#ff004d" : "#73eff7"; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(t.x, t.y); cx.lineTo(t.tx, t.ty); cx.stroke(); }
+    for (const j of s.js) if (j.vivo) { caja(j.x - 1, j.y - 1, 3, 3, j.eq ? "#ff004d" : "#73eff7"); } else caja(j.x - 1, j.y - 1, 3, 3, "rgba(148,176,194,.35)");
+  };
+  // Pizarra táctica: alineación en tiza y jugadas que se dibujan solas
+  CREAR.pizarra = () => {
+    const P = [[.5, .9], [.15, .72], [.38, .75], [.62, .75], [.85, .72], [.3, .55], [.5, .58], [.7, .55], [.2, .35], [.5, .3], [.8, .35]];
+    return { os: P.map(([x, y]) => ({ x: x * w, y: y * h })), xs: P.slice(1).map(([x, y]) => ({ x: (x + r(-.05, .05)) * w, y: (1 - y + .12) * h })), jug: null, borrar: 0 };
+  };
+  PASO.pizarra = s => {
+    if (!s.jug) { const o = s.os[ri(1, 10)], t = { x: o.x + r(-w * .3, w * .3), y: o.y - r(h * .1, h * .3) }; s.jug = { o, t, cp: { x: (o.x + t.x) / 2 + r(-60, 60), y: (o.y + t.y) / 2 }, p: 0, fin: 0 }; }
+    const j = s.jug; if (j.p < 1) j.p += .02; else if (++j.fin > 60) s.jug = null;
+  };
+  DIBU.pizarra = s => {
+    cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
+    cx.strokeStyle = "rgba(255,255,255,.3)"; cx.lineWidth = 2.5; cx.lineCap = "round";
+    cx.strokeRect(w * .06, h * .04, w * .88, h * .92); cx.beginPath(); cx.moveTo(w * .06, h / 2); cx.lineTo(w * .94, h / 2); cx.stroke();
+    cx.beginPath(); cx.arc(w / 2, h / 2, w * .14, 0, 7); cx.stroke();
+    for (const o of s.os) { cx.beginPath(); cx.arc(o.x, o.y, 9, 0, 7); cx.stroke(); }
+    cx.strokeStyle = "rgba(255,226,140,.32)"; for (const x of s.xs) { cx.beginPath(); cx.moveTo(x.x - 7, x.y - 7); cx.lineTo(x.x + 7, x.y + 7); cx.moveTo(x.x + 7, x.y - 7); cx.lineTo(x.x - 7, x.y + 7); cx.stroke(); }
+    const j = s.jug; if (!j) return;
+    const a = Math.min(1, 1 - Math.max(0, j.fin - 40) / 20);
+    cx.strokeStyle = `rgba(255,255,255,${.55 * a})`; cx.setLineDash([9, 8]); cx.beginPath(); cx.moveTo(j.o.x, j.o.y);
+    const n = 30, q = Math.floor(n * j.p); let px = j.o.x, py = j.o.y;
+    for (let i = 1; i <= q; i++) { const t = i / n; px = (1 - t) * (1 - t) * j.o.x + 2 * (1 - t) * t * j.cp.x + t * t * j.t.x; py = (1 - t) * (1 - t) * j.o.y + 2 * (1 - t) * t * j.cp.y + t * t * j.t.y; cx.lineTo(px, py); }
+    cx.stroke(); cx.setLineDash([]);
+    if (j.p >= 1) { const ang = Math.atan2(j.t.y - j.cp.y, j.t.x - j.cp.x); cx.beginPath(); cx.moveTo(px, py); cx.lineTo(px - 13 * Math.cos(ang - .5), py - 13 * Math.sin(ang - .5)); cx.moveTo(px, py); cx.lineTo(px - 13 * Math.cos(ang + .5), py - 13 * Math.sin(ang + .5)); cx.stroke(); }
+    cx.fillStyle = `rgba(255,255,255,${.8 * a})`; cx.beginPath(); cx.arc(px, py, 4, 0, 7); cx.fill();
+  };
+  // Estadio de noche: grada con flashes de cámaras y los focos que se encienden por turnos
+  CREAR.noche = () => ({ fl: [], t: 0 });
+  PASO.noche = s => { s.t++; if (Math.random() < .35) s.fl.push({ x: r(0, w), y: r(h * .74, h * .95), v: 1 }); s.fl.forEach(f => f.v -= .12); s.fl = s.fl.filter(f => f.v > 0); };
+  DIBU.noche = s => {
+    cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
+    for (const [x, d] of [[w * .08, 1], [w * .92, -1]]) {   // haces de luz de los focos
+      const pul = .1 + .05 * Math.sin(s.t / 18 + d), g = cx.createLinearGradient(x, h * .1, x + d * w * .35, h * .75);
+      g.addColorStop(0, `rgba(255,248,214,${pul + .08})`); g.addColorStop(1, "rgba(255,248,214,0)");
+      cx.fillStyle = g; cx.beginPath(); cx.moveTo(x - 6, h * .1); cx.lineTo(x + 6, h * .1); cx.lineTo(x + d * w * .62, h * .78); cx.lineTo(x + d * w * .1, h * .78); cx.closePath(); cx.fill();
+      cx.fillStyle = "rgba(255,248,214,.85)"; for (let i = -2; i <= 2; i++) { cx.beginPath(); cx.arc(x + i * 5, h * .1, 2, 0, 7); cx.fill(); }
+      cx.fillStyle = "#0a1022"; cx.fillRect(x - 1.5, h * .1, 3, h * .62);
+    }
+    const gr = cx.createLinearGradient(0, h * .7, 0, h); gr.addColorStop(0, "#0a1022"); gr.addColorStop(1, "#05080f");
+    cx.fillStyle = gr; cx.beginPath(); cx.moveTo(0, h * .78); cx.quadraticCurveTo(w / 2, h * .68, w, h * .78); cx.lineTo(w, h); cx.lineTo(0, h); cx.fill();
+    for (const f of s.fl) { cx.fillStyle = `rgba(255,255,255,${f.v})`; cx.beginPath(); cx.arc(f.x, f.y, 1.2 + f.v * 1.8, 0, 7); cx.fill(); }
+  };
+  // Pixel art: un jugador corre con la pelota por un mundo de plataformas que avanza
+  CREAR.pxrun = () => ({ x: 0, t: 0, nubes: [...Array(5)].map(() => ({ x: r(0, W()), y: r(H() * .1, H() * .45), a: ri(8, 18) })), est: [...Array(40)].map(() => ({ x: r(0, W()), y: r(0, H() * .6) })), saltos: 0, salto: 0, gol: 0 });
+  PASO.pxrun = s => {
+    s.t++; s.x += 1;
+    s.nubes.forEach(n => { n.x -= .25; if (n.x < -20) { n.x = W() + 5; n.y = r(H() * .1, H() * .45); } });
+    if (s.salto) s.salto--; else if (Math.random() < .015) s.salto = 14;
+    if (s.gol) s.gol--; else if (s.x % 260 === 200) s.gol = 30;
+  };
+  DIBU.pxrun = s => {
+    const sue = Math.round(H() * .84); cx.clearRect(0, 0, W(), H());
+    for (const e of s.est) if ((s.t + e.x) % 30 < 26) caja(e.x, e.y, 1, 1, "rgba(255,255,255,.7)");
+    for (const n of s.nubes) { caja(n.x, n.y, n.a, 3, "rgba(194,195,199,.55)"); caja(n.x + 3, n.y - 2, n.a - 6, 2, "rgba(194,195,199,.55)"); }
+    for (let i = 0; i < W() + 40; i += 2) { const hx = i + (s.x * .3) % 40, y = sue - 18 - Math.round(8 * Math.abs(Math.sin(hx / 22))); caja(i, y, 2, sue - y, "#29366f"); }
+    for (let i = 0; i < W() + 20; i += 2) { const hx = i + (s.x * .6) % 60, y = sue - 6 - Math.round(5 * Math.abs(Math.sin(hx / 15))); caja(i, y, 2, sue - y, "#257179"); }
+    for (let i = -16; i < W() + 16; i += 8) { const x = i - (s.x % 8); caja(x, sue, 8, 6, (Math.floor((i + s.x) / 8)) % 2 ? "#38b764" : "#2c8a4d"); caja(x, sue, 8, 2, "#a7f070"); caja(x, sue + 6, 8, H() - sue, (Math.floor((i + s.x) / 8)) % 2 ? "#5d3a1a" : "#8b5a2b"); }
+    const porX = W() - ((s.x % 260) * 1.2) ; if (porX > -12 && porX < W() + 12) { caja(porX, sue - 16, 1, 16, "#f4f4f4"); caja(porX, sue - 16, 10, 1, "#f4f4f4"); caja(porX + 10, sue - 16, 1, 16, "#f4f4f4"); cx.fillStyle = "rgba(244,244,244,.25)"; for (let y = sue - 15; y < sue; y += 3) cx.fillRect(porX + 1, y, 9, 1); }
+    const px = Math.round(W() * .3), sal = s.salto ? Math.round(Math.sin(s.salto / 14 * Math.PI) * 8) : 0, py = sue - 8 - sal, pie = s.t % 6 < 3;
+    caja(px + 1, py, 3, 3, "#ffcd75"); caja(px, py + 3, 5, 3, "#ff004d"); caja(px + (pie ? 0 : 3), py + 6, 2, 2, "#1a1c2c"); caja(px + (pie ? 3 : 0), py + 6, 2, 1, "#1a1c2c");
+    const bote = Math.abs(Math.sin(s.t / 3)) * 4; caja(px + 7, sue - 3 - bote, 3, 3, "#f4f4f4"); caja(px + 8, sue - 2 - bote, 1, 1, "#1a1c2c");
+    if (s.gol && s.gol % 8 < 5) { cx.fillStyle = "#ffec27"; cx.font = "bold 10px monospace"; cx.textAlign = "center"; cx.fillText("GOL!", W() / 2, H() * .55); }
+  };
+  // Neón: carretera synthwave hacia el horizonte con el sol a rayas
+  CREAR.neon = () => ({ t: 0 });
+  PASO.neon = s => { s.t += 1; };
+  DIBU.neon = s => {
+    cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
+    const hz = h * .62, sr = Math.min(w * .32, 140);
+    const sg = cx.createLinearGradient(0, hz - sr, 0, hz); sg.addColorStop(0, "#ffd23f"); sg.addColorStop(1, "#ff2bd6");
+    cx.save(); cx.beginPath(); cx.arc(w / 2, hz, sr, Math.PI, 0); cx.clip(); cx.fillStyle = sg; cx.fillRect(w / 2 - sr, hz - sr, sr * 2, sr);
+    cx.fillStyle = "#0b0618"; for (let i = 0; i < 6; i++) { const y = hz - sr * .45 + i * sr * .1; cx.fillRect(w / 2 - sr, y, sr * 2, 2 + i); } cx.restore();
+    cx.strokeStyle = "rgba(255,43,214,.55)"; cx.lineWidth = 1.2;
+    for (let i = -14; i <= 14; i++) { cx.beginPath(); cx.moveTo(w / 2 + i * 8, hz); cx.lineTo(w / 2 + i * w * .16, h); cx.stroke(); }
+    cx.strokeStyle = "rgba(34,211,238,.5)";
+    for (let i = 0; i < 14; i++) { const p = ((i + (s.t % 30) / 30) / 14), y = hz + (h - hz) * p * p; cx.beginPath(); cx.moveTo(0, y); cx.lineTo(w, y); cx.stroke(); }
+    const fg = cx.createLinearGradient(0, hz - 30, 0, hz + 30); fg.addColorStop(0, "rgba(11,6,24,0)"); fg.addColorStop(.5, "rgba(255,43,214,.25)"); fg.addColorStop(1, "rgba(11,6,24,0)"); cx.fillStyle = fg; cx.fillRect(0, hz - 30, w, 60);
+  };
+  // Galaxia: estrellas fugaces y una nebulosa que gira muy despacio
+  CREAR.galaxia = () => ({ t: 0, fug: [] });
+  PASO.galaxia = s => { s.t++; if (Math.random() < .025) s.fug.push({ x: r(w * .2, w * 1.1), y: r(-20, h * .4), v: 0 }); s.fug.forEach(f => f.v++); s.fug = s.fug.filter(f => f.v < 26); };
+  DIBU.galaxia = s => {
+    cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
+    cx.save(); cx.translate(w * .7, h * .3); cx.rotate(s.t / 900);
+    for (const [rx, ry, c] of [[w * .55, h * .12, "rgba(168,85,247,.16)"], [w * .4, h * .09, "rgba(56,189,248,.12)"], [w * .25, h * .06, "rgba(244,114,182,.14)"]]) { const g = cx.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, c); g.addColorStop(1, "rgba(0,0,0,0)"); cx.fillStyle = g; cx.beginPath(); cx.ellipse(0, 0, rx, ry, 0, 0, 7); cx.fill(); }
+    cx.restore();
+    for (const f of s.fug) { const x = f.x - f.v * 9, y = f.y + f.v * 5, g = cx.createLinearGradient(x, y, x + 60, y - 33); g.addColorStop(0, `rgba(255,255,255,${1 - f.v / 26})`); g.addColorStop(1, "rgba(255,255,255,0)"); cx.strokeStyle = g; cx.lineWidth = 1.6; cx.beginPath(); cx.moveTo(x, y); cx.lineTo(x + 60, y - 33); cx.stroke(); }
+  };
+  requestAnimationFrame(bucle);
+  return { escena: () => esc };
+})();
+
 // ---------------------------------------------------------------- marcadores en directo (ESPN, desde el móvil)
 // ESPN agrupa los partidos por la fecha de EE. UU.: los de madrugada en España salen en el día
 // anterior. Por eso se mira hoy y ayer (y los partidos de ayer que sigan jugándose pasada la medianoche).
