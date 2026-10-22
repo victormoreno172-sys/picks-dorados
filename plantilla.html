@@ -3362,7 +3362,7 @@ function seccionBoleto() {
   const c = cuotaBoleto(), cv = numES(BOLETO.c) || c, iv = numES(BOLETO.i);
   return `<section class="apform" id="bolform"><h3>🧩 Combinada en preparación</h3>
     ${BOLETO.piernas.map((pi, k) => `<div class="bolpata"><span><b>${esc(pi.local)} – ${esc(pi.visitante)}</b><small>${esc(pi.texto)}${pi.cuota ? " · " + pi.cuota.toFixed(2).replace(".", ",") : ""}</small></span><button data-bolquitar="${k}" aria-label="Quitar">✕</button></div>`).join("")}
-    ${BOLETO.piernas.length < 2 ? `<p class="apnota">Añade al menos otra selección desde la pestaña Probabilidades de otro partido.</p>` : ""}
+    ${BOLETO.piernas.length < 2 ? `<p class="apnota">Añade al menos otra selección, de este partido o de otro.</p>` : ""}${new Set(BOLETO.piernas.map(x => x.fecha + x.local + x.visitante)).size < BOLETO.piernas.length ? `<p class="apnota">Hay varias cosas del mismo partido: pon como cuota total la que te dio la casa, porque no es la multiplicación de las cuotas sueltas.</p>` : ""}
     <div class="apfila"><label class="aplab">Cuota total<input id="bolC" class="apin" inputmode="decimal" placeholder="${c ? c.toFixed(2).replace(".", ",") : "la que diga tu casa"}" value="${esc(BOLETO.c)}"></label>
       <label class="aplab">Apostado (€)<input id="bolI" class="apin" inputmode="decimal" placeholder="2,00" value="${esc(BOLETO.i)}"></label></div>
     <div class="apinfo" id="bolInfo">${cv > 1 && iv > 0 ? `Si gana cobras <b>${eurosM(iv * cv)}</b> (${sigM(iv * (cv - 1))}).` : ""}</div>
@@ -3483,8 +3483,8 @@ function formApuesta(p, dia) {
   }
   const esta = pi => pi.local === p.local && pi.visitante === p.visitante && pi.fecha === dia.fecha;
   const ya = MIAS.apuestas.filter(a => patas(a).some(esta));
-  const enBol = BOLETO.piernas.find(esta);
-  const txtYa = a => a.piernas ? `🧩 Combinada de ${a.piernas.length} (${esc(a.piernas.find(esta).texto)})` : esc(a.texto);
+  const enBol = BOLETO.piernas.filter(esta);
+  const txtYa = a => a.piernas ? `🧩 Combinada de ${a.piernas.length} (${a.piernas.filter(esta).map(x => esc(x.texto)).join(" + ")})` : esc(a.texto);
   return `<section class="apform" id="apform"><h3>🎟️ Apuntar una apuesta</h3>
     <label class="aplab">Mercado<select id="apM"><option value="">Elige el mercado…</option>${ops.map(k => `<option value="${esc(k.m)}"${k.m === f.m ? " selected" : ""}>${esc(textoMercado({ mercado: k.m, local: p.local, visitante: p.visitante }))} · ${pct(k.p)}</option>`).join("")}<option value="__otro"${f.m === "__otro" ? " selected" : ""}>Otro (escríbelo)</option></select></label>
     ${f.m === "__otro" ? `<input id="apOtro" class="apin" placeholder="Por ejemplo: Mbappé marca" value="${esc(f.otro)}">` : ""}
@@ -3492,9 +3492,9 @@ function formApuesta(p, dia) {
       <label class="aplab">Apostado (€)<input id="apI" class="apin" inputmode="decimal" placeholder="2,00" value="${esc(f.i)}"></label></div>
     <div class="apinfo" id="apInfo">${info}</div>
     <div class="apbtns"><button class="apbtn" data-apguardar="1">Guardar sencilla</button><button class="apbtn ap2" data-apcombi="1">➕ A la combinada</button></div>
-    ${enBol ? `<p class="apnota">🧩 En tu combinada: <b>${esc(enBol.texto)}</b>${enBol.cuota ? " · " + enBol.cuota.toFixed(2).replace(".", ",") : ""}</p>` : ""}
+    ${enBol.length ? `<p class="apnota">🧩 En tu combinada de este partido: ${enBol.map(x => `<b>${esc(x.texto)}</b>${x.cuota ? " · " + x.cuota.toFixed(2).replace(".", ",") : ""}`).join(" + ")}. Puedes añadir más cosas de este mismo partido.</p>` : ""}
     ${ya.length ? `<div class="apya">${ya.map(a => `<div><span>${txtYa(a)} · ${a.cuota.toFixed(2).replace(".", ",")} · ${eurosM(a.importe)}${resuelta(a) ? (a.ok === true ? " · ✅" : a.ok === false ? " · ❌" : " · anulada") : ""}</span><button data-apborrar="${a.id}" aria-label="Borrar">🗑️</button></div>`).join("")}</div>` : ""}
-    <p class="apnota">Se guarda en <b>Estadísticas</b>. Si es un mercado de la lista, se marca sola como ganada o perdida al acabar. Para una combinada, añade una selección de cada partido con «➕ A la combinada» (la cuota de cada una es opcional) y termínala en Estadísticas.</p></section>`;
+    <p class="apnota">Se guarda en <b>Estadísticas</b>. Si es un mercado de la lista, se marca sola como ganada o perdida al acabar. Para una combinada, añade cada selección con «➕ A la combinada» (pueden ser varias del mismo partido) (la cuota de cada una es opcional) y termínala en Estadísticas.</p></section>`;
 }
 document.addEventListener("input", e => {
   if (e.target.id === "miniV") { est.miniV = e.target.value; return; }
@@ -3535,14 +3535,14 @@ document.addEventListener("click", e => {
     const m = f.m === "__otro" ? null : f.m;
     const pi = { fecha: dia.fecha, hora: p.hora, dep: p.dep || "f", liga: p.liga, local: p.local, visitante: p.visitante, m,
       texto: m ? textoMercado({ mercado: m, local: p.local, visitante: p.visitante }) : otro, cuota: cuota > 1 ? Math.round(cuota * 100) / 100 : null };
-    BOLETO.piernas = BOLETO.piernas.filter(x => !(x.local === p.local && x.visitante === p.visitante && x.fecha === dia.fecha)).concat([pi]);
+    BOLETO.piernas = BOLETO.piernas.filter(x => !(x.local === p.local && x.visitante === p.visitante && x.fecha === dia.fecha && x.texto === pi.texto)).concat([pi]);   // se pueden juntar varias cosas del mismo partido (crear apuesta); solo se quita si repites la misma
     est.apf = { k: f.k, m: "", c: "", i: f.i, otro: "" };
     guardarBoleto(); pintarLista(); return;
   }
   if (b.dataset.bolquitar !== undefined) { BOLETO.piernas.splice(+b.dataset.bolquitar, 1); guardarBoleto(); pintarLista(); return; }
   if (b.dataset.bolvaciar) { if (!confirm("¿Vaciar la combinada en preparación?")) return; BOLETO = { piernas: [], c: "", i: "" }; guardarBoleto(); pintarLista(); return; }
   if (b.dataset.bolguardar) {
-    if (BOLETO.piernas.length < 2) return alert("Una combinada necesita al menos 2 selecciones de partidos distintos.");
+    if (BOLETO.piernas.length < 2) return alert("Una combinada necesita al menos 2 selecciones (pueden ser del mismo partido).");
     const cuota = numES(BOLETO.c) || cuotaBoleto(), imp = numES(BOLETO.i);
     if (!(cuota > 1)) return alert("Pon la cuota total de la combinada.");
     if (!(imp > 0)) return alert("Pon lo que has apostado.");
