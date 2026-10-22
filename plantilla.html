@@ -613,8 +613,8 @@ h2.sec { margin: 18px 4px 8px; font: 700 12px/1 var(--display); letter-spacing: 
 .tj.tj-lava::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 30%, rgba(253,224,71,.45), transparent 45%), linear-gradient(0deg, rgba(249,115,22,.4), transparent 40%); animation: tjLatido 2.4s ease-in-out infinite; }
 .tj.tj-vencedor::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, rgba(56,189,248,.35), transparent 40%); animation: tjLatido 2s ease-in-out infinite; }
 /* Marco y avatar animados del evento */
-.mr-circuito { background: conic-gradient(#22d3ee, #4f46e5, #facc15, #22d3ee); animation: girar 2.5s linear infinite; box-shadow: 0 0 12px rgba(34, 211, 238, .8); }
-.mr-circuito .avi { animation: girar 2.5s linear infinite reverse; }
+.mr-circuito { background: transparent !important; box-shadow: 0 0 12px rgba(34, 211, 238, .8); isolation: isolate; }
+.mr-circuito::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 50%; background: conic-gradient(#22d3ee, #4f46e5, #facc15, #22d3ee); animation: girar 2.5s linear infinite; }   /* gira solo el aro; el avatar se queda derecho */
 @keyframes avaRobot { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-8%) rotate(-8deg); } 75% { transform: translateY(-8%) rotate(8deg); } }
 .ava-robot { display: inline-block; animation: avaRobot 2.2s ease-in-out infinite; filter: drop-shadow(0 0 6px rgba(250, 204, 21, .9)); }
 @media (prefers-reduced-motion: reduce) { .tj, .tj::after, .tj::before, .ava-robot, .mr-circuito, .mr-circuito .avi, .av, .av .avi, .av::before, [class*="nc-"] { animation: none !important; } }
@@ -1085,6 +1085,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix), :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix)::before, :is(.tj-leyenda, .tj-infinito, .tj-aurora, .tj-lava, .tj-galaxia, .tj-pxmatrix)::after,
 .av:is(.mr-neon, .mr-fuego, .mr-arcoiris, .mr-diamante, .mr-legendario, .mr-inmortal, .mr-pxglitch), .av:is(.mr-neon, .mr-fuego, .mr-arcoiris, .mr-diamante, .mr-legendario, .mr-inmortal, .mr-pxglitch)::before, .av:is(.mr-neon, .mr-fuego, .mr-arcoiris, .mr-diamante, .mr-legendario, .mr-inmortal, .mr-pxglitch)::after,
 :is(.nc-fuegoc, .nc-arcoirisc) { animation: none !important; }
+.av:is(.mr-neon, .mr-fuego, .mr-arcoiris, .mr-diamante, .mr-legendario, .mr-inmortal, .mr-pxglitch) .avi { animation: none !important; transform: none !important; }   /* el avatar de dentro también quieto (antes giraba al revés que el aro) */
 .nc-vencedorc { color: #73eff7 !important; background: linear-gradient(90deg, #73eff7 0 40%, #f4f4f4 45%, #73eff7 50% 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 6px rgba(115,239,247,.55); animation: ncRayo 1.4s steps(10) infinite; }
 @keyframes ncRayo { from { background-position: 100% 0; } to { background-position: -150% 0; } }
 .nc-hiscorec { color: #ffec27 !important; text-shadow: 2px 2px 0 #ff004d; animation: ncArcade .8s steps(1) infinite; } @keyframes ncArcade { 50% { color: #ff004d !important; text-shadow: 2px 2px 0 #ffec27; } }
