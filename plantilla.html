@@ -4294,33 +4294,33 @@ const rangoDe = n => RANGOS.filter(r => n >= r[0]).pop()[1];
 const CAT = {
   avatar: [
     ["a1", "⚽", "#16a34a"], ["a2", "🦁", "#d97706"], ["a3", "🐺", "#475569"], ["a4", "🦅", "#0369a1"], ["a5", "🔥", "#dc2626"], ["a6", "😎", "#7c3aed"],
-    ["a7", "🦊", "#ea580c", { precio: 500 }], ["a8", "🐻", "#92400e", { precio: 500 }], ["a9", "🐯", "#f59e0b", { precio: 600 }], ["a10", "🦈", "#0e7490", { precio: 600 }],
-    ["a11", "🐉", "#15803d", { precio: 800 }], ["a12", "👽", "#65a30d", { precio: 800 }], ["a13", "🥷", "#111827", { precio: 1000 }], ["a14", "🧙", "#6d28d9", { precio: 1000 }],
-    ["a15", "🦄", "#db2777", { precio: 1200 }], ["a16", "👑", "#ca8a04", { precio: 1500 }],
+    ["a7", "🦊", "#ea580c", { precio: 150 }], ["a8", "🐻", "#92400e", { precio: 150 }], ["a9", "🐯", "#f59e0b", { precio: 200 }], ["a10", "🦈", "#0e7490", { precio: 200 }],
+    ["a11", "🐉", "#15803d", { precio: 250 }], ["a12", "👽", "#65a30d", { precio: 250 }], ["a13", "🥷", "#111827", { precio: 300 }], ["a14", "🧙", "#6d28d9", { precio: 300 }],
+    ["a15", "🦄", "#db2777", { precio: 350 }], ["a16", "👑", "#ca8a04", { precio: 450 }],
     ["a17", "🏆", "#b45309", { nivel: 15 }], ["a18", "🎯", "#be123c", { nivel: 30 }], ["a19", "🚀", "#1d4ed8", { nivel: 45 }], ["a20", "💎", "#0891b2", { nivel: 60 }],
     ["a21", "🌋", "#9a3412", { nivel: 75 }], ["a22", "⚡", "#4338ca", { nivel: 90 }], ["a23", "🌟", "#a16207", { nivel: 110 }], ["a24", "🛡️", "#334155", { nivel: 130 }],
     ["a25", "🐲", "#047857", { nivel: 150 }], ["a26", "🔱", "#0f172a", { nivel: 175 }], ["a27", "♾️", "#000000", { nivel: 200 }],
     ["a28", "🤖", "#1e1b4b", { evento: "reto", anim: "robot", n: "Robot campeón" }],
     ["a29", "👾", "#312e81", { pase: 10, n: "Invasor" }], ["a30", "🕹️", "#1a1c2c", { pase: 35, n: "Joystick" }],
   ].map(([id, e, bg, x]) => ({ id, e, bg, ...(x || {}) })),
-  marco: [["ninguno", "Sin marco"], ["bronce", "Bronce", { nivel: 10 }], ["plata", "Plata", { nivel: 20 }], ["oro", "Oro", { nivel: 40 }], ["neon", "Neón", { precio: 2000 }],
-    ["esmeralda", "Esmeralda", { nivel: 60 }], ["fuego", "Fuego", { precio: 3000 }], ["rubi", "Rubí", { nivel: 80 }], ["arcoiris", "Arcoíris", { precio: 4000 }],
+  marco: [["ninguno", "Sin marco"], ["bronce", "Bronce", { nivel: 10 }], ["plata", "Plata", { nivel: 20 }], ["oro", "Oro", { nivel: 40 }], ["neon", "Neón", { precio: 400 }],
+    ["esmeralda", "Esmeralda", { nivel: 60 }], ["fuego", "Fuego", { precio: 550 }], ["rubi", "Rubí", { nivel: 80 }], ["arcoiris", "Arcoíris", { precio: 700 }],
     ["diamante", "Diamante", { nivel: 100 }], ["legendario", "Legendario", { nivel: 150 }], ["inmortal", "Inmortal", { nivel: 200 }],
     ["circuito", "Circuito", { evento: "reto" }], ["pixel", "Pixel", { pase: 20 }], ["pixelrgb", "Pixel arcoíris", { pase: 45 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
-  color: [["normal", "Normal"], ["dorado", "Dorado", { nivel: 5 }], ["cian", "Cian", { precio: 1000 }], ["rosa", "Rosa", { precio: 1000 }], ["neonv", "Verde neón", { nivel: 25 }],
-    ["fuegoc", "Fuego", { precio: 2500 }], ["arcoirisc", "Arcoíris", { nivel: 120 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+  color: [["normal", "Normal"], ["dorado", "Dorado", { nivel: 5 }], ["cian", "Cian", { precio: 200 }], ["rosa", "Rosa", { precio: 200 }], ["neonv", "Verde neón", { nivel: 25 }],
+    ["fuegoc", "Fuego", { precio: 450 }], ["arcoirisc", "Arcoíris", { nivel: 120 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   // Tarjetas: el fondo de tu ficha (barra de Desafíos, perfil y tu fila en la clasificación)
   tarjeta: [["clasica", "Clásica"], ["noche", "Noche"], ["cesped", "Césped"],
     ["atardecer", "Atardecer", { nivel: 3 }], ["oceano", "Océano", { nivel: 8 }], ["pizarra", "Pizarra táctica", { nivel: 12 }], ["estadio", "Estadio", { nivel: 18 }],
     ["oro", "Oro viejo", { nivel: 28 }], ["grada", "Grada", { nivel: 40 }], ["neonu", "Neón urbano", { nivel: 55 }], ["marmol", "Mármol", { nivel: 75 }],
     ["leyenda", "Leyenda ✨", { nivel: 100, anim: 1 }], ["infinito", "Infinito ✨", { nivel: 150, anim: 1 }],
-    ["carbono", "Carbono", { precio: 1500 }], ["pasion", "Rojo pasión", { precio: 1200 }], ["retro", "Retro 90", { precio: 2000 }],
-    ["aurora", "Aurora ✨", { precio: 6000, anim: 1 }], ["lava", "Lava ✨", { precio: 7000, anim: 1 }], ["galaxia", "Galaxia ✨", { precio: 8000, anim: 1 }],
+    ["carbono", "Carbono", { precio: 300 }], ["pasion", "Rojo pasión", { precio: 250 }], ["retro", "Retro 90", { precio: 400 }],
+    ["aurora", "Aurora ✨", { precio: 750, anim: 1 }], ["lava", "Lava ✨", { precio: 850, anim: 1 }], ["galaxia", "Galaxia ✨", { precio: 950, anim: 1 }],
     ["vencedor", "Vencedor de la máquina ✨", { evento: "reto", anim: 1 }], ["pixel", "Pixel", { pase: 15 }], ["arcade8", "Arcade 8-bit ✨", { pase: 40, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
   // Temas de toda la app
   skin: [["", "Normal"], ["estadio", "Estadio de noche", { perfil: true }], ["oro", "Oro y negro", { pase: 25 }],
-    ["pizarra", "Pizarra táctica", { nivel: 20 }], ["galaxia", "Galaxia ✨", { nivel: 60, anim: 1 }], ["neon", "Neón Arcade ✨", { precio: 10000, anim: 1 }], ["pixel", "Pixel art ✨", { pase: 50, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
-  titulo: [["rango", "Tu rango"], ["profeta", "El Profeta", { precio: 2000 }], ["empates", "Rey del Empate", { precio: 2000 }], ["matematico", "Matemático", { precio: 1500 }],
+    ["pizarra", "Pizarra táctica", { nivel: 20 }], ["galaxia", "Galaxia ✨", { nivel: 60, anim: 1 }], ["neon", "Neón Arcade ✨", { precio: 1500, anim: 1 }], ["pixel", "Pixel art ✨", { pase: 50, anim: 1 }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
+  titulo: [["rango", "Tu rango"], ["profeta", "El Profeta", { precio: 400 }], ["empates", "Rey del Empate", { precio: 400 }], ["matematico", "Matemático", { precio: 300 }],
     ["cazagigantes", "Cazagigantes", { insignia: "giganta" }], ["visionario", "Visionario", { nivel: 35 }], ["barrio", "Leyenda del barrio", { nivel: 70 }],
     ["elegido", "El Elegido", { nivel: 140 }], ["inmortalt", "Inmortal", { nivel: 200 }], ["pixelmaster", "Pixel Master", { pase: 30 }], ["campeont0", "Campeón T0", { evento: "temporada" }]].map(([id, n, x]) => ({ id, n, ...(x || {}) })),
 };
@@ -4653,7 +4653,7 @@ document.addEventListener("click", e => {
 });
 // ---- Tienda
 // ---- Tienda (estilo tienda de juego): destacado, categorías y tarjetas con rareza
-const RAREZA = it => it.t0s ? (it.esp ? (it.anim || it.precio >= 1000 ? ["leg", "Legendario"] : ["epi", "Épico"]) : it.precio >= 250 ? ["rar", "Raro"] : ["com", "Común"]) : it.anim || (it.precio || 0) >= 6000 ? ["leg", "Legendario"] : (it.precio || 0) >= 2500 ? ["epi", "Épico"] : (it.precio || 0) >= 1200 ? ["rar", "Raro"] : ["com", "Común"];
+const RAREZA = it => it.anim || (it.precio || 0) >= 700 ? ["leg", "Legendario"] : (it.precio || 0) >= 400 ? ["epi", "Épico"] : (it.precio || 0) >= 250 ? ["rar", "Raro"] : ["com", "Común"];
 function dibujoTienda(tipo, it, grande) {
   const av = avatarDe(PERFIL.avatar), base = PERFIL.avatar === "foto" && PERFIL.foto ? `<img src="${PERFIL.foto}" alt="">` : avE(av);
   if (tipo === "skin") return `<span class="pzsk">${movilTema(it.id)}</span>`;
@@ -4679,11 +4679,11 @@ function cartaTienda(tipo, it, mon) {
 function pintarTienda() {
   procesarRecompensas();
   const mon = totalMon(), cat = est.tcat || "dest";
-  const comodines = [{ id: "doble", n: "Comodín Doble", precio: 800 }, { id: "segunda", n: "Segunda oportunidad", precio: 1500 }];
+  const comodines = [{ id: "doble", n: "Comodín Doble", precio: 400 }, { id: "segunda", n: "Segunda oportunidad", precio: 700 }];
   const venta = [["skin", "🎨 Temas"], ["tarjeta", "🪪 Tarjetas"], ["marco", "🖼️ Marcos"], ["avatar", "🧑 Avatares"], ["color", "🌈 Colores"], ["titulo", "🏷️ Títulos"]]
     .map(([t, n]) => [t, n, CAT[t].filter(i => i.precio && !i.t0s)]);
   // Destacado de la semana: va cambiando entre lo más vistoso que aún no tienes
-  const vistosos = venta.flatMap(([t, , l]) => l.filter(i => (i.anim || i.precio >= 2000) && !tieneItem(t, i)).map(i => [t, i]));
+  const vistosos = venta.flatMap(([t, , l]) => l.filter(i => (i.anim || i.precio >= 400) && !tieneItem(t, i)).map(i => [t, i]));
   const sem = Math.floor(new Date(AHORA.fecha + "T12:00:00") / 6048e5);
   const dest = vistosos.length ? vistosos[sem % vistosos.length] : null;
   const chips = [["dest", "⭐ Destacados"], ["t0s", "🎮 Temporada 0"], ...venta.map(([t, n]) => [t, n]), ["comodin", "🃏 Comodines"], ["excl", "🏆 Exclusivos"], ["fis", "🎁 Premios"]];
@@ -4750,7 +4750,7 @@ document.addEventListener("click", e => {
   }
   if (b.dataset.comprar) {
     const tipo = b.dataset.comprar, id = b.dataset.id;
-    const precio = tipo === "comodin" ? (id === "doble" ? 800 : 1500) : (CAT[tipo].find(i => i.id === id) || {}).precio;
+    const precio = tipo === "comodin" ? (id === "doble" ? 400 : 700) : (CAT[tipo].find(i => i.id === id) || {}).precio;
     if (!precio || totalMon() < precio) return;
     if (tipo !== "comodin" && (CAT[tipo].find(i => i.id === id) || {}).t0s && AHORA.fecha > TEMP1.hasta) return;
     const nombre = tipo === "comodin" ? (id === "doble" ? "comodín Doble" : "comodín Segunda oportunidad") : (CAT[tipo].find(i => i.id === id).n || "avatar " + CAT[tipo].find(i => i.id === id).e);
@@ -4882,10 +4882,10 @@ function pintarGuia() {
   <section class="mcard guia"><h3>🪙 Monedas</h3><p>Se ganan con lo mismo que la XP pero <b>se gastan</b>. No caducan. <b>No se pueden comprar con dinero</b> ni cambiar por dinero.</p>
     ${t(["Cómo se ganan monedas", "🪙"], [["Acertar", "los puntos del acierto (14–60)"], ["Completar el día", "20"], ["Ganarle el día a la app", "50"], ["Racha de 3 / 7 / 30 días", "50 / 200 / 1.000"], ["Podio de la semana", "1.000 / 600 / 400"], ["4.º–10.º de la semana", "200"], ["Podio del mes", "5.000 / 3.000 / 2.000"], ["4.º–10.º del mes", "1.000"], ["Subir de nivel", "20 + nivel"]])}
     ${t(["Temporada 0 (extra)", "🪙"], [["Regalo diario (7 días)", "10 / 15 / 20 / 25 / 30 / comodín ×2 / cofre 75"], ["Misiones diarias (3)", "10 cada una"], ["Misiones de la semana", "40 / 60 / 80"], ["Misiones especiales", "150–300"], ["Pase (niveles impares)", "15 + nivel"], ["Podio de la temporada", "10.000 / 6.000 / 4.000"]])}
-    <p>Jugando cada día se hacen unas <b>4.000–5.000 monedas al mes</b>, y con la temporada unas <b>6.000–7.000</b>; más si quedas arriba en los rankings.</p></section>
+    <p>Jugando cada día se hacen unas <b>5.000–6.500 monedas al mes</b> entre Gánale a la app, HI-SCORE, misiones y regalos; más si quedas arriba en los rankings.</p></section>
   <section class="mcard guia"><h3>🛍️ La tienda</h3><ul>
-    <li><b>Comodín ×2</b> (800 🪙): un acierto vale el doble. Uno al día.</li><li><b>Segunda oportunidad</b> (1.500 🪙): cambias un pronóstico ya empezado (fútbol: hasta el minuto 15; baloncesto: durante el 1.er cuarto).</li>
-    <li><b>Avatares</b> (500–1.500 🪙), <b>marcos</b> (2.000–4.000 🪙), <b>colores de nombre</b> (1.000–2.500 🪙), <b>títulos</b> (1.500–2.000 🪙) y <b>tarjetas</b> (el fondo de tu ficha: 1.200–2.000 🪙, y las animadas Aurora, Lava y Galaxia de 6.000 a 8.000 🪙). Lo que compras es tuyo para siempre y lo pones en Perfil → Personalizar.</li>
+    <li><b>Comodín ×2</b> (400 🪙): un acierto vale el doble. Uno al día.</li><li><b>Segunda oportunidad</b> (700 🪙): cambias un pronóstico ya empezado (fútbol: hasta el minuto 15; baloncesto: durante el 1.er cuarto).</li>
+    <li><b>Avatares</b> (150–450 🪙), <b>marcos</b> (400–700 🪙), <b>colores de nombre</b> (200–450 🪙), <b>títulos</b> (300–400 🪙), <b>tarjetas</b> (el fondo de tu ficha: 250–400 🪙, y las animadas Aurora, Lava y Galaxia de 750 a 950 🪙) y el tema <b>Neón Arcade</b> (1.500 🪙).</li><li><b>Colección de temporada</b>: en la pestaña 🎮 Temporada 0 hay objetos de deportes en pixel art (100–650 🪙) y el tema Estadio 8-bit (1.200 🪙). Solo se venden hasta que acaba la temporada. Lo que compras es tuyo para siempre y lo pones en Perfil → Personalizar.</li>
     <li><b>Premios físicos</b>: bufanda (13.000 🪙), balón (20.000 🪙) y camiseta (26.000 🪙), con unidades limitadas cada mes. Se podrán canjear cuando haya ranking online.</li></ul>
     <p>Otras cosas no se compran: se ganan con nivel o con insignias (por ejemplo, el título Cazagigantes).</p></section>
   <section class="mcard guia"><h3>🏆 Eventos</h3><ul>
@@ -4913,7 +4913,7 @@ const PASE_OBJ = { 10: ["avatar", "a29"], 15: ["tarjeta", "pixel"], 20: ["marco"
   35: ["avatar", "a30"], 40: ["tarjeta", "arcade8"], 45: ["marco", "pixelrgb"], 50: ["skin", "pixel"] };
 function regaloPase(n) {
   if (PASE_OBJ[n]) { const [t, id] = PASE_OBJ[n], it = CAT[t].find(x => x.id === id); return { t, id, it, txt: (it.n || "Avatar " + it.e).replace(" ✨", "") }; }
-  // Comodines contados (valen 800 y 1.500 🪙 en la tienda); el resto, XP (pares) y monedas (impares)
+  // Comodines contados (valen 400 y 700 🪙 en la tienda); el resto, XP (pares) y monedas (impares)
   if ([3, 5, 8, 13, 23, 28, 33, 43].includes(n)) return { t: "comodin", id: "doble", txt: "Comodín ×2" };
   if ([18, 38, 48].includes(n)) return { t: "comodin", id: "segunda", txt: "Segunda oportunidad" };
   if (n % 2 === 0) return { t: "xp", xp: 100 + 10 * n, txt: `${100 + 10 * n} XP` };
