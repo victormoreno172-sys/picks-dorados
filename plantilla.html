@@ -1077,6 +1077,10 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 :root[data-skin="neon"] .mcard, .skp-neon .mcard, :root[data-skin="neon"] .mhero, .skp-neon .mhero, :root[data-skin="neon"] .partido, .skp-neon .partido, :root[data-skin="neon"] .rpart, .skp-neon .rpart { box-shadow: 0 0 0 1px rgba(255,43,214,.35), 0 0 18px rgba(34,211,238,.12); }
 @media (prefers-reduced-motion: reduce) { :root[data-skin] body::before { animation: none !important; } }
 /* Fondos animados de algunos temas (lienzo #fondovivo detrás de todo); el dibujo fijo de esos temas se apaga */
+/* Con fondo animado: la cabecera es transparente y las tarjetas dejan ver lo de detrás */
+:root.fondovivo header { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-bottom-color: transparent !important; box-shadow: none !important; }
+:root.fondovivo :is(.mcard, .partido, .rpart, .comps, .ajb, .todos, .caja, .jp, .jcard, .rrow:not(.rhead):not(.tj), .tcard, .tdest, .fbar, .fequipos, .tabla2, .fila, .arp, .arsl) { background-color: color-mix(in srgb, var(--surface) 62%, transparent) !important; background-image: none; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
+:root.fondovivo :is(.comps .comp, .comps .compir) { background: transparent !important; }
 #fondovivo { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 :root.fondovivo:not([data-skin="galaxia"]) body::before { opacity: 0 !important; }
 
@@ -5820,7 +5824,7 @@ window.addEventListener("popstate", e => {
 // Un lienzo detrás de la app (debajo de todo, sin tocar nada). Solo lo usan algunos temas; en el resto no hay nada.
 // Va a pocos fotogramas por segundo, se para con la app en segundo plano y, con "reducir movimiento", se queda quieto.
 const FONDO = (() => {
-  let cv = null, cx = null, esc = "", st = null, ult = 0, w = 0, h = 0, k = 1, quieto = false;
+  let cv = null, cx = null, esc = "", st = null, ult = 0, w = 0, h = 0, k = 1, quieto = false, bot = 0;
   const PX = { f: "pxf", b: "pxb", te: "pxte", e: "pxe" };
   const ESCENAS = { s0estadio: d => PX[d] || "pxf", pizarra: () => "pizarra", estadio: () => "noche", pixel: () => "pxrun", neon: () => "neon", galaxia: () => "galaxia" };
   const OPAC = { pxf: .5, pxb: .5, pxte: .5, pxe: .55, pizarra: .75, noche: .9, pxrun: .85, neon: .7, galaxia: .9 };
@@ -5829,6 +5833,7 @@ const FONDO = (() => {
   const esPixel = e => e.startsWith("px");
   function medir() {
     w = innerWidth; h = innerHeight;
+    const ab = document.querySelector(".abajo"); bot = ab ? Math.max(0, h - ab.getBoundingClientRect().top) : 0;   // los dibujos acaban justo donde empiezan los botones de abajo
     if (esPixel(esc)) { k = Math.max(2, Math.round(w / 130)); cv.width = Math.ceil(w / k); cv.height = Math.ceil(h / k); }
     else { k = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(w * k); cv.height = Math.round(h * k); }
     cx = cv.getContext("2d"); cx.imageSmoothingEnabled = !esPixel(esc);
@@ -5851,7 +5856,7 @@ const FONDO = (() => {
     PASO[esc](st, ts); DIBU[esc](st, ts);
   }
   // ---------------------------------------------------------------- utilidades pixel
-  const W = () => cv.width, H = () => cv.height;
+  const W = () => cv.width, H = () => Math.floor(cv.height - bot / k), hu = () => h - bot;
   const caja = (x, y, a, b, c) => { cx.fillStyle = c; cx.fillRect(Math.round(x), Math.round(y), a, b); };
   const marco = (x, y, a, b, c) => { cx.fillStyle = c; cx.fillRect(x, y, a, 1); cx.fillRect(x, y + b - 1, a, 1); cx.fillRect(x, y, 1, b); cx.fillRect(x + a - 1, y, 1, b); };
   const circ = (x0, y0, rr, c) => { cx.fillStyle = c; for (let a = 0; a < 360; a += 6) cx.fillRect(Math.round(x0 + rr * Math.cos(a * Math.PI / 180)), Math.round(y0 + rr * Math.sin(a * Math.PI / 180)), 1, 1); };
@@ -6012,17 +6017,17 @@ const FONDO = (() => {
   // Pizarra táctica: alineación en tiza y jugadas que se dibujan solas
   CREAR.pizarra = () => {
     const P = [[.5, .9], [.15, .72], [.38, .75], [.62, .75], [.85, .72], [.3, .55], [.5, .58], [.7, .55], [.2, .35], [.5, .3], [.8, .35]];
-    return { os: P.map(([x, y]) => ({ x: x * w, y: y * h })), xs: P.slice(1).map(([x, y]) => ({ x: (x + r(-.05, .05)) * w, y: (1 - y + .12) * h })), jug: null, borrar: 0 };
+    return { os: P.map(([x, y]) => ({ x: x * w, y: y * hu() })), xs: P.slice(1).map(([x, y]) => ({ x: (x + r(-.05, .05)) * w, y: (1 - y + .12) * hu() })), jug: null, borrar: 0 };
   };
   PASO.pizarra = s => {
-    if (!s.jug) { const o = s.os[ri(1, 10)], t = { x: o.x + r(-w * .3, w * .3), y: o.y - r(h * .1, h * .3) }; s.jug = { o, t, cp: { x: (o.x + t.x) / 2 + r(-60, 60), y: (o.y + t.y) / 2 }, p: 0, fin: 0 }; }
+    if (!s.jug) { const o = s.os[ri(1, 10)], t = { x: o.x + r(-w * .3, w * .3), y: o.y - r(hu() * .1, hu() * .3) }; s.jug = { o, t, cp: { x: (o.x + t.x) / 2 + r(-60, 60), y: (o.y + t.y) / 2 }, p: 0, fin: 0 }; }
     const j = s.jug; if (j.p < 1) j.p += .02; else if (++j.fin > 60) s.jug = null;
   };
   DIBU.pizarra = s => {
     cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
     cx.strokeStyle = "rgba(255,255,255,.3)"; cx.lineWidth = 2.5; cx.lineCap = "round";
-    cx.strokeRect(w * .06, h * .04, w * .88, h * .92); cx.beginPath(); cx.moveTo(w * .06, h / 2); cx.lineTo(w * .94, h / 2); cx.stroke();
-    cx.beginPath(); cx.arc(w / 2, h / 2, w * .14, 0, 7); cx.stroke();
+    cx.strokeRect(w * .06, hu() * .04, w * .88, hu() * .92); cx.beginPath(); cx.moveTo(w * .06, hu() / 2); cx.lineTo(w * .94, hu() / 2); cx.stroke();
+    cx.beginPath(); cx.arc(w / 2, hu() / 2, w * .14, 0, 7); cx.stroke();
     for (const o of s.os) { cx.beginPath(); cx.arc(o.x, o.y, 9, 0, 7); cx.stroke(); }
     cx.strokeStyle = "rgba(255,226,140,.32)"; for (const x of s.xs) { cx.beginPath(); cx.moveTo(x.x - 7, x.y - 7); cx.lineTo(x.x + 7, x.y + 7); cx.moveTo(x.x + 7, x.y - 7); cx.lineTo(x.x - 7, x.y + 7); cx.stroke(); }
     const j = s.jug; if (!j) return;
@@ -6036,18 +6041,18 @@ const FONDO = (() => {
   };
   // Estadio de noche: grada con flashes de cámaras y los focos que se encienden por turnos
   CREAR.noche = () => ({ fl: [], t: 0 });
-  PASO.noche = s => { s.t++; if (Math.random() < .35) s.fl.push({ x: r(0, w), y: r(h * .74, h * .95), v: 1 }); s.fl.forEach(f => f.v -= .12); s.fl = s.fl.filter(f => f.v > 0); };
+  PASO.noche = s => { s.t++; if (Math.random() < .35) s.fl.push({ x: r(0, w), y: r(hu() * .74, hu() * .95), v: 1 }); s.fl.forEach(f => f.v -= .12); s.fl = s.fl.filter(f => f.v > 0); };
   DIBU.noche = s => {
     cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
     for (const [x, d] of [[w * .08, 1], [w * .92, -1]]) {   // haces de luz de los focos
-      const pul = .1 + .05 * Math.sin(s.t / 18 + d), g = cx.createLinearGradient(x, h * .1, x + d * w * .35, h * .75);
+      const pul = .1 + .05 * Math.sin(s.t / 18 + d), g = cx.createLinearGradient(x, hu() * .1, x + d * w * .35, hu() * .75);
       g.addColorStop(0, `rgba(255,248,214,${pul + .08})`); g.addColorStop(1, "rgba(255,248,214,0)");
-      cx.fillStyle = g; cx.beginPath(); cx.moveTo(x - 6, h * .1); cx.lineTo(x + 6, h * .1); cx.lineTo(x + d * w * .62, h * .78); cx.lineTo(x + d * w * .1, h * .78); cx.closePath(); cx.fill();
-      cx.fillStyle = "rgba(255,248,214,.85)"; for (let i = -2; i <= 2; i++) { cx.beginPath(); cx.arc(x + i * 5, h * .1, 2, 0, 7); cx.fill(); }
-      cx.fillStyle = "#0a1022"; cx.fillRect(x - 1.5, h * .1, 3, h * .62);
+      cx.fillStyle = g; cx.beginPath(); cx.moveTo(x - 6, hu() * .1); cx.lineTo(x + 6, hu() * .1); cx.lineTo(x + d * w * .62, hu() * .78); cx.lineTo(x + d * w * .1, hu() * .78); cx.closePath(); cx.fill();
+      cx.fillStyle = "rgba(255,248,214,.85)"; for (let i = -2; i <= 2; i++) { cx.beginPath(); cx.arc(x + i * 5, hu() * .1, 2, 0, 7); cx.fill(); }
+      cx.fillStyle = "#0a1022"; cx.fillRect(x - 1.5, hu() * .1, 3, hu() * .62);
     }
-    const gr = cx.createLinearGradient(0, h * .7, 0, h); gr.addColorStop(0, "#0a1022"); gr.addColorStop(1, "#05080f");
-    cx.fillStyle = gr; cx.beginPath(); cx.moveTo(0, h * .78); cx.quadraticCurveTo(w / 2, h * .68, w, h * .78); cx.lineTo(w, h); cx.lineTo(0, h); cx.fill();
+    const gr = cx.createLinearGradient(0, hu() * .7, 0, hu()); gr.addColorStop(0, "#0a1022"); gr.addColorStop(1, "#05080f");
+    cx.fillStyle = gr; cx.beginPath(); cx.moveTo(0, hu() * .78); cx.quadraticCurveTo(w / 2, hu() * .68, w, hu() * .78); cx.lineTo(w, h); cx.lineTo(0, h); cx.fill();
     for (const f of s.fl) { cx.fillStyle = `rgba(255,255,255,${f.v})`; cx.beginPath(); cx.arc(f.x, f.y, 1.2 + f.v * 1.8, 0, 7); cx.fill(); }
   };
   // Pixel art: un jugador corre con la pelota por un mundo de plataformas que avanza
@@ -6059,12 +6064,12 @@ const FONDO = (() => {
     if (s.gol) s.gol--; else if (s.x % 260 === 200) s.gol = 30;
   };
   DIBU.pxrun = s => {
-    const sue = Math.round(H() * .84); cx.clearRect(0, 0, W(), H());
+    const sue = H() - 7; cx.clearRect(0, 0, W(), H());
     for (const e of s.est) if ((s.t + e.x) % 30 < 26) caja(e.x, e.y, 1, 1, "rgba(255,255,255,.7)");
     for (const n of s.nubes) { caja(n.x, n.y, n.a, 3, "rgba(194,195,199,.55)"); caja(n.x + 3, n.y - 2, n.a - 6, 2, "rgba(194,195,199,.55)"); }
     for (let i = 0; i < W() + 40; i += 2) { const hx = i + (s.x * .3) % 40, y = sue - 18 - Math.round(8 * Math.abs(Math.sin(hx / 22))); caja(i, y, 2, sue - y, "#29366f"); }
     for (let i = 0; i < W() + 20; i += 2) { const hx = i + (s.x * .6) % 60, y = sue - 6 - Math.round(5 * Math.abs(Math.sin(hx / 15))); caja(i, y, 2, sue - y, "#257179"); }
-    for (let i = -16; i < W() + 16; i += 8) { const x = i - (s.x % 8); caja(x, sue, 8, 6, (Math.floor((i + s.x) / 8)) % 2 ? "#38b764" : "#2c8a4d"); caja(x, sue, 8, 2, "#a7f070"); caja(x, sue + 6, 8, H() - sue, (Math.floor((i + s.x) / 8)) % 2 ? "#5d3a1a" : "#8b5a2b"); }
+    for (let i = -16; i < W() + 16; i += 8) { const x = i - (s.x % 8); caja(x, sue, 8, 6, (Math.floor((i + s.x) / 8)) % 2 ? "#38b764" : "#2c8a4d"); caja(x, sue, 8, 2, "#a7f070"); caja(x, sue + 6, 8, cv.height - sue, (Math.floor((i + s.x) / 8)) % 2 ? "#5d3a1a" : "#8b5a2b"); }
     const porX = W() - ((s.x % 260) * 1.2) ; if (porX > -12 && porX < W() + 12) { caja(porX, sue - 16, 1, 16, "#f4f4f4"); caja(porX, sue - 16, 10, 1, "#f4f4f4"); caja(porX + 10, sue - 16, 1, 16, "#f4f4f4"); cx.fillStyle = "rgba(244,244,244,.25)"; for (let y = sue - 15; y < sue; y += 3) cx.fillRect(porX + 1, y, 9, 1); }
     const px = Math.round(W() * .3), sal = s.salto ? Math.round(Math.sin(s.salto / 14 * Math.PI) * 8) : 0, py = sue - 8 - sal, pie = s.t % 6 < 3;
     caja(px + 1, py, 3, 3, "#ffcd75"); caja(px, py + 3, 5, 3, "#ff004d"); caja(px + (pie ? 0 : 3), py + 6, 2, 2, "#1a1c2c"); caja(px + (pie ? 3 : 0), py + 6, 2, 1, "#1a1c2c");
@@ -6076,23 +6081,23 @@ const FONDO = (() => {
   PASO.neon = s => { s.t += 1; };
   DIBU.neon = s => {
     cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
-    const hz = h * .62, sr = Math.min(w * .32, 140);
+    const hz = hu() * .62, sr = Math.min(w * .32, 140);
     const sg = cx.createLinearGradient(0, hz - sr, 0, hz); sg.addColorStop(0, "#ffd23f"); sg.addColorStop(1, "#ff2bd6");
     cx.save(); cx.beginPath(); cx.arc(w / 2, hz, sr, Math.PI, 0); cx.clip(); cx.fillStyle = sg; cx.fillRect(w / 2 - sr, hz - sr, sr * 2, sr);
     cx.fillStyle = "#0b0618"; for (let i = 0; i < 6; i++) { const y = hz - sr * .45 + i * sr * .1; cx.fillRect(w / 2 - sr, y, sr * 2, 2 + i); } cx.restore();
     cx.strokeStyle = "rgba(255,43,214,.55)"; cx.lineWidth = 1.2;
-    for (let i = -14; i <= 14; i++) { cx.beginPath(); cx.moveTo(w / 2 + i * 8, hz); cx.lineTo(w / 2 + i * w * .16, h); cx.stroke(); }
+    for (let i = -14; i <= 14; i++) { cx.beginPath(); cx.moveTo(w / 2 + i * 8, hz); cx.lineTo(w / 2 + i * w * .16, hu()); cx.stroke(); }
     cx.strokeStyle = "rgba(34,211,238,.5)";
-    for (let i = 0; i < 14; i++) { const p = ((i + (s.t % 30) / 30) / 14), y = hz + (h - hz) * p * p; cx.beginPath(); cx.moveTo(0, y); cx.lineTo(w, y); cx.stroke(); }
+    for (let i = 0; i < 14; i++) { const p = ((i + (s.t % 30) / 30) / 14), y = hz + (hu() - hz) * p * p; cx.beginPath(); cx.moveTo(0, y); cx.lineTo(w, y); cx.stroke(); }
     const fg = cx.createLinearGradient(0, hz - 30, 0, hz + 30); fg.addColorStop(0, "rgba(11,6,24,0)"); fg.addColorStop(.5, "rgba(255,43,214,.25)"); fg.addColorStop(1, "rgba(11,6,24,0)"); cx.fillStyle = fg; cx.fillRect(0, hz - 30, w, 60);
   };
   // Galaxia: estrellas fugaces y una nebulosa que gira muy despacio
   CREAR.galaxia = () => ({ t: 0, fug: [] });
-  PASO.galaxia = s => { s.t++; if (Math.random() < .025) s.fug.push({ x: r(w * .2, w * 1.1), y: r(-20, h * .4), v: 0 }); s.fug.forEach(f => f.v++); s.fug = s.fug.filter(f => f.v < 26); };
+  PASO.galaxia = s => { s.t++; if (Math.random() < .025) s.fug.push({ x: r(w * .2, w * 1.1), y: r(-20, hu() * .4), v: 0 }); s.fug.forEach(f => f.v++); s.fug = s.fug.filter(f => f.v < 26); };
   DIBU.galaxia = s => {
     cx.setTransform(k, 0, 0, k, 0, 0); cx.clearRect(0, 0, w, h);
-    cx.save(); cx.translate(w * .7, h * .3); cx.rotate(s.t / 900);
-    for (const [rx, ry, c] of [[w * .55, h * .12, "rgba(168,85,247,.16)"], [w * .4, h * .09, "rgba(56,189,248,.12)"], [w * .25, h * .06, "rgba(244,114,182,.14)"]]) { const g = cx.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, c); g.addColorStop(1, "rgba(0,0,0,0)"); cx.fillStyle = g; cx.beginPath(); cx.ellipse(0, 0, rx, ry, 0, 0, 7); cx.fill(); }
+    cx.save(); cx.translate(w * .7, hu() * .3); cx.rotate(s.t / 900);
+    for (const [rx, ry, c] of [[w * .55, hu() * .12, "rgba(168,85,247,.16)"], [w * .4, hu() * .09, "rgba(56,189,248,.12)"], [w * .25, hu() * .06, "rgba(244,114,182,.14)"]]) { const g = cx.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, c); g.addColorStop(1, "rgba(0,0,0,0)"); cx.fillStyle = g; cx.beginPath(); cx.ellipse(0, 0, rx, ry, 0, 0, 7); cx.fill(); }
     cx.restore();
     for (const f of s.fug) { const x = f.x - f.v * 9, y = f.y + f.v * 5, g = cx.createLinearGradient(x, y, x + 60, y - 33); g.addColorStop(0, `rgba(255,255,255,${1 - f.v / 26})`); g.addColorStop(1, "rgba(255,255,255,0)"); cx.strokeStyle = g; cx.lineWidth = 1.6; cx.beginPath(); cx.moveTo(x, y); cx.lineTo(x + 60, y - 33); cx.stroke(); }
   };
