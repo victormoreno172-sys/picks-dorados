@@ -1292,7 +1292,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .arccombo b { font: 14px "Press Start 2P", monospace; color: #ffec27; min-width: 44px; } .arccombo b.fuego { color: #ff004d; animation: pxSalto .5s steps(2) infinite; }
 .arcvid { width: 100%; display: flex; align-items: center; justify-content: space-between; background: #000; border: 2px solid #5f574f; padding: 7px; } .arcvid > div { display: flex; gap: 4px; }
 .arcvid span { filter: grayscale(1) brightness(.35); } .arcvid span.on { filter: none; animation: pxSalto 1.4s steps(2) infinite; }
-.tw-arc > h3 { background: #ff004d !important; } .tw-arcl > h3 { background: #29366f !important; } .tw-go > h3 { background: #000 !important; color: #ff004d !important; }
+.tw-arc > h3 { background: #ff004d !important; } .tw-arcm > h3 { background: #7e2553 !important; } .tw-arcl > h3 { background: #29366f !important; } .tw-go > h3 { background: #000 !important; color: #ff004d !important; }
 .arslots { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .arsl { display: flex; align-items: center; gap: 10px; padding: 8px; background: #1a1c2c; border: 2px solid #000; box-shadow: inset 3px 3px 0 rgba(255,255,255,.06); }
 .arsl > b { width: 28px; height: 28px; display: grid; place-items: center; flex: none; font: 10px "Press Start 2P", monospace; background: #ffec27; color: #000; border: 2px solid #000; }
@@ -5172,6 +5172,7 @@ function pintarArcade() {
       return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" data-arpk="${esc(pa.local + "|" + pa.visitante)}" ${ARP_ABIERTOS.has(pa.local + "|" + pa.visitante) ? "open" : ""}><summary><span class="are">${marcArc({ ...pa, ops: (pa.qs[0] || {}).ops || [] }, s0)}<small class="arlg">${esc(ligaBase(pa.liga))}${mio ? ` · <b class="armi">★ ${esc(((pa.qs.find(q => q.tipo === mio.t) || { ops: [] }).ops.find(o => o.m === mio.m) || {}).n || mio.m)}</b>` : ""}</small></span><span class="arfl">▼</span></summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
     }).join("")}</div></section>`;
   } else if (!fin) h += `<div class="vacio">${hoy < ARC.desde ? `El evento empieza el ${fCorta(ARC.desde)}. Sus partidos salen la noche antes, a las 23:30: ahí podrás elegir tus 3 primeros pronósticos.` : "Hoy no hay partidos para el evento. A las 23:30 salen los de mañana."}</div>`;
+  if (hoy >= ARC.desde) h += misionesArcHTML();
   const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
   if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
     return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span>${marcArc(z.x)}<b>${esc(o.n || o.m)}</b></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
@@ -5299,6 +5300,56 @@ function estadoYoArc() {
   const vidas = Math.max(0, ARC.vidas + (ARCD.cont[sem] ? 1 : 0) - (yo.fallos[sem] || 0));
   return { ...yo, vidas, sem, combo: multiArc(yo.racha) };
 }
+// ---- Misiones del evento HI-SCORE: diarias, de la semana y de todo el evento (dan estrellas del pase y monedas)
+function statsArc(dias) {
+  const set = new Set(dias), yo = partidaArc(diasArc(), picksYoArc, ARCD.cont), st = { picks: 0, aciertos: 0, pts: 0, combo: 1, dias: 0, perfecto: 0, riesgo: 0, basket: 0, futbol: 0 };
+  for (const d of dias) { const r = ARCD.dias[d]; if (!r || !r.picks) continue; st.picks += r.picks.length; if (r.picks.length >= ARC.picks) st.dias++; }
+  const porDia = {};
+  for (const z of yo.log) {
+    if (!set.has(z.d) || z.go || z.ok === undefined) continue;
+    const pd = porDia[z.d] ||= [0, 0]; pd[1]++;
+    if (!z.ok) continue;
+    pd[0]++; st.aciertos++; st.pts += z.g || 0; st.combo = Math.max(st.combo, Math.min(ARC.maxCombo, (z.mult || 1) + 1));
+    const o = z.x.ops.find(q => q.m === z.m); if (o && o.p < .5) st.riesgo++;
+    if (z.x.dep === "b") st.basket++; else st.futbol++;
+  }
+  for (const [ok, n] of Object.values(porDia)) if (n >= ARC.picks && ok === n) st.perfecto++;
+  return st;
+}
+const ARC_DIA = [{ id: "aciertos", t: "Acierta 1 pronóstico", n: 1 }, { id: "aciertos", t: "Acierta 2 pronósticos", n: 2 }, { id: "pts", t: "Consigue 40 puntos", n: 40 },
+  { id: "combo", t: "Llega a combo ×3", n: 3 }, { id: "riesgo", t: "Acierta uno de menos del 50 %", n: 1 }, { id: "basket", t: "Acierta uno de baloncesto", n: 1 }, { id: "futbol", t: "Acierta uno de fútbol", n: 1 }];
+const ARC_SEM = [{ id: "aciertos", t: "Acierta {n} pronósticos", n: [5, 8, 11] }, { id: "pts", t: "Consigue {n} puntos", n: [250, 450, 700] },
+  { id: "combo", t: "Llega a combo ×{n}", n: [4, 5, 6] }, { id: "dias", t: "Juega {n} días con tus 3 pronósticos", n: [3, 5, 7] },
+  { id: "riesgo", t: "Acierta {n} de menos del 50 %", n: [2, 3, 4] }, { id: "perfecto", t: "Haz {n} día perfecto (3 de 3)", n: [1, 1, 2] }, { id: "basket", t: "Acierta {n} de baloncesto", n: [2, 3, 4] }];
+function misionesArcDia(d = diaJuego()) {
+  const st = statsArc([d]), r = ARCD.dias[d], hayB = !!(r && r.pool && r.pool.some(p => p.dep === "b"));
+  const pool = ARC_DIA.filter(x => x.id !== "basket" || hayB).map((x, i) => [x, azar("ad" + d + i)]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+  const otras = []; for (const x of pool) if (otras.length < 2 && !otras.some(o => o.id === x.id)) otras.push(x);
+  return [{ id: "picks", t: `Elige tus ${ARC.picks} pronósticos`, n: ARC.picks }, ...otras].map((x, k) => ({ ...x, key: `ad:${d}:${x.id}:${x.n}`, v: Math.min(x.n, st[x.id]), est: k === 2 ? 2 : 1, mon: 15 }));
+}
+function misionesArcSem(d = diaJuego()) {
+  const lun = lunesDe(d), h = Math.floor(new Date(lun + "T12:00:00") / 6048e5);
+  const orden = ARC_SEM.map(x => [x, azar("as" + h + x.id)]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(x => x[0]);
+  const st = statsArc([...Array(7)].map((_, k) => sumaDias(lun, k)).filter(x => x <= d && enArc(x)));
+  return orden.map((x, k) => { const n = x.n[k]; return { key: `as:${lun}:${x.id}`, t: x.t.replace("{n}", n), n, v: Math.min(n, st[x.id]), est: 3 + k, mon: 50 + 25 * k }; });
+}
+function misionesArcEvento() {
+  const st = statsArc(diasArc());
+  return [{ id: "aciertos", t: "Consigue 40 aciertos en el evento", n: 40, est: 10, mon: 300 }, { id: "pts", t: "Suma 3.000 puntos", n: 3000, est: 10, mon: 300 },
+    { id: "dias", t: "Juega 20 días con tus 3 pronósticos", n: 20, est: 8, mon: 250 }, { id: "perfecto", t: "Haz 4 días perfectos (3 de 3)", n: 4, est: 8, mon: 250 },
+    { id: "riesgo", t: "Acierta 10 de menos del 50 %", n: 10, est: 6, mon: 200 }, { id: "combo", t: "Llega a combo ×8", n: 8, est: 6, mon: 200 }]
+    .map(x => ({ ...x, key: `ae:${x.id}`, v: Math.min(x.n, st[x.id]) }));
+}
+function misionesArcHTML() {
+  const mis = { dia: misionesArcDia(), sem: misionesArcSem(), esp: misionesArcEvento() }, mt = est.amt || "dia";
+  const hechas = l => `${l.filter(d => d.v >= d.n).length}/${l.length}`;
+  const barra = d => `<div class="dsf ${d.v >= d.n ? "ok" : ""}"><span class="dst">${d.v >= d.n ? px("ok", 12) + " " : ""}${esc(d.t)}</span><span class="dsb"><i style="width:${d.v / d.n * 100}%"></i></span><span class="dsp">${fmtN(d.v)}/${fmtN(d.n)} · +${d.est}★ · +${fmtN(d.mon)} 🪙</span></div>`;
+  const nota = { dia: "Cambian cada día a las 23:30, cuando salen los partidos del día siguiente.", sem: "Cambian cada lunes.", esp: `Duran todo el evento · ${quedanArc()}.` }[mt];
+  return `<section class="mcard t0 tw-arcm"><h3>📜 MISIONES HI-SCORE</h3>
+    <div class="pxtabs">${[["dia", "Diarias"], ["sem", "Semana"], ["esp", "Evento"]].map(([k, n]) => `<button data-amt="${k}" aria-pressed="${mt === k}">${n}<small>${hechas(mis[k])}</small></button>`).join("")}</div>
+    ${mis[mt].map(barra).join("")}<p class="apnota">${nota} Las estrellas suben tu pase de la ${TEMP.nombre}.</p></section>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-amt]"); if (!b) return; est.amt = b.dataset.amt; const y = window.scrollY; pintarLista(); window.scrollTo(0, y); });
 // Premios: estrellas y XP por acierto, hitos de combo y el podio al acabar
 function recompensasArc() {
   if (diaJuego() < ARC.desde) return;   // aún no ha empezado
@@ -5307,6 +5358,10 @@ function recompensasArc() {
   for (const z of yo.log) if (z.ok) { const k = `arc:${z.d}:${z.x.i}:${z.x.tipo}`;
     if (!PERFIL.cobrados[k]) { if (cobrar(k, `🕹️ HI-SCORE · acierto ×${z.mult} (+${z.g})`, 50 + z.g * 5, z.g, enTemp(z.d) ? { est: 1 } : null)) PERFIL.cobrados["m" + k] = 1; }
     else cobrar("m" + k, `🕹️ HI-SCORE · monedas del acierto ×${z.mult}`, 0, z.g); }
+  // misiones del evento: las diarias de los últimos días, las de la semana (esta y la anterior) y las de todo el evento
+  const hoy = diaJuego(), mis = [0, 1, 2, 3].map(k => fechaMenos(hoy, k)).filter(enArc).flatMap(d => misionesArcDia(d))
+    .concat(misionesArcSem(hoy), enArc(sumaDias(lunesDe(hoy), -1)) ? misionesArcSem(sumaDias(lunesDe(hoy), -1)) : [], misionesArcEvento());
+  for (const d of mis) if (d.v >= d.n) cobrar(d.key, `🕹️ Misión HI-SCORE: ${d.t}`, 0, d.mon, enTemp(AHORA.fecha) ? { est: d.est } : null);
   const hitos = [[4, 150, 3, null, "Combo ×4"], [6, 300, 5, ["titulo", "combo6"], "Combo ×6 · título Combo ×6"], [8, 600, 8, ["avatar", "ficha"], "Combo ×8 · avatar Ficha arcade"]];
   for (const [rr, mon, es, obj, txt] of hitos) if (yo.mejor >= rr && cobrar(`arch${rr}`, `🕹️ HI-SCORE · ${txt}`, 0, mon, { est: es }) && obj) { const k = obj[0] + ":" + obj[1]; if (!PERFIL.comprados.includes(k)) PERFIL.comprados.push(k); }
   if (AHORA.fecha > ARC.hasta && !PERFIL.cobrados["arcfin"]) {
