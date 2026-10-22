@@ -1475,6 +1475,9 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .pxmc.jg .pxprev .pcab .ptit { text-shadow: 0 1px 4px rgba(0,0,0,.7); }
 .jgk { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; } .jgk div { background: var(--bar); border-radius: calc(12px * var(--rad)); padding: 8px 4px; display: flex; flex-direction: column; gap: 2px; }
 .jgk b { font: 800 17px var(--display); color: var(--ink); } .jgk small { font-size: 11px; color: var(--muted); }
+.jgtabs { display: flex; gap: 6px; width: 100%; } .jgtabs button { flex: 1; padding: 7px 4px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: 600 12px var(--body); cursor: pointer; }
+.jgtabs button[aria-pressed="true"] { background: var(--grad); color: #1b1200; border-color: transparent; }
+.jgnota { display: block; width: 100%; text-align: center; color: var(--muted); font-size: 11px; margin-top: -2px; }
 .jgh { margin: 6px 0 0; align-self: flex-start; font: 800 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .jgvit { width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; } .jgvit .vslot { min-height: 64px; }
 .rpron { display: flex; align-items: center; gap: 12px; } .rpron > span { font-size: 30px; } .rpron b { display: block; font-size: 15px; } .rpron small { display: block; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
@@ -4119,19 +4122,45 @@ const kXP = n => n >= 1000 ? (n / 1000).toLocaleString("es-ES") + "k" : String(n
 // con el puesto, el jugador, el premio, los aciertos y los puntos encima
 // Filas de las clasificaciones pintadas (para abrir el perfil de quien toques)
 var RKREG = [];
+// Apartados de cada evento en el perfil de otro jugador: su puesto y sus datos en Gánale a la app, HI-SCORE y la Temporada 0
+let _JG = null;
+function eventosJugador(f) {
+  _JG = f; const tab = est.jgtab || "reto", mes = AHORA.fecha.slice(0, 7), o = f.o;
+  const mismo = x => f.app ? x.app : f.uid ? x.uid === f.uid : (x.n === f.n && !x.yo && !x.app);
+  const pct = (a, b) => b ? Math.round(a / b * 100) + " %" : "–", pos = r => r && r.pts ? r.pos + ".º" : "–";
+  const caja = (v, t) => `<div><b>${v}</b><small>${t}</small></div>`;
+  let cuerpo = "";
+  try {
+    if (tab === "reto") {
+      const r = clasificacionReto(Object.keys(RETO.dias).filter(d => d.startsWith(mes)).sort(), rangoMes(mes)).find(mismo) || {};
+      const rd = (o && o.reto) || {}, dd = Object.values(rd), tot = k => dd.reduce((t, v) => t + (v[k] || 0), 0), mejor = dd.reduce((m, v) => Math.max(m, v[0] || 0), 0);
+      cuerpo = caja(pos(r), "puesto del mes") + caja(fmtN(r.pts || 0), "puntos del mes") + caja(`${r.ok || 0}/${r.jug || 0}`, "aciertos del mes") + caja(pct(r.ok || 0, r.jug || 0), "acierto del mes")
+        + (f.app ? "" : caja(r.vsApp || 0, "contra la app (mes)"))
+        + (o ? caja(Object.keys(rd).length, "días jugados") + caja(`${tot(1)}/${tot(2)}`, "aciertos en total") + caja(fmtN(mejor), "mejor día") : "");
+    } else if (tab === "arc") {
+      const r = clasificacionArc().find(mismo) || {}, ad = (o && o.arc && o.arc.d) || {};
+      cuerpo = caja(pos(r), "puesto") + caja(String(r.pts || 0).padStart(5, "0"), "score") + caja(`${r.ok || 0}/${r.jug || 0}`, "aciertos") + caja(pct(r.ok || 0, r.jug || 0), "acierto")
+        + caja("×" + Math.max(1, Math.min(ARC.maxCombo, r.mejor || 0)), "récord combo") + (o ? caja(Object.keys(ad).length, "días jugados") : "");
+    } else {
+      const r = clasificacionTemp(diasTemporada()).find(mismo) || {};
+      cuerpo = caja(pos(r), "puesto") + caja(fmtN(r.pts || 0), "puntos") + caja(`${r.ok || 0}/${r.jug || 0}`, "aciertos") + caja(pct(r.ok || 0, r.jug || 0), "acierto");
+    }
+  } catch (e) { cuerpo = `<p class="apnota">No se han podido calcular sus datos.</p>`; }
+  const nota = { reto: `Gánale a la app · ${MESES[+mes.slice(5) - 1]} ${mes.slice(0, 4)}`, arc: `Evento HI-SCORE · ${fCorta(ARC.desde)} – ${fCorta(ARC.hasta)}`, temp: `${TEMP.nombre} · suma Gánale a la app y HI-SCORE` }[tab];
+  return `<h4 class="jgh">🏆 Sus eventos</h4><div class="jgtabs">${[["reto", "🎯 Gánale"], ["arc", "🕹️ HI-SCORE"], ["temp", "🎮 Temporada"]].map(([k, n]) => `<button data-jgtab="${k}" aria-pressed="${tab === k}">${n}</button>`).join("")}</div>
+    <div class="jgk">${cuerpo}</div><small class="jgnota">${nota}</small>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-jgtab]"); if (!b || !_JG) return; e.stopPropagation(); est.jgtab = b.dataset.jgtab;
+  const m = document.querySelector("#pxmodal .pxmc"), y = m ? m.scrollTop : 0; verJugador(_JG); const m2 = document.querySelector("#pxmodal .pxmc"); if (m2) { m2.style.animation = "none"; m2.scrollTop = y; } });
 function verJugador(f) {
+  if (_JG !== f) est.jgtab = est.vista === "arcade" ? "arc" : est.vista === "temporada" ? "temp" : "reto";   // se abre en el evento desde el que lo miras
   if (f.yo) { est.vista = "perfil"; pintarLista(); window.scrollTo(0, 0); return; }
   const o = f.o, p = f.perfil || {}, mes = AHORA.fecha.slice(0, 7);
   const ficha = `<div class="pcab tj tj-${f.app ? "vencedor" : p.tarjeta || "clasica"} pxpc">${f.app ? `<span class="av" style="--s:72px"><span class="avi" style="background:#4f46e5">🤖</span></span>` : avatarHTML(p, 72)}
     <b class="pnom nc-${p.color || "normal"}">${esc(f.n)}</b><span class="ptit">${esc(f.app ? "Siempre lo más probable" : f.online ? p.tt || "" : f.e || "")}</span></div>`;
-  let datos = `<div class="jgk"><div><b>${f.pts ? f.pos + ".º" : "–"}</b><small>puesto</small></div><div><b>${fmtN(f.pts || 0)}</b><small>puntos</small></div><div><b>${f.ok || 0}/${f.jug || 0}</b><small>aciertos</small></div>${f.vsApp !== undefined && !f.app ? `<div><b>${f.vsApp}</b><small>contra la app</small></div>` : f.mejor !== undefined ? `<div><b>×${Math.max(1, Math.min(8, f.mejor || 0))}</b><small>récord combo</small></div>` : ""}</div>`;
+  let datos = "";   // los datos van por eventos, en sus apartados
+  datos += eventosJugador(f);
   if (o) {
-    const rd = o.reto || {}, dias = Object.keys(rd), en = d => d >= TEMP1.desde && d <= TEMP1.hasta;
-    const sm = (f2) => dias.filter(f2).reduce((t, d) => t + (rd[d][0] || 0), 0), ok = dias.reduce((t, d) => t + (rd[d][1] || 0), 0), jg = dias.reduce((t, d) => t + (rd[d][2] || 0), 0);
-    const ad = (o.arc && o.arc.d) || {}, arcPts = Object.values(ad).reduce((t, v) => t + (v[0] || 0), 0);
-    datos += `<h4 class="jgh">📊 Sus números</h4><div class="jgk"><div><b>${fmtN(sm(d => d.startsWith(mes)))}</b><small>puntos este mes</small></div><div><b>${fmtN(sm(en) + arcPts)}</b><small>Temporada 0</small></div>
-      <div><b>${jg ? Math.round(ok / jg * 100) + " %" : "–"}</b><small>acierto</small></div><div><b>${dias.length}</b><small>días jugados</small></div>
-      <div><b>${fmtN(arcPts)}</b><small>HI-SCORE</small></div><div><b>×${Math.max(1, Math.min(8, (o.arc && o.arc.mejor) || 0))}</b><small>récord combo</small></div></div>`;
     const vit = (p.vit || []).filter(v => { const [t, id] = v.split(":"); return t === "ins" ? INSIGNIAS.some(x => x[0] === id) : t === "av" ? CAT.avatar.some(x => x.id === id) : CAT.tarjeta.some(x => x.id === id); });
     if (vit.length) datos += `<h4 class="jgh">🏆 Su vitrina</h4><div class="jgvit">${vit.map(v => `<span class="vslot si">${dibujoVitrina(v)}</span>`).join("")}</div>`;
   }
