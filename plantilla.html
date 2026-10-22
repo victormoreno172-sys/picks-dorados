@@ -5886,7 +5886,7 @@ const TJVIVA = (() => {
     dibu: (s, W, H) => {
       px(0, 0, W, H, "#1a1c2c"); px(1, 1, W - 2, H - 2, "#566c86"); px(2, 2, W - 4, H - 4, "#0b0618");
       for (let y = 3; y < H - 3; y += 2) for (let x = 3; x < W - 3; x += 2) px(x, y, 1, 1, "#16112a");
-      const big = Math.max(6, Math.round(H * .38)), cy = Math.round(H * .58), flash = s.gol && s.gol % 6 < 3;
+      const big = Math.max(6, Math.round(Math.min(H * .38, W * .2))), cy = Math.round(H * .58), flash = s.gol && s.gol % 6 < 3;
       txt(String(s.m[0]), W * .3, cy, big, flash && s.quien === 0 ? "#f4f4f4" : "#ffec27"); txt(String(s.m[1]), W * .7, cy, big, flash && s.quien === 1 ? "#f4f4f4" : "#ffec27");
       txt(`${String(s.min).padStart(2, "0")}:${String(s.seg).padStart(2, "0")}`, W / 2, cy - big * .25, Math.max(4, Math.round(big * .45)), "#ff004d");
       px(W * .3 - big * .4, 4, big * .8, 2, "#41a6f6"); px(W * .7 - big * .4, 4, big * .8, 2, "#ff004d");
@@ -5950,15 +5950,15 @@ const TJVIVA = (() => {
       for (let i = -8; i <= 8; i++) { c.strokeStyle = "rgba(255,0,77,.45)"; c.lineWidth = 1; c.beginPath(); c.moveTo(W / 2 + i * 3, hz); c.lineTo(W / 2 + i * W * .14, H); c.stroke(); }
       px(0, hz, W, 1, "#ff77a8");
       // letrero con bombillas alrededor que van corriendo
-      const mx = 2, my = 1, mw = W - 4, mh = Math.max(9, Math.round(H * .44));
+      const mx = 2, my = 1, mw = W - 4, mh = Math.max(9, Math.round(Math.min(H * .44, W * .26)));
       px(mx + dx, my, mw, mh, "#29133f"); px(mx + 1 + dx, my + 1, mw - 2, mh - 2, "#120720");
       const bombillas = []; for (let x = mx; x < mx + mw; x += 3) bombillas.push([x, my], [x, my + mh - 1]); for (let y = my + 3; y < my + mh - 2; y += 3) bombillas.push([mx, y], [mx + mw - 1, y]);
       bombillas.forEach(([x, y], i) => px(x + dx, y, 1, 1, (i + Math.floor(s.t / 2)) % 3 === 0 ? (rec ? "#f4f4f4" : "#ffec27") : "#7e2553"));
-      const tam = Math.max(6, Math.round(mh * .62)), ly = my + Math.round(mh * .72);
+      const tam = Math.max(6, Math.round(Math.min(mh * .62, W / 5.6))), ly = my + Math.round(mh * .72);
       txt("HI-SCORE", W / 2 + dx + 1, ly + 1, tam, "#ff004d"); txt("HI-SCORE", W / 2 + dx, ly, tam, rec && s.t % 6 < 3 ? "#f4f4f4" : "#ffec27");
       if (s.brillo >= 0) { c.save(); c.beginPath(); c.rect(mx + 1, my + 1, mw - 2, mh - 2); c.clip(); c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.moveTo(s.brillo, my); c.lineTo(s.brillo + 4, my); c.lineTo(s.brillo - 2, my + mh); c.lineTo(s.brillo - 6, my + mh); c.fill(); c.restore(); }
       // puntuación y barra de combo
-      const sy = my + mh + Math.max(5, Math.round(H * .14)), t2 = Math.max(5, Math.round(H * .12));
+      const sy = my + mh + Math.max(5, Math.round(Math.min(H, W / 2) * .14)), t2 = Math.max(5, Math.round(Math.min(H, W / 2) * .12));
       if (sy < H - 2) {
         txt(String(Math.round(s.pts)).padStart(7, "0"), W * .3 + dx, sy, t2, "#73eff7");
         const bx = Math.round(W * .56), bw = Math.round(W * .4), seg = Math.max(2, Math.floor((bw - 7) / 8));
@@ -6079,7 +6079,7 @@ const TJVIVA = (() => {
       px(0, 0, W, H, "#0b2016"); for (let y = 0; y < H; y += 4) for (let x = (y / 4) % 2 * 2; x < W; x += 4) px(x, y, 1, 1, "#12301f");
       for (const p of s.pistas) for (let j = 1; j < p.length; j++) { const [x0, y0] = p[j - 1], [x1, y1] = p[j]; c.strokeStyle = "#1f5a33"; c.lineWidth = 1; c.beginPath(); c.moveTo(x0 + .5, y0 + .5); c.lineTo(x1 + .5, y1 + .5); c.stroke(); px(x1 - 1, y1 - 1, 2, 2, "#c2a04b"); }
       for (const u of s.pul) { const p = s.pistas[u.p], tot = p.length - 1, seg = Math.min(tot - 1, Math.floor(u.f * tot)), f = u.f * tot - seg, [x0, y0] = p[seg], [x1, y1] = p[seg + 1]; px(x0 + (x1 - x0) * f - 1, y0 + (y1 - y0) * f - 1, 2, 2, u.col); }
-      const cx0 = Math.round(W / 2), cy0 = Math.round(H * .55), k = Math.max(1, Math.round(H / 26));
+      const cx0 = Math.round(W / 2), cy0 = Math.round(H * .55), k = Math.max(1, Math.round(Math.min(H / 26, W / 52)));
       px(cx0 - 6 * k, cy0 - 6 * k, 12 * k, 10 * k, "#566c86"); px(cx0 - 5 * k, cy0 - 5 * k, 10 * k, 8 * k, "#333c57");
       if (s.parpa) { px(cx0 - 4 * k, cy0 - 3 * k, 2 * k, 1 * k, "#ff004d"); px(cx0 + 2 * k, cy0 - 3 * k, 2 * k, 1 * k, "#ff004d"); }
       else { for (const ex of [-3, 3]) { px(cx0 + (ex - 1) * k, cy0 - 4 * k, k, k, "#ff004d"); px(cx0 + ex * k, cy0 - 3 * k, k, k, "#ff004d"); px(cx0 + (ex + 1) * k, cy0 - 2 * k, k, k, "#ff004d"); px(cx0 + (ex + 1) * k, cy0 - 4 * k, k, k, "#ff004d"); px(cx0 + (ex - 1) * k, cy0 - 2 * k, k, k, "#ff004d"); } }
@@ -6088,18 +6088,119 @@ const TJVIVA = (() => {
       for (const p of s.chis) px(p.x, p.y, 1, 1, p.v % 2 ? "#ffec27" : "#f4f4f4");
       txt("YOU WIN", W / 2, H - 2, Math.max(5, Math.round(H * .14)), s.t % 10 < 7 ? "#a7f070" : "#ffec27");
     } };
+  // ---------------------------------------------------------------- Tarjetas fijas que se adaptan al hueco: los campos y marcos se dibujan
+  // al tamaño real de la tarjeta, con las líneas pegadas a los bordes y el círculo redondo, sea alta, ancha o fina.
+  const F = {};
+  const linea = (x0, y0, x1, y1) => { c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); };
+  function campoLineas(W, H, m, lw, col, conArco) {   // contorno, medio campo, círculo central y áreas
+    c.strokeStyle = col; c.lineWidth = lw; c.lineCap = "round";
+    const iw = W - 2 * m, ih = H - 2 * m, cyy = H / 2, rc = Math.min(ih * .2, iw * .12);
+    c.strokeRect(m, m, iw, ih); linea(W / 2, m, W / 2, H - m);
+    c.beginPath(); c.arc(W / 2, cyy, rc, 0, 7); c.stroke(); c.fillStyle = col; c.beginPath(); c.arc(W / 2, cyy, lw * 1.2, 0, 7); c.fill();
+    const aw = Math.min(iw * .15, ih * .32), ah = ih * .56, pw = aw * .38, ph = ih * .28;
+    for (const lado of [0, 1]) {
+      const x = lado ? W - m - aw : m, xp = lado ? W - m - pw : m;
+      c.strokeRect(x, cyy - ah / 2, aw, ah); c.strokeRect(xp, cyy - ph / 2, pw, ph);
+      c.beginPath(); c.arc(lado ? W - m - aw * .72 : m + aw * .72, cyy, lw * 1.1, 0, 7); c.fill();
+      if (conArco) { c.beginPath(); lado ? c.arc(W - m - aw, cyy, ah * .2, Math.PI / 2, Math.PI * 1.5) : c.arc(m + aw, cyy, ah * .2, -Math.PI / 2, Math.PI / 2); c.stroke(); }
+    }
+  }
+  F.cesped = { dibu: (W, H) => {
+    const n = Math.max(6, Math.round(W / 38) * 2), cw = W / n;
+    for (let i = 0; i < n; i++) { c.fillStyle = i % 2 ? "#15803d" : "#16a34a"; c.fillRect(Math.floor(i * cw), 0, Math.ceil(cw) + 1, H); }
+    const s = Math.min(W, H * 2) / 400; campoLineas(W, H, Math.max(5, 8 * s), Math.max(1.5, 2.5 * s), "rgba(255,255,255,.78)", true);
+    const g = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.hypot(W, H) * .6); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.3)"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  } };
+  F.pizarra = { dibu: (W, H) => {
+    c.fillStyle = "#1f3a2e"; c.fillRect(0, 0, W, H);
+    for (let y = 2; y < H; y += 7) for (let x = (y * 3) % 7; x < W; x += 7) { c.fillStyle = (x + y) % 3 ? "rgba(255,255,255,.05)" : "rgba(0,0,0,.12)"; c.fillRect(x, y, 1, 1); }
+    const s = Math.min(W, H * 2) / 400; campoLineas(W, H, Math.max(7, 14 * s), Math.max(1.5, 2.2 * s), "rgba(241,245,249,.55)", false);
+    const P = (fx, fy) => [W * fx, H * fy], rr = Math.max(4, Math.min(W, H * 2) * .018);
+    c.strokeStyle = "#fde68a"; c.lineWidth = Math.max(1.6, 2.6 * s);
+    for (const [fx, fy] of [[.275, .3], [.325, .65], [.625, .45]]) { const [x, y] = P(fx, fy); linea(x - rr, y - rr, x + rr, y + rr); linea(x + rr, y - rr, x - rr, y + rr); }
+    c.strokeStyle = "#fff"; c.lineWidth = Math.max(1.5, 2.4 * s);
+    const os = [[.2, .5], [.4, .35], [.425, .72], [.725, .55]]; for (const [fx, fy] of os) { const [x, y] = P(fx, fy); c.beginPath(); c.arc(x, y, rr, 0, 7); c.stroke(); }
+    c.setLineDash([6 * Math.max(.6, s), 6 * Math.max(.6, s)]); c.lineWidth = Math.max(1.3, 2 * s);
+    const [a1, a2] = [P(.405, .36), P(.71, .49)]; c.beginPath(); c.moveTo(...a1); c.quadraticCurveTo(W * .55, H * .12, ...a2); c.stroke();
+    const [b1, b2] = [P(.43, .7), P(.75, .6)]; c.beginPath(); c.moveTo(...b1); c.quadraticCurveTo(W * .6, H * .88, ...b2); c.stroke(); c.setLineDash([]);
+    const ang = Math.atan2(a2[1] - H * .12, a2[0] - W * .55), al = rr * 1.4; linea(a2[0], a2[1], a2[0] - al * Math.cos(ang - .5), a2[1] - al * Math.sin(ang - .5)); linea(a2[0], a2[1], a2[0] - al * Math.cos(ang + .5), a2[1] - al * Math.sin(ang + .5));
+  } };
+  F.oro = { dibu: (W, H) => {
+    const g = c.createRadialGradient(W / 2, H, 0, W / 2, H, Math.hypot(W / 2, H)); g.addColorStop(0, "#8a5a12"); g.addColorStop(.5, "#3a2508"); g.addColorStop(1, "#0d0904"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.strokeStyle = "rgba(245,196,81,.25)"; c.lineWidth = 1.2; const R = Math.hypot(W, H);
+    for (let a = 0; a <= 180; a += 9) { const t = a * Math.PI / 180; linea(W / 2, H, W / 2 + Math.cos(t) * R, H - Math.sin(t) * R); }
+    const base = Math.min(W / 2, H) * .95; c.strokeStyle = "#f5c451"; c.lineWidth = Math.max(1.2, base / 70);
+    for (const f of [.45, .7, .95]) { c.globalAlpha = .45 + f * .4; c.beginPath(); c.arc(W / 2, H, base * f, Math.PI, 0); c.stroke(); } c.globalAlpha = 1;
+    const m = Math.max(5, Math.min(W, H) * .045); c.strokeStyle = "rgba(245,196,81,.6)"; c.lineWidth = 1; c.strokeRect(m, m, W - 2 * m, H - 2 * m); c.strokeStyle = "rgba(245,196,81,.3)"; c.strokeRect(m + 3, m + 3, W - 2 * m - 6, H - 2 * m - 6);
+    const est = (x, y, t) => { c.fillStyle = "#fff6d5"; c.beginPath(); c.moveTo(x, y - t); c.quadraticCurveTo(x, y, x + t, y); c.quadraticCurveTo(x, y, x, y + t); c.quadraticCurveTo(x, y, x - t, y); c.quadraticCurveTo(x, y, x, y - t); c.fill(); };
+    const t0 = Math.max(4, Math.min(W, H) * .045); est(W * .14, H * .2, t0); est(W * .86, H * .28, t0 * .9); est(W * .78, H * .78, t0 * .7);
+  } };
+  // Campo y cancha pixel de la tienda de la Temporada 0
+  F.s0campo = { px: 1, dibu: (W, H) => {
+    for (let x = 0, i = 0; x < W; x += 6, i++) { c.fillStyle = i % 2 ? "#2c8a4d" : "#38b764"; c.fillRect(x, 0, 6, H); }
+    c.fillStyle = "#f4f4f4"; const L = (x, y, a, b) => c.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(a)), Math.max(1, Math.round(b)));
+    const m = 2, iw = W - 2 * m, ih = H - 2 * m, cy0 = Math.round(H / 2), cx0 = Math.round(W / 2);
+    L(m, m, iw, 1); L(m, H - m - 1, iw, 1); L(m, m, 1, ih); L(W - m - 1, m, 1, ih); L(cx0, m, 1, ih);
+    const rc = Math.max(3, Math.round(Math.min(ih * .2, iw * .12))); for (let a = 0; a < 360; a += 4) L(cx0 + Math.round(rc * Math.cos(a * Math.PI / 180)), cy0 + Math.round(rc * Math.sin(a * Math.PI / 180)), 1, 1);
+    const aw = Math.round(Math.min(iw * .14, ih * .3)), ah = Math.round(ih * .5), pw = Math.max(2, Math.round(aw * .4)), ph = Math.round(ih * .24);
+    for (const lado of [0, 1]) { const x = lado ? W - m - aw : m, xp = lado ? W - m - pw : m;
+      L(x, cy0 - ah / 2, aw, 1); L(x, cy0 + ah / 2, aw, 1); L(lado ? x : x + aw, cy0 - ah / 2, 1, ah + 1);
+      L(xp, cy0 - ph / 2, pw, 1); L(xp, cy0 + ph / 2, pw, 1); L(lado ? xp : xp + pw, cy0 - ph / 2, 1, ph + 1); L(lado ? W - m - Math.round(aw * .7) : m + Math.round(aw * .7), cy0, 1, 1); }
+  } };
+  F.s0cancha = { px: 1, dibu: (W, H) => {
+    for (let y = 0; y < H; y += 4) { c.fillStyle = "#d9a066"; c.fillRect(0, y, W, 3); c.fillStyle = "#8b5a2b"; c.fillRect(0, y + 3, W, 1); for (let x = (y * 7) % 24; x < W; x += 24) c.fillRect(x, y, 1, 3); }
+    const L = (x, y, a, b, col) => { c.fillStyle = col || "#f4f4f4"; c.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(a)), Math.max(1, Math.round(b))); };
+    const m = 1, iw = W - 2 * m, ih = H - 2 * m, cy0 = Math.round(H / 2), cx0 = Math.round(W / 2), zw = Math.round(Math.min(iw * .2, ih * .45)), zh = Math.round(ih * .36);
+    for (const lado of [0, 1]) { const x = lado ? W - m - zw : m; L(x, cy0 - zh / 2, zw, zh, "#ef7d57"); L(x, cy0 - zh / 2, zw, 1); L(x, cy0 + zh / 2, zw, 1); L(lado ? x : x + zw, cy0 - zh / 2, 1, zh);
+      const r = Math.round(zh * .32); for (let a = 0; a < 360; a += 5) L((lado ? x : x + zw) + Math.round(r * Math.cos(a * Math.PI / 180)), cy0 + Math.round(r * Math.sin(a * Math.PI / 180)), 1, 1); L(lado ? W - m - 3 : m + 1, cy0 - 3, 2, 7); }
+    L(m, m, iw, 1); L(m, H - m - 1, iw, 1); L(m, m, 1, ih); L(W - m - 1, m, 1, ih); L(cx0, m, 1, ih);
+    const rc = Math.max(3, Math.round(zh * .32)); for (let a = 0; a < 360; a += 5) L(cx0 + Math.round(rc * Math.cos(a * Math.PI / 180)), cy0 + Math.round(rc * Math.sin(a * Math.PI / 180)), 1, 1);
+  } };
+  // Las demás tarjetas de dibujo: en huecos altos (como la ficha del perfil) se ve el dibujo entero de lado a lado
+  // y se alarga el cielo hacia arriba y el suelo hacia abajo, en vez de cortar los lados.
+  const IMGS = {};
+  function imagenDe(el, id) {
+    if (IMGS[id]) return IMGS[id];
+    const bg = getComputedStyle(el).backgroundImage || "", us = [...bg.matchAll(/url\("?(.*?)"?\)(?=,|$)/g)]; if (!us.length) return (IMGS[id] = { mala: 1 });
+    const im = new Image(), o = { im, ok: 0 }; im.onload = () => { o.ok = 1; document.querySelectorAll(".tj-" + id + ".tjviva").forEach(e => { if (e._tjv) e._tjv.w = 0; }); }; im.src = us[us.length - 1][1]; return (IMGS[id] = o);
+  }
+  function dibujarImagen(el, v, cw, ch) {
+    const o = imagenDe(el, v.id); if (!o.ok) return;
+    const k = Math.min(2, devicePixelRatio || 1), W = Math.round(cw * k), H = Math.round(ch * k); if (v.w === W && v.h === H) return;
+    v.w = W; v.h = H; v.cv.width = W; v.cv.height = H; const pix = /^(pixel|px|s0)/.test(v.id); v.cv.style.imageRendering = pix ? "pixelated" : "auto";
+    const x = v.cv.getContext("2d"); x.imageSmoothingEnabled = !pix;
+    const ah = Math.round(W / 2), off = document.createElement("canvas"); off.width = W; off.height = ah; const ox = off.getContext("2d"); ox.imageSmoothingEnabled = !pix; ox.drawImage(o.im, 0, 0, W, ah);
+    const y0 = Math.round((H - ah) * .45);   // un poco más de cielo que de suelo
+    const media = (yy, n) => { const d = ox.getImageData(0, yy, W, n).data; let rr = 0, gg = 0, bb = 0, q = 0; for (let i = 0; i < d.length; i += 16) { rr += d[i]; gg += d[i + 1]; bb += d[i + 2]; q++; } return `rgb(${rr / q | 0},${gg / q | 0},${bb / q | 0})`; };
+    // arriba, el color medio del cielo; abajo, el del suelo (así no se estiran nubes ni detalles sueltos)
+    const ga = x.createLinearGradient(0, 0, 0, y0 + 2); ga.addColorStop(0, media(0, 1)); ga.addColorStop(1, media(0, 3)); x.fillStyle = ga; x.fillRect(0, 0, W, y0 + 1);
+    x.fillStyle = media(ah - 3, 3); x.fillRect(0, y0 + ah - 1, W, H - y0 - ah + 1); x.drawImage(off, 0, y0);
+  }
   // ---------------------------------------------------------------- motor
   const animada = id => !!(CAT.tarjeta.find(t => t.id === id) || {}).anim;
-  function idDe(el) { for (const k of el.classList) if (k.startsWith("tj-") && E[k.slice(3)] && animada(k.slice(3))) return k.slice(3); return null; }
+  function modoDe(el) {
+    for (const k of el.classList) { if (!k.startsWith("tj-")) continue; const id = k.slice(3);
+      if (E[id] && animada(id)) return { id, m: "anim" }; if (F[id]) return { id, m: "fija" };
+      if (id !== "clasica" && CAT.tarjeta.some(t => t.id === id)) return { id, m: "img" }; }
+    return null;
+  }
   function montar(el) {
-    const id = idDe(el); if (el._tjv && el._tjv.id === id) return; if (el._tjv) quitar(el); if (!id) return;
+    const md = modoDe(el); if (el._tjv && md && el._tjv.id === md.id && el._tjv.m === md.m) return; if (el._tjv) quitar(el); if (!md) return;
     const cv = document.createElement("canvas"); cv.className = "tjcv"; cv.setAttribute("aria-hidden", "true");
-    el.prepend(cv); el._tjv = { id, cv, st: null, w: 0, h: 0 }; el.classList.add("tjviva"); vivas.add(el); if (io) io.observe(el); else visibles.add(el);
+    el.prepend(cv); el._tjv = { ...md, cv, st: null, w: 0, h: 0 }; if (md.m !== "img") el.classList.add("tjviva"); vivas.add(el); if (io) io.observe(el); else visibles.add(el);
     dibujar(el, true);
   }
   function quitar(el) { const v = el._tjv; if (!v) return; v.cv.remove(); el._tjv = null; el.classList.remove("tjviva"); vivas.delete(el); visibles.delete(el); if (io) io.unobserve(el); }
   function dibujar(el, primero) {
-    const v = el._tjv, esc = E[v.id], cw = el.clientWidth, ch = el.clientHeight; if (!cw || !ch) return;
+    const v = el._tjv, cw = el.clientWidth, ch = el.clientHeight; if (!cw || !ch) return;
+    if (v.m === "img") { const alto = cw / ch < 1.85; v.cv.hidden = !alto; el.classList.toggle("tjviva", alto); if (alto) dibujarImagen(el, v, cw, ch); return; }
+    if (v.m === "fija") {
+      const f = F[v.id], k = f.px ? Math.max(2, Math.min(4, Math.round(Math.min(cw, ch * 2) / 110))) : Math.min(2, devicePixelRatio || 1);
+      const W = f.px ? Math.ceil(cw / k) : cw, H = f.px ? Math.ceil(ch / k) : ch; if (v.w === W && v.h === H) return;
+      v.w = W; v.h = H; v.cv.width = f.px ? W : Math.round(cw * k); v.cv.height = f.px ? H : Math.round(ch * k); v.cv.style.imageRendering = f.px ? "pixelated" : "auto";
+      c = v.cv.getContext("2d"); c.imageSmoothingEnabled = !f.px; c.setTransform(f.px ? 1 : k, 0, 0, f.px ? 1 : k, 0, 0); f.dibu(W, H); return;
+    }
+    const esc = E[v.id];
     const k = esc.px ? Math.max(2, Math.min(4, Math.round(Math.min(cw, ch * 2) / 110))) : Math.min(2, devicePixelRatio || 1);
     const W = esc.px ? Math.ceil(cw / k) : cw, H = esc.px ? Math.ceil(ch / k) : ch;
     if (v.w !== W || v.h !== H) { v.w = W; v.h = H; v.cv.width = esc.px ? W : Math.round(cw * k); v.cv.height = esc.px ? H : Math.round(ch * k); v.cv.style.imageRendering = esc.px ? "pixelated" : "auto"; v.st = esc.crear(W, H); if (primero || quieto) for (let i = 0; i < 30; i++) esc.paso(v.st, W, H); }
@@ -6111,7 +6212,7 @@ const TJVIVA = (() => {
   function bucle(ts) {
     requestAnimationFrame(bucle);
     if (document.hidden || quieto || ts - ult < 1000 / 12) return; ult = ts;
-    let n = 0; for (const el of visibles) { if (!el.isConnected) { quitar(el); continue; } if (n++ >= 14) break; try { dibujar(el); } catch (e) {} }
+    let n = 0; for (const el of visibles) { if (!el.isConnected) { quitar(el); continue; } if (el._tjv && el._tjv.m === "anim" && n++ >= 14) continue; try { dibujar(el); } catch (e) {} }
   }
   function escanear(raiz) { (raiz || document).querySelectorAll(".tj").forEach(el => { try { montar(el); } catch (e) {} }); for (const el of vivas) if (!el.isConnected) quitar(el); }
   let pend = 0; new MutationObserver(() => { if (!pend) pend = requestAnimationFrame(() => { pend = 0; escanear(); }); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
