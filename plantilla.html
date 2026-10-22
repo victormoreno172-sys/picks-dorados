@@ -1095,8 +1095,6 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 /* Tarjetas vivas: el lienzo va dentro de la tarjeta, detrás del contenido */
 .tj.tjviva { position: relative; overflow: hidden; isolation: isolate; } .tj.tjviva::before, .tj.tjviva::after { display: none !important; }
 .tjcv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; border-radius: inherit; }
-#fondocab { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-:root.fondovivo header { isolation: isolate; background-color: var(--fondocab, transparent) !important; }
 #fondovivo { position: fixed; top: 0; left: 0; width: 100%; z-index: -1; pointer-events: none; }
 :root.fondovivo:not([data-skin="galaxia"]) body::before { opacity: 0 !important; }
 
@@ -6141,12 +6139,10 @@ const FONDO = (() => {
   }
   function iniciar(e) {
     esc = e;
-    if (!e) { if (cv) cv.hidden = true; if (cab) cab.hidden = true; document.documentElement.classList.remove("fondovivo"); return; }
+    if (!e) { if (cv) cv.hidden = true; document.documentElement.classList.remove("fondovivo"); copiarCab(); return; }
     if (!cv) { cv = document.createElement("canvas"); cv.id = "fondovivo"; cv.setAttribute("aria-hidden", "true"); document.body.prepend(cv); addEventListener("resize", () => { if (esc && Math.abs(innerWidth - w) > 2) { medir(); st = CREAR[esc](); } }); }   // solo si cambia el ancho (girar el móvil); el teclado al buscar no cuenta
     cv.hidden = false; cv.style.opacity = OPAC[e]; cv.style.imageRendering = esPixel(e) ? "pixelated" : "auto";
-    const hd = document.querySelector("header"); if (hd && !cab) { cab = document.createElement("canvas"); cab.id = "fondocab"; cab.setAttribute("aria-hidden", "true"); hd.prepend(cab); }
-    if (cab) { cab.hidden = false; cab.style.opacity = OPAC[e]; cab.style.imageRendering = cv.style.imageRendering; }
-    try { document.documentElement.style.setProperty("--fondocab", getComputedStyle(document.body).backgroundColor); } catch (er) {}
+
     document.documentElement.classList.add("fondovivo");
     medir(); st = CREAR[e](); ult = 0;
     quieto = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -6159,13 +6155,16 @@ const FONDO = (() => {
     if (ts - ult < 1000 / (esPixel(esc) ? 14 : 30)) return; ult = ts;
     PASO[esc](st, ts); DIBU[esc](st, ts); copiarCab();
   }
-  // La cabecera se queda con el trozo de dibujo que tiene detrás: así se ve el fondo, pero no la lista que pasa por debajo al bajar
+  // La cabecera es transparente: lo que sube al bajar por la lista se recorta justo donde empieza la cabecera,
+  // así por arriba solo se ve el fondo (ni detrás de los días y botones ni detrás de la barra del móvil)
   function copiarCab() {
-    if (!cab || cab.hidden) return; const hd = cab.parentElement, rc = hd.getBoundingClientRect(); if (!rc.height) return;
-    const f = cv.height / h, sy = Math.max(0, rc.top * f), sh = Math.max(1, Math.round(rc.height * f));
-    if (cab.width !== cv.width || cab.height !== sh) { cab.width = cv.width; cab.height = sh; }
-    const x = cab.getContext("2d"); x.imageSmoothingEnabled = !esPixel(esc); x.clearRect(0, 0, cab.width, cab.height); x.drawImage(cv, 0, sy, cv.width, sh, 0, 0, cab.width, sh);
+    const hd = document.querySelector("header"), corte = hd && esc ? hd.getBoundingClientRect().bottom : 0;
+    document.querySelectorAll(".wrap > :not(header)").forEach(el => {
+      if (el.hidden) return; const d = Math.round(corte - el.getBoundingClientRect().top);
+      const v = d > 0 ? `inset(${d}px 0 0 0)` : ""; if (el.style.clipPath !== v) el.style.clipPath = v;
+    });
   }
+  addEventListener("scroll", () => copiarCab(), { passive: true });
   // ---------------------------------------------------------------- utilidades pixel
   const W = () => cv.width, H = () => Math.floor(cv.height - bot / k), hu = () => h - bot;
   const caja = (x, y, a, b, c) => { cx.fillStyle = c; cx.fillRect(Math.round(x), Math.round(y), a, b); };
