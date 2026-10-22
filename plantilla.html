@@ -3734,7 +3734,7 @@ function chipModo() {
   const on = rkOnline(), n = otrosOnline().length, hace = ONL.t ? Math.round((Date.now() - ONL.t) / 60000) : null;
   const estado = !PERFIL.nombre || PERFIL.nombre.length < 3 ? `Sales como «${esc(nombreOnline())}». <button class="lnk" data-pnombre="1">Elegir mi nombre</button>`
     : ONL.err ? `⚠️ ${esc(ONL.err)}` : !ONL.t ? "Conectando…" : n ? `${n + 1} jugadores · actualizado ${hace ? "hace " + hace + " min" : "ahora"}` : "De momento solo estás tú: pásale la app a alguien 😉";
-  return `<div class="rkmodo"><div class="rseg"><button data-rkmodo="online" aria-pressed="${on}">🌐 Online</button><button data-rkmodo="bots" aria-pressed="${!on}">🤖 De prueba</button></div>${on ? `<small>${estado}</small>` : `<small>40 jugadores de prueba</small>`}</div>`;
+  return `<div class="rkmodo"><div class="rseg"><button data-rkmodo="online" aria-pressed="${on}">🌐 Online</button><button data-rkmodo="bots" aria-pressed="${!on}">🤖 De prueba</button></div>${on ? `<small>${estado}</small>` : `<small>40 jugadores de prueba${otrosOnline().length ? ` + ${otrosOnline().length} de verdad` : ""}</small>`}</div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-rkmodo]"); if (!b) return; est.rkModo = b.dataset.rkmodo; try { localStorage.setItem("rkModo", est.rkModo); } catch (er) {} _XB = null; pintarLista(); if (est.rkModo === "online") syncOnline(true); });
 if (fbOn()) { setTimeout(() => { if (arenaVista()) syncOnline(true); }, 1500); setInterval(() => { if (arenaVista() && document.visibilityState === "visible") syncOnline(true); }, 120000); }
@@ -3871,8 +3871,8 @@ function clasificacionReto(dias, rango) {
   const xb = xpBots();
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...suma((x, r) => r.picks[claveReto(x)], true) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...suma(x => x.ops.reduce((a, b) => b.p > a.p ? b : a).m) });
-  if (rkOnline()) otrosOnline().forEach(o => filas.push(filaOnline(o, sumaOnline(o.reto, dias, rango))));
-  else BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
+  if (fbOn()) otrosOnline().forEach(o => filas.push(filaOnline(o, sumaOnline(o.reto, dias, rango))));
+  if (!rkOnline()) BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...suma(x => eligeBot(b, x)) }));
   // Desempate: más aciertos y luego más aciertos en los que falló la app; si sigue igual, comparten puesto
   filas.sort((a, b) => b.pts - a.pts || b.ok - a.ok || b.vsApp - a.vsApp || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null;
@@ -5092,8 +5092,8 @@ function clasificacionArc(dias, rango) {
   const xb = xpBots(), filas = [];
   filas.push({ n: nombreYo(), yo: true, perfil: PERFIL, nv: nivelDe(totalXP()).n, e: tituloYo(), ...partidaArc(dias, picksYoArc, ARCD.cont) });
   filas.push({ n: "La App", app: true, perfil: { avatar: "app" }, e: "Siempre lo más probable", ...partidaArc(dias, (d, r) => picksAppArc(r), {}) });
-  if (rkOnline()) otrosOnline().forEach(o => { const a = (o.arc && o.arc.d) || {}, t = sumaOnline(a, dias, rango); filas.push(filaOnline(o, { ...t, mejor: (o.arc && o.arc.mejor) || 0 })); });
-  else BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...partidaArc(dias, (d, r) => picksBotArc(b, d, r), {}) }));
+  if (fbOn()) otrosOnline().forEach(o => { const a = (o.arc && o.arc.d) || {}, t = sumaOnline(a, dias, rango); filas.push(filaOnline(o, { ...t, mejor: (o.arc && o.arc.mejor) || 0 })); });
+  if (!rkOnline()) BOTS_RETO.forEach((b, i) => filas.push({ n: b.n, e: ESTILOS[b.e], perfil: perfilBot(b, i, xb[b.n] || 0), nv: nivelDe(xb[b.n] || 0).n, ...partidaArc(dias, (d, r) => picksBotArc(b, d, r), {}) }));
   if (_arcSucio) { _arcSucio = false; guardarArc(); }
   filas.sort((a, b) => b.pts - a.pts || b.mejor - a.mejor || b.ok - a.ok || (a.yo ? -1 : b.yo ? 1 : 0));
   let pos = 0, ant = null;
