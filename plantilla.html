@@ -6282,11 +6282,11 @@ const TJVIVA = (() => {
 const FONDO = (() => {
   let cv = null, cx = null, cab = null, esc = "", st = null, ult = 0, w = 0, h = 0, k = 1, quieto = false, bot = 0;
   const PX = { f: "pxf", b: "pxb", te: "pxte", e: "pxe" };
-  const ESCENAS = { s0estadio: d => PX[d] || "pxf", pizarra: () => "pizarra", estadio: () => "noche", pixel: () => "pxrun", neon: () => "neon", galaxia: () => "galaxia" };
-  const OPAC = { pxf: .5, pxb: .5, pxte: .5, pxe: .55, pizarra: .75, noche: .9, pxrun: .85, neon: .7, galaxia: .9 };
+  const ESCENAS = { "": () => "logo", s0estadio: d => PX[d] || "pxf", pizarra: () => "pizarra", estadio: () => "noche", pixel: () => "pxrun", neon: () => "neon", galaxia: () => "galaxia" };
+  const OPAC = { logo: .9, pxf: .5, pxb: .5, pxte: .5, pxe: .55, pizarra: .75, noche: .9, pxrun: .85, neon: .7, galaxia: .9 };
   const r = (a, b) => a + Math.random() * (b - a), ri = (a, b) => Math.floor(r(a, b + 1));
   const escenaAhora = () => { const f = ESCENAS[document.documentElement.dataset.skin || ""]; return f ? f(est.dep) : ""; };
-  const esPixel = e => e.startsWith("px");
+  const esPixel = e => e.startsWith("px") || e === "logo";
   function medir() {
     w = innerWidth; h = innerHeight; cv.style.height = h + "px";   // alto fijo: si sale el teclado, el dibujo no se aplasta ni se reinicia
     const ab = document.querySelector(".abajo"); bot = ab ? Math.max(0, h - ab.getBoundingClientRect().top) : 0;   // los dibujos acaban justo donde empiezan los botones de abajo
@@ -6480,6 +6480,20 @@ const FONDO = (() => {
     for (const [x, y, l] of [[W() * .25, H() * .3, "A"], [W() * .7, H() * .7, "B"]]) { marco(Math.round(x) - 8, Math.round(y) - 8, 16, 16, s.t % 20 < 10 ? "#ffcd75" : "#ef7d57"); cx.fillStyle = "#ffcd75"; cx.font = "bold 8px monospace"; cx.textAlign = "center"; cx.fillText(l, x, y + 3); }
     for (const t of s.tiros) { cx.strokeStyle = t.eq ? "#ff004d" : "#73eff7"; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(t.x, t.y); cx.lineTo(t.tx, t.ty); cx.stroke(); }
     for (const j of s.js) if (j.vivo) { caja(j.x - 1, j.y - 1, 3, 3, j.eq ? "#ff004d" : "#73eff7"); } else caja(j.x - 1, j.y - 1, 3, 3, "rgba(148,176,194,.35)");
+  };
+  // Tema normal: el logo de Clávala en grande, flotando con un brillo dorado detrás y destellos alrededor
+  const LOGO_IMG = (() => { const im = new Image(); im.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIElEQVR42sVXPU4CQRT+ht3SC2hpYWdDYQy2VCZUGi5AApzAAkyWLdjKAywkXmADlQkVhQ1kY2FDYUJBqRewlKwFzPp2dmZ2ZpX4umV4833v/w3wz8LKKvYukdDvIC53l1sWdDhqZw8746QMGWYDnANVSL8zNibCSgG/P8oVTlrWRJgOPAOsAlUJIdPvjJUkKgcBF3SGo3YuaZUE/gRcRsJzpCRc0wtSd/pbrcrQc/D1uvuPW3XSO/r+VhoGprReAR7EYLV6N2fJch4yfoff+Pnde9KXpmtj+fNRF7U6ks36BR+rWXp2fH4NTirYEUn8xg68qBSZifUcfLN+AYAMOCUBAKdnF1jOQ9a7RGLSByqFTYXE7mM1y1nORTwz7YYVE/fX6t1kMR1ILaYkAGAxHUCWI1oCudKTCAUSQXVnvw6BDEjMAf5tC249DSmwSGLx9olJFOG22TyMB2SZT8G5TKLInkAQg/HJJZPlPGRXN4NCcAC4u39Im1K5EJy0jPo/jbet1VY5MPQcwN8mwTxkVze7YSKWJLdcbMnWC0lajsQDfLDQtqqbBXQemLRiV7lMCGHYD5gkiMF0MabDiOvoOiPT7gN7EtwLdLqphE5Ct+pIW7p5Duw9wS/6et1mAJRuJcCCXi4vcn1AV5Ju1cldXnQuyyHzpdRzfvXqKQI3X8stiVDg0mu5jIhJ/E2BS70N6VYrkqHV8edPs0M+Tv9dvgEHUSs1tKLoGgAAAABJRU5ErkJggg=="; return im; })();
+  CREAR.logo = () => ({ t: 0, chis: [...Array(14)].map(() => ({ a: r(0, 6.28), d: r(.55, 1.05), f: r(0, 6.28), v: r(.004, .012) })) });
+  PASO.logo = s => { s.t++; s.chis.forEach(c2 => { c2.a += c2.v; c2.f += .08; }); };
+  DIBU.logo = s => {
+    const oscuro = document.documentElement.dataset.tema === "oscuro", W0 = W(), H0 = H();
+    cx.clearRect(0, 0, W0, cv.height);
+    const lado = Math.round(Math.min(W0 * .62, H0 * .5) / 32) * 32 || 32, x0 = Math.round((W0 - lado) / 2), y0 = Math.round((H0 - lado) / 2 + Math.sin(s.t / 22) * lado * .03);
+    const g = cx.createRadialGradient(W0 / 2, y0 + lado / 2, lado * .1, W0 / 2, y0 + lado / 2, lado * .85), p = .18 + .08 * Math.sin(s.t / 16);
+    g.addColorStop(0, `rgba(255,183,3,${oscuro ? p : p * .7})`); g.addColorStop(1, "rgba(255,183,3,0)"); cx.fillStyle = g; cx.fillRect(0, 0, W0, H0);
+    cx.globalAlpha = oscuro ? .55 : .35; if (LOGO_IMG.complete) cx.drawImage(LOGO_IMG, x0, y0, lado, lado); cx.globalAlpha = 1;
+    for (const c2 of s.chis) { const x = W0 / 2 + Math.cos(c2.a) * lado * c2.d * .8, y = y0 + lado / 2 + Math.sin(c2.a) * lado * c2.d * .8, b = Math.max(0, Math.sin(c2.f));
+      if (b > .3) { cx.fillStyle = `rgba(255,${oscuro ? 241 : 183},${oscuro ? 232 : 3},${b * (oscuro ? .8 : .6)})`; cx.fillRect(Math.round(x), Math.round(y), 1, 1); if (b > .85) { cx.fillRect(Math.round(x) - 1, Math.round(y), 3, 1); cx.fillRect(Math.round(x), Math.round(y) - 1, 1, 3); } } }
   };
   // Pizarra táctica: alineación en tiza y jugadas que se dibujan solas
   CREAR.pizarra = () => {
