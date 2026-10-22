@@ -4695,7 +4695,7 @@ const BASES_EVENTO = {
     ["Fechas", "Del 22 de octubre al 21 de noviembre de 2026. Es el primer evento de la Temporada 0."],
     ["Mecánica", "Cada día puedes elegir 3 respuestas de los partidos del día que salen en el evento (una por partido), hasta que empieza cada partido. Puedes cambiarlas o quitarlas antes de que empiecen."],
     ["Combo", "Cada acierto seguido sube tu combo: ×1, ×2, ×3… hasta ×8. Los puntos de un acierto son 10 ÷ la probabilidad de esa respuesta, multiplicados por el combo que tenías. Un fallo devuelve el combo a ×1. El combo continúa de un día a otro y se cuenta en el orden de los partidos."],
-    ["Vidas", "Tienes 3 vidas cada semana (de lunes a domingo) y cada fallo quita una. Sin vidas, tus jugadas de esa semana no puntúan (GAME OVER) hasta el lunes. Una vez por semana puedes «continuar» gastando una Segunda oportunidad para recuperar una vida."],
+    ["Vidas", "Tienes 4 vidas cada semana (de lunes a domingo) y cada fallo quita una. Sin vidas, tus jugadas de esa semana no puntúan (GAME OVER) hasta el lunes. Una vez por semana puedes «continuar» gastando una Segunda oportunidad para recuperar una vida."],
     ["Clasificación", "Gana quien más puntos sume en todo el evento. Desempate: mayor combo conseguido y después más aciertos. Los puntos del evento suman también a la clasificación de la Temporada 0."],
     ["Premios", "1.º, 2.º y 3.º: set exclusivo animado (tarjeta HI-SCORE, marco Arcade y título HI-SCORE), 3.000, 2.000 y 1.000 monedas y 5.000 XP. Del 4.º al 10.º: título Top 10 Arcade, 500 monedas y 1.000 XP. Hitos: combo ×4, 150 monedas; combo ×6, título Combo ×6; combo ×8, avatar Ficha arcade. Cada acierto da 1 estrella del pase de temporada."],
   ],
@@ -5026,7 +5026,7 @@ function movilTema(id) {
 // multiplica los puntos; un fallo lo devuelve a ×1 y quita una vida (3 por semana). Sin vidas, GAME OVER hasta
 // el lunes (o «continuar» gastando una Segunda oportunidad). El combo sigue de un día a otro.
 // Tiene su clasificación y premios, y sus puntos suman también a la clasificación de la Temporada 0.
-const ARC = { nombre: "HI-SCORE", desde: "2026-10-22", hasta: "2026-11-21", picks: 3, vidas: 3, maxCombo: 8 };
+const ARC = { nombre: "HI-SCORE", desde: "2026-10-22", hasta: "2026-11-21", picks: 3, vidas: 4, maxCombo: 8 };
 const ARC_K = "arcadeV1";
 let ARCD = (() => { try { const r = JSON.parse(localStorage.getItem(ARC_K) || "null"); if (r && r.dias) return r; } catch (e) {} return { dias: {}, cont: {} }; })();
 ARCD.cont ||= {};
