@@ -6163,7 +6163,8 @@ const FONDO = (() => {
     const pan = { x: tv.x + 6, y: tv.y + 6, a: tvw - 20, b: tvh - 12 };
     const ninos = [{ x: Math.round(cw * .31), pelo: "#5d3a1a", cam: "#b13e53" }, { x: Math.round(cw * .69), pelo: "#1a1c2c", cam: "#3b5dc9", coleta: 1 }];
     ninos.forEach(n => { n.sx = n.x; });
-    const s = { cw, ch, suelo, mueble, tv, pan, ninos, t: 0, cual: "futbol", ev: null, prox: ri(260, 480), est: [...Array(9)].map(() => ({ x: r(2, 26), y: r(2, 18) })) };
+    const s = { cw, ch, suelo, mueble, tv, pan, ninos, t: 0, cual: "futbol", ev: null, prox: 280,   // a 14 fotogramas por segundo: 280 = 20 s
+    est: [...Array(9)].map(() => ({ x: r(2, 26), y: r(2, 18) })) };
     s.juego = JUEGOS.futbol.crear(pan.a, pan.b); s.co = { x: Math.round(cw / 2 - 9), y: mueble.y + mueble.b + 3 };
     return s;
   };
@@ -6172,7 +6173,7 @@ const FONDO = (() => {
     const ev = s.ev, base = s.ch - 3;
     if (!ev) {
       JUEGOS[s.cual].paso(s.juego, s.pan.a, s.pan.b);
-      if (s.t >= s.prox && !s.juego.fiesta) s.ev = { n: ri(0, 1), fase: "levanta", t: 0 };
+      if (s.t >= s.prox && !s.juego.fiesta) s.ev = { n: ri(0, 1), fase: "levanta", t: 0, ini: s.t };
       return;
     }
     ev.t++;
@@ -6184,7 +6185,7 @@ const FONDO = (() => {
       if (ev.t > 34) { ev.fase = "vuelve"; ev.t = 0; }
     }
     else if (ev.fase === "vuelve") { const f = Math.min(1, ev.t / 46); n.x = meta.x + (n.sx - meta.x) * f; n.ay = (meta.y - base) * (1 - f); if (f >= 1) { ev.fase = "sienta"; ev.t = 0; } }
-    else if (ev.fase === "sienta" && ev.t > 8) { n.x = n.sx; n.ay = 0; s.ev = null; s.prox = s.t + ri(420, 900); }
+    else if (ev.fase === "sienta" && ev.t > 8) { n.x = n.sx; n.ay = 0; s.prox = s.ev.ini + 280; s.ev = null; }   // cada 20 s se cambia de juego (contando desde que se levantó)
   };
   // Un niño de espaldas: sentado (con el mando), de pie andando o agachado delante de la consola
   function pintarNino(s, n, i, base, luz) {
