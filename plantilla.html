@@ -1293,7 +1293,9 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .arp { margin: 0 0 6px; background: #1a1c2c; border: 2px solid #000; } .arp.elegido { border-color: #ffec27; } .arp summary { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; list-style: none; } .arp summary::-webkit-details-marker { display: none; }
 .arp .arh { font: 9px "Press Start 2P", monospace; color: #ffcd75; min-width: 42px; } .arp .are { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .arp .are b { font: 600 13.5px "Pixelify Sans", var(--body); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .arp .are small { font: 400 10.5px "Pixelify Sans", var(--body); color: #83769c; }
-.arp .armk { color: #ffec27; font-size: 18px; } .arp.dep-b { box-shadow: inset 4px 0 0 #ffa300; } .arp.dep-f { box-shadow: inset 4px 0 0 #38b764; }
+.arp .armk { color: #ffec27; font-size: 18px; }
+.arp .arfl { flex: none; width: 26px; height: 26px; display: grid; place-items: center; font: 9px "Press Start 2P", monospace; color: #000; background: #ffcd75; border: 2px solid #000; transition: transform .15s steps(2); }
+.arp[open] .arfl { transform: rotate(180deg); } .arp .armi { font-weight: 600; color: #ffec27; } .arp[open] > summary { border-bottom: 2px dashed #3a4466; } .arp.dep-b { box-shadow: inset 4px 0 0 #ffa300; } .arp.dep-f { box-shadow: inset 4px 0 0 #38b764; }
 .arq { padding: 4px 8px 8px; } .arq > small { display: block; font: 400 12px "Pixelify Sans", var(--body); color: #94b0c2; margin-bottom: 4px; }
 .arops { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; }
 .arop { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 3px; cursor: pointer; background: #262b44; color: #fff; border: 2px solid #000; box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.08); }
@@ -5047,6 +5049,9 @@ function marcArc(x, s) {
   return `<span class="armc"><span class="armt">${miniEsc(escu[0] || "", x.local)}<b>${esc(x.local)}</b></span><span class="arms ${vivo || (s.empezado && !fin) ? "vivo" : fin ? "fin" : ""}">${centro}</span><span class="armt v"><b>${esc(x.visitante)}</b>${miniEsc(escu[1] || "", x.visitante)}</span></span>`;
 }
 // ---- Pantalla del evento
+// Los partidos del evento van cerrados (desplegables); se recuerda cuáles has abierto para que no se cierren al repintar
+const ARP_ABIERTOS = new Set();
+document.addEventListener("toggle", e => { const d = e.target; if (!d.matches || !d.matches("details[data-arpk]")) return; d.open ? ARP_ABIERTOS.add(d.dataset.arpk) : ARP_ABIERTOS.delete(d.dataset.arpk); }, true);
 function pintarArcade() {
   procesarRecompensas();
   const hoy = diaJuego(), r = enArc(hoy) && DATOS.dias.some(d => d.fecha === hoy) ? poolArc(hoy) : null, y = estadoYoArc();
@@ -5075,7 +5080,7 @@ function pintarArcade() {
       const s0 = estadoReto({ ...pa, ops: (pa.qs[0] || {}).ops || [] }), mio = picks.find(pk => pk.i === i), cerrado = s0.empezado || go;
       const preg = pa.qs.map(q => `<div class="arq"><small>${esc(q.q)}</small><div class="arops">${q.ops.map(o => { const yoEs = mio && mio.t === q.tipo && mio.m === o.m;
         return `<button class="arop ${yoEs ? "yo" : ""}" ${cerrado || (!yoEs && !mio && picks.length >= ARC.picks) ? "disabled" : `data-arcpick="${i}|${q.tipo}|${esc(o.m)}"`}><b>${esc(o.n || o.m)}</b><span>${Math.round(o.p * 100)}% · +${ptsReto(o.p)}</span></button>`; }).join("")}</div></div>`).join("");
-      return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" ${mio ? "open" : ""}><summary><span class="are">${marcArc({ ...pa, ops: (pa.qs[0] || {}).ops || [] }, s0)}<small class="arlg">${esc(ligaBase(pa.liga))}</small></span>${mio ? '<span class="armk">★</span>' : ""}</summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
+      return `<details class="arp dep-${pa.dep === "b" ? "b" : "f"} ${mio ? "elegido" : ""}" data-arpk="${esc(pa.local + "|" + pa.visitante)}" ${ARP_ABIERTOS.has(pa.local + "|" + pa.visitante) ? "open" : ""}><summary><span class="are">${marcArc({ ...pa, ops: (pa.qs[0] || {}).ops || [] }, s0)}<small class="arlg">${esc(ligaBase(pa.liga))}${mio ? ` · <b class="armi">★ ${esc(((pa.qs.find(q => q.tipo === mio.t) || { ops: [] }).ops.find(o => o.m === mio.m) || {}).n || mio.m)}</b>` : ""}</small></span><span class="arfl">▼</span></summary>${preg}${cerrado && !go ? '<p class="apnota">Ya ha empezado.</p>' : ""}</details>`;
     }).join("")}</section>`;
   } else if (!fin) h += `<div class="vacio">${hoy < ARC.desde ? `El evento empieza el ${fCorta(ARC.desde)}. Sus partidos salen la noche antes, a las 23:30: ahí podrás elegir tus 3 primeros pronósticos.` : "Hoy no hay partidos para el evento. A las 23:30 salen los de mañana."}</div>`;
   const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
