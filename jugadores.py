@@ -20,7 +20,7 @@ if sys.argv[1:2] == ["reglas"]:   # python jugadores.py reglas -> qué reglas ti
     rel = requests.get(f"https://firebaserules.googleapis.com/v1/projects/{proy}/releases/cloud.firestore", headers=H, timeout=30).json()
     src = requests.get(f"https://firebaserules.googleapis.com/v1/{rel.get('rulesetName')}", headers=H, timeout=30).json()
     txt = "".join(f.get("content", "") for f in src.get("source", {}).get("files", []))
-    print("::notice::" + ("con pk" if "'pk'" in txt else "SIN pk") + " · " + rel.get("updateTime", ""))
+    print("::notice::" + ("con pk" if "'pk'" in txt else "SIN pk") + (" · con historial" if "match /pk/" in txt else " · SIN historial") + " · " + rel.get("updateTime", ""))
     sys.exit()
 if sys.argv[1:2] == ["ver"]:   # python jugadores.py ver UID -> muestra lo que tiene guardado
     for uid in sys.argv[2:]:

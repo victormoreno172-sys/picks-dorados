@@ -26,6 +26,13 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['n', 'nl', 'p', 'reto', 'arc', 'nv', 't', 'pk'])
         && request.resource.data.n is string && request.resource.data.n.size() >= 3 && request.resource.data.n.size() <= 16;
       allow delete: if request.auth != null && request.auth.uid == uid;
+      // Pronósticos: cada cambio es un documento nuevo con la hora del servidor; no se pueden cambiar ni borrar
+      match /pk/{id} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.auth.uid == uid && request.resource.data.ts == request.time
+          && request.resource.data.keys().hasOnly(['k', 'd', 'j', 'sg', 'ts']) && request.resource.data.j is string && request.resource.data.j.size() < 400
+          && request.resource.data.k is string && request.resource.data.k.size() < 320;
+      }
     }
   }
 }

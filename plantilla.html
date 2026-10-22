@@ -3668,7 +3668,7 @@ async function _fbToken(reintento) {
 }
 const fsEnc = v => v === null || v === undefined ? { nullValue: null } : typeof v === "boolean" ? { booleanValue: v } : typeof v === "number" ? (Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v })
   : typeof v === "string" ? { stringValue: v } : Array.isArray(v) ? { arrayValue: { values: v.map(fsEnc) } } : { mapValue: { fields: Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fsEnc(x)])) } };
-const fsDec = f => !f ? null : "nullValue" in f ? null : "booleanValue" in f ? f.booleanValue : "integerValue" in f ? +f.integerValue : "doubleValue" in f ? f.doubleValue : "stringValue" in f ? f.stringValue
+const fsDec = f => !f ? null : "nullValue" in f ? null : "booleanValue" in f ? f.booleanValue : "integerValue" in f ? +f.integerValue : "doubleValue" in f ? f.doubleValue : "stringValue" in f ? f.stringValue : "timestampValue" in f ? f.timestampValue
   : "arrayValue" in f ? (f.arrayValue.values || []).map(fsDec) : "mapValue" in f ? Object.fromEntries(Object.entries(f.mapValue.fields || {}).map(([k, x]) => [k, fsDec(x)])) : null;
 const FS = () => `https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents`;
 // Tu ficha: nombre, aspecto y los puntos de cada día (Gánale a la app y HI-SCORE)
@@ -3679,21 +3679,62 @@ function fichaOnline() {
   const arc = {}, y = partidaArc(diasArc(), picksYoArc, ARCD.cont);
   for (const z of y.log) { if (z.go || z.ok === undefined) continue; const a = arc[z.d] ||= [0, 0, 0]; a[0] += z.g || 0; a[1] += z.ok ? 1 : 0; a[2]++; }
   const n = nombreOnline();
-  return { n, nl: n.toLowerCase(), nv: nivelDe(totalXP()).n, t: Date.now(), reto, arc: { d: arc, mejor: y.mejor }, pk: pronosOnline(),
+  return { n, nl: n.toLowerCase(), nv: nivelDe(totalXP()).n, t: Date.now(), reto, arc: { d: arc, mejor: y.mejor }, pk: { c: Object.keys(ARCD.cont || {}).filter(k => ARCD.cont[k]) },
     p: { avatar: PERFIL.avatar === "foto" ? "a1" : PERFIL.avatar || "a1", marco: PERFIL.marco || "ninguno", tarjeta: PERFIL.tarjeta || "clasica", color: PERFIL.color || "normal", tt: tituloYo(), vit: vitrina() } };
 }
 // Tus pronósticos tal cual (no solo los totales): así los demás calculan tus puntos con los resultados reales
 // aunque tengas la app cerrada. Cada pronóstico va como texto JSON (Firestore no admite listas dentro de listas).
-function pronosOnline() {
-  const r = {}, a = {};
+function pronosOnline() {   // { clave: [j, sg] } con todos tus pronósticos actuales
+  const out = {};
   for (const d of Object.keys(RETO.dias)) { const rd = RETO.dias[d]; if (d < INICIO_RANK || !rd.partidos) continue;
     for (const x of rd.partidos) { const k = claveReto(x), m = (rd.picks || {})[k]; if (!m) continue;
       const top = x.ops.reduce((u, v) => v.p > u.p ? v : u), o = x.ops.find(z => z.m === m) || {};
-      (r[d] ||= []).push(JSON.stringify([x.local, x.visitante, x.hora || "", m, o.p || 0, top.m, rd.dobles && rd.dobles[k] ? 1 : 0])); } }
+      out[`r|${d}|${k}`] = [JSON.stringify([x.local, x.visitante, x.hora || "", m, o.p || 0, top.m, rd.dobles && rd.dobles[k] ? 1 : 0]), rd.segunda && rd.segunda[k] ? 1 : 0]; } }
   for (const d of diasArc()) { const rd = ARCD.dias[d]; if (!rd || !rd.pool) continue;
     for (const pk of rd.picks || []) { const x = xArc(rd, pk.i, pk.t); if (!x) continue; const o = x.ops.find(z => z.m === pk.m) || {};
-      (a[d] ||= []).push(JSON.stringify([x.local, x.visitante, x.hora || "", pk.m, o.p || 0, pk.i])); } }
-  return { r, a, c: Object.keys(ARCD.cont || {}).filter(k => ARCD.cont[k]) };
+      out[`a|${d}|${x.local}|${x.visitante}`] = [JSON.stringify([x.local, x.visitante, x.hora || "", pk.m, o.p || 0, pk.i]), 0]; } }
+  return out;
+}
+// Cada cambio de pronóstico se guarda como un documento nuevo en jugadores/{uid}/pk con la hora del SERVIDOR (ts).
+// Las reglas no dejan cambiarlo ni borrarlo: así nadie puede colar un pronóstico cuando el partido ya ha empezado.
+const hashK = t => { let h = 5381; for (let i = 0; i < t.length; i++) h = (h * 33 ^ t.charCodeAt(i)) >>> 0; return h.toString(36); };
+async function subirPks(tok) {
+  let hecho = {}; try { hecho = JSON.parse(localStorage.getItem("pkSubidos") || "{}"); } catch (e) {}
+  const ahora = pronosOnline(), writes = [], nuevo = { ...hecho }, base = `projects/${FB.projectId}/databases/(default)/documents/jugadores/${FBA.uid}/pk/`;
+  const claves = new Set([...Object.keys(ahora), ...Object.keys(hecho).filter(k => hecho[k] && hecho[k] !== "|0")]);
+  for (const k of claves) {
+    const [j, sg] = ahora[k] || ["", 0], v = j + "|" + sg; if (hecho[k] === v || (!hecho[k] && !j)) continue;
+    const d = k.split("|")[1]; if (!ahora[k] && d < sumaDias(AHORA.fecha, -1)) { delete nuevo[k]; continue; }
+    writes.push({ update: { name: base + hashK(k) + "-" + Date.now().toString(36) + writes.length, fields: { k: { stringValue: k.slice(0, 300) }, d: { stringValue: d }, j: { stringValue: j }, sg: { integerValue: String(sg) } } },
+      updateTransforms: [{ fieldPath: "ts", setToServerValue: "REQUEST_TIME" }], currentDocument: { exists: false } });
+    nuevo[k] = v;
+  }
+  if (!writes.length) return;
+  const r = await fetch(`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents:commit`, { method: "POST", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json" }, body: JSON.stringify({ writes: writes.slice(0, 450) }) });
+  if (r.ok && writes.length <= 450) try { localStorage.setItem("pkSubidos", JSON.stringify(nuevo)); } catch (e) {}
+}
+// Minutos (en hora de Madrid) de una fecha ISO del servidor y de la hora de un partido, para compararlas
+const minMad = iso => { const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)), g = t => +p.find(z => z.type === t).value;
+  return Date.UTC(g("year"), g("month") - 1, g("day"), g("hour"), g("minute")) / 6e4; };
+const minPartido = (d, h) => { const [y, m, dd] = d.split("-").map(Number), [hh, mm] = (h || "23:59").split(":").map(Number); return Date.UTC(y, m - 1, dd, hh, mm) / 6e4; };
+// Pronósticos válidos de otro jugador: por cada partido, el último guardado antes de que empezara
+// (con Segunda oportunidad, hasta 20 min después). La hora del partido se mira en los datos de la app, no en lo que sube él.
+const PK_DESDE = "2026-10-23";   // el 22/10 se subieron de golpe los pronósticos que ya estaban hechos: ese día no se mira la hora
+function pksValidos(docs) {
+  const porK = {};
+  for (const dd of docs) { const f = fsDec({ mapValue: { fields: dd.fields || {} } }) || {}; if (!f.k || !f.ts) continue; (porK[f.k] ||= []).push(f); }
+  const out = { r: {}, a: {} };
+  for (const [k, l] of Object.entries(porK)) {
+    l.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+    let elegido = null;
+    for (const f of l) { let z = null; try { z = f.j ? JSON.parse(f.j) : null; } catch (e) { continue; }
+      const d = f.d, lo = z ? z[0] : k.split("|")[2], vi = z ? z[1] : k.split("|")[3];
+      const pos = partidoDePierna({ fecha: d, local: lo, visitante: vi }), hora = pos ? DATOS.dias[pos[0]].partidos[pos[1]].hora : z && z[2];
+      if (d >= PK_DESDE && minMad(f.ts) > minPartido(d, hora) + (f.sg && k[0] === "r" ? 20 : 1)) continue;   // llegó tarde: no vale
+      elegido = { d, j: f.j }; }
+    if (elegido && elegido.j) (out[k[0]][elegido.d] ||= []).push(elegido.j);
+  }
+  return out;
 }
 // ¿Ha acertado este pronóstico? 1 sí, 0 no, null si el partido aún no ha acabado
 function resPk(fecha, local, visitante, hora, m) {
@@ -3704,18 +3745,18 @@ function resPk(fecha, local, visitante, hora, m) {
 }
 // Puntos de un jugador online calculados aquí con sus pronósticos (igual que los tuyos)
 function calcPk(o) {
-  if (!o.pk) return o;
+  if (!o.pkv) return o;   // si aún no tiene pronósticos con hora del servidor, se queda con lo que ha subido
   const tk = Date.now() >> 13; if (o._pkT === tk) return o; o._pkT = tk;
   o._reto0 ||= o.reto || {};
   const parse = t => { try { return JSON.parse(t); } catch (e) { return null; } };
   const reto = { ...o._reto0 };
-  for (const [d, l] of Object.entries(o.pk.r || {})) { const t = [0, 0, 0, 0];
+  for (const [d, l] of Object.entries(o.pkv.r || {})) { const t = [0, 0, 0, 0];
     for (const z of (l || []).map(parse).filter(Boolean)) { const [lo, vi, h, m, p, tm, dob] = z, ok = resPk(d, lo, vi, h, m); if (ok === null) continue;
       t[2]++; if (ok) { const appOk = tm === m || resPk(d, lo, vi, h, tm) === 1; t[1]++; t[0] += (ptsReto(p) + (appOk ? 0 : BONUS_RETO)) * (dob ? 2 : 1); if (!appOk) t[3]++; } }
     reto[d] = t; }
-  const arcd = {}, cont = new Set(o.pk.c || []), fallos = {}; let racha = 0, mejor = 0;
-  for (const d of Object.keys(o.pk.a || {}).filter(enArc).sort()) { const sem = lunesDe(d);
-    const lista = (o.pk.a[d] || []).map(parse).filter(Boolean).sort((x, y) => (x[2] || "").localeCompare(y[2] || "") || x[5] - y[5]);
+  const arcd = {}, cont = new Set((o.pk && o.pk.c) || []), fallos = {}; let racha = 0, mejor = 0;
+  for (const d of Object.keys(o.pkv.a || {}).filter(enArc).sort()) { const sem = lunesDe(d);
+    const lista = (o.pkv.a[d] || []).map(parse).filter(Boolean).sort((x, y) => (x[2] || "").localeCompare(y[2] || "") || x[5] - y[5]);
     for (const [lo, vi, h, m, p] of lista) {
       if (ARC.vidas + (cont.has(sem) ? 1 : 0) - (fallos[sem] || 0) <= 0) continue;
       const ok = resPk(d, lo, vi, h, m); if (ok === null) continue;
@@ -3731,6 +3772,7 @@ let _subH = "", _subTimer = 0;
 async function subirOnline() {
   if (!fbOn() || !arenaVista()) return;
   if (!FBA) await fbToken();
+  try { const tk = await fbToken(); if (tk) await subirPks(tk); } catch (e) {}
   const f = fichaOnline(), h = JSON.stringify({ ...f, t: 0 }); if (h === _subH) return;
   const tok = await fbToken(); if (!tok) return;
   try {
@@ -3751,7 +3793,14 @@ async function bajarOnline(forzar) {
     } while (pt && docs.length < 3000);
     const todas = docs.map(d => ({ uid: d.name.split("/").pop(), ...fsDec({ mapValue: { fields: d.fields || {} } }) })).filter(x => x.n), porNom = {};
     for (const x of todas) { const k = claveNom(x.n), y = porNom[k]; if (!y || (FBA && x.uid === FBA.uid) || ((x.t || 0) > (y.t || 0) && !(FBA && y.uid === FBA.uid))) porNom[k] = x; }
-    ONL.lista = Object.values(porNom);
+    const lista = Object.values(porNom);
+    await Promise.all(lista.filter(x => !FBA || x.uid !== FBA.uid).map(async x => { try {
+      let pd = [], pt2 = "";
+      do { const r = await fetch(`${FS()}/jugadores/${x.uid}/pk?pageSize=300${pt2 ? "&pageToken=" + encodeURIComponent(pt2) : ""}`, { headers: { Authorization: "Bearer " + tok } }), j = await r.json();
+        if (!r.ok) break; pd = pd.concat(j.documents || []); pt2 = j.nextPageToken || ""; } while (pt2 && pd.length < 3000);
+      if (pd.length) x.pkv = pksValidos(pd);
+    } catch (e) {} }));
+    ONL.lista = lista;
     ONL.t = Date.now(); ONL.err = "";
     try { localStorage.setItem("onlineV1", JSON.stringify({ lista: ONL.lista.map(({ _pkT, _reto0, ...x }) => x), t: ONL.t })); } catch (e) {}
   } catch (e) { ONL.err = "Sin conexión"; }
