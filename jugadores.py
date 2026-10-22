@@ -27,6 +27,8 @@ if sys.argv[1:2] == ["ver"]:   # python jugadores.py ver UID -> muestra lo que t
         f = requests.get(f"{BASE}/{uid}", headers=H, timeout=30).json().get("fields", {})
         for k in ("n", "t", "reto", "arc"):
             print("::notice::" + k + " = " + json.dumps(f.get(k), ensure_ascii=False)[:900])
+        pd = requests.get(f"{BASE}/{uid}/pk", headers=H, params={"pageSize": 300}, timeout=30).json().get("documents", [])
+        print("::notice::pronósticos guardados: " + str(len(pd)) + " · " + " ; ".join((d["fields"].get("k", {}).get("stringValue", "")[:60] + " @ " + d["fields"].get("ts", {}).get("timestampValue", "")[11:19]) for d in pd[:6]))
     sys.exit()
 if sys.argv[1:]:
     for uid in sys.argv[1:]:
