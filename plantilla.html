@@ -1700,6 +1700,7 @@ let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorO
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 // Temas de la app (paquetes de interfaz): cambian toda la app. Se guardan en el perfil (perfilV1.skin)
+const APP_VERSION = "__VERSION__";   // número de versión: se ve abajo («Actualizado») y arriba en Ajustes
 const SKIN_BG = { estadio: "#06111f", oro: "#070707", pizarra: "#12261d", galaxia: "#070313", neon: "#0b0618", pixel: "#1a1c2c", pxconsola: "#0f380f", s0estadio: "#131a2e" };
 function skinActual() { try { const p = JSON.parse(localStorage.getItem("perfilV1") || "null"); return p && SKIN_BG[p.skin] ? p.skin : ""; } catch (e) { return ""; } }
 function aplicarTema() {
@@ -3141,7 +3142,7 @@ function pintarPantallaAjustes() {
     [...todas[k]].sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b)).map(l => { const inf = infoLiga(l);
       return `<label class="ajliga"><span>${inf.flag}</span><span class="nl">${esc(inf.nombre)}<small style="color:var(--muted)"> ${esc(inf.pais)}</small></span><input type="checkbox" data-ajliga="${esc(l)}" ${AJ.ocultas.includes(l) ? "" : "checked"}></label>`; }).join("") + `</details>`).join("");
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
-  $("vista").innerHTML = `<div class="aj" style="margin-top:12px">${htmlCuenta()}
+  $("vista").innerHTML = `<p class="apnota" style="text-align:center;margin:10px 0 0">Clávala · <b>versión ${esc(APP_VERSION)}</b> · datos del ${esc(DATOS.generado)}</p><div class="aj" style="margin-top:12px">${htmlCuenta()}
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
     ${esProbador() ? `<section class="ajb"><h3>🧪 Pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
       <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div>
@@ -5818,7 +5819,7 @@ document.addEventListener("click", e => { const a = e.target.closest("[data-ajre
   AJ.umbral = null; guardarAjustes(); aplicarUmbral(); pintarLista(); });
 if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (AJ.tema === "auto") aplicarTema(); });
 est.busca = "";
-$("upd").textContent = "act. " + DATOS.generado;
+$("upd").textContent = "versión " + APP_VERSION + " · act. " + DATOS.generado;
 // --- Actualizar: busca si hay datos más nuevos publicados y, si los hay, recarga la app
 const ACCIONES = "https://github.com/victormoreno172-sys/picks-dorados/actions/workflows/actualizar.yml";
 async function hayNuevos() {

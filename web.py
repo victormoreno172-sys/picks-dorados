@@ -119,6 +119,12 @@ def html(datos: dict, documento_completo: bool = True) -> str:
     except Exception:  # noqa: BLE001
         fb = None
     cuerpo = cuerpo.replace("__FIREBASE__", json.dumps(fb) if fb else "null")
+    try:  # número de versión de la app (version.txt se sube en cada cambio)
+        with open(os.path.join(CARPETA, "version.txt"), encoding="utf-8") as f:
+            ver = f.read().strip()
+    except OSError:
+        ver = "?"
+    cuerpo = cuerpo.replace("__VERSION__", ver)
     cuerpo = cuerpo.replace("__DATOS__", js).replace('href="bot/"', f'href="bot/?v={VERSION}"') + AUTO_RECARGA
     return (CABECERA.replace("#0b1711", "#f5f7fb") + cuerpo + "\n</body>\n</html>\n") if documento_completo else cuerpo
 
