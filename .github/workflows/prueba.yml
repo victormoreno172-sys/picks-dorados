@@ -1,0 +1,25 @@
+name: prueba-vlr
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests
+      - run: |
+          python - <<'P'
+          import requests, time, re, directo
+          UA = directo.UA
+          base = "/773430/team-liquid-brazil-vs-gentle-mates-gc-game-changers-2026-championship-s-o-paulo-ubqf"
+          for ruta, red in [(f"/773430/d{int(time.time()*1000)}", False), (f"/773430/d{int(time.time()*1000)}", True), (base, True), (base + "/", True)]:
+              r = requests.get("https://www.vlr.gg" + ruta, headers={**UA, "Accept": "text/html", "Cache-Control": "no-cache"}, params={"game": "all", "tab": "overview", "_": int(time.time())}, allow_redirects=red, timeout=25)
+              p = directo._vlr_pagina(r.text, False)
+              print(f"::notice::{ruta[:30]} red={red} st={r.status_code} hist={[h.status_code for h in r.history]} cf={r.headers.get('cf-cache-status')} age={r.headers.get('age')} loc={r.headers.get('location')} -> {p}")
+          for u in ["https://vlrggapi.vercel.app/match?q=live_score"]:
+              try:
+                  print("::notice::api " + requests.get(u, timeout=25).text[:600].replace("\n"," "))
+              except Exception as e:
+                  print("::notice::api err", e)
+          P
