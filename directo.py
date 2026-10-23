@@ -351,12 +351,9 @@ def _vlr_lista() -> list:
     if time.time() - _VLR["t"] > 120:
         try:
             t = requests.get("https://www.vlr.gg/matches", headers={**UA, "Accept": "text/html", "Cache-Control": "no-cache"}, timeout=25, params={"_": int(time.time())}).text
-            lista = []
-            for bloque in t.split('class="wf-module-item match-item')[1:]:
-                href = re.search(r'href="(/\d+/[^"]+)"', bloque) or re.search(r"^[^>]*?href=\"(/\d+/[^\"]+)\"", bloque)
-                eq = [re.sub(r"<[^>]+>", "", x).strip() for x in re.findall(r'match-item-vs-team-name">\s*<div class="text-of">(.*?)</div>', bloque, re.S)]
-                if href and len(eq) >= 2 and re.search(r'ml-status">\s*LIVE', bloque):
-                    lista.append({"url": href.group(1), "n1": eq[0], "n2": eq[1]})
+            # El enlace va ANTES de la clase del bloque (<a href="/id/..." class="wf-module-item match-item">):
+            # al partir por la clase, cada partido se quedaba con el enlace del siguiente
+            lista = [{"url": x["url"], "n1": x["n1"], "n2": x["n2"]} for x in _vlr_bloques(t) if x["st"].startswith("LIVE")]
             _VLR["lista"], _VLR["t"] = lista, time.time()
         except requests.RequestException:
             pass
