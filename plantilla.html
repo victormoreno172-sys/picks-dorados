@@ -3793,6 +3793,41 @@ function preguntasReto(p) {
   return qs;
 }
 function opcionesReto(p) { const q = preguntasReto(p); return q.length ? q : null; }
+// Lo conocido que es un partido, para los eventos de la Arena: el peso de la competición y un extra por
+// cada equipo grande (un Madrid-Barça o un Lakers-Celtics salen siempre los primeros)
+const FAMA_LIGA_F = [[/^champions league|liga de campeones/, 100], [/^laliga$|^la liga/, 92], [/^premier league/, 92], [/^serie a$/, 85],
+  [/^europa league/, 82], [/^bundesliga/, 82], [/copa del rey|fa cup|supercopa|mundial|eurocopa|nations league/, 75], [/^ligue 1/, 72],
+  [/conference league/, 62], [/liga portugal/, 62], [/eredivisie/, 60], [/saudi/, 58], [/^mls/, 52], [/brasileir/, 52], [/argentina/, 50],
+  [/^championship/, 45], [/segunda/, 45]];
+const FAMA_LIGA_B = [[/^nba/, 90], [/euroliga|euroleague/, 80], [/liga acb|^acb/, 70], [/eurocup/, 50], [/lega basket/, 45],
+  [/greek|grecia/, 40], [/s[uü]per lig/, 40], [/champions league/, 35], [/lnb|bbl/, 35], [/lkl/, 30]];
+// Los más grandes (y los de Cristiano y Messi) suman más que el resto de grandes
+const ENORMES = ["real madrid", "barcelona", "manchester city", "man city", "manchester united", "man united", "man utd", "liverpool", "arsenal", "chelsea",
+  "bayern", "paris saint", "paris sg", "psg", "juventus", "inter", "milan", "al nassr", "inter miami", "lakers", "celtics", "warriors", "knicks"];
+const GRANDES = ["atletico", "athletic", "sevilla", "betis", "real sociedad", "valencia", "villarreal", "tottenham", "newcastle", "aston villa",
+  "dortmund", "leverkusen", "marseille", "napoli", "roma", "lazio", "benfica", "porto", "sporting", "ajax", "psv", "feyenoord",
+  "al hilal", "al ittihad", "boca juniors", "river plate", "flamengo", "palmeiras", "galatasaray", "fenerbahce",
+  "bulls", "heat", "nuggets", "thunder", "bucks", "mavericks", "76ers", "spurs", "cavaliers", "timberwolves",
+  "olympiacos", "panathinaikos", "baskonia", "unicaja", "zalgiris", "partizan", "monaco", "efes", "maccabi"];
+const sinTilde = t => (t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function famaPartido(p) {
+  const l = sinTilde(ligaBase(p.liga)), tabla = p.dep === "b" ? FAMA_LIGA_B : FAMA_LIGA_F;
+  const liga = (tabla.find(([re]) => re.test(l)) || [0, 25])[1];
+  const extra = [p.local, p.visitante].map(n => { const x = sinTilde(n); return ENORMES.some(g => x.includes(g)) ? 30 : GRANDES.some(g => x.includes(g)) ? 15 : 0; });
+  return liga + extra[0] + extra[1] + (extra[0] && extra[1] ? 10 : 0);
+}
+// Elige los partidos de un evento: los más conocidos, con fútbol y baloncesto (nBasket de baloncesto si los hay)
+// y como mucho maxLiga de cada competición
+function elegirFamosos(cand, n, nBasket, maxLiga) {
+  const orden = cand.slice().sort((a, b) => famaPartido(b) - famaPartido(a) || (a.hora || "").localeCompare(b.hora || ""));
+  const porLiga = {}, el = [], cabe = p => (porLiga[ligaBase(p.liga)] || 0) < maxLiga;
+  const coger = p => { porLiga[ligaBase(p.liga)] = (porLiga[ligaBase(p.liga)] || 0) + 1; el.push(p); };
+  for (const p of orden) if (p.dep === "b" && el.length < nBasket && cabe(p) && famaPartido(p) >= 60) coger(p);   // baloncesto, si es de nivel
+  for (const p of orden) if (el.length < n && !el.includes(p) && (p.dep || "f") === "f" && cabe(p) && famaPartido(p) >= 60) coger(p);
+  for (const p of orden) if (el.length < n && !el.includes(p) && famaPartido(p) >= 80) coger(p);   // si faltan, antes otro de una liga top que uno flojo
+  for (const p of orden) if (el.length < n && !el.includes(p) && cabe(p)) coger(p);   // y si aún faltan, lo que haya
+  return el;
+}
 // Los 6 partidos del día: los de las competiciones más importantes (como mucho 2 por competición), y se
 // quedan fijos para todo el día (con sus porcentajes) la primera vez que abres el juego
 function retoDelDia(fecha) {
@@ -3801,13 +3836,8 @@ function retoDelDia(fecha) {
   const dia = DATOS.dias.find(d => d.fecha === fecha); if (!dia) return null;
   const ahoraMin = fecha === AHORA.fecha ? AHORA.hora : "00:00";
   const cand = dia.partidos.filter(p => ["f", "b"].includes(p.dep || "f") && !/Pretemporada/i.test(p.liga) && (p.hora || "99") > ahoraMin && opcionesReto(p))
-    .sort((a, b) => ((a.dep || "f") !== "f") - ((b.dep || "f") !== "f") || ordenLiga(ligaBase(a.liga)) - ordenLiga(ligaBase(b.liga)) || (a.hora || "").localeCompare(b.hora || ""));
-  const porLiga = {}, elegidos = [];
-  let basket = 0;   // sobre todo fútbol: como mucho 2 de baloncesto
-  for (const p of cand) {
-    const l = ligaBase(p.liga); if ((porLiga[l] || 0) >= 2 || (p.dep === "b" && basket >= 2)) continue;
-    porLiga[l] = (porLiga[l] || 0) + 1; if (p.dep === "b") basket++; elegidos.push(p); if (elegidos.length >= N_RETO) break;
-  }
+  ;
+  const elegidos = elegirFamosos(cand, N_RETO, 2, 2);   // 4 de fútbol y 2 de baloncesto, los más conocidos
   if (!elegidos.length) return null;
   elegidos.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
   // Preguntas variadas: se van turnando (quién gana, goles, marcan los dos…) según lo que tenga cada partido
@@ -5407,9 +5437,8 @@ function poolArc(fecha) {
   const ya = ARCD.dias[fecha]; if (ya && ya.pool) return ya;
   const dia = DATOS.dias.find(d => d.fecha === fecha); if (!dia) return null;
   const cand = dia.partidos.filter(p => ["f", "b"].includes(p.dep || "f") && !/Pretemporada/i.test(p.liga) && opcionesReto(p))
-    .sort((a, b) => ordenLiga(ligaBase(a.liga)) - ordenLiga(ligaBase(b.liga)) || (a.hora || "").localeCompare(b.hora || ""));
-  const porLiga = {}, el = [];
-  for (const p of cand) { const l = ligaBase(p.liga); if ((porLiga[l] || 0) >= 3) continue; porLiga[l] = (porLiga[l] || 0) + 1; el.push(p); if (el.length >= 12) break; }
+  ;
+  const el = elegirFamosos(cand, 12, 4, 3);   // 8 de fútbol y 4 de baloncesto, los más conocidos
   if (!el.length) return null;
   el.sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
   ARCD.dias[fecha] = { pool: el.map(p => ({ local: p.local, visitante: p.visitante, liga: p.liga, hora: p.hora, dep: p.dep || "f", fecha,
