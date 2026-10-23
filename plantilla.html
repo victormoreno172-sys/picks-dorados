@@ -1158,6 +1158,39 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 @keyframes bvMoneda { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-190px) rotate(360deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #bienv *, #bienv { animation: none !important; transition: none !important; } }
 .bvcomo { display: block; margin: 14px auto 6px; }
+.bvguias { margin: 12px 0 0; padding: 12px; border-radius: 14px; background: var(--card, rgba(255,255,255,.06)); } .bvguias > b { display: block; margin-bottom: 8px; font-size: 14px; }
+.bvguias div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .bvguias button { padding: 10px 8px; border-radius: 10px; border: 1px solid var(--line, rgba(255,255,255,.15)); background: transparent; color: inherit; font: 600 13px var(--body); text-align: left; }
+.bvtag { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 18px); left: 16px; z-index: 2; font: 700 11px var(--body); letter-spacing: .12em; color: #ffcd75; }
+#bienv.bvpxl { background: #1a1c2c; background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px); background-size: 16px 16px; }
+#bienv.bvpxl .bvtag, #bienv.bvpxl h2 { font-family: "Press Start 2P", var(--mono); } #bienv.bvpxl .bvtag { font-size: 9px; letter-spacing: .04em; }
+#bienv.bvpxl h2 { font-size: 17px; line-height: 1.45; color: #ffec27; background: none; -webkit-background-clip: border-box; background-clip: border-box; text-shadow: 3px 3px 0 #b13e53; }
+#bienv.bvpxl .bvsig { border-radius: 0; background: #38b764; color: #fff; box-shadow: inset -4px -4px 0 #257179, 0 0 0 3px #000; font-family: "Press Start 2P", var(--mono); font-size: 11px; }
+#bienv.bvpxl .bvat, #bienv.bvpxl .bvsaltar { border-radius: 0; } #bienv.bvpxl .bvpuntos button { border-radius: 0; } #bienv.bvpxl .bvpuntos button[aria-current="true"] { background: #ffec27; }
+.bvpregs { display: flex; flex-direction: column; gap: 8px; padding: 12px; } .bvpreg { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.06); animation: bvBaja .5s ease-out both; animation-delay: calc(var(--k) * .15s); }
+.bvpreg > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; font-size: 13px; } .bvpreg small { color: #9a93b5; } .bvpreg em { font-style: normal; font: 800 12px var(--body); padding: 5px 10px; border-radius: 99px; background: linear-gradient(135deg, #ffd166, #fb8500); color: #1b1200; }
+.bvduelo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; width: 100%; } .bvlado { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 6px; border-radius: 16px; background: rgba(255,255,255,.07); font-size: 12.5px; }
+.bvcara { font-size: 36px; width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%; background: #7c3aed; } .bvcara.bot { background: #334155; } .bvlado b { font-size: 15px; } .bvlado small { color: #c9c3e3; text-align: center; }
+.bvlado em { font-style: normal; font-weight: 800; font-size: 15px; animation: bvGol 2.6s ease-in-out infinite; } .bvok { color: #4ade80; } .bvok i { font-style: normal; color: #ffd166; } .bvko { color: #ff4d6d; }
+.bvvs { font: 900 16px var(--body); width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #fbbf24; color: #1e1b4b; animation: bvSalta 1s ease-in-out infinite alternate; }
+.bvcomod { display: flex; gap: 18px; } .bvficha { width: 118px; height: 150px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; animation: bvFlota 2.4s ease-in-out infinite; box-shadow: 0 16px 30px -12px rgba(0,0,0,.6); }
+.bvficha b { font: 900 40px var(--body); } .bvficha small { font-weight: 700; font-size: 12.5px; } .bvficha.x2 { background: linear-gradient(135deg, #ffd166, #fb8500); color: #1b1200; } .bvficha.so { background: linear-gradient(135deg, #22d3ee, #4f46e5); animation-delay: .5s; }
+.bvpodio { display: flex; align-items: flex-end; gap: 8px; height: 200px; } .bvpodio > div { width: 84px; display: flex; flex-direction: column; align-items: center; gap: 6px; } .bvpodio span { font-size: 34px; animation: bvFlota 2s ease-in-out infinite; }
+.bvpodio i { width: 100%; border-radius: 10px 10px 0 0; background: linear-gradient(#ffd166, #fb8500); animation: bvSube 1s cubic-bezier(.2,.8,.2,1) both; } .bvpodio .p1 i { height: 130px; } .bvpodio .p2 i { height: 90px; background: linear-gradient(#e2e8f0, #94a3b8); animation-delay: .15s; } .bvpodio .p3 i { height: 60px; background: linear-gradient(#fdba74, #b45309); animation-delay: .3s; }
+.bvpodio.px i { border-radius: 0; box-shadow: inset -6px 0 0 rgba(0,0,0,.25), 0 0 0 3px #000; } @keyframes bvSube { from { height: 0; } }
+.bvpx { width: 100%; font-family: "Press Start 2P", var(--mono); color: #f4f4f4; background: #29366f; box-shadow: 0 0 0 4px #000, inset -6px -6px 0 rgba(0,0,0,.25); padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; overflow: hidden; }
+.bvslots { align-items: stretch; } .bvslots div { display: flex; align-items: center; gap: 12px; padding: 10px; background: #1a1c2c; box-shadow: 0 0 0 2px #000; font-size: 10px; animation: bvBaja .4s steps(3) both; animation-delay: calc(var(--k) * .25s); }
+.bvslots b { color: #1a1c2c; background: #ffec27; padding: 6px 8px; } .bvslots .vac span { color: #566c86; animation: bvLate 1s steps(1) infinite; }
+.bvcx { font-size: 38px; color: #ff004d; text-shadow: 4px 4px 0 #000; animation: bvGol 1.6s steps(3) infinite; } .bvsegs { display: flex; gap: 4px; } .bvsegs i { width: 22px; height: 22px; background: #333c57; animation: bvSeg 4s steps(1) infinite; animation-delay: calc(var(--k) * .3s); }
+.bvsegs i:nth-child(-n+2) { --c: #38b764; } .bvsegs i:nth-child(n+3):nth-child(-n+4) { --c: #a7f070; } .bvsegs i:nth-child(n+5):nth-child(-n+6) { --c: #ffec27; } .bvsegs i:nth-child(n+7) { --c: #ff004d; }
+@keyframes bvSeg { 0% { background: #333c57; } 1%, 90% { background: var(--c); } 91%, 100% { background: #333c57; } } .bvcombo small { font-size: 10px; color: #94b0c2; } .bvcombo small b { color: #ffec27; }
+.bvvidas div { display: flex; gap: 10px; } .bvvidas span { font-size: 38px; color: #ff004d; text-shadow: 3px 3px 0 #000; font-family: system-ui; } .bvvidas span.rota { animation: bvRota 2.4s steps(1) infinite; }
+@keyframes bvRota { 0%, 45% { color: #ff004d; transform: none; } 50%, 60% { color: #fff; transform: translateY(-4px); } 65%, 100% { color: #333c57; transform: none; } }
+.bvvidas b { font-size: 14px; color: #ffec27; animation: bvLate 1.2s steps(1) infinite; } .bvvidas small { font-size: 9px; color: #73eff7; }
+.bvhs { min-height: 170px; justify-content: center; } .bvhs small { font-size: 11px; color: #ff77a8; } .bvhs > b { font-size: 26px; color: #73eff7; text-shadow: 3px 3px 0 #000; }
+.bvfilas div { display: flex; gap: 8px; } .bvfilas span { width: 46px; height: 46px; display: grid; place-items: center; background: #1a1c2c; box-shadow: 0 0 0 2px #000; font: 12px "Press Start 2P", var(--mono); color: #ffcd75; animation: bvEstrella .4s steps(3) both; animation-delay: calc(var(--k) * .12s); }
+.bvfilas .prem span { background: #5d275d; } .bvfilas .prem span:nth-child(-n+2) { box-shadow: 0 0 0 2px #ffec27; }
+.bvmisi .bvtabs { display: flex; gap: 6px; font-size: 8px; } .bvtabs > * { padding: 6px 7px; background: #1a1c2c; color: #94b0c2; } .bvtabs b { background: #ffec27; color: #1a1c2c; font-weight: 400; }
+.bvmisi .bvmis { width: 100%; font-family: var(--body); } .bvregalo { position: absolute; right: 10px; bottom: 8px; font-size: 28px; animation: bvSalta .6s steps(2) infinite alternate; }
 #avisofallo { position: fixed; left: 10px; right: 10px; bottom: 96px; z-index: 60; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #3b1020; color: #fff; font: 600 13px var(--body); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
 #avisofallo span { flex: 1; } #avisofallo button { border: 0; border-radius: 9px; padding: 8px 10px; background: #ffcd75; color: #1b1200; font: 700 13px var(--body); }
 .mcard.fallo pre { white-space: pre-wrap; word-break: break-word; font: 11px var(--mono); background: rgba(0,0,0,.25); padding: 8px; border-radius: 8px; }
@@ -2139,6 +2172,7 @@ function pintarListaReal() {
   if (pintarLista._v !== est.vista) { pintarLista._v = est.vista; try { const el = document.getElementById("brindis"); if (el && el.classList.contains("ver") && Date.now() - (el._t || 0) > 1200) quitarBrindis(); } catch (e) {} }
   try { pintarBarraBoleto(); } catch (e) {}
   guardarNav();
+  try { guiaPrimeraVez(est.vista); } catch (e) {}
   document.querySelector("header").hidden = ["partido", "ligas", "clasif", "juego", "ajustes", "misap", "buscar", "reto", "desafios", "evento", "perfil", "personalizar", "tienda", "guia", "elegirvitrina", "temporada", "arcade"].includes(est.vista);
   if (est.vista !== "temporada" && est.vista !== "arcade") delete document.documentElement.dataset.vt;
   if (est.vista === "buscar") return pintarBuscadorGeneral();
@@ -3245,7 +3279,7 @@ function pintarPantallaAjustes() {
     [...todas[k]].sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b)).map(l => { const inf = infoLiga(l);
       return `<label class="ajliga"><span>${inf.flag}</span><span class="nl">${esc(inf.nombre)}<small style="color:var(--muted)"> ${esc(inf.pais)}</small></span><input type="checkbox" data-ajliga="${esc(l)}" ${AJ.ocultas.includes(l) ? "" : "checked"}></label>`; }).join("") + `</details>`).join("");
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
-  $("vista").innerHTML = `<p class="apnota" style="text-align:center;margin:10px 0 0">Clávala · <b>versión ${esc(APP_VERSION)}</b> · datos del ${esc(DATOS.generado)} · <button class="lnk" data-reparar="1">🔧 Arreglar la app</button></p><button class="apbtn" data-bienvenida="hola" style="margin:10px 0 0">📖 Ver la bienvenida</button><div class="aj" style="margin-top:12px">${htmlCuenta()}
+  $("vista").innerHTML = `<p class="apnota" style="text-align:center;margin:10px 0 0">Clávala · <b>versión ${esc(APP_VERSION)}</b> · datos del ${esc(DATOS.generado)} · <button class="lnk" data-reparar="1">🔧 Arreglar la app</button></p><div class="bvguias"><b>📖 Guías</b><div>${Object.entries(GUIAS).map(([k, g]) => `<button data-tutorial="${k}">${g.ico} ${esc(g.t)}</button>`).join("")}</div></div><div class="aj" style="margin-top:12px">${htmlCuenta()}
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
     ${esProbador() ? `<section class="ajb"><h3>🧪 Pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
       <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div>
@@ -6457,29 +6491,73 @@ const BIENV = [
       <div class="bvmis"><span>✓ Elige tus 3 pronósticos</span><span>Acierta 2 pronósticos · 1/2</span></div></div>` },
   { id: "perfil", t: "Tu perfil y la tienda", s: "Sube de nivel, gana monedas y cámbialas por avatares, marcos, tarjetas, colores y temas. Los animados más especiales solo se ganan quedando arriba.",
     dib: () => `<div class="bvperfil"><div class="bvav">😎</div><b>Tu nombre</b><small>Nivel 12 · 🪙 1.240</small><div class="bvcoins">${[...Array(6)].map((_, k) => `<span style="--k:${k}">🪙</span>`).join("")}</div></div>` },
-  { id: "fin", t: "¡A jugar!", s: "Puedes volver a ver estas pantallas cuando quieras en Ajustes → «📖 Ver la bienvenida».",
+  { id: "fin", t: "¡A jugar!", s: "Puedes volver a verla cuando quieras en Ajustes → «📖 Guías». Cada evento tiene además la suya, que sale la primera vez que entras.",
     dib: () => `<img class="bvlogo salta" src="${LOGO_PX}" alt="">` },
 ];
-function abrirBienvenida(desde) {
+// Guías de cada evento: salen la primera vez que entras en él y se pueden volver a ver en Ajustes («📖 Guías»)
+const GUIAS = {
+  app: { t: "Bienvenida", ico: "📖", lista: BIENV, fin: "Empezar" },
+  reto: { t: "Gánale a la app", ico: "🎯", fin: "¡A jugar!", lista: [
+    { id: "r1", t: "6 partidos al día", s: "Cada día la app elige 6 partidos con una pregunta cada uno: quién gana, goles, si marcan los dos… Respondes antes de que empiecen y puedes cambiar de idea hasta entonces.",
+      dib: () => `<div class="bvcard bvpregs">${[["⚽", "Betis – Sevilla", "¿Quién gana?", "Betis"], ["🏀", "Lakers – Celtics", "¿Más de 220,5 puntos?", "Sí"], ["⚽", "Inter – Milan", "¿Marcan los dos?", "No"]].map(([d, p, q, r], k) =>
+        `<div class="bvpreg" style="--k:${k}"><span>${d}</span><span><b>${p}</b><small>${q}</small></span><em>${r}</em></div>`).join("")}</div>` },
+    { id: "r2", t: "Tú contra la máquina", s: "La app juega siempre lo más probable. Acertar da 10 ÷ la probabilidad: cuanto más difícil, más puntos. Si aciertas donde la app falla, +10 extra. Fallar no resta.",
+      dib: () => `<div class="bvduelo"><div class="bvlado"><span class="bvcara">😎</span><b>Tú</b><small>Gana Betis · 30 %</small><em class="bvok">✅ +33 <i>+10</i></em></div><div class="bvvs">VS</div>
+        <div class="bvlado"><span class="bvcara bot">🤖</span><b>App</b><small>Gana Sevilla · 45 %</small><em class="bvko">❌ 0</em></div></div>` },
+    { id: "r3", t: "Comodines", s: "El ×2 duplica los puntos de un partido (uno al día). La Segunda oportunidad cambia una respuesta ya empezada: en fútbol hasta el minuto 15 y en baloncesto durante el primer cuarto.",
+      dib: () => `<div class="bvcomod"><div class="bvficha x2"><b>×2</b><small>Comodín</small></div><div class="bvficha so"><b>🔄</b><small>Segunda<br>oportunidad</small></div></div>` },
+    { id: "r4", t: "Rankings y premios", s: "Hay clasificación del día, de la semana y del mes. El podio del mes se lleva el set animado «Vencedor de la máquina» y monedas, y tus puntos suman a la Temporada 0.",
+      dib: () => `<div class="bvpodio"><div class="p2"><span>🥈</span><i></i></div><div class="p1"><span>🥇</span><i></i></div><div class="p3"><span>🥉</span><i></i></div></div>` },
+  ] },
+  arcade: { t: "HI-SCORE", ico: "🕹️", px: 1, fin: "INSERT COIN", lista: [
+    { id: "a1", t: "3 jugadas al día", s: "Elige hasta 3 respuestas de los partidos del evento, una por partido. Puedes cambiarlas o quitarlas hasta que empiece cada partido.",
+      dib: () => `<div class="bvpx bvslots">${["GANA BETIS", "+2,5 GOLES", "?"].map((x, k) => `<div class="${x === "?" ? "vac" : ""}" style="--k:${k}"><b>${k + 1}</b><span>${x === "?" ? "ELIGE…" : x}</span></div>`).join("")}</div>` },
+    { id: "a2", t: "COMBO ×8", s: "Cada acierto seguido sube el combo y multiplica tus puntos, hasta ×8. Un fallo lo devuelve a ×1. El combo sigue de un día a otro.",
+      dib: () => `<div class="bvpx bvcombo"><b class="bvcx">x8</b><div class="bvsegs">${[...Array(8)].map((_, k) => `<i style="--k:${k}"></i>`).join("")}</div><small>+20 × 8 = <b>160</b></small></div>` },
+    { id: "a3", t: "4 vidas por semana", s: "Cada fallo quita una vida. Sin vidas, GAME OVER: esa semana ya no puntúas hasta el lunes. Una vez por semana puedes continuar gastando una Segunda oportunidad.",
+      dib: () => `<div class="bvpx bvvidas"><div>${[0, 1, 2, 3].map(k => `<span class="${k === 3 ? "rota" : ""}">♥</span>`).join("")}</div><b>GAME OVER?</b><small>CONTINUE · 🔄</small></div>` },
+    { id: "a4", t: "Monedas y premios", s: "Cada acierto da tantas monedas como puntos (con el combo) y 1 ★ del pase. El top 3 se lleva el set animado HI-SCORE. Dura hasta el 21 de noviembre.",
+      dib: () => `<div class="bvpx bvhs"><small>HI-SCORE</small><b>0012480</b><div class="bvcoins">${[...Array(6)].map((_, k) => `<span style="--k:${k}">🪙</span>`).join("")}</div></div>` },
+  ] },
+  temporada: { t: "Temporada 0", ico: "🎮", px: 1, fin: "¡VAMOS!", lista: [
+    { id: "t1", t: "Estrellas y pase", s: "Los aciertos dan estrellas. Cada 10 ★ subes un nivel del pase: 50 niveles con monedas, comodines y objetos pixel de deportes.",
+      dib: BIENV.find(b => b.id === "temp").dib },
+    { id: "t2", t: "Gratis y Premium", s: "Cada nivel tiene un premio gratis. El Pase Premium añade una segunda fila con premios extra. Los cobras tocándolos.",
+      dib: () => `<div class="bvpx bvfilas">${["", "prem"].map(f => `<div class="${f}">${[...Array(5)].map((_, k) => `<span style="--k:${k}">${f ? (k < 2 ? "💎" : "🔒") : ["🪙", "×2", "🪙", "🎨", "🪙"][k]}</span>`).join("")}</div>`).join("")}</div>` },
+    { id: "t3", t: "Misiones y regalo diario", s: "Misiones diarias, semanales y especiales dan más estrellas y monedas. Y si entras cada día, el regalo diario va creciendo durante 7 días.",
+      dib: () => `<div class="bvpx bvmisi"><div class="bvtabs"><b>DIARIAS</b><span>SEMANA</span><span>ESPECIAL</span></div><div class="bvmis"><span>✓ Pronostica 3 partidos</span><span>Acierta 2 · 1/2</span><span>Juega HI-SCORE · 0/1</span></div><div class="bvregalo">🎁</div></div>` },
+    { id: "t4", t: "Clasificación de la temporada", s: "Del 1 de octubre al 31 de diciembre suman Gánale a la app y HI-SCORE. Top 3: título Campeón T0 y 10.000 / 6.000 / 4.000 monedas. En la tienda tienes la colección 🎮 Temporada 0.",
+      dib: () => `<div class="bvpodio px"><div class="p2"><span>🥈</span><i></i></div><div class="p1"><span>🏆</span><i></i></div><div class="p3"><span>🥉</span><i></i></div></div>` },
+  ] },
+};
+const guiaVista = g => g === "app" ? "bienvenidaV1" : "guiaV1:" + g;
+function abrirBienvenida(desde, guia = "app") {
+  const G = GUIAS[guia] || GUIAS.app, L = G.lista;
   document.getElementById("bienv")?.remove();
-  let i = Math.max(0, BIENV.findIndex(b => b.id === desde));
-  const d = document.createElement("div"); d.id = "bienv"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Bienvenida");
-  d.innerHTML = `<button class="bvsaltar" data-bw="cerrar">Saltar</button><div class="bvpista">${BIENV.map(b => `<section class="bvdia bv-${b.id}"><div class="bvdib">${b.dib()}</div><h2>${esc(b.t)}</h2><p>${esc(b.s)}</p></section>`).join("")}</div>
-    <div class="bvpie"><button class="bvat" data-bw="atras" aria-label="Anterior">‹</button><div class="bvpuntos">${BIENV.map((_, k) => `<button data-bw="ir" data-k="${k}" aria-label="Pantalla ${k + 1}"></button>`).join("")}</div><button class="bvsig" data-bw="sig">Siguiente</button></div>`;
+  let i = Math.max(0, L.findIndex(b => b.id === desde));
+  const d = document.createElement("div"); d.id = "bienv"; d.className = "g-" + guia + (G.px ? " bvpxl" : ""); d.setAttribute("role", "dialog"); d.setAttribute("aria-label", G.t);
+  d.innerHTML = `${guia !== "app" ? `<span class="bvtag">${G.ico} ${esc(G.t.toUpperCase())}</span>` : ""}<button class="bvsaltar" data-bw="cerrar">Saltar</button><div class="bvpista">${L.map(b => `<section class="bvdia bv-${b.id}"><div class="bvdib">${b.dib()}</div><h2>${esc(b.t)}</h2><p>${esc(b.s)}</p></section>`).join("")}</div>
+    <div class="bvpie"><button class="bvat" data-bw="atras" aria-label="Anterior">‹</button><div class="bvpuntos">${L.map((_, k) => `<button data-bw="ir" data-k="${k}" aria-label="Pantalla ${k + 1}"></button>`).join("")}</div><button class="bvsig" data-bw="sig">Siguiente</button></div>`;
   document.body.appendChild(d); document.documentElement.classList.add("pxabierto");
   const pista = d.querySelector(".bvpista");
-  const ir = k => { i = Math.max(0, Math.min(BIENV.length - 1, k)); pista.style.transform = `translateX(${-i * 100}%)`;
+  const ir = k => { i = Math.max(0, Math.min(L.length - 1, k)); pista.style.transform = `translateX(${-i * 100}%)`;
     d.querySelectorAll(".bvdia").forEach((s, n) => s.classList.toggle("ver", n === i));
     d.querySelectorAll(".bvpuntos button").forEach((b, n) => b.setAttribute("aria-current", n === i));
-    d.querySelector(".bvsig").textContent = i === BIENV.length - 1 ? "Empezar" : "Siguiente"; d.querySelector(".bvat").style.visibility = i ? "visible" : "hidden"; };
-  const cerrar = () => { try { localStorage.setItem("bienvenidaV1", "1"); } catch (e) {} document.documentElement.classList.remove("pxabierto"); d.classList.add("fuera"); setTimeout(() => d.remove(), 220); };
+    d.querySelector(".bvsig").textContent = i === L.length - 1 ? G.fin : "Siguiente"; d.querySelector(".bvat").style.visibility = i ? "visible" : "hidden"; };
+  const cerrar = () => { try { localStorage.setItem(guiaVista(guia), "1"); } catch (e) {} document.documentElement.classList.remove("pxabierto"); d.classList.add("fuera"); setTimeout(() => d.remove(), 220); };
   d.addEventListener("click", e => { const b = e.target.closest("[data-bw]"); if (!b) return; e.stopPropagation();
-    const a = b.dataset.bw; if (a === "cerrar") cerrar(); else if (a === "atras") ir(i - 1); else if (a === "ir") ir(+b.dataset.k); else if (i === BIENV.length - 1) cerrar(); else ir(i + 1); });
+    const a = b.dataset.bw; if (a === "cerrar") cerrar(); else if (a === "atras") ir(i - 1); else if (a === "ir") ir(+b.dataset.k); else if (i === L.length - 1) cerrar(); else ir(i + 1); });
   let x0 = null; pista.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
   pista.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 45) ir(i + (dx < 0 ? 1 : -1)); });
   requestAnimationFrame(() => ir(i));
 }
-document.addEventListener("click", e => { const b = e.target.closest("[data-bienvenida]"); if (!b) return; abrirBienvenida(b.dataset.bienvenida); });
+document.addEventListener("click", e => { const b = e.target.closest("[data-bienvenida],[data-tutorial]"); if (!b) return; abrirBienvenida(b.dataset.bienvenida || "", b.dataset.tutorial || "app"); });
+// La primera vez que entras en un evento sale su guía (si tienes cuenta en la Arena y no hay otra abierta)
+function guiaPrimeraVez(v) {
+  if (!GUIAS[v] || v === "app" || typeof CUENTA === "undefined" || !CUENTA) return;
+  let visto = true; try { visto = !!localStorage.getItem(guiaVista(v)); } catch (e) {}
+  if (!visto) setTimeout(() => { if (est.vista === v && !document.getElementById("bienv")) abrirBienvenida("", v); }, 450);
+}
 // La primera vez que se abre la app
 setTimeout(() => { let visto = true; try { visto = !!localStorage.getItem("bienvenidaV1"); } catch (e) {} if (!visto) abrirBienvenida(); }, 600);
 
