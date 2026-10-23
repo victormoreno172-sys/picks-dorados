@@ -400,16 +400,24 @@ def vlr(local: str, visitante: str, url: str | None = None, giro: bool = False) 
 
 
 def _vlr_pagina(t: str, giro: bool) -> dict | None:
-    mapas, envivo, sa, sb = [], None, 0, 0
-    for bloque in re.split(r'<div class="vm-stats-game\s*[^"]*" data-game-id="', t)[1:]:
-        if bloque.startswith("all"):
-            continue
-        cab = bloque.split('class="vlr-rounds')[0]
+    # Cada mapa es un bloque con su id; el orden de verdad (mapa 1, 2, 3) es el de las pestañas de arriba,
+    # que no siempre coincide con el de los bloques. Los mapas sin jugar también salen con 0-0.
+    bloques = {}
+    for bloque in re.split(r'<div class="vm-stats-game(?:\s[^"]*)?" data-game-id="', t)[1:]:
+        gid = bloque.split('"', 1)[0]
+        if gid != "all":
+            bloques.setdefault(gid, bloque)
+    nav = [g for g in dict.fromkeys(re.findall(r'vm-stats-gamesnav-item[^>]*?data-game-id="(\d+)"', t)) if g in bloques]
+    orden = nav + [g for g in bloques if g not in nav]
+    mapas, abiertos, sa, sb = [], [], 0, 0
+    for gid in orden:
+        cab = bloques[gid].split('class="vlr-rounds')[0]
         sc = re.findall(r'<div class="score([^"]*)"[^>]*>\s*(\d+)\s*</div>', cab)
         nm = re.search(r'class="map-name">.*?<span[^>]*>\s*([A-Za-z]+)', cab, re.S)
         nombre = nm.group(1) if nm else ""
         if len(sc) < 2:
             mapas.append([nombre, None, None])
+            abiertos.append((len(mapas), nombre, 0, 0))
             continue
         a, b = int(sc[0][1]), int(sc[1][1])
         gana_a, gana_b = "mod-win" in sc[0][0], "mod-win" in sc[1][0]
@@ -420,8 +428,12 @@ def _vlr_pagina(t: str, giro: bool) -> dict | None:
             sa, sb = sa + gana_a, sb + gana_b
         else:
             mapas.append([nombre, None, None])
-            if envivo is None:
-                envivo = {"n": len(mapas), "mapa": nombre, "a": a, "b": b, "fuente": "vlr.gg"}
+            abiertos.append((len(mapas), nombre, a, b))
+    # El que se está jugando: el que ya tiene rondas; si ninguno, el primero sin acabar
+    envivo = None
+    if abiertos:
+        n, nombre, a, b = max(abiertos, key=lambda x: (x[2] + x[3] > 0, -x[0]))
+        envivo = {"n": n, "mapa": nombre, "a": a, "b": b, "fuente": "vlr.gg"}
     if not mapas:
         return None
     # lo avanzada que va la página: mapas con nombre (veto hecho), mapas acabados y rondas jugadas
