@@ -378,12 +378,28 @@ def vlr(local: str, visitante: str, url: str | None = None, giro: bool = False) 
             break
     if not m:
         return None
-    try:
-        # con un parámetro que cambia: si no, vlr.gg/Cloudflare devuelve una copia vieja de la página (p. ej. de antes de empezar)
-        t = requests.get("https://www.vlr.gg" + m["url"], headers={**UA, "Accept": "text/html", "Cache-Control": "no-cache"}, timeout=25,
-                         params={"game": "all", "tab": "overview", "_": int(time.time())}).text
-    except requests.RequestException:
-        return None
+    # vlr.gg (Cloudflare) devuelve a menudo una copia vieja de la página aunque cambie la consulta (?_=…),
+    # p. ej. la de antes del veto, con los mapas en TBD 0-0. La página acepta cualquier texto tras el id
+    # (/773430/loquesea), así que se pide con uno nuevo cada vez (nunca está en caché) y, por si acaso,
+    # también la normal; se queda la que va más avanzada.
+    ident = re.match(r"/(\d+)", m["url"])
+    rutas = ([f"/{ident.group(1)}/d{int(time.time() * 1000)}"] if ident else []) + [m["url"]]
+    mejor, punt = None, -1
+    for ruta in rutas:
+        try:
+            t = requests.get("https://www.vlr.gg" + ruta, headers={**UA, "Accept": "text/html", "Cache-Control": "no-cache", "Pragma": "no-cache"},
+                             timeout=25, params={"game": "all", "tab": "overview", "_": int(time.time())}).text
+        except requests.RequestException:
+            continue
+        r = _vlr_pagina(t, giro)
+        if r and r["avance"] > punt:
+            mejor, punt = r, r["avance"]
+    if mejor:
+        mejor.pop("avance", None)
+    return mejor
+
+
+def _vlr_pagina(t: str, giro: bool) -> dict | None:
     mapas, envivo, sa, sb = [], None, 0, 0
     for bloque in re.split(r'<div class="vm-stats-game\s*[^"]*" data-game-id="', t)[1:]:
         if bloque.startswith("all"):
@@ -408,7 +424,9 @@ def vlr(local: str, visitante: str, url: str | None = None, giro: bool = False) 
                 envivo = {"n": len(mapas), "mapa": nombre, "a": a, "b": b, "fuente": "vlr.gg"}
     if not mapas:
         return None
-    return {"m": f"{sa}-{sb}", "mapas": mapas, "envivo": envivo}
+    # lo avanzada que va la página: mapas con nombre (veto hecho), mapas acabados y rondas jugadas
+    avance = sum(1 for x in mapas if x[0] and x[0].upper() != "TBD") * 1000 + (sa + sb) * 100 + (envivo["a"] + envivo["b"] if envivo else 0)
+    return {"m": f"{sa}-{sb}", "mapas": mapas, "envivo": envivo, "avance": avance}
 
 
 # ---------------------------------------------------------------- LoL: datos oficiales de Riot (lolesports)
