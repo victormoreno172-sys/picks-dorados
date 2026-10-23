@@ -1103,6 +1103,61 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 /* Tarjetas vivas: el lienzo va dentro de la tarjeta, detrás del contenido */
 .tj.tjviva { position: relative; overflow: hidden; isolation: isolate; } .tj.tjviva::before, .tj.tjviva::after { display: none !important; }
 .tjcv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; border-radius: inherit; }
+/* ---- Pantallas de bienvenida */
+#bienv { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; overflow: hidden; color: #fff; animation: bvEntra .25s ease-out both;
+  background: radial-gradient(circle at 50% 30%, #2b1d4d, #0b0618 70%); padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0); }
+#bienv.fuera { animation: bvSale .2s ease-in both; } @keyframes bvEntra { from { opacity: 0; transform: scale(1.03); } } @keyframes bvSale { to { opacity: 0; } }
+.bvsaltar { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 14px; z-index: 2; border: 0; background: rgba(255,255,255,.1); color: #fff; border-radius: 99px; padding: 7px 14px; font: 600 13px var(--body); }
+.bvpista { flex: 1; display: flex; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.bvdia { flex: 0 0 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 60px 26px 10px; text-align: center; }
+.bvdia h2 { margin: 6px 0 0; font: 800 26px var(--display); background: linear-gradient(135deg, #ffd166, #fb8500); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.bvdia p { margin: 0; max-width: 340px; font: 500 15.5px/1.45 var(--body); color: #d9d4ee; }
+.bvdib { width: 100%; max-width: 330px; min-height: 230px; display: grid; place-items: center; }
+.bvdia:not(.ver) .bvdib * { animation-play-state: paused !important; }
+.bvpie { display: flex; align-items: center; gap: 10px; padding: 14px 18px 22px; }
+.bvat { width: 46px; height: 46px; border-radius: 50%; border: 0; background: rgba(255,255,255,.1); color: #fff; font-size: 22px; }
+.bvpuntos { flex: 1; display: flex; justify-content: center; gap: 6px; } .bvpuntos button { width: 8px; height: 8px; padding: 0; border-radius: 99px; border: 0; background: rgba(255,255,255,.25); transition: width .25s; }
+.bvpuntos button[aria-current="true"] { width: 22px; background: #ffb703; }
+.bvsig { min-width: 120px; height: 46px; border-radius: 14px; border: 0; background: linear-gradient(135deg, #ffd166, #fb8500); color: #1b1200; font: 800 15px var(--body); }
+.bvlogo { width: 150px; height: 150px; image-rendering: pixelated; filter: drop-shadow(0 0 24px rgba(255,183,3,.45)); animation: bvFlota 2.6s ease-in-out infinite; }
+.bvlogo.salta { animation: bvSalta 1s cubic-bezier(.3,1.6,.5,1) infinite alternate; }
+@keyframes bvFlota { 50% { transform: translateY(-10px); } } @keyframes bvSalta { from { transform: translateY(8px) scale(.96); } to { transform: translateY(-8px) scale(1.04); } }
+.bvdeps { display: flex; gap: 14px; font-size: 28px; margin-top: 14px; } .bvdeps span { animation: bvFlota 2s ease-in-out infinite; } .bvdeps span:nth-child(2) { animation-delay: .25s; } .bvdeps span:nth-child(3) { animation-delay: .5s; } .bvdeps span:nth-child(4) { animation-delay: .75s; }
+.bvcard { width: 100%; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 18px; padding: 10px; text-align: left; box-shadow: 0 20px 40px -20px rgba(0,0,0,.6); }
+.bvliga { display: flex; align-items: center; gap: 10px; padding: 10px 8px; font-size: 15px; } .bvliga b { flex: 1; } .bvliga em { font: 700 12px var(--mono); font-style: normal; background: rgba(255,255,255,.12); border-radius: 8px; padding: 3px 8px; }
+.bvliga i { font-style: normal; color: #ffb703; display: inline-block; transform: rotate(180deg); } .bvliga.cerr i { transform: none; color: #9a93b5; } .bvliga u { text-decoration: none; color: #ffb703; } .bvliga.cerr u { color: #9a93b5; }
+.bvliga.cerr { border-top: 1px solid rgba(255,255,255,.1); }
+.bvpart { display: flex; gap: 12px; align-items: center; padding: 8px 10px; border-top: 1px solid rgba(255,255,255,.08); font-size: 13.5px; animation: bvBaja .5s ease-out both; } .bvpart small { font: 600 12px var(--mono); color: #9a93b5; } .bvpart + .bvpart { animation-delay: .12s; }
+@keyframes bvBaja { from { opacity: 0; transform: translateY(-8px); } }
+.bvprob { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.bvbar { position: relative; display: flex; justify-content: space-between; padding: 9px 10px; border-radius: 10px; overflow: hidden; font-size: 13.5px; background: rgba(255,255,255,.05); }
+.bvbar i { position: absolute; inset: 0 auto 0 0; width: var(--v); background: rgba(148,147,181,.25); z-index: 0; animation: bvCrece 1s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--k) * .12s); } .bvbar span, .bvbar b { position: relative; z-index: 1; }
+.bvbar.oro { box-shadow: 0 0 0 1.5px #ffb703; } .bvbar.oro i { background: linear-gradient(90deg, rgba(255,209,102,.55), rgba(251,133,0,.55)); } .bvbar.oro b { color: #ffd166; }
+@keyframes bvCrece { from { width: 0; } }
+.bvvivo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; padding: 18px 10px; text-align: center; }
+.bveq { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; } .bvesc { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: #fff; color: #1a1c2c; font: 800 13px var(--body); } .bvesc.v { background: #a50044; color: #fff; }
+.bvmarc b { display: block; font: 800 34px var(--mono); color: #ffd166; } .bvmarc small { color: #ff4d6d; font-weight: 700; animation: bvLate 1s steps(1) infinite; } .bvgol { animation: bvGol 3s ease-in-out infinite; }
+@keyframes bvLate { 50% { opacity: .35; } } @keyframes bvGol { 0%, 70%, 100% { transform: none; } 78% { transform: scale(1.25); color: #fff; } 86% { transform: scale(1); } }
+.bvapu { display: flex; flex-direction: column; gap: 8px; padding: 14px; }
+.bvsaldo small { display: block; font: 700 11px var(--body); letter-spacing: .1em; color: #9a93b5; } .bvsaldo b { font: 800 28px var(--mono); } .bvsaldo em { font-style: normal; color: #4ade80; font-weight: 700; margin-left: 8px; }
+.bvap { display: flex; justify-content: space-between; padding: 10px; border-radius: 10px; background: rgba(255,255,255,.06); font-size: 13.5px; animation: bvBaja .5s ease-out both; } .bvap.ok { box-shadow: inset 3px 0 0 #4ade80; } .bvap + .bvap { animation-delay: .15s; } .bvap:not(.ok) b { color: #ff4d6d; }
+.bvarena { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.bvt { display: flex; flex-direction: column; gap: 3px; padding: 14px; border-radius: 16px; text-align: left; animation: bvBaja .5s ease-out both; }
+.bvt b { font: 800 16px var(--display); } .bvt small { opacity: .85; font-weight: 600; } .bvt.t1 { background: linear-gradient(135deg, #3f6212, #65a30d); } .bvt.t2 { background: #1a1c2c; border: 3px solid #ff77a8; font-family: monospace; } .bvt.t2 b { color: #ffec27; text-shadow: 2px 2px 0 #ff004d; }
+.bvt.t3 { background: linear-gradient(135deg, #1e3a8a, #4f46e5); } .bvt.t2 { animation-delay: .12s; } .bvt.t3 { animation-delay: .24s; }
+.bvpase { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.bvpips { display: flex; justify-content: space-between; } .bvpips span { color: #ffb703; font-size: 20px; animation: bvEstrella .4s ease-out both; animation-delay: calc(var(--k) * .12s); } .bvpips span:nth-child(n+8) { color: rgba(255,255,255,.2); }
+@keyframes bvEstrella { from { opacity: 0; transform: scale(2) rotate(-40deg); } }
+.bvniv { display: flex; align-items: center; gap: 8px; font: 800 12px var(--mono); } .bvniv i { flex: 1; height: 10px; border-radius: 99px; background: rgba(255,255,255,.12); position: relative; overflow: hidden; }
+.bvniv i::after { content: ""; position: absolute; inset: 0 30% 0 0; background: linear-gradient(90deg, #38b764, #a7f070); animation: bvCrece 1.4s ease-out both; }
+.bvmis { display: flex; flex-direction: column; gap: 6px; font-size: 13px; } .bvmis span { padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.06); } .bvmis span:first-child { color: #a7f070; }
+.bvperfil { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; padding: 22px 10px; border-radius: 20px; background: linear-gradient(135deg, #15803d, #16a34a); position: relative; overflow: hidden; }
+.bvav { width: 86px; height: 86px; border-radius: 50%; display: grid; place-items: center; font-size: 46px; background: #7c3aed; box-shadow: 0 0 0 4px #ffb703, 0 0 22px rgba(255,183,3,.6); }
+.bvperfil b { font: 800 20px var(--display); } .bvperfil small { font-weight: 700; opacity: .9; }
+.bvcoins span { position: absolute; bottom: -20px; left: calc(10% + var(--k) * 15%); font-size: 20px; animation: bvMoneda 2.4s ease-in infinite; animation-delay: calc(var(--k) * .35s); }
+@keyframes bvMoneda { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-190px) rotate(360deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #bienv *, #bienv { animation: none !important; transition: none !important; } }
+.bvcomo { display: block; margin: 14px auto 6px; }
 #avisofallo { position: fixed; left: 10px; right: 10px; bottom: 96px; z-index: 60; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #3b1020; color: #fff; font: 600 13px var(--body); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
 #avisofallo span { flex: 1; } #avisofallo button { border: 0; border-radius: 9px; padding: 8px 10px; background: #ffcd75; color: #1b1200; font: 700 13px var(--body); }
 .mcard.fallo pre { white-space: pre-wrap; word-break: break-word; font: 11px var(--mono); background: rgba(0,0,0,.25); padding: 8px; border-radius: 8px; }
@@ -1707,7 +1762,8 @@ let AJ = { tema: "claro", depInicio: "ultimo", umbral: null, ocultas: [], colorO
 try { AJ = Object.assign(AJ, JSON.parse(localStorage.getItem("ajustesApp") || "{}")); } catch (e) {}
 const guardarAjustes = () => { try { localStorage.setItem("ajustesApp", JSON.stringify(AJ)); } catch (e) {} };
 // Temas de la app (paquetes de interfaz): cambian toda la app. Se guardan en el perfil (perfilV1.skin)
-const APP_VERSION = "__VERSION__";   // número de versión: se ve abajo («Actualizado») y arriba en Ajustes
+const APP_VERSION = "__VERSION__";
+const LOGO_PX = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIElEQVR42sVXPU4CQRT+ht3SC2hpYWdDYQy2VCZUGi5AApzAAkyWLdjKAywkXmADlQkVhQ1kY2FDYUJBqRewlKwFzPp2dmZ2ZpX4umV4833v/w3wz8LKKvYukdDvIC53l1sWdDhqZw8746QMGWYDnANVSL8zNibCSgG/P8oVTlrWRJgOPAOsAlUJIdPvjJUkKgcBF3SGo3YuaZUE/gRcRsJzpCRc0wtSd/pbrcrQc/D1uvuPW3XSO/r+VhoGprReAR7EYLV6N2fJch4yfoff+Pnde9KXpmtj+fNRF7U6ks36BR+rWXp2fH4NTirYEUn8xg68qBSZifUcfLN+AYAMOCUBAKdnF1jOQ9a7RGLSByqFTYXE7mM1y1nORTwz7YYVE/fX6t1kMR1ILaYkAGAxHUCWI1oCudKTCAUSQXVnvw6BDEjMAf5tC249DSmwSGLx9olJFOG22TyMB2SZT8G5TKLInkAQg/HJJZPlPGRXN4NCcAC4u39Im1K5EJy0jPo/jbet1VY5MPQcwN8mwTxkVze7YSKWJLdcbMnWC0lajsQDfLDQtqqbBXQemLRiV7lMCGHYD5gkiMF0MabDiOvoOiPT7gN7EtwLdLqphE5Ct+pIW7p5Duw9wS/6et1mAJRuJcCCXi4vcn1AV5Ju1cldXnQuyyHzpdRzfvXqKQI3X8stiVDg0mu5jIhJ/E2BS70N6VYrkqHV8edPs0M+Tv9dvgEHUSs1tKLoGgAAAABJRU5ErkJggg==";   // el logo de Clávala en pixel art (32×32)   // número de versión: se ve abajo («Actualizado») y arriba en Ajustes
 const SKIN_BG = { estadio: "#06111f", oro: "#070707", pizarra: "#12261d", galaxia: "#070313", neon: "#0b0618", pixel: "#1a1c2c", pxconsola: "#0f380f", s0estadio: "#131a2e" };
 function skinActual() { try { const p = JSON.parse(localStorage.getItem("perfilV1") || "null"); return p && SKIN_BG[p.skin] ? p.skin : ""; } catch (e) { return ""; } }
 function aplicarTema() {
@@ -3189,7 +3245,7 @@ function pintarPantallaAjustes() {
     [...todas[k]].sort((a, b) => ordenLiga(a) - ordenLiga(b) || a.localeCompare(b)).map(l => { const inf = infoLiga(l);
       return `<label class="ajliga"><span>${inf.flag}</span><span class="nl">${esc(inf.nombre)}<small style="color:var(--muted)"> ${esc(inf.pais)}</small></span><input type="checkbox" data-ajliga="${esc(l)}" ${AJ.ocultas.includes(l) ? "" : "checked"}></label>`; }).join("") + `</details>`).join("");
   let favs = 0; try { favs = JSON.parse(localStorage.getItem("favs") || "[]").length + JSON.parse(localStorage.getItem("ligasFav") || "[]").length; } catch (e) {}
-  $("vista").innerHTML = `<p class="apnota" style="text-align:center;margin:10px 0 0">Clávala · <b>versión ${esc(APP_VERSION)}</b> · datos del ${esc(DATOS.generado)} · <button class="lnk" data-reparar="1">🔧 Arreglar la app</button></p><div class="aj" style="margin-top:12px">${htmlCuenta()}
+  $("vista").innerHTML = `<p class="apnota" style="text-align:center;margin:10px 0 0">Clávala · <b>versión ${esc(APP_VERSION)}</b> · datos del ${esc(DATOS.generado)} · <button class="lnk" data-reparar="1">🔧 Arreglar la app</button></p><button class="apbtn" data-bienvenida="hola" style="margin:10px 0 0">📖 Ver la bienvenida</button><div class="aj" style="margin-top:12px">${htmlCuenta()}
     <section class="ajb"><h3>Apariencia</h3>${seg("tema", [["claro", "☀️ Claro"], ["oscuro", "🌙 Oscuro"], ["auto", "📱 Como el móvil"]])}${skinActual() ? `<p>Ahora mismo tienes puesto un tema de la app (se cambia en Arena → Perfil → Personalizar).</p>` : ""}</section>
     ${esProbador() ? `<section class="ajb"><h3>🧪 Pruebas</h3><p style="margin:0 0 8px">Todos los temas desbloqueados para probarlos (solo en tu perfil).</p>
       <div class="pgrid skin">${CAT.skin.map(it => `<button class="pit ${(PERFIL.skin || "") === it.id ? "on" : ""}" data-skinprueba="${it.id}"><span class="skmini sk-${it.id || "normal"}"></span><b>${esc(it.n)}</b></button>`).join("")}</div>
@@ -4286,7 +4342,7 @@ function pintarDesafios() {
     h += `<button class="ev ${ev.tema}" data-vista="${ev.id === "reto" ? "reto" : "evento"}" data-evento="${ev.id}">
       ${ARTE_EV[ev.id] || ""}<span class="evtx"><b>${ev.t}</b><span class="evchip ${on ? "on" : ""}">${esc(estado)}</span></span></button>`;
   }
-  $("vista").innerHTML = h + `</div>`;
+  $("vista").innerHTML = h + `</div><button class="lnk bvcomo" data-bienvenida="arena">❓ Cómo funciona la Arena</button>`;
 }
 // Eventos que aún no están: su pantalla con lo que será
 function pintarEvento() {
@@ -6376,6 +6432,57 @@ const TJVIVA = (() => {
   return { escenas: Object.keys(E), escanear };
 })();
 
+// ================================================================ Pantallas de bienvenida
+// Se ven la primera vez que se abre la app y cuando quieras desde Ajustes («📖 Ver la bienvenida») o desde la Arena («❓ Cómo funciona»).
+// Cada pantalla tiene un dibujito animado hecho con piezas de la propia app, para que se reconozca luego.
+const BIENV = [
+  { id: "hola", t: "Bienvenido a Clávala", s: "Partidos de fútbol, baloncesto, tenis y esports con la probabilidad de cada resultado. Y un juego gratis para ganarle a la app.",
+    dib: () => `<img class="bvlogo" src="${LOGO_PX}" alt=""><div class="bvdeps"><span>⚽</span><span>🏀</span><span>🎾</span><span>🎮</span></div>` },
+  { id: "partidos", t: "Partidos", s: "Elige el deporte arriba y el día. Toca una liga para desplegar sus partidos; abre las que quieras a la vez. Con la ☆ guardas tus favoritas.",
+    dib: () => `<div class="bvcard"><div class="bvliga"><span>🇪🇸</span><b>LaLiga</b><em>4</em><i>▾</i><u>★</u></div>
+      <div class="bvpart"><small>21:00</small><span>Real Madrid<br>Barcelona</span></div><div class="bvpart"><small>18:30</small><span>Betis<br>Sevilla</span></div>
+      <div class="bvliga cerr"><span>🏴</span><b>Premier League</b><em>5</em><i>▾</i><u>☆</u></div></div>` },
+  { id: "prob", t: "Probabilidades", s: "En cada partido ves el % de cada mercado. Lo más probable sale en dorado y, si la hay, la cuota de Winamax para comparar.",
+    dib: () => `<div class="bvcard bvprob">${[["Gana local", 62, 1], ["Más de 2,5 goles", 55, 0], ["Marcan los dos", 48, 0], ["Empate", 24, 0]].map(([n, v, o], k) =>
+      `<div class="bvbar ${o ? "oro" : ""}"><span>${n}</span><b>${v} %</b><i style="--v:${v}%;--k:${k}"></i></div>`).join("")}</div>` },
+  { id: "directo", t: "En directo", s: "Marcador y minuto al momento. En baloncesto, los cuartos; en tenis, los sets; en esports, cada mapa y sus rondas.",
+    dib: () => `<div class="bvcard bvvivo"><div class="bveq"><span class="bvesc">RM</span><b>Real Madrid</b></div><div class="bvmarc"><b class="bvgol">2-1</b><small>● 67'</small></div><div class="bveq"><span class="bvesc v">FCB</span><b>Barcelona</b></div></div>` },
+  { id: "estad", t: "Estadísticas", s: "Apunta tus apuestas (sencillas y combinadas, también varias cosas del mismo partido). Se marcan solas como ganadas o perdidas y ves cuánto llevas.",
+    dib: () => `<div class="bvcard bvapu"><div class="bvsaldo"><small>TU DINERO</small><b>84,50 €</b><em>+14,50 €</em></div>
+      <div class="bvap ok"><span>🧩 Combinada de 3</span><b>✅ 3,40</b></div><div class="bvap"><span>Gana Real Madrid</span><b>● en juego</b></div></div>` },
+  { id: "arena", t: "La Arena", s: "Juega gratis a pronosticar. En «Gánale a la app» eliges 6 partidos y compites contra la máquina; en los eventos, como HI-SCORE, encadenas aciertos para multiplicar los puntos.",
+    dib: () => `<div class="bvarena"><div class="bvt t1"><b>🎯 Gánale a la app</b><small>Tú 3 – 2 App</small></div><div class="bvt t2"><b>🕹️ HI-SCORE</b><small>COMBO ×4 · ♥♥♥♥</small></div><div class="bvt t3"><b>🏆 Ranking online</b><small>contra tus amigos</small></div></div>` },
+  { id: "temp", t: "Temporada, pase y misiones", s: "Cada acierto da estrellas. Las estrellas suben el pase de la temporada, con premios en cada nivel. Las misiones diarias, semanales y del evento dan más.",
+    dib: () => `<div class="bvcard bvpase"><div class="bvpips">${[...Array(10)].map((_, k) => `<span style="--k:${k}">★</span>`).join("")}</div><div class="bvniv"><b>NV 7</b><i></i><b>NV 8</b></div>
+      <div class="bvmis"><span>✓ Elige tus 3 pronósticos</span><span>Acierta 2 pronósticos · 1/2</span></div></div>` },
+  { id: "perfil", t: "Tu perfil y la tienda", s: "Sube de nivel, gana monedas y cámbialas por avatares, marcos, tarjetas, colores y temas. Los animados más especiales solo se ganan quedando arriba.",
+    dib: () => `<div class="bvperfil"><div class="bvav">😎</div><b>Tu nombre</b><small>Nivel 12 · 🪙 1.240</small><div class="bvcoins">${[...Array(6)].map((_, k) => `<span style="--k:${k}">🪙</span>`).join("")}</div></div>` },
+  { id: "fin", t: "¡A jugar!", s: "Puedes volver a ver estas pantallas cuando quieras en Ajustes → «📖 Ver la bienvenida».",
+    dib: () => `<img class="bvlogo salta" src="${LOGO_PX}" alt="">` },
+];
+function abrirBienvenida(desde) {
+  document.getElementById("bienv")?.remove();
+  let i = Math.max(0, BIENV.findIndex(b => b.id === desde));
+  const d = document.createElement("div"); d.id = "bienv"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Bienvenida");
+  d.innerHTML = `<button class="bvsaltar" data-bw="cerrar">Saltar</button><div class="bvpista">${BIENV.map(b => `<section class="bvdia bv-${b.id}"><div class="bvdib">${b.dib()}</div><h2>${esc(b.t)}</h2><p>${esc(b.s)}</p></section>`).join("")}</div>
+    <div class="bvpie"><button class="bvat" data-bw="atras" aria-label="Anterior">‹</button><div class="bvpuntos">${BIENV.map((_, k) => `<button data-bw="ir" data-k="${k}" aria-label="Pantalla ${k + 1}"></button>`).join("")}</div><button class="bvsig" data-bw="sig">Siguiente</button></div>`;
+  document.body.appendChild(d); document.documentElement.classList.add("pxabierto");
+  const pista = d.querySelector(".bvpista");
+  const ir = k => { i = Math.max(0, Math.min(BIENV.length - 1, k)); pista.style.transform = `translateX(${-i * 100}%)`;
+    d.querySelectorAll(".bvdia").forEach((s, n) => s.classList.toggle("ver", n === i));
+    d.querySelectorAll(".bvpuntos button").forEach((b, n) => b.setAttribute("aria-current", n === i));
+    d.querySelector(".bvsig").textContent = i === BIENV.length - 1 ? "Empezar" : "Siguiente"; d.querySelector(".bvat").style.visibility = i ? "visible" : "hidden"; };
+  const cerrar = () => { try { localStorage.setItem("bienvenidaV1", "1"); } catch (e) {} document.documentElement.classList.remove("pxabierto"); d.classList.add("fuera"); setTimeout(() => d.remove(), 220); };
+  d.addEventListener("click", e => { const b = e.target.closest("[data-bw]"); if (!b) return; e.stopPropagation();
+    const a = b.dataset.bw; if (a === "cerrar") cerrar(); else if (a === "atras") ir(i - 1); else if (a === "ir") ir(+b.dataset.k); else if (i === BIENV.length - 1) cerrar(); else ir(i + 1); });
+  let x0 = null; pista.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+  pista.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 45) ir(i + (dx < 0 ? 1 : -1)); });
+  requestAnimationFrame(() => ir(i));
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-bienvenida]"); if (!b) return; abrirBienvenida(b.dataset.bienvenida); });
+// La primera vez que se abre la app
+setTimeout(() => { let visto = true; try { visto = !!localStorage.getItem("bienvenidaV1"); } catch (e) {} if (!visto) abrirBienvenida(); }, 600);
+
 // ================================================================ Fondos animados de los temas
 // Un lienzo detrás de la app (debajo de todo, sin tocar nada). Solo lo usan algunos temas; en el resto no hay nada.
 // Va a pocos fotogramas por segundo, se para con la app en segundo plano y, con "reducir movimiento", se queda quieto.
@@ -6581,7 +6688,7 @@ const FONDO = (() => {
     for (const j of s.js) if (j.vivo) { caja(j.x - 1, j.y - 1, 3, 3, j.eq ? "#ff004d" : "#73eff7"); } else caja(j.x - 1, j.y - 1, 3, 3, "rgba(148,176,194,.35)");
   };
   // Tema normal: el logo de Clávala en grande, flotando con un brillo dorado detrás y destellos alrededor
-  const LOGO_IMG = (() => { const im = new Image(); im.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIElEQVR42sVXPU4CQRT+ht3SC2hpYWdDYQy2VCZUGi5AApzAAkyWLdjKAywkXmADlQkVhQ1kY2FDYUJBqRewlKwFzPp2dmZ2ZpX4umV4833v/w3wz8LKKvYukdDvIC53l1sWdDhqZw8746QMGWYDnANVSL8zNibCSgG/P8oVTlrWRJgOPAOsAlUJIdPvjJUkKgcBF3SGo3YuaZUE/gRcRsJzpCRc0wtSd/pbrcrQc/D1uvuPW3XSO/r+VhoGprReAR7EYLV6N2fJch4yfoff+Pnde9KXpmtj+fNRF7U6ks36BR+rWXp2fH4NTirYEUn8xg68qBSZifUcfLN+AYAMOCUBAKdnF1jOQ9a7RGLSByqFTYXE7mM1y1nORTwz7YYVE/fX6t1kMR1ILaYkAGAxHUCWI1oCudKTCAUSQXVnvw6BDEjMAf5tC249DSmwSGLx9olJFOG22TyMB2SZT8G5TKLInkAQg/HJJZPlPGRXN4NCcAC4u39Im1K5EJy0jPo/jbet1VY5MPQcwN8mwTxkVze7YSKWJLdcbMnWC0lajsQDfLDQtqqbBXQemLRiV7lMCGHYD5gkiMF0MabDiOvoOiPT7gN7EtwLdLqphE5Ct+pIW7p5Duw9wS/6et1mAJRuJcCCXi4vcn1AV5Ju1cldXnQuyyHzpdRzfvXqKQI3X8stiVDg0mu5jIhJ/E2BS70N6VYrkqHV8edPs0M+Tv9dvgEHUSs1tKLoGgAAAABJRU5ErkJggg=="; return im; })();
+  const LOGO_IMG = (() => { const im = new Image(); im.src = LOGO_PX; return im; })();
   CREAR.logo = () => ({ t: 0, chis: [...Array(14)].map(() => ({ a: r(0, 6.28), d: r(.55, 1.05), f: r(0, 6.28), v: r(.004, .012) })) });
   PASO.logo = s => { s.t++; s.chis.forEach(c2 => { c2.a += c2.v; c2.f += .08; }); };
   DIBU.logo = s => {
