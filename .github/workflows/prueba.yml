@@ -1,0 +1,22 @@
+name: prueba-vlr
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests
+      - run: |
+          python - <<'P'
+          import requests, time, json, directo
+          from datetime import datetime
+          datos = requests.get(directo.DATOS, params={"t": int(time.time())}, timeout=30).json()
+          cand = directo.candidatos(datos, datetime.now(directo.TZ))
+          val = [c for c in cand["e"] if "Liquid" in c.get("local","")]
+          print("::notice::cand " + json.dumps(val)[:500])
+          print("::notice::lista " + json.dumps(directo._vlr_lista())[:600])
+          print("::notice::vlr_valorant " + json.dumps(directo.vlr_valorant(val))[:500])
+          print("::notice::esports " + json.dumps(directo.esports(val))[:500])
+          P
