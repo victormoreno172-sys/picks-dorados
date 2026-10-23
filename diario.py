@@ -105,6 +105,48 @@ try:
                 _r = _p.get("res") or {}
                 if _r.get("st") == "post" and _r.get("m"):
                     _res[f'{_d["fecha"]}|{_p["local"]}|{_p["visitante"]}'] = _r["m"]
+    # Partidos que acaban después de la última actualización de su día (los de las 21:00) se quedaban
+    # sin resultado: al día siguiente ya no salen en la app. Se apuntan como "sinres" y se buscan después.
+    _sin = {k: v for k, v in (_prev.get("sinres") or {}).items() if k not in _res}
+    for _fuente in (_prev, datos_app):
+        for _d in _fuente.get("dias", []):
+            if _d["fecha"] > hoy.isoformat():
+                continue
+            for _p in _d.get("partidos", []):
+                _k = f'{_d["fecha"]}|{_p["local"]}|{_p["visitante"]}'
+                if _k not in _res:
+                    _sin[_k] = {"dep": _p.get("dep", "f"), "liga": _p.get("liga") or "", "hora": _p.get("hora") or ""}
+    # El primero que se perdió así (antes de este arreglo); se borra solo a los 4 días
+    if "2026-10-22|Ajax|Atalanta" not in _res:
+        _sin.setdefault("2026-10-22|Ajax|Atalanta", {"dep": "f", "liga": "Conference League", "hora": "21:00"})
+    _lim4 = (hoy - _td(days=4)).isoformat()
+    _sin = {k: v for k, v in _sin.items() if k[:10] >= _lim4}
+    try:
+        import ficha as _fi
+        from datetime import date as _date
+        _cache: dict = {}
+        for _k, _v in list(_sin.items()):
+            _f, _l, _vi = _k.split("|", 2)
+            _fecha = _date.fromisoformat(_f)
+            _r = None
+            _ds = _fi.SLUGS.get(_v["liga"])
+            if _ds:
+                _evs = []
+                for _dd in (_fecha - _td(days=1), _fecha, _fecha + _td(days=1)):
+                    if (*_ds, _dd) not in _cache:
+                        _cache[(*_ds, _dd)] = _fi._eventos(*_ds, _dd)
+                    _evs += _cache[(*_ds, _dd)]
+                _e = _fi._emparejar({"local": _l, "visitante": _vi, "hora": _v["hora"]}, _fecha, _evs)
+                _r = (_e or {}).get("estado")
+            elif _v["dep"] in ("b", "te", "e"):
+                _r = _fi._resultado_propio({"dep": _v["dep"], "local": _l, "visitante": _vi}, _f)
+            if _r and _r.get("st") == "post" and _r.get("m"):
+                _res[_k] = _r["m"]
+                _sin.pop(_k)
+        print(f"  resultados recuperados de días anteriores: quedan {len(_sin)} sin resultado")
+    except Exception as e:  # noqa: BLE001
+        print(f"aviso: resultados de días anteriores: {e}")
+    datos_app["sinres"] = _sin
     _lim = (hoy - _td(days=10)).isoformat()
     datos_app["resultados"] = {k: v for k, v in _res.items() if k[:10] >= _lim}
     print(f"  resultados guardados para los desafíos: {len(datos_app['resultados'])}")

@@ -1409,7 +1409,7 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .armc .arms b { font: 12px "Press Start 2P", monospace; color: #fff; letter-spacing: .02em; white-space: nowrap; } .armc .arms small { font: 7px "Press Start 2P", monospace; color: #83769c; margin-top: 3px; white-space: nowrap; }
 .armc .arms.vivo { border-color: #ff004d; } .armc .arms.vivo b { color: #ffec27; } .armc .arms.vivo small { color: #ff004d; } .armc .arms.fin small { color: #a7f070; }
 .arp summary .armc { flex: 1; } .arp .arlg { display: block; font: 400 10.5px "Pixelify Sans", var(--body); color: #83769c; text-align: center; margin-top: 3px; }
-.arlog .armc .armt b { font-size: 11.5px; }
+.arlog .armc .armt b { font-size: 12.5px; } .arlog .armc .mini { width: 26px; height: 26px; }
 .arp { margin: 0 0 6px; background: #1a1c2c; border: 2px solid #000; } .arp.elegido { border-color: #ffec27; } .arp summary { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; list-style: none; } .arp summary::-webkit-details-marker { display: none; }
 .arp .arh { font: 9px "Press Start 2P", monospace; color: #ffcd75; min-width: 42px; } .arp .are { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .arp .are b { font: 600 13.5px "Pixelify Sans", var(--body); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .arp .are small { font: 400 10.5px "Pixelify Sans", var(--body); color: #83769c; }
@@ -1424,8 +1424,10 @@ button.pin { border: 0; cursor: pointer; font: inherit; color: inherit; position
 .arop { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 3px; cursor: pointer; background: #262b44; color: #fff; border: 2px solid #000; box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.08); }
 .arop b { font: 600 12px "Pixelify Sans", var(--body); text-align: center; line-height: 1.1; } .arop span { font: 400 10.5px "Pixelify Sans", var(--body); color: #ffcd75; }
 .arop.yo { background: #ffec27; color: #000; box-shadow: 0 0 0 2px #ff004d; } .arop.yo span { color: #7e2553; } .arop:disabled { opacity: .45; cursor: default; }
-.arlog { display: flex; align-items: center; gap: 10px; padding: 7px 4px; border-top: 2px dashed #3a4466; } .arlog:first-of-type { border-top: 0; }
-.arlog > span:first-child { font: 8px "Press Start 2P", monospace; color: #83769c; min-width: 40px; } .arlog > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.arlog { display: flex; flex-direction: column; gap: 8px; padding: 10px 2px; border-top: 2px dashed #3a4466; } .arlog:first-of-type { border-top: 0; }
+.arlog .arlh { display: flex; align-items: center; justify-content: space-between; gap: 8px; } .arlog .arlh span { font: 8px/1.4 "Press Start 2P", monospace; color: #83769c; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arlog .arlh i small { font: inherit; opacity: .75; } .arlog .arlp { text-align: center; font: 400 12px "Pixelify Sans", var(--body); color: #94b0c2; } .arlog .arlp b { color: #fff; }
+.arlog.ok .arlp b { color: #a7f070; } .arlog.ko .arlp b { color: #ff9eae; text-decoration: line-through; text-decoration-thickness: 1px; }
 .arlog b { font: 600 13px "Pixelify Sans", var(--body); } .arlog small { font: 400 11px "Pixelify Sans", var(--body); color: #94b0c2; } .arlog i { font: 9px "Press Start 2P", monospace; font-style: normal; }
 .arlog.ok i { color: #a7f070; } .arlog.ko i { color: #ff004d; } .arlog.go i { color: #5f574f; }
 .tj.tj-hiscore { background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAwCAIAAABhdOiYAAADbklEQVR42u1ZP2gTURj/7qhYexzeUApJ62WpgSJkMLYIZgh0ye4S8Faz6CKUilIqitTBQpe61DVCNkezCBkyiJUOBSkElxzqgWQ4CbGBDDpcE1/uvbu89+5PL/o+wsfHL9/73vd+933fXS7SxQtpiFH6ljqb6sL0iBQzQVMnsqBAEOTZ7PER1O8cJSQIvVCOwnAImp2/npAgfLL14JknQQtKFgCYdN9Snfok2uiHsLZz5IqD+wfB8Tz983H0871tr/PKP3qtBSXLpM86YpAn2mNdM8i71uqZsisO7h8E7w/ylYrhH5/pvNIVrWi2a3qmTCww84ulL6dwEABgPqtrXdQGANNWodNyEMfZwb2Co54jfyp8uAsRd3L2isPUfTMA4MXOaCd60bWuiaVSqRgHB1X/Vay46YubtoquZSXFTRCndFom5QjcfLm16c07Eof1euD56Msp01aJeEKfg8x2jQDa5GcQL5xhO1vVtS5eMtyRA1QQOgt82idTBkgR8xu72pPi0OfjrpfxGcRTQfrcEpP26m3Xt+gqXesW0pdR7cI9+SXtO3GWua4HuiOTNtu1GX1uyfz1lUkDWEj2f+3m8SHW+eATZ+hvYYxYyGyyYBhnHAdiDgQbi0PMx7mTuHA9Uw5UQTQTIcQ4IQxE73zq1QYRl26lDY6dmt9/AoBTt7iNioP7x8H9+fDg+RDeB/ERFL80T3YLKxsoUjKK9Woj8hdmrAQ1jw8LudX/560I822ej52bn187xodrd8Oyp/iFWcko4iB6JFZbe/GGiNNXfSCC1pVTel0yihN96tVG82SXMqZTFP62/egOa56oLuRWudfK68rp+94lej14+47Gs7CygSIAQNTKmuFUBKWNatbM+bS0ffV2DJ3c+3j2a15ZM8KyWXN4+unVkxv3mO9i8RA0vSL+9hEECYIEQYKgBIv0+2FtcX8H/+Lb/ccCPyNIlIlfBaWVHA2RlA4BlycwvqggxgqivxRRuCVwX9nlNLInFiqNG2uW9LK4v4Nm6+OGH83f0+UsWoy3xYJXAV/hxLMR/RJ5YiD6Voq6rQK2G1/ryf7U8B0yTnbQA7PSRMOUmEF0MyiUa56QIOGmIQdppfNtq9Dbjdh6cijUhELxuU/uSF53JKdwIuJIDOmQHhRjK5yIInOHlf+xtgq93f4AjGiX6cEXCAEAAAAASUVORK5CYII=") center / cover; image-rendering: pixelated; }
@@ -3826,7 +3828,8 @@ function estadoReto(x) {
   const rg = !(e && e.st === "post") && (DATOS.resultados || {})[`${x.fecha}|${x.local}|${x.visitante}`];
   if (rg) gana = x.ops.find(o => acierta(o.m, rg, x.local, x.visitante) === true);
   if (x.fin) gana = x.ops.find(o => o.m === x.fin);
-  return { pos, p, e, empezado: empezado || !!rg, final: !!x.fin || !!rg || (e && e.st === "post"), gana: gana ? gana.m : null };
+  const mf = (e && e.st === "post" && /^\d+-\d+$/.test(e.m || "") ? e.m : rg) || x.mf || null;   // marcador final
+  return { pos, p, e, empezado: empezado || !!rg || !!x.fin, final: !!x.fin || !!rg || (e && e.st === "post"), gana: gana ? gana.m : null, m: mf };
 }
 // Puntos de un día: los tuyos y los de la app, solo en los partidos que has pronosticado y ya han acabado
 function cuentaReto(r) {
@@ -3834,7 +3837,8 @@ function cuentaReto(r) {
   let cambio = false;
   for (const x of r.partidos) {
     const s = estadoReto(x);
-    if (s.final && s.gana && !x.fin) { x.fin = s.gana; cambio = true; }   // se guarda el resultado de todos (lo usan los demás jugadores)
+    if (s.final && s.gana && !x.fin) { x.fin = s.gana; cambio = true; }
+    if (s.final && s.m && !x.mf) { x.mf = s.m; cambio = true; }   // se guarda el resultado de todos (lo usan los demás jugadores)
     const mio = r.picks[claveReto(x)]; if (!mio) continue;
     if (!s.final || !s.gana) { if (s.empezado) vivos++; continue; }
     jugados++;
@@ -5301,10 +5305,10 @@ function marcArc(x, s) {
   s = s || estadoReto(x);
   const escu = (s.p && s.p.fi && s.p.fi.esc) || [], e = s.e;
   let m = e && /^(\d+)-(\d+)$/.exec(e.m || "");
-  const rg = !m && (DATOS.resultados || {})[`${x.fecha}|${x.local}|${x.visitante}`]; if (rg) m = /^(\d+)-(\d+)$/.exec(rg);
+  const rg = !m && ((DATOS.resultados || {})[`${x.fecha}|${x.local}|${x.visitante}`] || s.m || x.mf); if (rg) m = /^(\d+)-(\d+)$/.exec(rg);
   const vivo = e && e.st === "in", fin = s.final || (e && e.st === "post");
   const centro = m ? `<b>${m[1]}-${m[2]}</b><small>${vivo ? "● " + esc(minutoTxt(e.det) === "Vivo" ? "VIVO" : minutoTxt(e.det)) : fin ? "FIN" : ""}</small>`
-    : `<b>${esc(x.hora || "--:--")}</b><small>${s.empezado ? "● VIVO" : "HOY"}</small>`;
+    : fin ? `<b>-:-</b><small>FIN</small>` : `<b>${esc(x.hora || "--:--")}</b><small>${s.empezado ? "● VIVO" : x.fecha === AHORA.fecha ? "HOY" : esc(fCorta(x.fecha))}</small>`;
   return `<span class="armc"><span class="armt">${miniEsc(escu[0] || "", x.local)}<b>${esc(x.local)}</b></span><span class="arms ${vivo || (s.empezado && !fin) ? "vivo" : fin ? "fin" : ""}">${centro}</span><span class="armt v"><b>${esc(x.visitante)}</b>${miniEsc(escu[1] || "", x.visitante)}</span></span>`;
 }
 // ---- Pantalla del evento
@@ -5349,7 +5353,7 @@ function pintarArcade() {
   if (hoy >= ARC.desde) h += misionesArcHTML();
   const ult = y.log.filter(z => z.s.final || z.go).slice(-8).reverse();
   if (ult.length) h += `<section class="mcard t0 tw-arcl"><h3>📼 ÚLTIMAS JUGADAS</h3>${ult.map(z => { const o = z.x.ops.find(q => q.m === z.m);
-    return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><span>${fCorta(z.d)}</span><span>${marcArc(z.x)}<b>${esc(o.n || o.m)}</b></span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} ×${z.mult}` : "✗ −♥"}</i></div>`; }).join("")}</section>`;
+    return `<div class="arlog ${z.go ? "go" : z.ok ? "ok" : "ko"}"><div class="arlh"><span>${fCorta(z.d)}${z.x.liga ? " · " + esc(ligaBase(z.x.liga)) : ""}</span><i>${z.go ? "GAME OVER" : z.ok ? `+${z.g} <small>×${z.mult}</small>` : "✗ −♥"}</i></div>${marcArc(z.x, z.s)}<div class="arlp">★ <b>${esc(o.n || o.m)}</b></div></div>`; }).join("")}</section>`;
   h += `<section class="mcard t0 tw-rank"><h3>🏆 TABLA HI-SCORE</h3>${chipModo()}${tablaRanking(filas, false, "arcade")}
 </section>` + htmlReglas("arcade");
   $("vista").innerHTML = h;
@@ -5434,6 +5438,7 @@ function partidaArc(dias, elige, cont) {
     for (const z of lista) {
       const s = estadoReto(z.x);
       if (s.final && s.gana && !z.x.src.fin) { z.x.src.fin = s.gana; _arcSucio = true; }
+      if (s.final && s.m) { z.x.mf = s.m; if (r.pool[z.x.i] && !r.pool[z.x.i].mf) { r.pool[z.x.i].mf = s.m; _arcSucio = true; } }
       const vivas = ARC.vidas + (cont[sem] ? 1 : 0) - (fallos[sem] || 0);
       if (vivas <= 0) { log.push({ ...z, d, s, go: true }); continue; }
       if (!s.final || !s.gana) { log.push({ ...z, d, s, mult: multiArc(racha) }); continue; }
