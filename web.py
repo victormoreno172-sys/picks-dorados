@@ -156,6 +156,12 @@ def escribir(datos: dict, carpeta: str = SALIDA):
     with open(os.path.join(carpeta, "icono.svg"), "w", encoding="utf-8") as f:
         f.write(_icono_svg())
     _icono_png(os.path.join(carpeta, "icono.png"))
+    # Página de descarga para compartir con los amigos: .../picks-dorados/descargar/
+    with open(os.path.join(CARPETA, "descargar.html"), encoding="utf-8") as f:
+        pagina = f.read()
+    os.makedirs(os.path.join(carpeta, "descargar"), exist_ok=True)
+    with open(os.path.join(carpeta, "descargar", "index.html"), "w", encoding="utf-8") as f:
+        f.write(pagina)
     print(f"App generada en {carpeta}/index.html")
 
 
