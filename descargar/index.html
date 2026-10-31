@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Descarga Clávala</title>
+<meta name="description" content="Partidos, probabilidades y la Arena. Descarga Clávala para Android.">
+<meta property="og:title" content="Descarga Clávala">
+<meta property="og:description" content="Partidos, probabilidades y la Arena. Toca para descargarla en Android.">
+<meta property="og:image" content="https://victormoreno172-sys.github.io/picks-dorados/icono.png">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0b0618">
+<link rel="icon" href="../icono.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { min-height: 100svh; display: grid; place-items: center; padding: 24px 16px; color: #fff; font-family: Inter, system-ui, sans-serif; text-align: center; overflow-x: hidden;
+    background: radial-gradient(circle at 50% 32%, #2b1d4d 0%, #0b0618 68%); }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(#ffd16633 1px, transparent 1.5px); background-size: 26px 26px; mask-image: radial-gradient(circle at 50% 35%, #000, transparent 70%); }
+  main { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; max-width: 380px; }
+  .logo { width: min(56vw, 220px); aspect-ratio: 1; image-rendering: pixelated; filter: drop-shadow(0 0 34px rgba(255,183,3,.5)); animation: flota 2.8s ease-in-out infinite; }
+  @keyframes flota { 50% { transform: translateY(-12px); } }
+  h1 { margin: 6px 0 0; font: 800 44px/1 Inter, system-ui; letter-spacing: -.02em; background: linear-gradient(135deg, #ffd166, #fb8500); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin: 0; color: #c9c3e3; font-size: 15px; }
+  .btn { margin-top: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px 20px; border-radius: 18px; text-decoration: none;
+    background: linear-gradient(135deg, #ffd166, #fb8500); color: #1b1200; font: 800 18px Inter, system-ui; box-shadow: 0 14px 34px -10px rgba(251,133,0,.7); transition: transform .15s; }
+  .btn:active { transform: scale(.97); }
+  .btn svg { width: 24px; height: 24px; }
+  .info { margin: 2px 0 0; font: 9px/1.6 "Press Start 2P", monospace; color: #83769c; min-height: 15px; }
+  .nota { margin: 14px 0 0; font-size: 13px; line-height: 1.5; color: #9a93b5; }
+  .nota b { color: #d9d4ee; }
+  .web { color: #ffd166; font-size: 13px; text-decoration: none; }
+  @media (prefers-reduced-motion: reduce) { .logo { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIElEQVR42sVXPU4CQRT+ht3SC2hpYWdDYQy2VCZUGi5AApzAAkyWLdjKAywkXmADlQkVhQ1kY2FDYUJBqRewlKwFzPp2dmZ2ZpX4umV4833v/w3wz8LKKvYukdDvIC53l1sWdDhqZw8746QMGWYDnANVSL8zNibCSgG/P8oVTlrWRJgOPAOsAlUJIdPvjJUkKgcBF3SGo3YuaZUE/gRcRsJzpCRc0wtSd/pbrcrQc/D1uvuPW3XSO/r+VhoGprReAR7EYLV6N2fJch4yfoff+Pnde9KXpmtj+fNRF7U6ks36BR+rWXp2fH4NTirYEUn8xg68qBSZifUcfLN+AYAMOCUBAKdnF1jOQ9a7RGLSByqFTYXE7mM1y1nORTwz7YYVE/fX6t1kMR1ILaYkAGAxHUCWI1oCudKTCAUSQXVnvw6BDEjMAf5tC249DSmwSGLx9olJFOG22TyMB2SZT8G5TKLInkAQg/HJJZPlPGRXN4NCcAC4u39Im1K5EJy0jPo/jbet1VY5MPQcwN8mwTxkVze7YSKWJLdcbMnWC0lajsQDfLDQtqqbBXQemLRiV7lMCGHYD5gkiMF0MabDiOvoOiPT7gN7EtwLdLqphE5Ct+pIW7p5Duw9wS/6et1mAJRuJcCCXi4vcn1AV5Ju1cldXnQuyyHzpdRzfvXqKQI3X8stiVDg0mu5jIhJ/E2BS70N6VYrkqHV8edPs0M+Tv9dvgEHUSs1tKLoGgAAAABJRU5ErkJggg==" alt="Logo de Clávala">
+  <h1>Clávala</h1>
+  <p class="sub">Partidos, probabilidades y la Arena</p>
+  <a class="btn" id="bajar" href="https://github.com/victormoreno172-sys/picks-dorados/releases/download/app/Clavala.apk" download>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+    Descargar para Android
+  </a>
+  <p class="info" id="info"></p>
+  <p class="nota">Abre el archivo descargado. Si el móvil te avisa, toca <b>Ajustes</b> y permite <b>instalar apps de esta fuente</b>. Para actualizar, instálala encima: no se pierde nada.</p>
+  <a class="web" href="../">¿iPhone? Úsala en la web ›</a>
+</main>
+<script>
+  // La versión y el tamaño de la última APK (si no se puede leer, el botón funciona igual)
+  fetch("https://api.github.com/repos/victormoreno172-sys/picks-dorados/releases/tags/app")
+    .then(r => r.ok ? r.json() : null).then(j => {
+      if (!j) return;
+      const a = (j.assets || []).find(x => x.name === "Clavala.apk"), v = /versi\u00f3n\s+([\d.]+)|versión\s+([\d.]+)/.exec(j.body || "");
+      const partes = [];
+      if (v) partes.push("v" + (v[1] || v[2]));
+      if (a) partes.push((a.size / 1048576).toFixed(1).replace(".", ",") + " MB");
+      document.getElementById("info").textContent = partes.join(" · ");
+    }).catch(() => {});
+</script>
+</body>
+</html>
