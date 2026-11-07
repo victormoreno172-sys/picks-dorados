@@ -1,0 +1,77 @@
+caché al empezar: 653M en 7720 archivos
+11:03:07
+11:03:46
+caché al terminar: 653M en 7720 archivos
+[   1s]   fixtures.csv: 160 filas
+[   1s]   ligas: [('E1', 12), ('E0', 10), ('I1', 10), ('I2', 10), ('SP1', 10), ('B1', 9), ('D1', 9), ('D2', 9), ('F1', 9), ('F2', 9), ('N1', 9), ('P1', 9)]
+[   1s]   fechas: [('06/11/2026', 20), ('07/11/2026', 81), ('08/11/2026', 58), ('09/11/2026', 1)]
+[   1s]   columnas: ['Div', 'Date', 'Time', 'HomeTeam', 'AwayTeam', 'Referee', 'B365H', 'B365D', 'B365A', 'BFDH', 'BFDD', 'BFDA']
+[   1s] Preparando predicciones desde 2026-11-07 (7 días)...
+[   1s]   MLS: 1037 partidos de historial
+[   1s]   ARG: 698 partidos de historial
+[   2s]   BRA: 552 partidos de historial
+[   2s]   SAU: 410 partidos de historial
+[   2s]   calendario ESPN SP1: 9 partidos (20 nombres aprendidos)
+[   2s]   calendario ESPN SP2: 9 partidos (22 nombres aprendidos)
+[   2s]   calendario ESPN E0: 9 partidos (19 nombres aprendidos)
+[   2s]   calendario ESPN E1: 11 partidos (24 nombres aprendidos)
+[   2s]   calendario ESPN I1: 9 partidos (20 nombres aprendidos)
+[   2s]   calendario ESPN D1: 8 partidos (18 nombres aprendidos)
+[   2s]   calendario ESPN F1: 8 partidos (18 nombres aprendidos)
+[   2s]   calendario ESPN N1: 8 partidos (18 nombres aprendidos)
+[   2s]   calendario ESPN P1: 8 partidos (18 nombres aprendidos)
+[   2s]   2026-11-07: 53 partidos
+[   3s]   cuotas Winamax: 0 créditos gastados hoy, quedan ~237.0
+[   3s]   sondeo de mercados Winamax (guardado): soccer_spain_la_liga: Winamax no da mercados extra | soccer_epl: Winamax no da mercados extra | basketball_nba: Winamax no da mercados extra
+[   3s]   cuotas Winamax: 169 partidos con cuotas
+[   8s]   2026-11-08: 46 partidos
+[   9s]   2026-11-09: 1 partidos
+[   9s]   2026-11-10: 0 partidos
+[   9s]   2026-11-11: 0 partidos
+[   9s]   2026-11-12: 0 partidos
+[   9s]   2026-11-13: 1 partidos
+[  14s]   europa: 624 partidos en el calendario, 0 próximos
+[  14s]   NBA: 1570 partidos, 42 próximos
+[  14s]   modelo baloncesto NBA: 33 equipos, 1443 partidos, dispersión margen 15.1, total 20.1
+[  19s]   baloncesto europeo: 3322 partidos, 87 próximos
+[  19s]   modelo baloncesto ABA/ACB/BBL/BCL/BSL/EC/EL/GBL/LBA/LKL/LNB: 155 equipos, 3067 partidos, dispersión margen 12.7, total 17.6
+[  19s]     sin datos suficientes: Bordo Sportif - Karşıyaka Basket
+[  19s]   ATP: 4003 partidos de historial, 18 próximos
+[  19s]   modelo tenis: 497 jugadores, 4003 partidos
+[  19s]   WTA: 6745 partidos de historial, 18 próximos
+[  19s]   modelo tenis: 893 jugadores, 6745 partidos
+[  21s]   CS2: 6680 partidos de historial (1 nuevos)
+[  22s]   CS2: ejemplo de cuotas en bo3.gg: {"path": "https://thunderpick.io/match/2859736", "team_1": {"name": "Legacy", "coeff": 3.1, "active": true, "team_id": 8118, "max_coeff": 3.1, "aggrement_score": 0.34}, "team_2": {"name": "FURIA", "coeff": 1.32, "active": true, "team_id": 648, "max_coeff": 1.52, "aggrement_score": 0.66}, "provider":
+[  22s]   CS2: 4 partidos de nivel S/A en los próximos 7 días
+[  22s]   modelo esports: 593 equipos, 6678 series
+[  23s]   VAL: 3152 partidos de historial (0 nuevos)
+[  24s]   VAL: 0 partidos de nivel S/A en los próximos 7 días
+[  25s]   LOL: 3965 partidos de historial (0 nuevos)
+[  25s]   LOL: ejemplo de cuotas en bo3.gg: {"path": "https://thunderpick.io/match/2947814", "team_1": {"name": "Gen.G Esports", "coeff": 1.2, "active": true, "team_id": 17752, "max_coeff": 1.22, "aggrement_score": 0.62}, "team_2": {"name": "Invictus Gaming", "coeff": 4.0, "active": true, "team_id": 17955, "max_coeff": 4.4, "aggrement_score":
+[  25s]   LOL: 5 partidos de nivel S/A en los próximos 7 días
+[  26s]   modelo esports: 373 equipos, 3965 series
+[  27s]     pocos datos (pronóstico prudente): FENNEL - Nothin'Here
+[  27s]     pocos datos (pronóstico prudente): Saigon Warriors - Gromp Esports
+[  27s]     pocos datos (pronóstico prudente): Ground Zero Gaming - Frank Esports
+[  27s]   partidos ya empezados recuperados de la versión anterior: 15
+[  28s]   fichas de basket europeo, tenis y esports: 116
+[  28s]   fichas: 145 partidos con escudos y estadio, 126 con detalle, 22 clasificaciones
+[  28s]   resultados de ESPN para lo pendiente: 6 de 132
+[  29s]   historial: 152 partidos corregidos, 0 descartados sin resultado
+[  29s]   historial: 241 partidos guardados o actualizados
+[  29s]   resultados recuperados de días anteriores: quedan 99 sin resultado
+[  29s]   resultados guardados para los desafíos: 770
+[  29s] App generada en /home/runner/work/picks-dorados/picks-dorados/web/index.html
+[  29s] [11:03:36] ligas
+[  30s]   europa: 2 cruces sorteados añadidos (365Scores)
+[  30s]   conference: 1 cruces sorteados añadidos (365Scores)
+[  30s]   copabrasil: 2 cruces sorteados añadidos (365Scores)
+[  34s]   escudos: 326 encontrados en TheSportsDB
+[  34s]   ligas: 57 competiciones con clasificación y calendario
+[  34s]   ranking mundial: 347
+[  34s]   ranking VLR: 113
+[  38s]   ranking mundial: 58
+[  38s]   ranking ATP: 150
+[  38s]   ranking WTA: 150
+[  38s]   posiciones: 263 partidos con la clasificación de sus equipos
+[  38s] App generada en /home/runner/work/picks-dorados/picks-dorados/web/index.html
