@@ -1,0 +1,75 @@
+caché al empezar: 709M en 8065 archivos
+19:55:12
+20:01:07
+caché al terminar: 709M en 8065 archivos
+[   1s]   fixtures.csv: 51 filas
+[   1s]   ligas: [('EC', 11), ('SP2', 11), ('E3', 10), ('E2', 5), ('SC2', 5), ('SC3', 5), ('SC1', 4)]
+[   1s]   fechas: [('13/11/2026', 1), ('14/11/2026', 45), ('15/11/2026', 4), ('16/11/2026', 1)]
+[   1s]   columnas: ['Div', 'Date', 'Time', 'HomeTeam', 'AwayTeam', 'Referee', 'B365H', 'B365D', 'B365A', 'BFDH', 'BFDD', 'BFDA']
+[   1s] Preparando predicciones desde 2026-11-14 (7 días)...
+[   2s]   MLS: 1052 partidos de historial
+[   2s]   ARG: 691 partidos de historial
+[   2s]   BRA: 542 partidos de historial
+[   2s]   SAU: 410 partidos de historial
+[   2s]   calendario ESPN SP1: 1 partidos (20 nombres aprendidos)
+[   2s]   calendario ESPN SP2: 9 partidos (22 nombres aprendidos)
+[   2s]   calendario ESPN E0: 0 partidos (19 nombres aprendidos)
+[   2s]   calendario ESPN E1: 0 partidos (24 nombres aprendidos)
+[   2s]   calendario ESPN I1: 0 partidos (20 nombres aprendidos)
+[   2s]   calendario ESPN D1: 1 partidos (18 nombres aprendidos)
+[   2s]   calendario ESPN F1: 1 partidos (18 nombres aprendidos)
+[   2s]   calendario ESPN N1: 0 partidos (18 nombres aprendidos)
+[   2s]   calendario ESPN P1: 0 partidos (18 nombres aprendidos)
+[   2s]   2026-11-14: 6 partidos
+[   5s]   cuotas Winamax: 0 créditos gastados hoy, quedan ~144.0
+[   5s]   sondeo de mercados Winamax (guardado): soccer_spain_la_liga: Winamax no da mercados extra | soccer_epl: Winamax no da mercados extra | basketball_nba: Winamax no da mercados extra
+[   5s]   cuotas Winamax: 44 partidos con cuotas
+[   5s]   2026-11-15: 5 partidos
+[   5s]   2026-11-16: 1 partidos
+[   5s]   2026-11-17: 0 partidos
+[   5s]   2026-11-18: 1 partidos
+[   5s]   2026-11-19: 7 partidos
+[   5s]   2026-11-20: 8 partidos
+[  30s]   europa: 624 partidos en el calendario, 0 próximos
+[  30s]   NBA: 1622 partidos, 43 próximos
+[  30s]   modelo baloncesto NBA: 33 equipos, 1494 partidos, dispersión margen 15.2, total 20.0
+[ 328s]   baloncesto europeo: 3413 partidos, 90 próximos
+[ 328s]   modelo baloncesto ABA/ACB/BBL/BCL/BSL/EC/EL/GBL/LBA/LKL/LNB: 155 equipos, 3146 partidos, dispersión margen 12.6, total 17.5
+[ 328s]     sin datos suficientes: Joventut Badalona - FC Porto Basketball
+[ 328s]     sin datos suficientes: Baloncesto Málaga - BK Pardubice
+[ 328s]     sin datos suficientes: AEK BC - Falco KC
+[ 328s]     sin datos suficientes: Bursaspor Basketbol - Bordo Sportif
+[ 328s]   ATP: 3969 partidos de historial, 12 próximos
+[ 328s]   modelo tenis: 503 jugadores, 3969 partidos
+[ 328s]   WTA: 6626 partidos de historial, 3 próximos
+[ 328s]   modelo tenis: 882 jugadores, 6626 partidos
+[ 330s]   CS2: 6600 partidos de historial (1 nuevos)
+[ 331s]   CS2: ejemplo de cuotas en bo3.gg: {"path": "https://thunderpick.io/match/3003443", "team_1": {"name": "Spirit", "coeff": 1.58, "active": true, "team_id": 654, "max_coeff": 1.62, "aggrement_score": 0.39}, "team_2": {"name": "FURIA", "coeff": 2.2, "active": true, "team_id": 648, "max_coeff": 2.2, "aggrement_score": 0.61}, "provider": 
+[ 331s]   CS2: 5 partidos de nivel S/A en los próximos 7 días
+[ 331s]   modelo esports: 593 equipos, 6589 series
+[ 334s]   VAL: 3186 partidos de historial (0 nuevos)
+[ 334s]   VAL: 0 partidos de nivel S/A en los próximos 7 días
+[ 335s]   LOL: 3963 partidos de historial (0 nuevos)
+[ 335s]   LOL: 0 partidos de nivel S/A en los próximos 7 días
+[ 335s]   partidos ya empezados recuperados de la versión anterior: 22
+[ 337s]   fichas de basket europeo, tenis y esports: 91
+[ 337s]   fichas: 49 partidos con escudos y estadio, 35 con detalle, 12 clasificaciones
+[ 337s]   resultados de ESPN para lo pendiente: 3 de 46
+[ 337s]   historial: 85 partidos corregidos, 0 descartados sin resultado
+[ 337s]   historial: 148 partidos guardados o actualizados
+[ 338s]   resultados recuperados de días anteriores: quedan 28 sin resultado
+[ 338s]   resultados guardados para los desafíos: 534
+[ 338s] App generada en /home/runner/work/picks-dorados/picks-dorados/web/index.html
+[ 338s] [20:00:49] ligas
+[ 338s]   europa: 2 cruces sorteados añadidos (365Scores)
+[ 338s]   conference: 1 cruces sorteados añadidos (365Scores)
+[ 339s]   copabrasil: 1 cruces sorteados añadidos (365Scores)
+[ 352s]   escudos: 327 encontrados en TheSportsDB
+[ 352s]   ligas: 52 competiciones con clasificación y calendario
+[ 352s]   ranking mundial: 347
+[ 353s]   ranking VLR: 113
+[ 355s]   ranking mundial: 58
+[ 356s]   ranking ATP: 150
+[ 356s]   ranking WTA: 150
+[ 356s]   posiciones: 153 partidos con la clasificación de sus equipos
+[ 356s] App generada en /home/runner/work/picks-dorados/picks-dorados/web/index.html
