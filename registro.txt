@@ -1,0 +1,159 @@
+caché al empezar: 768M en 8540 archivos
+12:37:55
+12:43:59
+caché al terminar: 768M en 8540 archivos
+[   1s]   fixtures.csv: 190 filas
+[   1s]   ligas: [('E1', 12), ('E2', 12), ('E3', 12), ('EC', 12), ('SP2', 11), ('E0', 10), ('I1', 10), ('I2', 10), ('SP1', 10), ('B1', 9), ('D1', 9), ('D2', 9)]
+[   1s]   fechas: [('20/11/2026', 16), ('21/11/2026', 122), ('22/11/2026', 44), ('23/11/2026', 8)]
+[   1s]   columnas: ['Div', 'Date', 'Time', 'HomeTeam', 'AwayTeam', 'Referee', 'B365H', 'B365D', 'B365A', 'BFDH', 'BFDD', 'BFDA']
+[   1s] Preparando predicciones desde 2026-11-21 (7 días)...
+[   1s]   MLS: 1054 partidos de historial
+[   1s]   ARG: 678 partidos de historial
+[   1s]   BRA: 543 partidos de historial
+[   1s]   SAU: 411 partidos de historial
+[   1s]   calendario ESPN SP1: 10 partidos (20 nombres aprendidos)
+[   1s]   calendario ESPN SP2: 11 partidos (22 nombres aprendidos)
+[   1s]   calendario ESPN E0: 11 partidos (19 nombres aprendidos)
+[   1s]   calendario ESPN E1: 25 partidos (24 nombres aprendidos)
+[   1s]   calendario ESPN I1: 11 partidos (20 nombres aprendidos)
+[   1s]   calendario ESPN D1: 9 partidos (18 nombres aprendidos)
+[   1s]   calendario ESPN F1: 9 partidos (18 nombres aprendidos)
+[   1s]   calendario ESPN N1: 10 partidos (18 nombres aprendidos)
+[   1s]   calendario ESPN P1: 1 partidos (16 nombres aprendidos)
+[   1s]   2026-11-21: 52 partidos
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_efl_champ
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_spain_segunda_division
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_italy_serie_a
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_epl
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_spain_la_liga
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_netherlands_eredivisie
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_brazil_campeonato
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_france_ligue_one
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_usa_mls
+[   3s]   cuotas Winamax: sin presupuesto hoy para soccer_argentina_primera_division
+[   3s]   cuotas Winamax: sin presupuesto hoy para basketball_nba
+[   3s]   cuotas Winamax: 0 créditos gastados hoy, quedan ~18.0
+[   3s]   sondeo de mercados Winamax (guardado): soccer_spain_la_liga: Winamax no da mercados extra | soccer_epl: Winamax no da mercados extra | basketball_nba: Winamax no da mercados extra
+[   3s]   cuotas Winamax: 168 partidos con cuotas
+[   5s]   2026-11-22: 34 partidos
+[   6s]   2026-11-23: 9 partidos
+[   6s]   2026-11-24: 12 partidos
+[   6s]   2026-11-25: 5 partidos
+[   6s]   2026-11-26: 5 partidos
+[   6s]   2026-11-27: 13 partidos
+[  21s]   europa: 624 partidos en el calendario, 54 próximos
+[  22s]   equipos sin emparejar (102): ?:~aek larnaca, ?:~alashkert, ?:~aluminij, ?:~amrun spartans, ?:~apollon limassol, ?:~ararat armenia, ?:~atert bissen, ?:~atletic d escaldes, ?:~auda kekava, ?:~bate borisov, ?:~beitar jerusalem, ?:~bravo, ?:~caernarfon town, ?:~coleraine, ?:~connah s quay nomads, ?:~cska 1948, ?:~cska sofia, ?:~dac 1904 dunajska streda, ?:~debrecen, ?:~decic, ?:~differdange 03, ?:~dila gori, ?:~dinamo city, ?:~dinamo tbilisi, ?:~drita, ?:~dukagjini, ?:~egnatia, ?:~elbasani, ?:~elimai semey, ?:~europa, ?:~flora tallinn, ?:~floriana, ?:~glentoran, ?:~gyori eto, ?:~hajduk split, ?:~hapoel be er sheva, ?:~hapoel tel aviv, ?:~hb torshavn, ?:~hegelmann, ?:~hradec kralove, ?:~iberia 1999, ?:~inter d escaldes, ?:~jablonec, ?:~kauno zalgiris, ?:~koper, ?:~la fiorita, ?:~levadia tallinn, ?:~levski sofia, ?:~liepaja, ?:~linfield, ?:~lnz cherkasy, ?:~malisheva, ?:~marsaxlokk, ?:~maxline vitebsk, ?:~milsami orhei, ?:~mondorf les bains, ?:~mornar, ?:~neftci pfk, ?:~nomme kalju, ?:~nsi runavik, ?:~pafos, ?:~paide linnameeskond, ?:~paks, ?:~panevezys, ?:~partizan, ?:~pen y bont, ?:~petrocub hincesti, ?:~petrovac, ?:~polissya zhytomyr, ?:~pyunik yerevan, ?:~rapid vienna, ?:~riga, ?:~rijeka, ?:~sabah baku, ?:~santa coloma, ?:~sarajevo, ?:~shkendija, ?:~sileks, ?:~st joseph s, ?:~stjarnan, ?:~sutjeska, ?:~tobol, ?:~torpedo kutaisi, ?:~torreense, ?:~tre fiori, ?:~una strassen, ?:~universitatea cluj, ?:~universitatea craiova, ?:~valletta, ?:~valur, ?:~varazdin, ?:~vardar, ?:~velez mostar, ?:~vestri, ?:~vikingur gota, ?:~vllaznia shkoder, ?:~vojvodina, ?:~zalgiris vilnius, ?:~zeleznicar pancevo, ?:~zilina, ?:~zimbru chisinau, ?:~zir
+[  22s]   modelo europeo: 656 equipos, 48 ligas, 20343 partidos, ventaja local en Europa 1.34x
+[  22s]   nivel de las ligas: E0 +1.46, X-HUN +0.98, SP1 +0.97, I1 +0.93, D1 +0.91, F1 +0.83, X-CRO +0.63, E1 +0.53, B1 +0.49, X-CYP +0.35, N1 +0.35, P1 +0.34, X-CZE +0.34, X-ISR +0.32, D2 +0.28, SP2 +0.25, X-AZE +0.22, X-UKR +0.21, T1 +0.17, NOR +0.07, DNK +0.02, POL +0.02, X-SVN +0.00, X-SRB -0.03, X-LVA -0.04, G1 -0.04, I2 -0.07, F2 -0.09, AUT -0.12, SWZ -0.16, SWE -0.18, X-BLR -0.21, SC0 -0.21, X-BUL -0.31, X-ARM -0.32, X-KOS -0.32, X-KAZ -0.36, X-BIH -0.39, X-ISL -0.42, IRL -0.45, X-SVK -0.49, X-? -0.55, ROU -0.63, FIN -0.70, X-WAL -0.86, X-MDA -1.09, X-FRO -1.16, X-NIR -1.49
+[  22s]     UCL Arsenal -> Arsenal | Borussia Dortmund -> Dortmund
+[  22s]     UCL Manchester City -> Man City | Napoli -> Napoli
+[  22s]     UCL RB Leipzig -> RB Leipzig | Lens -> Lens
+[  22s]     UCL Feyenoord -> Feyenoord | Porto -> Porto
+[  22s]     UCL Bodø/Glimt -> Bodo/Glimt | LASK -> LASK
+[  22s]     UCL Real Madrid -> Real Madrid | PSV Eindhoven -> PSV Eindhoven
+[  22s]     UCL Galatasaray -> Galatasaray | Aston Villa -> Aston Villa
+[  22s]     UCL Slovan Bratislava -> ~slovan bratislava | Real Betis -> Betis
+[  22s]     UCL Como -> Como | AEK Athens -> AEK
+[  22s]     UCL Lille -> Lille | Bayern Munich -> Bayern Munich
+[  22s]     UCL Paris Saint-Germain -> Paris SG | Roma -> Roma
+[  22s]     UCL Sporting CP -> Sp Lisbon | Manchester United -> Man United
+[  22s]     UCL Inter Milan -> Inter | Stuttgart -> Stuttgart
+[  22s]     UCL Atlético Madrid -> Ath Madrid | Viking -> Viking
+[  22s]     UCL Shakhtar Donetsk -> ~shakhtar donetsk | Fenerbahçe -> Fenerbahce
+[  22s]     UCL Slavia Prague -> ~slavia praha | Villarreal -> Villarreal
+[  22s]     UCL Club Brugge -> Club Brugge | Liverpool -> Liverpool
+[  22s]     UCL Sabah Baku -> ~sabah baku | Barcelona -> Barcelona
+[  22s]     UEL Crystal Palace -> Crystal Palace | Real Sociedad -> Sociedad
+[  22s]     UEL Lyon -> Lyon | Lillestrøm -> Lillestrom
+[  22s]     UEL Marseille -> Marseille | Levski Sofia -> ~levski sofia
+[  22s]     UEL Hoffenheim -> Hoffenheim | Sturm Graz -> Sturm Graz
+[  22s]     UEL NEC Nijmegen -> Nijmegen | Rennes -> Rennes
+[  22s]     UEL Juventus -> Juventus | Omonia Nicosia -> ~omonia nikosia
+[  22s]     UEL Celta Vigo -> Celta | Bournemouth -> Bournemouth
+[  22s]     UEL Beşiktaş -> Besiktas | Hapoel Be'er Sheva -> ~hapoel be er sheva
+[  22s]     UEL Olympiacos -> Olympiakos | AC Milan -> Milan
+[  22s]     UEL Viktoria Plzeň -> ~viktoria plzen | Benfica -> Benfica
+[  22s]     UEL Red Bull Salzburg -> Salzburg | Ararat-Armenia -> ~ararat armenia
+[  22s]     UEL Dinamo Zagreb -> ~dinamo zagreb | Bayer Leverkusen -> Leverkusen
+[  22s]     UEL Sparta Prague -> ~sparta praha | AZ Alkmaar -> AZ Alkmaar
+[  22s]     UEL Ferencváros -> ~ferencvarosi tc | Celje -> ~celje
+[  22s]     UEL Sunderland -> Sunderland | Jagiellonia Białystok -> Jagiellonia
+[  22s]     UEL OFI -> OFI Crete | Anderlecht -> Anderlecht
+[  22s]     UEL Union Saint-Gilloise -> St. Gilloise | Lech Poznań -> Lech Poznan
+[  22s]     UEL Torreense -> ~torreense | Celtic -> Celtic
+[  22s]     UECL Brighton and Hove Albion -> Brighton | Universitatea Craiova -> ~universitatea craiova
+[  22s]     UECL Freiburg -> Freiburg | Twente -> Twente
+[  22s]     UECL Ajax -> Ajax | Thun -> Thun
+[  22s]     UECL Braga -> Sp Braga | KuPS -> KuPS
+[  22s]     UECL Heart of Midlothian -> Hearts | Monaco -> Monaco
+[  22s]     UECL Brann -> Brann | AGF Aarhus -> Aarhus
+[  22s]     UECL FC Nordsjælland -> Nordsjaelland | Panathinaikos -> Panathinaikos
+[  22s]     UECL Hajduk Split -> ~hajduk split | Sint-Truiden -> St Truiden
+[  22s]     UECL Gent -> Gent | Crvena Zvezda -> ~crvena zvezda
+[  22s]     UECL Kairat Almaty -> ~kairat | Mjällby -> Mjallby
+[  22s]     UECL CSKA Sofia -> ~cska sofia | Trabzonspor -> Trabzonspor
+[  22s]     UECL Jablonec -> ~jablonec | Lugano -> Lugano
+[  22s]     UECL Egnatia -> ~egnatia | Lincoln Red Imps -> Lincoln
+[  22s]     UECL Inter Club d'Escaldes -> ~inter d escaldes | FC Copenhagen -> FC Copenhagen
+[  22s]     UECL Borac Banja Luka -> ~borac banja luka | Atalanta -> Atalanta
+[  22s]     UECL Pafos -> ~pafos | FC Midtjylland -> Midtjylland
+[  22s]     UECL Iberia 1999 -> ~iberia 1999 | Getafe -> Getafe
+[  22s]     UECL Kauno Žalgiris -> ~kauno zalgiris | Riga FC -> ~riga
+[  22s]   sin datos suficientes: Torreense - Celtic
+[  22s]   sin datos suficientes: Jablonec - Lugano
+[  22s]   sin datos suficientes: Inter Club d'Escaldes - FC Copenhagen
+[  22s]   sin datos suficientes: Pafos - FC Midtjylland
+[  22s]   sin datos suficientes: Kauno Žalgiris - Riga FC
+[  22s]   NBA: 1668 partidos, 35 próximos
+[  22s]   modelo baloncesto NBA: 33 equipos, 1546 partidos, dispersión margen 15.2, total 19.8
+[ 304s]   baloncesto europeo: 3417 partidos, 58 próximos
+[ 304s]   modelo baloncesto ABA/ACB/BBL/BCL/BSL/EC/EL/GBL/LBA/LKL/LNB: 155 equipos, 3238 partidos, dispersión margen 12.5, total 17.5
+[ 304s]   ATP: 3903 partidos de historial, 2 próximos
+[ 304s]   modelo tenis: 501 jugadores, 3903 partidos
+[ 304s]   WTA: 6577 partidos de historial, 2 próximos
+[ 304s]   modelo tenis: 877 jugadores, 6577 partidos
+[ 306s]   CS2: 6567 partidos de historial (1 nuevos)
+[ 308s]   CS2: ejemplo de cuotas en bo3.gg: {"path": "https://thunderpick.io/match/2934835", "team_1": {"name": "9z", "coeff": 1.5, "active": true, "team_id": 324, "max_coeff": 1.5, "aggrement_score": 0.68}, "team_2": {"name": "Lynn Vision", "coeff": 2.4, "active": true, "team_id": 476, "max_coeff": 2.5, "aggrement_score": 0.32}, "provider": 
+[ 308s]   CS2: 8 partidos de nivel S/A en los próximos 7 días
+[ 308s]   modelo esports: 592 equipos, 6565 series
+[ 312s]   VAL: 3225 partidos de historial (8 nuevos)
+[ 313s]   VAL: ejemplo de cuotas en bo3.gg: {"path": "https://thunderpick.io/match/3043323", "team_1": {"name": "No Org No Problem", "coeff": 2.62, "active": true, "team_id": 25844, "max_coeff": 2.64, "aggrement_score": 0.56}, "team_2": {"name": "Stallions Esports", "coeff": 1.43, "active": true, "team_id": 20422, "max_coeff": 1.43, "aggremen
+[ 313s]   VAL: 18 partidos de nivel S/A en los próximos 7 días
+[ 313s]   modelo esports: 473 equipos, 3213 series
+[ 313s]     pocos datos (pronóstico prudente): No Org No Problem - Stallions Esports
+[ 313s]     pocos datos (pronóstico prudente): Mix My Miks - Gamax Esports
+[ 314s]     pocos datos (pronóstico prudente): Mafiosos - SÓ TEM VELHO
+[ 314s]     pocos datos (pronóstico prudente): 2GAME Esports - BRASIL2002
+[ 314s]     pocos datos (pronóstico prudente): Fluxo W7M - Manticore
+[ 315s]     pocos datos (pronóstico prudente): Yellow Dragon Gaming - Wildcard
+[ 315s]     pocos datos (pronóstico prudente): Arashi - 0 intelecto
+[ 315s]     pocos datos (pronóstico prudente): TIME DO B3M - Master Bank
+[ 315s]     pocos datos (pronóstico prudente): Arranca Dreams - Piranhas do Caribe
+[ 315s]     pocos datos (pronóstico prudente): Next - GANGUE
+[ 315s]     pocos datos (pronóstico prudente): Xora Esports - SaD Esports
+[ 315s]     pocos datos (pronóstico prudente): Oafs - Shopify Rebellion Black
+[ 315s]     pocos datos (pronóstico prudente): Masterclass - counterfeit
+[ 315s]     pocos datos (pronóstico prudente): Cloud9 - Maryville University
+[ 316s]   LOL: 3956 partidos de historial (0 nuevos)
+[ 316s]   LOL: 0 partidos de nivel S/A en los próximos 7 días
+[ 316s]   partidos ya empezados recuperados de la versión anterior: 15
+[ 325s]   fichas de basket europeo, tenis y esports: 84
+[ 325s]   fichas: 149 partidos con escudos y estadio, 118 con detalle, 18 clasificaciones
+[ 325s]   resultados de ESPN para lo pendiente: 4 de 182
+[ 325s]   historial: 90 partidos corregidos, 0 descartados sin resultado
+[ 325s]   historial: 289 partidos guardados o actualizados
+[ 325s]   resultados recuperados de días anteriores: quedan 102 sin resultado
+[ 325s]   resultados guardados para los desafíos: 334
+[ 325s] App generada en /home/runner/work/picks-dorados/picks-dorados/web/index.html
+[ 325s] [12:43:20] ligas
+[ 335s]   europa: 2 cruces sorteados añadidos (365Scores)
+[ 336s]   conference: 1 cruces sorteados añadidos (365Scores)
+[ 359s]   escudos: 381 encontrados en TheSportsDB
+[ 359s]   ligas: 50 competiciones con clasificación y calendario
+[ 359s]   ranking mundial: 347
+[ 359s]   ranking VLR: 100
+[ 363s]   ranking mundial: 58
+[ 363s]   ranking ATP: 150
+[ 363s]   ranking WTA: 150
+[ 363s]   posiciones: 231 partidos con la clasificación de sus equipos
+[ 364s] App generada en /home/runner/work/picks-dorados/picks-dorados/web/index.html
